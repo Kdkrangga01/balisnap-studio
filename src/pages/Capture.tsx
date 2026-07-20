@@ -109,7 +109,10 @@ export const Capture: React.FC = () => {
   const [showFlash, setShowFlash] = useState<boolean>(false);
   const [hasCamera, setHasCamera] = useState<boolean>(true);
   const [showCelebration, setShowCelebration] = useState<boolean>(false);
+<<<<<<< HEAD
   const [resolution, setResolution] = useState<'HD' | '4K' | 'Auto'>('HD');
+=======
+>>>>>>> cd92156 (fix error)
   const [actualResolution, setActualResolution] = useState<{ width: number; height: number } | null>(null);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
@@ -149,7 +152,10 @@ export const Capture: React.FC = () => {
     return 16 / 9;
   }, [selectedFrame]);
 
+<<<<<<< HEAD
   const activeAspect = getSlotAspectRatio(activeSlot);
+=======
+>>>>>>> cd92156 (fix error)
 
   const getVideoConstraints = () => {
     return {
@@ -469,7 +475,11 @@ export const Capture: React.FC = () => {
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
                     screenshotQuality={1.0}
+<<<<<<< HEAD
                     imageSmoothingEnabled={true}
+=======
+                    imageSmoothing={true}
+>>>>>>> cd92156 (fix error)
                     videoConstraints={getVideoConstraints()}
                     onUserMedia={handleUserMedia}
                     onUserMediaError={handleUserMediaError}
@@ -741,7 +751,11 @@ export const Capture: React.FC = () => {
 
 const popupVariants = {
   hidden: { opacity: 0, scale: 0.95, y: 15 },
+<<<<<<< HEAD
   visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 22 } },
+=======
+  visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 22 } },
+>>>>>>> cd92156 (fix error)
   exit: { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15 } },
 };
 

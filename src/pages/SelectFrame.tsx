@@ -4,15 +4,20 @@ import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import {
   ArrowLeft,
+<<<<<<< HEAD
   LayoutGrid,
   Palette,
   Layers,
+=======
+  Palette,
+>>>>>>> cd92156 (fix error)
   Sparkles,
   Search,
   X,
   Filter,
   Grid3x3,
   Images,
+<<<<<<< HEAD
   TrendingUp,
   Clock,
   RefreshCw,
@@ -24,12 +29,25 @@ import {
   RotateCcw,
   CheckCircle2,
   MousePointerClick,
+=======
+  Clock,
+  RefreshCw,
+  Heart,
+  Upload,
+  Trash2,
+  RotateCcw,
+  CheckCircle2,
+>>>>>>> cd92156 (fix error)
   ScanSearch,
   EyeOff,
   Eye,
   Pencil,
 } from 'lucide-react';
+<<<<<<< HEAD
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplate } from 'framer-motion';
+=======
+import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
+>>>>>>> cd92156 (fix error)
 
 type SlotCoord = FrameTemplate['slotCoords'][number];
 
@@ -369,7 +387,11 @@ const FrameCard: React.FC<{
   onDelete: (e: React.MouseEvent) => void;
   onEdit: (e: React.MouseEvent) => void;
   onClick: () => void;
+<<<<<<< HEAD
 }> = ({ frame, idx, isTrending, isFavorite, isCustom, style, onFavorite, onDelete, onEdit, onClick }) => {
+=======
+}> = ({ frame, idx, isTrending, isFavorite, isCustom: _isCustom, style, onFavorite, onDelete, onEdit, onClick }) => {
+>>>>>>> cd92156 (fix error)
   return (
     <motion.div
       whileHover={{ y: -10, scale: 1.02, rotate: idx % 2 === 0 ? 0.5 : -0.5 }}
@@ -447,7 +469,10 @@ export const SelectFrame: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'name'>('popular');
+<<<<<<< HEAD
   const [_hoveredFrame, setHoveredFrame] = useState<string | null>(null);
+=======
+>>>>>>> cd92156 (fix error)
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const [previewFrame, setPreviewFrame] = useState<FrameTemplate | null>(null);
@@ -557,9 +582,13 @@ export const SelectFrame: React.FC = () => {
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
 
   const [customSlotCoords, setCustomSlotCoords] = useState<(SlotCoord | null)[]>([null]);
+<<<<<<< HEAD
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number>(0);
   const [isAutoDetecting, setIsAutoDetecting] = useState(false);
   const [autoDetectedCount, setAutoDetectedCount] = useState<number | null>(null);
+=======
+  const [isAutoDetecting, setIsAutoDetecting] = useState(false);
+>>>>>>> cd92156 (fix error)
 
   const rawAllFrames = useMemo(
     () => [...frames, ...customFrames].filter((f) => !hiddenFrameIds.has(f.id)),
@@ -625,8 +654,11 @@ export const SelectFrame: React.FC = () => {
       workingCanvasRef.current = bestCanvas;
       setPreviewSrc(bestCanvas.toDataURL('image/png'));
       setCustomSlotCoords(bestDetected);
+<<<<<<< HEAD
       setAutoDetectedCount(bestFound);
       setSelectedSlotIndex(0);
+=======
+>>>>>>> cd92156 (fix error)
       setUploadError(null);
       setIsAutoDetecting(false);
     }, 30);
@@ -653,8 +685,11 @@ export const SelectFrame: React.FC = () => {
       setUploadImageDims({ w: canvas.width, h: canvas.height });
       setPreviewSrc(canvas.toDataURL('image/png'));
       setCustomSlotCoords(Array(uploadSlots).fill(null));
+<<<<<<< HEAD
       setSelectedSlotIndex(0);
       setAutoDetectedCount(null);
+=======
+>>>>>>> cd92156 (fix error)
 
       runAutoDetect(uploadSlots);
     };
@@ -675,10 +710,13 @@ export const SelectFrame: React.FC = () => {
     reader.readAsDataURL(file);
   }, [initWorkingCanvas]);
 
+<<<<<<< HEAD
   const handleResetAll = useCallback(() => {
     runAutoDetect(uploadSlots);
   }, [uploadSlots, runAutoDetect]);
 
+=======
+>>>>>>> cd92156 (fix error)
   const handleRemoveImage = useCallback(() => {
     workingCanvasRef.current = null;
     originalCanvasRef.current = null;
@@ -686,7 +724,10 @@ export const SelectFrame: React.FC = () => {
     setUploadImageDims(null);
     setCustomSlotCoords(Array(uploadSlots).fill(null));
     setUploadError(null);
+<<<<<<< HEAD
     setAutoDetectedCount(null);
+=======
+>>>>>>> cd92156 (fix error)
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, [uploadSlots]);
 
@@ -696,7 +737,10 @@ export const SelectFrame: React.FC = () => {
       runAutoDetect(slots);
     } else {
       setCustomSlotCoords(Array(slots).fill(null));
+<<<<<<< HEAD
       setSelectedSlotIndex(0);
+=======
+>>>>>>> cd92156 (fix error)
     }
   }, [runAutoDetect]);
 
@@ -749,8 +793,11 @@ export const SelectFrame: React.FC = () => {
       setUploadImageDims(null);
       setUploadError(null);
       setCustomSlotCoords([null]);
+<<<<<<< HEAD
       setSelectedSlotIndex(0);
       setAutoDetectedCount(null);
+=======
+>>>>>>> cd92156 (fix error)
     }, 1200);
   }, [uploadName, uploadImageDims, uploadSlots, uploadCategory, customSlotCoords, allSlotsFilled, addCustomFrame, deleteCustomFrame]);
 
@@ -874,7 +921,11 @@ export const SelectFrame: React.FC = () => {
 
   const popupVariants = {
     hidden: { opacity: 0, scale: 0.9, y: 30 },
+<<<<<<< HEAD
     visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 20 } },
+=======
+    visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 20 } },
+>>>>>>> cd92156 (fix error)
     exit: { opacity: 0, scale: 0.92, y: 15, transition: { duration: 0.15 } },
   };
 
