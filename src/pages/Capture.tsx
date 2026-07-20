@@ -109,7 +109,6 @@ export const Capture: React.FC = () => {
   const [showFlash, setShowFlash] = useState<boolean>(false);
   const [hasCamera, setHasCamera] = useState<boolean>(true);
   const [showCelebration, setShowCelebration] = useState<boolean>(false);
-  const [resolution, setResolution] = useState<'HD' | '4K' | 'Auto'>('HD');
   const [actualResolution, setActualResolution] = useState<{ width: number; height: number } | null>(null);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
@@ -137,30 +136,18 @@ export const Capture: React.FC = () => {
     bY.set(clientY - top);
   }
 
-  if (!selectedFrame) return null;
-
-  const { slots: totalSlots, name: frameName } = selectedFrame;
-
   const getSlotAspectRatio = useCallback((slotIndex: number): number => {
-    const coords = selectedFrame.slotCoords?.[slotIndex];
+    const coords = selectedFrame?.slotCoords?.[slotIndex];
     if (coords && coords.w > 0 && coords.h > 0) {
       return coords.w / coords.h;
     }
     return 16 / 9;
   }, [selectedFrame]);
 
-  const activeAspect = getSlotAspectRatio(activeSlot);
-  const getVideoConstraints = () => {
-    return {
-      facingMode: 'user',
-      width: { ideal: 1920, min: 1280 },
-      height: { ideal: 1080, min: 720 },
-      aspectRatio: 16 / 9
-    };
-  };
-
   const selectNextEmptySlot = useCallback(
     (currentPhotos: (string | null)[]) => {
+      if (!selectedFrame) return null;
+      const { slots: totalSlots } = selectedFrame;
       const nextEmpty = currentPhotos.findIndex((p) => p === null);
       if (nextEmpty !== -1 && nextEmpty < totalSlots) {
         setActiveSlot(nextEmpty);
@@ -175,18 +162,20 @@ export const Capture: React.FC = () => {
         return null;
       }
     },
-    [totalSlots]
+    [selectedFrame]
   );
 
   // Jalankan inisialisasi slot aktif pertama kali berdasarkan slot kosong murni di context
   useEffect(() => {
+    if (!selectedFrame) return;
+    const { slots: totalSlots } = selectedFrame;
     const initialEmpty = photos.findIndex((p) => p === null);
     if (initialEmpty !== -1 && initialEmpty < totalSlots) {
       setActiveSlot(initialEmpty);
     } else {
       setActiveSlot(0);
     }
-  }, [selectedFrame, totalSlots]);
+  }, [selectedFrame, photos]);
 
   const handleUserMedia = (stream: MediaStream) => {
     setHasCamera(true);
@@ -251,6 +240,19 @@ export const Capture: React.FC = () => {
         setIsAutoShooting(false);
       });
   }, [webcamRef, activeSlot, isAutoShooting, activeFilter, timerInterval, setPhotoAtSlot, selectNextEmptySlot, actualResolution, getSlotAspectRatio]);
+
+  if (!selectedFrame) return null;
+
+  const { slots: totalSlots, name: frameName } = selectedFrame;
+
+  const getVideoConstraints = () => {
+    return {
+      facingMode: 'user',
+      width: { ideal: 1920, min: 1280 },
+      height: { ideal: 1080, min: 720 },
+      aspectRatio: 16 / 9
+    };
+  };
 
   const startSingleClickMultiShoot = () => {
     const firstEmpty = photosStateRef.current.findIndex((p) => p === null);
@@ -468,8 +470,6 @@ export const Capture: React.FC = () => {
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
                     screenshotQuality={1.0}
-                    imageSmoothingEnabled={true}
-                    imageSmoothing={true}
                     imageSmoothing={true}
                     videoConstraints={getVideoConstraints()}
                     onUserMedia={handleUserMedia}
@@ -678,7 +678,7 @@ export const Capture: React.FC = () => {
                           }}
                         >
                           {hasPhoto ? (
-                            <img src={photo!} alt={`Slot ${index + 1}`} className="w-full h-full object-cover" />
+                            <img src={photo} alt={`Slot ${index + 1}`} className="w-full h-full object-cover" />
                           ) : (
                             <ImageIcon className="w-3.5 h-3.5 text-rose-200" />
                           )}
@@ -742,8 +742,6 @@ export const Capture: React.FC = () => {
 
 const popupVariants = {
   hidden: { opacity: 0, scale: 0.95, y: 15 },
-  visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 22 } },
-  visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 22 } },
   visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 22 } },
   exit: { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15 } },
 };

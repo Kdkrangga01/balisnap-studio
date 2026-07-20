@@ -4,10 +4,6 @@ import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import {
   ArrowLeft,
-  LayoutGrid,
-  Palette,
-  Layers,
-  
   Palette,
   Sparkles,
   Search,
@@ -15,18 +11,6 @@ import {
   Filter,
   Grid3x3,
   Images,
-  TrendingUp,
-  Clock,
-  RefreshCw,
-  Heart,
-  Zap,
-  Upload,
-  Trash2,
-  Wand2,
-  RotateCcw,
-  CheckCircle2,
-  MousePointerClick,
-
   Clock,
   RefreshCw,
   Heart,
@@ -39,10 +23,7 @@ import {
   Eye,
   Pencil,
 } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useTransform, useMotionTemplate } from 'framer-motion';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
-import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
-
 
 type SlotCoord = FrameTemplate['slotCoords'][number];
 
@@ -371,20 +352,19 @@ const CursorTrail: React.FC = () => {
   );
 };
 
+// PERBAIKAN: Ubah prop `style` menjadi `categoryStyle`
 const FrameCard: React.FC<{
   frame: FrameTemplate;
   idx: number;
   isTrending: boolean;
   isFavorite: boolean;
   isCustom: boolean;
-  style: any;
+  categoryStyle: any; // <-- Ganti nama
   onFavorite: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
   onEdit: (e: React.MouseEvent) => void;
   onClick: () => void;
-}> = ({ frame, idx, isTrending, isFavorite, isCustom, style, onFavorite, onDelete, onEdit, onClick }) => {
-}> = ({ frame, idx, isTrending, isFavorite, isCustom: _isCustom, style, onFavorite, onDelete, onEdit, onClick }) => {
-}> = ({ frame, idx, isTrending, isFavorite, isCustom: _isCustom, style, onFavorite, onDelete, onEdit, onClick }) => {
+}> = ({ frame, idx, isTrending, isFavorite, isCustom: _isCustom, categoryStyle, onFavorite, onDelete, onEdit, onClick }) => {
   return (
     <motion.div
       whileHover={{ y: -10, scale: 1.02, rotate: idx % 2 === 0 ? 0.5 : -0.5 }}
@@ -396,7 +376,7 @@ const FrameCard: React.FC<{
 
       <div className="flex justify-between items-start w-full mb-4 z-10">
         <div className="flex flex-col gap-1.5 items-start">
-          <span className="text-3xl filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.05)] transform group-hover:scale-125 transition-transform duration-300">{style.icon}</span>
+          <span className="text-3xl filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.05)] transform group-hover:scale-125 transition-transform duration-300">{categoryStyle.icon}</span>
           {isTrending && (
             <span className="flex items-center gap-1 bg-gradient-to-r from-pink-400 to-rose-400 text-white text-[9px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
               <Sparkles className="w-2.5 h-2.5 animate-spin" /> Populer
@@ -457,12 +437,16 @@ const FrameCard: React.FC<{
 };
 
 export const SelectFrame: React.FC = () => {
-  const { selectFrame, setStep, customFrames, addCustomFrame, deleteCustomFrame } = usePhotobooth();
+  const context = usePhotobooth();
+  if (!context) {
+    throw new Error('SelectFrame must be used within a PhotoboothProvider');
+  }
+  const { selectFrame, setStep, customFrames, addCustomFrame, deleteCustomFrame } = context;
   const [slotFilter, setSlotFilter] = useState<number | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'name'>('popular');
-  const [_hoveredFrame, setHoveredFrame] = useState<string | null>(null);
+  const [_hoveredFrame, _setHoveredFrame] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const [previewFrame, setPreviewFrame] = useState<FrameTemplate | null>(null);
@@ -573,11 +557,9 @@ export const SelectFrame: React.FC = () => {
 
   const [customSlotCoords, setCustomSlotCoords] = useState<(SlotCoord | null)[]>([null]);
 
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number>(0);
+  const [_selectedSlotIndex, setSelectedSlotIndex] = useState<number>(0);
   const [isAutoDetecting, setIsAutoDetecting] = useState(false);
-  const [autoDetectedCount, setAutoDetectedCount] = useState<number | null>(null)
-  const [isAutoDetecting, setIsAutoDetecting] = useState(false);
-  const [isAutoDetecting, setIsAutoDetecting] = useState(false);
+  const [_autoDetectedCount, setAutoDetectedCount] = useState<number | null>(null);
 
 
   const rawAllFrames = useMemo(
@@ -692,7 +674,7 @@ export const SelectFrame: React.FC = () => {
     };
     reader.readAsDataURL(file);
   }, [initWorkingCanvas]);
-  const handleResetAll = useCallback(() => {
+  const _handleResetAll = useCallback(() => {
     runAutoDetect(uploadSlots);
   }, [uploadSlots, runAutoDetect]);
   const handleRemoveImage = useCallback(() => {
@@ -889,8 +871,6 @@ export const SelectFrame: React.FC = () => {
 
   const popupVariants = {
     hidden: { opacity: 0, scale: 0.9, y: 30 },
-    visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 350, damping: 20 } },
-    visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 20 } },
     visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 20 } },
     exit: { opacity: 0, scale: 0.92, y: 15, transition: { duration: 0.15 } },
   };
@@ -1080,7 +1060,7 @@ export const SelectFrame: React.FC = () => {
                       isTrending={isTrending}
                       isFavorite={isFavorite}
                       isCustom={isCustom}
-                      style={style}
+                      categoryStyle={style} // PERBAIKAN: ganti prop name
                       onFavorite={(e) => toggleFavorite(frame.id, e)}
                       onDelete={(e) => handleDeleteFrame(frame, e)}
                       onEdit={(e) => handleOpenRename(frame, e)}
@@ -1438,7 +1418,7 @@ export const SelectFrame: React.FC = () => {
                         </div>
 
                         <div className="flex justify-end items-center text-[10px] font-bold">
-                          <button onClick={() => runAutoDetect(uploadSlots)} className="text-zinc-500 hover:text-pink-500 transition-colors">
+                          <button onClick={_handleResetAll} className="text-zinc-500 hover:text-pink-500 transition-colors">
                             Deteksi Ulang
                           </button>
                         </div>

@@ -41,8 +41,6 @@ export const Landing: React.FC = () => {
       opacity: 1,
       y: 0,
       filter: 'blur(0px)',
-      transition: { type: 'spring', stiffness: 100, damping: 18 },
-      transition: { type: 'spring' as const, stiffness: 100, damping: 18 },
       transition: { type: 'spring' as const, stiffness: 100, damping: 18 },
     },
   };
