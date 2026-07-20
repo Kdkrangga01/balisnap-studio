@@ -1,0 +1,6 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="35" y="55" width="130" height="80" rx="10" fill="#2E2620" stroke="#C9A66B" stroke-width="4" />
+    <polygon points="50,135 60,155 70,135" fill="#2E2620" stroke="#C9A66B" stroke-width="4" />
+    <polygon points="52,133 60,150 68,133" fill="#2E2620" />
+    <text x="100" y="103" font-family="'Poppins', sans-serif" font-size="28" font-weight="900" fill="#C9A66B" text-anchor="middle" letter-spacing="2">OOTD</text>
+  </svg>

@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Gochi+Hand&family=Pacifico&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600;700;900&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-mahogany: #6B4A3A;
+  --color-mahogany-dark: #52372B;
+  --color-mahogany-light: #8A6250;
+  --color-cream: #D8C3A5;
+  --color-cream-dark: #BFA88A;
+  --color-cream-light: #EAE0D5;
+  --color-gold: #C9A66B;
+  --color-gold-dark: #AB864A;
+  --color-gold-light: #DFBF87;
+  --color-ivory: #FFFFFF;
+  --color-ivory-dark: #FFFFFF;
+  --color-ivory-light: #FFFFFF;
+  --color-charcoal: #2E2620;
+  --color-charcoal-dark: #1C1714;
+  --color-charcoal-light: #473C35;
+
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Poppins", "Inter", sans-serif;
+  --font-handwriting: "Caveat", "Pacifico", cursive;
+}
+
+body {
+  @apply bg-ivory text-charcoal font-sans antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-serif;
+}
+
+/* Custom micro-animations & premium details */
+.gold-gradient {
+  background: linear-gradient(135deg, #C9A66B 0%, #E2C799 50%, #B69255 100%);
+}
+
+.gold-gradient-hover:hover {
+  background: linear-gradient(135deg, #B69255 0%, #E2C799 50%, #C9A66B 100%);
+}
+
+.mahogany-gradient {
+  background: linear-gradient(135deg, #6B4A3A 0%, #8A6250 100%);
+}
+
+.glass-panel {
+  background: rgba(250, 246, 240, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(216, 195, 165, 0.4);
+}
+
+.elegant-border {
+  border: 1px solid hsla(38, 24%, 91%, 0.349);
+}
+
+.gold-shadow {
+  box-shadow: 0 4px 20px -2px rgba(252, 254, 252, 0.15);
+}
+
+.gold-shadow-hover:hover {
+  box-shadow: 0 10px 25px -3px rgba(201, 166, 107, 0.3);
+  transform: translateY(-4px);
+}
+
+/* Shimmer animation for golden CTA */
+.shimmer-btn {
+  background-image: linear-gradient(90deg,
+      #6B4A3A 0%,
+      #C9A66B 25%,
+      #6B4A3A 50%,
+      #C9A66B 75%,
+      #6B4A3A 100%);
+  background-size: 400% 100%;
+  animation: shimmer 8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 0%;
+  }
+
+  100% {
+    background-position: 400% 0%;
+  }
+}
+
+/* Webkit scrollbar stylings */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-ivory-dark;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-cream rounded-full hover:bg-gold-light transition-colors;
+}
+
+/* Camera feed wrapper */
+.camera-mirror video {
+  transform: scaleX(-1);
+}

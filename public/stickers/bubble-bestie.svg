@@ -1,0 +1,6 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="15" y="40" width="170" height="100" rx="30" fill="#FFE4E6" stroke="#F43F5E" stroke-width="4" />
+    <polygon points="70,140 85,165 100,140" fill="#FFE4E6" stroke="#F43F5E" stroke-width="4" />
+    <polygon points="72,138 85,160 98,138" fill="#FFE4E6" />
+    <text x="100" y="98" font-family="'Caveat', cursive, sans-serif" font-size="28" font-weight="bold" fill="#E11D48" text-anchor="middle">Best Friends</text>
+  </svg>

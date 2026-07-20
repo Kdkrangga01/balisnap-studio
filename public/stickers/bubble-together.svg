@@ -1,0 +1,6 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="15" y="45" width="170" height="90" rx="20" fill="#CCFBF1" stroke="#0D9488" stroke-width="4" />
+    <polygon points="150,135 160,160 170,135" fill="#CCFBF1" stroke="#0D9488" stroke-width="4" />
+    <polygon points="152,133 160,155 168,133" fill="#CCFBF1" />
+    <text x="100" y="98" font-family="'Caveat', cursive, sans-serif" font-size="28" font-weight="bold" fill="#0F766E" text-anchor="middle">Together Forever</text>
+  </svg>

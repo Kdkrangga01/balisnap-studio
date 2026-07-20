@@ -1,0 +1,18 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <line x1="100" y1="10" x2="100" y2="35" stroke="#999" stroke-width="3"/>
+    <circle cx="100" cy="110" r="65" fill="#C0C0C0" stroke="#A0A0A0" stroke-width="2"/>
+    <g opacity="0.4">
+      <rect x="60" y="60" width="18" height="14" rx="2" fill="#E8E8E8" transform="rotate(-10 69 67)"/>
+      <rect x="90" y="55" width="18" height="14" rx="2" fill="#FFF" transform="rotate(5 99 62)"/>
+      <rect x="120" y="65" width="18" height="14" rx="2" fill="#E8E8E8" transform="rotate(10 129 72)"/>
+      <rect x="55" y="90" width="18" height="14" rx="2" fill="#FFF" transform="rotate(-5 64 97)"/>
+      <rect x="85" y="85" width="18" height="14" rx="2" fill="#D8D8D8"/>
+      <rect x="115" y="88" width="18" height="14" rx="2" fill="#FFF" transform="rotate(8 124 95)"/>
+      <rect x="65" y="115" width="18" height="14" rx="2" fill="#E8E8E8" transform="rotate(-8 74 122)"/>
+      <rect x="95" y="112" width="18" height="14" rx="2" fill="#FFF"/>
+      <rect x="125" y="118" width="18" height="14" rx="2" fill="#D8D8D8" transform="rotate(5 134 125)"/>
+      <rect x="75" y="140" width="18" height="14" rx="2" fill="#FFF" transform="rotate(-3 84 147)"/>
+      <rect x="105" y="138" width="18" height="14" rx="2" fill="#E8E8E8" transform="rotate(6 114 145)"/>
+    </g>
+    <circle cx="80" cy="80" r="12" fill="#FFF" opacity="0.3"/>
+  </svg>

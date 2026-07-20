@@ -1,0 +1,193 @@
+<svg width="800" height="2400" viewBox="0 0 800 2400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <mask id="mask-korean-maroon-3">
+      <rect width="100%" height="100%" fill="white"/>
+      <rect x="80" y="440" width="640" height="480" fill="black" rx="0"/>
+<rect x="80" y="980" width="640" height="480" fill="black" rx="0"/>
+<rect x="80" y="1520" width="640" height="480" fill="black" rx="0"/>
+    </mask>
+  </defs>
+  <g mask="url(#mask-korean-maroon-3)">
+    
+      <rect width="100%" height="100%" fill="#7C0A21"/>
+      <!-- Left & Right ticket cuts aligned to scaled ticket position -->
+      <circle cx="292" cy="2145" r="10" fill="#7C0A21"/>
+      <circle cx="508" cy="2145" r="10" fill="#7C0A21"/>
+    
+  </g>
+  
+      <!-- SLOT BORDERS -->
+      
+        <rect x="80" y="440" width="640" height="480" fill="none" stroke="#7C0A21" stroke-width="8"/>
+        <rect x="76" y="436" width="648" height="488" fill="none" stroke="#5E0013" stroke-width="2"/>
+      
+
+        <rect x="80" y="980" width="640" height="480" fill="none" stroke="#7C0A21" stroke-width="8"/>
+        <rect x="76" y="976" width="648" height="488" fill="none" stroke="#5E0013" stroke-width="2"/>
+      
+
+        <rect x="80" y="1520" width="640" height="480" fill="none" stroke="#7C0A21" stroke-width="8"/>
+        <rect x="76" y="1516" width="648" height="488" fill="none" stroke="#5E0013" stroke-width="2"/>
+      
+
+      <!-- RETRO POLAROID CAMERA -->
+      <g transform="translate(0, 20)">
+        <rect x="180" y="80" width="440" height="300" rx="35" fill="#EAECEE" stroke="#BDC3C7" stroke-width="4"/>
+        <rect x="180" y="320" width="440" height="60" rx="15" fill="#5D6D7E"/>
+        <path d="M 220,120 L 580,120 L 560,150 L 240,150 Z" fill="#2C3E50"/>
+        <circle cx="400" cy="250" r="95" fill="#1A1A1A" stroke="#2C3E50" stroke-width="8"/>
+        <circle cx="400" cy="250" r="80" fill="none" stroke="#BDC3C7" stroke-width="6"/>
+        <circle cx="400" cy="250" r="65" fill="#0D1B2A"/>
+        <circle cx="400" cy="250" r="50" fill="none" stroke="#1B4965" stroke-width="12" opacity="0.6"/>
+        <ellipse cx="425" cy="225" rx="18" ry="8" fill="#52B788" opacity="0.4" transform="rotate(-30 425 225)"/>
+        <circle cx="375" cy="215" r="7" fill="#FFF" opacity="0.8"/>
+        <rect x="220" y="160" width="80" height="80" rx="8" fill="#D5D8DC" stroke="#95A5A6" stroke-width="3"/>
+        <rect x="230" y="170" width="60" height="60" rx="4" fill="#F2F3F4"/>
+        <line x1="240" y1="170" x2="240" y2="230" stroke="#BDC3C7" stroke-width="3"/>
+        <line x1="250" y1="170" x2="250" y2="230" stroke="#BDC3C7" stroke-width="3"/>
+        <line x1="260" y1="170" x2="260" y2="230" stroke="#BDC3C7" stroke-width="3"/>
+        <line x1="270" y1="170" x2="270" y2="230" stroke="#BDC3C7" stroke-width="3"/>
+        <line x1="280" y1="170" x2="280" y2="230" stroke="#BDC3C7" stroke-width="3"/>
+        <rect x="500" y="150" width="60" height="45" rx="6" fill="#2C3E50"/>
+        <rect x="515" y="160" width="30" height="25" rx="3" fill="#5DADE2"/>
+        <rect x="500" y="210" width="40" height="12" rx="4" fill="#E67E22"/>
+        <circle cx="230" cy="285" r="22" fill="#E74C3C" stroke="#C0392B" stroke-width="3"/>
+        <text x="530" y="300" font-family="'Poppins', sans-serif" font-weight="900" font-size="20" fill="#2C3E50" text-anchor="middle">One</text>
+        <text x="530" y="320" font-family="'Poppins', sans-serif" font-weight="900" font-size="20" fill="#2C3E50" text-anchor="middle">Step<tspan fill="#F39C12">2</tspan></text>
+      </g>
+
+      <!-- TOP RIBBON (RED BOW) -->
+      <g transform="translate(130, 10)">
+        <path d="M 80,70 C 40,20 -10,30 20,70 C 45,90 70,80 80,70 Z" fill="#990000" stroke="#660000" stroke-width="2"/>
+        <path d="M 80,70 C 120,20 170,30 140,70 C 115,90 90,80 80,70 Z" fill="#990000" stroke="#660000" stroke-width="2"/>
+        <path d="M 75,75 L 10,130 L 25,140 L 75,85 Z" fill="#990000" stroke="#660000" stroke-width="1.5"/>
+        <path d="M 85,75 L 150,130 L 135,140 L 85,85 Z" fill="#990000" stroke="#660000" stroke-width="1.5"/>
+        <circle cx="80" cy="70" r="12" fill="#800000" stroke="#660000" stroke-width="2"/>
+      </g>
+
+      <!-- WHITE CAT STICKER -->
+      <g transform="translate(170, 310)">
+        <polygon points="10,60 20,0 50,30 80,0 90,60 50,80" fill="#FFF" stroke="#660000" stroke-width="3"/>
+        <polygon points="20,40 25,10 40,30" fill="#FADBD8"/>
+        <polygon points="80,40 75,10 60,30" fill="#FADBD8"/>
+        <circle cx="35" cy="45" r="4" fill="#000"/>
+        <circle cx="65" cy="45" r="4" fill="#000"/>
+        <polygon points="50,53 47,50 53,50" fill="#E74C3C"/>
+        <line x1="25" y1="55" x2="5" y2="55" stroke="#000" stroke-width="1.5"/>
+        <line x1="25" y1="60" x2="5" y2="65" stroke="#000" stroke-width="1.5"/>
+        <line x1="75" y1="55" x2="95" y2="55" stroke="#000" stroke-width="1.5"/>
+        <line x1="75" y1="60" x2="95" y2="65" stroke="#000" stroke-width="1.5"/>
+      </g>
+
+      <!-- HIBISCUS FLOWER -->
+      <g transform="translate(560, 310)">
+        <ellipse cx="25" cy="40" rx="30" ry="20" fill="#FAF4EE" stroke="#E5E7EB" stroke-width="1" transform="rotate(-30 25 40)"/>
+        <ellipse cx="55" cy="20" rx="25" ry="30" fill="#FFF" stroke="#E5E7EB" stroke-width="1" transform="rotate(10 55 20)"/>
+        <ellipse cx="85" cy="40" rx="30" ry="20" fill="#FAF4EE" stroke="#E5E7EB" stroke-width="1" transform="rotate(30 85 40)"/>
+        <ellipse cx="75" cy="70" rx="25" ry="30" fill="#FFF" stroke="#E5E7EB" stroke-width="1" transform="rotate(-20 75 70)"/>
+        <ellipse cx="35" cy="70" rx="25" ry="30" fill="#FFF" stroke="#E5E7EB" stroke-width="1" transform="rotate(20 35 70)"/>
+        <circle cx="55" cy="45" r="8" fill="#F1C40F"/>
+        <path d="M 55,45 Q 85,25 95,20" fill="none" stroke="#E74C3C" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="95" cy="20" r="5" fill="#F1C40F"/>
+      </g>
+
+      <!-- SNOOPY CUPID (Overlapping Left Border) -->
+      <g transform="translate(35, 890) scale(1.15)">
+        <ellipse cx="40" cy="10" rx="28" ry="18" fill="#FFF" stroke="#000" stroke-width="3"/>
+        <ellipse cx="70" cy="15" rx="15" ry="9" fill="#FFF" stroke="#000" stroke-width="3"/>
+        <circle cx="85" cy="15" r="5" fill="#000"/>
+        <path d="M 20,5 C 10,0 0,20 15,35 Q 25,40 20,5" fill="#000"/>
+        <circle cx="45" cy="8" r="2.5" fill="#000"/>
+        <rect x="25" y="30" width="30" height="38" rx="15" fill="#FFF" stroke="#000" stroke-width="3"/>
+        <path d="M 15,35 C -5,20 0,50 15,45 Z" fill="#FADBD8" stroke="#E74C3C" stroke-width="1.5"/>
+        <path d="M 75,30 Q 90,40 75,70" fill="none" stroke="#8B5A2B" stroke-width="4" stroke-linecap="round"/>
+        <line x1="75" y1="30" x2="75" y2="70" stroke="#AAA" stroke-width="1.5"/>
+        <line x1="60" y1="50" x2="115" y2="50" stroke="#8B5A2B" stroke-width="3"/>
+        <path d="M 115,50 l 10,-8 c 5,0 5,10 0,11 c -5,1 -10,-3 -10,-3 Z" fill="#E74C3C"/>
+        <rect x="25" y="68" width="11" height="18" rx="5" fill="#FFF" stroke="#000" stroke-width="3"/>
+        <rect x="40" y="68" width="11" height="18" rx="5" fill="#FFF" stroke="#000" stroke-width="3"/>
+      </g>
+
+      <!-- RED STAR -->
+      <g transform="translate(680, 890)">
+        <polygon points="50,10 65,45 100,45 70,65 82,100 50,80 18,100 30,65 0,45 35,45" fill="#B01D2E" stroke="#FFF" stroke-width="3"/>
+        <polygon points="50,18 61,47 90,47 65,64 75,92 50,76 25,92 35,64 10,47 39,47" fill="none" stroke="#E59866" stroke-width="1.5" stroke-dasharray="3,2"/>
+      </g>
+
+      <!-- PLUSH SNOOPY WITH HEART -->
+      <g transform="translate(620, 1430)">
+        <ellipse cx="110" cy="60" rx="28" ry="22" fill="#FFF" stroke="#555" stroke-width="2"/>
+        <circle cx="75" cy="65" r="6" fill="#000"/>
+        <path d="M 130,55 C 145,50 150,75 135,90 Z" fill="#111"/>
+        <circle cx="105" cy="58" r="2.5" fill="#000"/>
+        <path d="M 80,85 C 70,75 50,85 80,120 C 110,85 90,75 80,85 Z" fill="#8B5A2B" stroke="#5C3A21" stroke-width="2"/>
+        <rect x="95" y="85" width="38" height="42" rx="14" fill="#FFF" stroke="#555" stroke-width="2"/>
+        <ellipse cx="90" cy="95" rx="14" ry="8" fill="#FFF" stroke="#555" stroke-width="2" transform="rotate(25 90 95)"/>
+      </g>
+
+      <!-- THE TICKET (Bottom Center - Scaled up) -->
+      <g transform="translate(292, 2105) scale(1.2)">
+        <rect x="0" y="0" width="180" height="70" rx="10" fill="#FFF9E6" stroke="#8B1D2F" stroke-width="3"/>
+        <rect x="6" y="6" width="168" height="58" rx="6" fill="none" stroke="#8B1D2F" stroke-width="1.5" stroke-dasharray="4,2"/>
+        <text x="20" y="35" font-family="monospace" font-size="9" fill="#8B1D2F" transform="rotate(-90 20 35)" text-anchor="middle">48645235</text>
+        <text x="160" y="35" font-family="monospace" font-size="9" fill="#8B1D2F" transform="rotate(90 160 35)" text-anchor="middle">48645235</text>
+        <text x="90" y="22" font-family="Georgia, serif" font-weight="bold" font-size="12" fill="#8B1D2F" text-anchor="middle">good</text>
+        <text x="90" y="35" font-family="Georgia, serif" font-weight="bold" font-size="12" fill="#8B1D2F" text-anchor="middle">things</text>
+        <text x="90" y="48" font-family="Georgia, serif" font-weight="bold" font-size="12" fill="#8B1D2F" text-anchor="middle">are</text>
+        <text x="90" y="61" font-family="Georgia, serif" font-weight="bold" font-size="11" fill="#8B1D2F" text-anchor="middle">coming</text>
+        <!-- Circle cuts on top of cream background to show border behind -->
+        <circle cx="0" cy="35" r="8" fill="#7C0A21"/>
+        <circle cx="180" cy="35" r="8" fill="#7C0A21"/>
+      </g>
+
+      <!-- TEDDY BEAR WITH GIFT (Larger, drawn on top of ticket) -->
+      <g transform="translate(10, 1910) scale(1.4)">
+        <circle cx="100" cy="110" r="45" fill="#935116" stroke="#5C3A21" stroke-width="3"/>
+        <circle cx="60" cy="75" r="18" fill="#935116" stroke="#5C3A21" stroke-width="3"/>
+        <circle cx="60" cy="75" r="9" fill="#FADBD8"/>
+        <circle cx="140" cy="75" r="18" fill="#935116" stroke="#5C3A21" stroke-width="3"/>
+        <circle cx="140" cy="75" r="9" fill="#FADBD8"/>
+        <ellipse cx="100" cy="123" rx="18" ry="12" fill="#FFF"/>
+        <ellipse cx="100" cy="118" rx="7" ry="4" fill="#000"/>
+        <path d="M 95,127 Q 100,131 105,127" fill="none" stroke="#000" stroke-width="1.5"/>
+        <circle cx="82" cy="100" r="5" fill="#000"/>
+        <circle cx="118" cy="100" r="5" fill="#000"/>
+        <polygon points="100,150 78,142 78,158" fill="#FFF" stroke="#CCC" stroke-width="1.5"/>
+        <polygon points="100,150 122,142 122,158" fill="#FFF" stroke="#CCC" stroke-width="1.5"/>
+        <circle cx="100" cy="150" r="5" fill="#FFF" stroke="#CCC" stroke-width="1.5"/>
+        <polygon points="100,20 78,70 122,70" fill="#F4D03F" stroke="#B7950B" stroke-width="2"/>
+        <circle cx="95" cy="45" r="2.5" fill="#E74C3C"/>
+        <circle cx="105" cy="55" r="3" fill="#3498DB"/>
+        <circle cx="90" cy="62" r="2.5" fill="#2ECC71"/>
+        <circle cx="100" cy="15" r="7" fill="#E74C3C"/>
+        <ellipse cx="105" cy="180" rx="48" ry="38" fill="#935116" stroke="#5C3A21" stroke-width="3"/>
+        <ellipse cx="50" cy="165" rx="22" ry="12" fill="#935116" stroke="#5C3A21" stroke-width="3" transform="rotate(-30 50 165)"/>
+        <ellipse cx="160" cy="165" rx="22" ry="12" fill="#935116" stroke="#5C3A21" stroke-width="3" transform="rotate(30 160 165)"/>
+        <ellipse cx="65" cy="215" rx="22" ry="18" fill="#935116" stroke="#5C3A21" stroke-width="3"/>
+        <ellipse cx="65" cy="215" rx="13" ry="10" fill="#E59866"/>
+        <ellipse cx="145" cy="215" rx="22" ry="18" fill="#935116" stroke="#5C3A21" stroke-width="3"/>
+        <ellipse cx="145" cy="215" rx="13" ry="10" fill="#E59866"/>
+        <rect x="-10" y="170" width="50" height="45" fill="#3498DB" stroke="#2980B9" stroke-width="2"/>
+        <rect x="-15" y="165" width="60" height="10" fill="#F48FB1" stroke="#F06292" stroke-width="2"/>
+        <rect x="11" y="165" width="8" height="50" fill="#E74C3C"/>
+      </g>
+
+      <!-- CUTE CAKE (Bottom Right - Scaled up) -->
+      <g transform="translate(565, 2095) scale(1.35)">
+        <rect x="0" y="30" width="80" height="50" rx="10" fill="#FFF" stroke="#E5E7EB" stroke-width="2"/>
+        <circle cx="25" cy="55" r="2.5" fill="#000"/>
+        <circle cx="55" cy="55" r="2.5" fill="#000"/>
+        <path d="M 37,60 Q 40,63 43,60" fill="none" stroke="#000" stroke-width="1.5"/>
+        <circle cx="18" cy="58" r="3" fill="#FADBD8"/>
+        <circle cx="62" cy="58" r="3" fill="#FADBD8"/>
+        <polygon points="20,20 12,30 28,30" fill="#E74C3C" stroke="#C0392B" stroke-width="1"/>
+        <polygon points="60,20 52,30 68,30" fill="#E74C3C" stroke="#C0392B" stroke-width="1"/>
+        <polygon points="40,15 30,28 50,28" fill="#E74C3C" stroke="#C0392B" stroke-width="1"/>
+        <circle cx="10" cy="30" r="4.5" fill="#2E4053"/>
+        <circle cx="30" cy="30" r="4.5" fill="#2E4053"/>
+        <circle cx="50" cy="30" r="4.5" fill="#2E4053"/>
+        <circle cx="70" cy="30" r="4.5" fill="#2E4053"/>
+      </g>
+    
+  
+</svg>

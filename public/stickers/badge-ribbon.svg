@@ -1,0 +1,7 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 70,110 L 50,180 L 85,160 L 100,180 L 100,110" fill="#EF4444" />
+    <path d="M 130,110 L 150,180 L 115,160 L 100,180 L 100,110" fill="#EF4444" />
+    <circle cx="100" cy="80" r="50" fill="#FBBF24" stroke="#D97706" stroke-width="4" />
+    <circle cx="100" cy="80" r="38" fill="#FFF" />
+    <text x="100" y="90" font-family="'Poppins', sans-serif" font-size="28" font-weight="900" fill="#D97706" text-anchor="middle">N°1</text>
+  </svg>

@@ -1,0 +1,6 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="25" y="45" width="150" height="90" rx="25" fill="#F3E8FF" stroke="#A855F7" stroke-width="4" />
+    <polygon points="120,135 130,160 140,135" fill="#F3E8FF" stroke="#A855F7" stroke-width="4" />
+    <polygon points="122,133 130,155 138,133" fill="#F3E8FF" />
+    <text x="100" y="98" font-family="'Caveat', cursive, sans-serif" font-size="34" font-weight="bold" fill="#7E22CE" text-anchor="middle">LOVE</text>
+  </svg>

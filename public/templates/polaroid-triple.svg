@@ -1,0 +1,33 @@
+<svg width="800" height="2200" viewBox="0 0 800 2200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <mask id="mask-polaroid-triple">
+      <rect width="100%" height="100%" fill="white"/>
+      <rect x="80" y="80" width="640" height="460" fill="black" rx="0"/>
+<rect x="80" y="590" width="640" height="460" fill="black" rx="0"/>
+<rect x="80" y="1100" width="640" height="460" fill="black" rx="0"/>
+    </mask>
+  </defs>
+  <g mask="url(#mask-polaroid-triple)">
+    
+      <!-- White card base -->
+      <rect width="100%" height="100%" fill="#FFFFFF" rx="8"/>
+      <!-- Subtle paper shadow -->
+      <rect x="4" y="4" width="792" height="2192" fill="none" stroke="#E8E0D8" stroke-width="2" rx="6"/>
+      <!-- Slight aged paper effect -->
+      <rect width="100%" height="100%" fill="#F8F4EE" opacity="0.3"/>
+    
+  </g>
+  
+      <!-- Decorative tape at top -->
+      <rect x="370" y="-6.666666666666667" width="60" height="20" rx="2" fill="#E8B4B8" opacity="0.7" transform="rotate(-5 400 10)"/>
+    <rect x="80" y="80" width="640" height="460" fill="none" stroke="#DDD" stroke-width="1.5" rx="0"/>
+       <rect x="82" y="82" width="636" height="456" fill="none" stroke="#EEE" stroke-width="1" rx="0"/>
+<rect x="80" y="590" width="640" height="460" fill="none" stroke="#DDD" stroke-width="1.5" rx="0"/>
+       <rect x="82" y="592" width="636" height="456" fill="none" stroke="#EEE" stroke-width="1" rx="0"/>
+<rect x="80" y="1100" width="640" height="460" fill="none" stroke="#DDD" stroke-width="1.5" rx="0"/>
+       <rect x="82" y="1102" width="636" height="456" fill="none" stroke="#EEE" stroke-width="1" rx="0"/>
+  
+      <text x="400" y="2115" text-anchor="middle" font-family="'Playfair Display', serif" font-size="28" font-weight="bold" fill="#6B4A3A" letter-spacing="2">BaliSnap Studio</text>
+      <text x="400" y="2143" text-anchor="middle" font-family="'Poppins', sans-serif" font-size="14" fill="#B8A898" letter-spacing="3">2026.07.16</text>
+    
+</svg>
