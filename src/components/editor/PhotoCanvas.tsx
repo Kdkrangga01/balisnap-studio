@@ -569,7 +569,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
             />
           )}
 
-          {/* Layer Stiker Overlay (Dengan Ukuran Proporsional Besar) */}
+          {/* Layer Stiker Overlay */}
           {stickers.map((st) => (
             <StickerElement
               key={st.id}
@@ -598,13 +598,13 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
             <Transformer
               ref={trRef}
               boundBoxFunc={(oldBox, newBox) => {
-                if (Math.abs(newBox.width) < 20 || Math.abs(newBox.height) < 20) return oldBox;
+                if (Math.abs(newBox.width) < 15 || Math.abs(newBox.height) < 15) return oldBox;
                 return newBox;
               }}
               keepRatio={true}
               enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
-              anchorSize={16}
-              anchorCornerRadius={8}
+              anchorSize={14}
+              anchorCornerRadius={7}
               anchorFill="#C9A66B"
               anchorStroke="#6B4A3A"
               borderStroke="#C9A66B"
@@ -632,8 +632,9 @@ const StickerElement: React.FC<StickerElementProps> = ({ sticker, onClick, onCha
 
   if (!loadedImg || !selectedFrame) return null;
 
-  const baseStandardSize = 180;
-  const maxDim = Math.max(loadedImg.width, loadedImg.height) || 180;
+  // BASE SIZE 120px = UKURAN SEDANG PAS (SEKITAR 1/5 TINGGI SLOT FOTO, SANGAT ENAK DILIHAT)
+  const baseStandardSize = 120;
+  const maxDim = Math.max(loadedImg.width, loadedImg.height) || 120;
   const normFactor = baseStandardSize / maxDim;
 
   const finalScaleX = sticker.scaleX * normFactor;
