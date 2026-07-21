@@ -1001,20 +1001,6 @@ export const frames: FrameTemplate[] = [
     ]
   },
   {
-    id: "custom-1784636378328-yt0t",
-    name: "Frame Kawai",
-    slots: 4,
-    category: "cute",
-    src: "/templates/custom-1784636378328-yt0t.png",
-    width: 736, height: 1308,
-    slotCoords: [
-      { x: 342, y: 115, w: 342, h: 347, rx: 10 },
-      { x: 83, y: 878, w: 344, h: 350, rx: 10 },
-      { x: 379, y: 562, w: 333, h: 339, rx: 10 },
-      { x: 658, y: 933, w: 48, h: 116, rx: 1 }
-    ]
-  },
-  {
     id: "custom-1784636423699-6r8i",
     name: "Frame pink cute",
     slots: 4,
@@ -1061,6 +1047,98 @@ export const frames: FrameTemplate[] = [
     slotCoords: [
       { x: 10, y: 42, w: 432, h: 421, rx: 13 },
       { x: 264, y: 668, w: 436, h: 431, rx: 13 }
+    ]
+  },
+  {
+    id: "custom-1784637697432-9j8t",
+    name: "Gtau ah",
+    slots: 2,
+    category: "cute",
+    src: "/templates/custom-1784637697432-9j8t.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 50, y: 138, w: 348, h: 262, rx: 8 },
+      { x: 377, y: 720, w: 327, h: 439, rx: 10 }
+    ]
+  },
+  {
+    id: "custom-1784637740427-ln93",
+    name: "Kawai",
+    slots: 2,
+    category: "cute",
+    src: "/templates/custom-1784637740427-ln93.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 340, y: 476, w: 273, h: 283, rx: 8 },
+      { x: 48, y: 809, w: 305, h: 301, rx: 9 }
+    ]
+  },
+  {
+    id: "custom-1784637773555-camr",
+    name: "Vintage koran",
+    slots: 3,
+    category: "retro",
+    src: "/templates/custom-1784637773555-camr.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 177, y: 56, w: 347, h: 352, rx: 10 },
+      { x: 198, y: 458, w: 327, h: 330, rx: 10 },
+      { x: 179, y: 823, w: 362, h: 349, rx: 10 }
+    ]
+  },
+  {
+    id: "custom-1784637808377-sm67",
+    name: "Frame Spiderman",
+    slots: 4,
+    category: "filmstrip",
+    src: "/templates/custom-1784637808377-sm67.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 235, y: 219, w: 266, h: 200, rx: 6 },
+      { x: 236, y: 443, w: 266, h: 200, rx: 6 },
+      { x: 236, y: 667, w: 267, h: 201, rx: 6 },
+      { x: 236, y: 891, w: 267, h: 200, rx: 6 }
+    ]
+  },
+  {
+    id: "custom-1784637856530-clg6",
+    name: "Frame Sepiderman.",
+    slots: 6,
+    category: "filmstrip",
+    src: "/templates/custom-1784637856530-clg6.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 80, y: 49, w: 240, h: 246, rx: 7 },
+      { x: 55, y: 412, w: 276, h: 282, rx: 8 },
+      { x: 48, y: 806, w: 90, h: 79, rx: 2 },
+      { x: 61, y: 930, w: 265, h: 271, rx: 8 },
+      { x: 421, y: 212, w: 246, h: 251, rx: 7 },
+      { x: 480, y: 639, w: 226, h: 233, rx: 7 }
+    ]
+  },
+  {
+    id: "custom-1784637918243-o2dn",
+    name: "hem",
+    slots: 3,
+    category: "cute",
+    src: "/templates/custom-1784637918243-o2dn.png",
+    width: 675, height: 1200,
+    slotCoords: [
+      { x: 216, y: 82, w: 243, h: 250, rx: 7 },
+      { x: 214, y: 420, w: 247, h: 253, rx: 7 },
+      { x: 216, y: 761, w: 243, h: 250, rx: 7 }
+    ]
+  },
+  {
+    id: "custom-1784638039985-r0ku",
+    name: "ahhh",
+    slots: 2,
+    category: "cute",
+    src: "/templates/custom-1784638039985-r0ku.png",
+    width: 675, height: 1200,
+    slotCoords: [
+      { x: 91, y: 101, w: 323, h: 330, rx: 10 },
+      { x: 250, y: 648, w: 344, h: 348, rx: 10 }
     ]
   }
 ];
