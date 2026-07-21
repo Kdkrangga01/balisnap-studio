@@ -300,36 +300,50 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Canvas Actions
   const addSticker = (stickerId: string, overridePosition?: { x: number; y: number }) => {
     const id = `sticker-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    
+
     let posX = selectedFrame ? selectedFrame.width / 2 - 50 : 150;
     let posY = selectedFrame ? selectedFrame.height / 2 - 50 : 150;
-    let initialScale = 0.45; // Default scale is optimized to prevent stickers from appearing too large
+
+    // Sedikit variasi skala tiap kali nempel (0.40 - 0.50) supaya tidak semua
+    // stiker terlihat identik ukurannya persis, kesannya lebih "ditempel tangan".
+    let initialScale = 0.4 + Math.random() * 0.1;
+
+    // Rotasi kecil acak. Stiker photobooth yang enak dilihat biasanya sedikit
+    // miring (bukan lurus sempurna 0deg), jadi terasa natural/scrapbook-style.
+    let initialRotation = (Math.random() * 24) - 12; // antara -12deg s/d +12deg
 
     if (overridePosition) {
       posX = overridePosition.x;
       posY = overridePosition.y;
     } else if (selectedFrame && selectedFrame.slotCoords.length > 0) {
       // SMART IN-SLOT PLACEMENT ALGORITHM
-      // We generate candidate coordinates inside the individual photo slots (bingkai)
+      // Kita bikin beberapa titik kandidat di dalam tiap slot foto (bingkai),
+      // lalu pilih yang paling "kosong" & enak dilihat berdasarkan skor.
       const candidates: { x: number; y: number; score: number }[] = [];
-      
+
       selectedFrame.slotCoords.forEach((slot) => {
         const sW = slot.w;
         const sH = slot.h;
         const targetStickerSize = Math.min(sW, sH) * 0.25;
-        const offset = 18; // Margin inside the slot to prevent edge clipping
-        
-        // Generate positions in the corners of each slot
+        const offset = 18; // Margin di dalam slot supaya stiker tidak kepotong tepi
+
+        // Titik kandidat: 4 sudut (paling natural, tidak nutupin wajah di tengah)
+        // + 4 titik tengah-tepi sebagai cadangan kalau sudut-sudut sudah penuh,
+        // supaya stiker masih bisa nyebar rapi walau slot sudah cukup ramai.
         const corners = [
           { x: slot.x + offset + targetStickerSize / 2, y: slot.y + offset + targetStickerSize / 2 }, // Top Left
           { x: slot.x + sW - offset - targetStickerSize / 2, y: slot.y + offset + targetStickerSize / 2 }, // Top Right
           { x: slot.x + offset + targetStickerSize / 2, y: slot.y + sH - offset - targetStickerSize / 2 }, // Bottom Left
           { x: slot.x + sW - offset - targetStickerSize / 2, y: slot.y + sH - offset - targetStickerSize / 2 }, // Bottom Right
+          { x: slot.x + sW / 2, y: slot.y + offset + targetStickerSize / 2 }, // Top Mid
+          { x: slot.x + sW / 2, y: slot.y + sH - offset - targetStickerSize / 2 }, // Bottom Mid
+          { x: slot.x + offset + targetStickerSize / 2, y: slot.y + sH / 2 }, // Left Mid
+          { x: slot.x + sW - offset - targetStickerSize / 2, y: slot.y + sH / 2 }, // Right Mid
         ];
-        
+
         corners.forEach((c) => {
           let score = 0;
-          
+
           // Penalty for overlapping existing stickers
           stickers.forEach((existing) => {
             const dist = Math.hypot(existing.x - c.x, existing.y - c.y);
@@ -339,28 +353,40 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               score += dist * 0.05;
             }
           });
-          
+
           // Minor bonus for bottom corners which look more natural for overlays
           if (c.y > slot.y + sH / 2) {
             score += 40;
           }
-          
+
+          // Sudut (bukan titik tengah-tepi) sedikit lebih diprioritaskan karena
+          // secara visual lebih "aman" dari wajah yang biasanya ada di tengah.
+          const isCorner =
+            (c.x < slot.x + sW / 2 - 4 || c.x > slot.x + sW / 2 + 4) &&
+            (c.y < slot.y + sH / 2 - 4 || c.y > slot.y + sH / 2 + 4);
+          if (isCorner) score += 15;
+
           // Penalty for slots that already have multiple stickers to distribute them evenly
-          const stickersInThisSlot = stickers.filter((existing) => 
+          const stickersInThisSlot = stickers.filter((existing) =>
             existing.x >= slot.x && existing.x <= slot.x + sW &&
             existing.y >= slot.y && existing.y <= slot.y + sH
           ).length;
           score -= stickersInThisSlot * 300;
-          
+
           candidates.push({ ...c, score });
         });
       });
-      
+
       if (candidates.length > 0) {
         // Sort by score descending and pick the best spot
         candidates.sort((a, b) => b.score - a.score);
-        posX = candidates[0].x;
-        posY = candidates[0].y;
+        const best = candidates[0];
+
+        // Jitter halus (+/- 8px) supaya posisi tidak persis pixel-perfect sama
+        // setiap kali menempel di sudut yang sama -> kesannya lebih hidup/organik.
+        const jitter = 8;
+        posX = best.x + (Math.random() * jitter * 2 - jitter);
+        posY = best.y + (Math.random() * jitter * 2 - jitter);
       }
     }
 
@@ -371,9 +397,9 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       y: posY,
       scaleX: initialScale,
       scaleY: initialScale,
-      rotation: 0
+      rotation: overridePosition ? 0 : initialRotation
     };
-    
+
     setStickers(prev => [...prev, newSticker]);
     setSelectedId(id);
   };
@@ -388,8 +414,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const addText = (
-    text: string, 
-    color = '#6B4A3A', 
+    text: string,
+    color = '#6B4A3A',
     fontFamily = '"Playfair Display", serif',
     overrides?: { x?: number; y?: number; fontSize?: number }
   ) => {
