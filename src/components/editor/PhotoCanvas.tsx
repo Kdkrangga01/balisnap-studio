@@ -67,7 +67,24 @@ async function loadFrameAtExactSize(
   }
 }
 
+// ====================================================================
 // Chromakey helper to make solid frame backgrounds transparent
+// ------------------------------------------------------------
+// FIX (BaliSnap bugfix): Sebelumnya fungsi ini hanya sampling kotak
+// 40x40 di POJOK KIRI-ATAS canvas untuk menebak warna dominan latar
+// belakang frame. Kalau desain frame (mis. template tiket bioskop
+// dengan barcode, teks "NOW SHOWING", garis putus-putus, dsb) punya
+// elemen dekoratif persis di pojok kiri-atas, deteksi warna dominan
+// jadi salah -> chroma-key gagal melubangi background -> frame SVG
+// asli (opaque) tetap digambar utuh di atas warna/wallpaper baru yang
+// dipilih user -> user merasa "diklik tapi gak ada perubahan sama
+// sekali", padahal state di React sudah berubah dengan benar.
+//
+// Sekarang sampling dilakukan dari BEBERAPA region (4 pojok + tengah
+// atas/bawah), supaya kalau satu region "terkontaminasi" elemen
+// dekoratif, region lain tetap mewakili warna background asli dengan
+// akurat.
+// ====================================================================
 function keyOutBackgroundColor(canvas: HTMLCanvasElement, tolerance = 28): HTMLCanvasElement {
   const ctx = canvas.getContext('2d');
   if (!ctx) return canvas;
@@ -76,38 +93,50 @@ function keyOutBackgroundColor(canvas: HTMLCanvasElement, tolerance = 28): HTMLC
   const imgData = ctx.getImageData(0, 0, w, h);
   const data = imgData.data;
 
-  // Sample top-left 40x40 area to find dominant background colors (supports patterns like checkers/gingham)
-  const sampleSize = Math.min(40, w, h);
-  const colorCounts: Record<string, number> = {};
-  
-  for (let y = 0; y < sampleSize; y++) {
-    for (let x = 0; x < sampleSize; x++) {
-      const idx = (y * w + x) * 4;
-      const r = data[idx];
-      const g = data[idx + 1];
-      const b = data[idx + 2];
-      const a = data[idx + 3];
-      
-      if (a < 15) continue; // Skip transparent pixels
+  // Sampling dari beberapa titik region, bukan cuma 1 pojok
+  const sampleSize = Math.max(8, Math.min(40, Math.floor(w / 3), Math.floor(h / 3)));
+  const regions: { x0: number; y0: number }[] = [
+    { x0: 0, y0: 0 },                                              // kiri-atas
+    { x0: Math.max(0, w - sampleSize), y0: 0 },                    // kanan-atas
+    { x0: 0, y0: Math.max(0, h - sampleSize) },                    // kiri-bawah
+    { x0: Math.max(0, w - sampleSize), y0: Math.max(0, h - sampleSize) }, // kanan-bawah
+    { x0: Math.max(0, Math.floor(w / 2 - sampleSize / 2)), y0: 0 }, // tengah-atas
+    { x0: Math.max(0, Math.floor(w / 2 - sampleSize / 2)), y0: Math.max(0, h - sampleSize) }, // tengah-bawah
+  ];
 
-      // Quantize to group similar colors (divide by 16 to smooth out noise/gradients)
-      const qr = Math.round(r / 16) * 16;
-      const qg = Math.round(g / 16) * 16;
-      const qb = Math.round(b / 16) * 16;
-      const key = `${qr},${qg},${qb}`;
-      colorCounts[key] = (colorCounts[key] || 0) + 1;
+  const colorCounts: Record<string, number> = {};
+
+  regions.forEach(({ x0, y0 }) => {
+    for (let y = y0; y < y0 + sampleSize; y++) {
+      for (let x = x0; x < x0 + sampleSize; x++) {
+        if (x < 0 || y < 0 || x >= w || y >= h) continue;
+        const idx = (y * w + x) * 4;
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        const a = data[idx + 3];
+
+        if (a < 15) continue; // Skip transparent pixels
+
+        // Quantize to group similar colors (divide by 16 to smooth out noise/gradients)
+        const qr = Math.round(r / 16) * 16;
+        const qg = Math.round(g / 16) * 16;
+        const qb = Math.round(b / 16) * 16;
+        const key = `${qr},${qg},${qb}`;
+        colorCounts[key] = (colorCounts[key] || 0) + 1;
+      }
     }
-  }
+  });
 
   // Sort colors by frequency
   const sortedColors = Object.entries(colorCounts).sort((a, b) => b[1] - a[1]);
-  
+
   if (sortedColors.length === 0) return canvas;
 
   // Dominant color A
   const parseRGB = (str: string) => str.split(',').map(Number);
   const colorA = parseRGB(sortedColors[0][0]);
-  
+
   // Find dominant color B (must be visually distinct from color A)
   let colorB: number[] | null = null;
   for (let i = 1; i < sortedColors.length; i++) {
@@ -232,6 +261,9 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
         ctx.fillStyle = fillVal;
         ctx.fillRect(0, 0, frameWidth, frameHeight);
         setWallpaperCanvas(canvas);
+      } else {
+        console.warn('BaliSnap Debug - Wallpaper id not found in wallpapers list:', wallpaperId);
+        setWallpaperCanvas(null);
       }
     } else if (uploadedWallpaperImg) {
       const imgW = uploadedWallpaperImg.width;
@@ -286,6 +318,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
       const frameCanvas = await loadFrameAtExactSize(frameSrc, frameWidth, frameHeight);
       if (cancelled || !frameCanvas) {
         if (!cancelled) {
+          console.error('BaliSnap Debug - Frame failed to load, cannot render color/wallpaper changes. Src:', frameSrc);
           setProcessedFrameImg(null);
           setActiveSlotCoords(slotCoords);
         }
@@ -294,7 +327,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
 
       // Step 2: Try to detect actual transparent slot locations from frame image
       const detected = detectTransparentSlots(frameCanvas, slotCoords.length);
-      
+
       // Step 2b: Key out the background color if custom frame color is selected
       if (frameColor !== 'original') {
         keyOutBackgroundColor(frameCanvas, 28);
@@ -308,11 +341,11 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
 
       if (detected.length === slotCoords.length) {
         // ------------------------------------------------------------
-        // FIX: Jangan langsung pakai hasil deteksi mentah-mentah.
+        // Jangan langsung pakai hasil deteksi mentah-mentah.
         // Bandingkan luas area terdeteksi vs hardcoded per-slot, lalu
         // pilih yang paling "pas" (lebih besar/mendekati lubang asli
-        // di frame). Ini mencegah foto tampil kekecilan seperti di
-        // screenshot (ada celah putih di sekeliling foto).
+        // di frame). Ini mencegah foto tampil kekecilan (ada celah
+        // putih di sekeliling foto).
         // ------------------------------------------------------------
         finalSlotCoords = detected.map((dSlot, idx) => {
           const hardcoded = slotCoords[idx];
@@ -321,9 +354,6 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
           const detectedArea = dSlot.w * dSlot.h;
           const hardcodedArea = hardcoded.w * hardcoded.h;
 
-          // Toleransi: kalau hardcoded jauh lebih besar dari hasil deteksi (lebih dari 8% selisih),
-          // atau hasil deteksi jauh lebih besar dari hardcoded (lebih dari 15% selisih),
-          // kemungkinan hasil deteksi salah/bloated -> gunakan koordinat hardcoded.
           const isTooSmall = hardcodedArea > detectedArea * 1.08;
           const isTooLarge = detectedArea > hardcodedArea * 1.15;
           const useHardcoded = isTooSmall || isTooLarge;
@@ -368,6 +398,8 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
           const colorOpt = frameColors.find(c => c.id === frameColor);
           if (colorOpt) {
             fillStyle = colorOpt.getFill(ctx, frameWidth, frameHeight);
+          } else {
+            console.warn('BaliSnap Debug - frameColor id not found in frameColors list:', frameColor);
           }
         }
         ctx.fillStyle = fillStyle;
@@ -394,11 +426,11 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
         // Draw white glow/outline to isolate borders, text, and logos from the custom background pattern
         ctx.filter = 'drop-shadow(0px 0px 3px rgba(255, 255, 255, 0.95)) drop-shadow(0px 0px 1px rgba(255, 255, 255, 0.85))';
         ctx.drawImage(frameCanvas, 0, 0);
-        
+
         // Draw soft dark drop shadow for realistic 3D depth
         ctx.filter = 'drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.25))';
         ctx.drawImage(frameCanvas, 0, 0);
-        
+
         // Reset filter for final original rendering
         ctx.filter = 'none';
       }

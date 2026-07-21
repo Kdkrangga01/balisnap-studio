@@ -39,13 +39,18 @@ export const FrameColorPanel: React.FC = () => {
     const [activeWallpaperCat, setActiveWallpaperCat] = useState<string>('all');
     const [customHex, setCustomHex] = useState<string>('#ffffff');
 
-    // Handle custom hex input
+    // ------------------------------------------------------------
+    // FIX (BaliSnap bugfix): Sebelumnya baris ini memaksa
+    // setFrameColor('original') setiap kali user mengetik hex yang
+    // valid di kolom "Custom Color" -> warna yang diketik user TIDAK
+    // PERNAH benar-benar dipakai, selalu balik ke default. Sekarang
+    // benar-benar menerapkan hex yang diketik.
+    // ------------------------------------------------------------
     const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
         setCustomHex(val);
         if (/^#[0-9A-F]{6}$/i.test(val)) {
-            setFrameColor('original'); // Set to default or handle custom
-            // We will save to localStorage / custom state dynamically
+            setFrameColor(val as any); // FIX: sebelumnya 'original', sekarang pakai hex yang diketik
             addRecentColor(val);
         }
     };
@@ -53,14 +58,6 @@ export const FrameColorPanel: React.FC = () => {
     const handleColorPicker = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
         setCustomHex(val);
-        // Since frameColors are predefined, we can temporarily save hex color to state if we want,
-        // or register a 'custom' color slot.
-        // For simplicity, we can dynamically add a color option or just set it
-        // directly. To keep types safe, let's treat the picker as adding to recent colors
-        // and setting a solid custom background.
-        // Wait, let's see how photoCanvas draws it. If we support custom hex, we can check if it starts with '#'!
-        // Yes! In PhotoCanvas.tsx, we can check if frameColor starts with '#' or is one of the FrameColorIds.
-        // Let's modify the type FrameColorId to allow string, so it can hold hex!
         setFrameColor(val as any);
         addRecentColor(val);
     };
@@ -108,8 +105,8 @@ export const FrameColorPanel: React.FC = () => {
                         type="button"
                         onClick={() => setSubTab(t.id as any)}
                         className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${subTab === t.id
-                                ? 'bg-mahogany text-white shadow-sm'
-                                : 'text-charcoal/50 hover:bg-cream-light/30'
+                            ? 'bg-mahogany text-white shadow-sm'
+                            : 'text-charcoal/50 hover:bg-cream-light/30'
                             }`}
                     >
                         <t.icon className="w-3.5 h-3.5" />
@@ -128,8 +125,8 @@ export const FrameColorPanel: React.FC = () => {
                                 key={style}
                                 onClick={() => setFrameStyle(style)}
                                 className={`flex-1 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider border transition-all ${frameStyle === style
-                                        ? 'border-mahogany bg-mahogany/5 text-mahogany'
-                                        : 'border-cream/20 hover:border-cream text-charcoal/50'
+                                    ? 'border-mahogany bg-mahogany/5 text-mahogany'
+                                    : 'border-cream/20 hover:border-cream text-charcoal/50'
                                     }`}
                             >
                                 {style}
@@ -375,8 +372,8 @@ export const FrameColorPanel: React.FC = () => {
                                 key={cat.id}
                                 onClick={() => setActiveWallpaperCat(cat.id)}
                                 className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider flex-shrink-0 transition-all flex items-center gap-1 ${activeWallpaperCat === cat.id
-                                        ? 'bg-mahogany text-white'
-                                        : 'bg-cream-light text-charcoal/60 hover:bg-cream'
+                                    ? 'bg-mahogany text-white'
+                                    : 'bg-cream-light text-charcoal/60 hover:bg-cream'
                                     }`}
                             >
                                 <span>{cat.emoji}</span>
@@ -481,8 +478,8 @@ export const FrameColorPanel: React.FC = () => {
                                             key={mode}
                                             onClick={() => setWallpaperScaleMode(mode as any)}
                                             className={`py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider border transition-all ${wallpaperScaleMode === mode
-                                                    ? 'border-mahogany bg-mahogany/5 text-mahogany'
-                                                    : 'border-cream/20 hover:border-cream text-charcoal/50'
+                                                ? 'border-mahogany bg-mahogany/5 text-mahogany'
+                                                : 'border-cream/20 hover:border-cream text-charcoal/50'
                                                 }`}
                                         >
                                             {mode}
