@@ -59,10 +59,10 @@ export const Landing: React.FC = () => {
         <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute top-[62%] right-[5%] text-3xl opacity-50 hidden lg:block">🍓</motion.div>
       </div>
 
-      {/* Iridescent Organic Light Blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-gradient-to-tr from-rose-200/50 via-amber-100/40 to-cyan-200/30 rounded-full blur-[160px] pointer-events-none mix-blend-multiply animate-pulse duration-[12s]" />
-      <div className="absolute top-[20%] right-[-20%] w-[60vw] h-[60vw] bg-gradient-to-bl from-purple-100/60 via-teal-50/50 to-orange-100/40 rounded-full blur-[180px] pointer-events-none mix-blend-multiply" />
-      <div className="absolute bottom-[-10%] left-[10%] w-[50vw] h-[50vw] bg-gradient-to-r from-emerald-100/40 via-indigo-100/50 to-pink-100/30 rounded-full blur-[140px] pointer-events-none mix-blend-multiply" />
+      {/* Iridescent Organic Light Blobs - blur dikecilkan di mobile agar scroll ringan */}
+      <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-gradient-to-tr from-rose-200/50 via-amber-100/40 to-cyan-200/30 rounded-full blur-[60px] sm:blur-[100px] lg:blur-[160px] pointer-events-none mix-blend-multiply" />
+      <div className="absolute top-[20%] right-[-20%] w-[60vw] h-[60vw] bg-gradient-to-bl from-purple-100/60 via-teal-50/50 to-orange-100/40 rounded-full blur-[60px] sm:blur-[100px] lg:blur-[180px] pointer-events-none mix-blend-multiply" />
+      <div className="absolute bottom-[-10%] left-[10%] w-[50vw] h-[50vw] bg-gradient-to-r from-emerald-100/40 via-indigo-100/50 to-pink-100/30 rounded-full blur-[60px] sm:blur-[100px] lg:blur-[140px] pointer-events-none mix-blend-multiply" />
 
       {/* Luxury Editorial Grid Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#EAE6DC_1px,transparent_1px),linear-gradient(to_bottom,#EAE6DC_1px,transparent_1px)] bg-[size:40px_40px] opacity-[0.5] pointer-events-none" />
@@ -72,7 +72,7 @@ export const Landing: React.FC = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="px-4 sm:px-6 md:px-12 py-4 sm:py-6 border-b border-[#EAE6DC]/60 flex justify-between items-center bg-[#FAF9F5]/60 backdrop-blur-xl sticky top-0 z-50 shadow-[0_4px_30px_rgba(234,230,220,0.2)]"
+        className="px-4 sm:px-6 md:px-12 py-4 sm:py-6 border-b border-[#EAE6DC]/60 flex justify-between items-center bg-[#FAF9F5]/90 backdrop-blur-sm sticky top-0 z-50 shadow-[0_4px_30px_rgba(234,230,220,0.2)]"
       >
         <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer">
           <span className="font-serif tracking-[0.15em] sm:tracking-[0.2em] text-lg sm:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-zinc-950 via-zinc-800 to-zinc-600">
@@ -210,7 +210,7 @@ export const Landing: React.FC = () => {
       </main>
 
       {/* Procedural Section (Workflow Berkelas) */}
-      <section id="cara-kerja" className="relative border-t border-[#EAE6DC]/60 bg-white/40 backdrop-blur-md py-16 sm:py-28 px-4 sm:px-6 overflow-hidden">
+      <section id="cara-kerja" className="relative border-t border-[#EAE6DC]/60 bg-white/40 py-16 sm:py-28 px-4 sm:px-6 overflow-hidden">
         {/* Live Angry Cat Sticker - desktop only */}
         <motion.div
           animate={{ y: [0, -12, 0], rotate: [-12, -6, -12] }}
