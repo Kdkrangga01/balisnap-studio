@@ -210,6 +210,35 @@ export const Capture: React.FC = () => {
   };
   const handleUserMediaError = () => setHasCamera(false);
 
+  // Sebagian browser mobile (terutama saat HP di-rotate ke landscape) melaporkan
+  // videoWidth/videoHeight yang BERUBAH dari nilai awal getSettings(). Kalau kita
+  // cuma pakai nilai dari handleUserMedia sekali di awal, kontainer preview jadi
+  // tidak sinkron dengan bentuk asli stream setelah rotate -> wajah kepotong lagi.
+  // Di sini kita dengarkan event 'loadedmetadata' & 'resize' langsung dari elemen
+  // <video>, yang selalu mencerminkan dimensi video yang sesungguhnya saat ini.
+  useEffect(() => {
+    if (!hasCamera) return;
+    const video = webcamRef.current?.video;
+    if (!video) return;
+
+    const updateRealDimensions = () => {
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        setActualResolution({ width: video.videoWidth, height: video.videoHeight });
+      }
+    };
+
+    updateRealDimensions();
+    video.addEventListener('loadedmetadata', updateRealDimensions);
+    video.addEventListener('resize', updateRealDimensions);
+    window.addEventListener('orientationchange', updateRealDimensions);
+
+    return () => {
+      video.removeEventListener('loadedmetadata', updateRealDimensions);
+      video.removeEventListener('resize', updateRealDimensions);
+      window.removeEventListener('orientationchange', updateRealDimensions);
+    };
+  }, [hasCamera]);
+
   const capturePhoto = useCallback(() => {
     if (!webcamRef.current) return;
 
@@ -266,19 +295,30 @@ export const Capture: React.FC = () => {
 
   const { slots: totalSlots, name: frameName } = selectedFrame;
 
-  // PENTING: tidak lagi memaksa `aspectRatio` maupun `min` width/height ke hardware.
-  // Memaksa rasio 16:9 langsung di videoConstraints membuat kamera depan HP
-  // (yang native-nya portrait) di-crop di level driver kamera sebelum sampai ke
-  // browser, sehingga wajah tampak "zoom" parah dan terpotong. Dengan hanya
-  // memberi nilai `ideal`, browser akan mengambil FOV kamera secara penuh/asli,
-  // dan pemotongan tampilan cukup diatur lewat CSS (object-fit) di bawah.
+  // PENTING: tidak memaksa `aspectRatio`, `min`, ATAU height di videoConstraints.
+  // - Memaksa rasio 16:9 di hardware bikin kamera depan HP (native-nya portrait)
+  //   di-crop duluan oleh driver kamera sebelum sampai ke browser.
+  // - Meminta width DAN height ideal yang sama (mis. 1280x1280) juga bikin
+  //   kamera dipaksa crop jadi persegi oleh hardware -> hasilnya tetap zoom.
+  // Solusinya: minta `ideal width` saja, biarkan browser/kamera memilih tinggi
+  // sesuai rasio asli sensornya. Bentuk box preview di CSS akan MENGIKUTI
+  // dimensi asli ini (lihat `cameraAspect` di bawah), bukan sebaliknya.
   const getVideoConstraints = () => {
     return {
       facingMode: 'user',
       width: { ideal: 1280 },
-      height: { ideal: 1280 },
     };
   };
+
+  // Rasio kontainer preview mengikuti dimensi ASLI video (dari state
+  // actualResolution yang selalu ter-update, termasuk saat rotate).
+  // Selama dimensi asli belum diketahui, pakai fallback yang wajar
+  // sesuai orientasi layar saat ini.
+  const fallbackAspect = isPortraitView ? 3 / 4 : 4 / 3;
+  const cameraAspect =
+    actualResolution && actualResolution.width > 0 && actualResolution.height > 0
+      ? actualResolution.width / actualResolution.height
+      : fallbackAspect;
 
   const startSingleClickMultiShoot = () => {
     const firstEmpty = photosStateRef.current.findIndex((p) => p === null);
@@ -484,17 +524,17 @@ export const Capture: React.FC = () => {
               <div className="absolute top-[-6px] left-1/2 -translate-x-1/2 w-24 h-4 bg-pink-200/40 backdrop-blur-sm border border-white/40 skew-x-[-12deg] z-20 shadow-sm pointer-events-none flex items-center justify-center text-[7px] text-pink-500 font-bold tracking-widest uppercase">BALISNAP</div>
 
               {/*
-                Container preview kamera: rasio sekarang adaptif.
-                - Portrait/mobile: rasio 3/4 (lebih tinggi) supaya wajah penuh, tidak dipotong sisi kiri-kanan.
-                - Landscape/desktop: tetap 16/9 seperti semula.
-                object-fit tetap "cover" tapi karena rasio kontainer sudah mendekati rasio wajah,
-                crop yang terjadi jauh lebih minim.
+                Container preview kamera: rasionya sekarang mengikuti PERSIS rasio
+                video asli (cameraAspect, dari actualResolution). Karena kontainer
+                dan video punya rasio yang sama persis, object-cover tidak perlu
+                memotong apa pun -> wajah selalu penuh, baik saat HP tegak (portrait)
+                maupun saat di-rotate ke landscape.
               */}
               <div
                 className="relative bg-zinc-950 border-4 border-rose-100 shadow-[0_15px_40px_rgba(253,244,245,0.6)] rounded-[20px] sm:rounded-[28px] overflow-hidden mx-auto w-full max-w-4xl flex-1 min-h-0"
                 style={{
-                  aspectRatio: isPortraitView ? '3 / 4' : '16 / 9',
-                  maxHeight: isPortraitView ? '62vh' : '58vh',
+                  aspectRatio: cameraAspect,
+                  maxHeight: isPortraitView ? '62vh' : '78vh',
                 }}
               >
                 {hasCamera ? (
