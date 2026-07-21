@@ -180,7 +180,6 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
     appliedFilter,
     frameColor,
     frameStyle,
-    borderThickness,
     borderRadius,
     shadowIntensity,
     shadowBlur,
@@ -633,7 +632,6 @@ const StickerElement: React.FC<StickerElementProps> = ({ sticker, onClick, onCha
 
   if (!loadedImg || !selectedFrame) return null;
 
-  // DITINGKATKAN KEMBALI AGAR SESUAI CONTOH FOTO (Ukuran Standar Base = 180px)
   const baseStandardSize = 180;
   const maxDim = Math.max(loadedImg.width, loadedImg.height) || 180;
   const normFactor = baseStandardSize / maxDim;
