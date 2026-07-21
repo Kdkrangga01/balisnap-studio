@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePhotobooth } from '../context/PhotoboothContext';
 import { Camera, Sparkles, Image as ImageIcon, ArrowRight, Maximize2 } from 'lucide-react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 
 export const Landing: React.FC = () => {
   const { setStep } = usePhotobooth();
+
+  // Tilt 3D effect hanya aktif di desktop (pointer mouse), dimatikan total di mobile
+  // supaya tidak ada compositing layer / transform tambahan yang membebani scroll.
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px) and (pointer: fine)');
+    setIsDesktop(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -13,6 +25,7 @@ export const Landing: React.FC = () => {
   const rotateY = useTransform(x, [-300, 300], [-15, 15]);
 
   function handleMouse(event: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    if (!isDesktop) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
@@ -23,6 +36,7 @@ export const Landing: React.FC = () => {
   }
 
   function handleMouseLeave() {
+    if (!isDesktop) return;
     x.set(0);
     y.set(0);
   }
@@ -158,10 +172,10 @@ export const Landing: React.FC = () => {
           className="lg:col-span-5 flex justify-center items-center w-full lg:perspective-[1000px]"
         >
           <motion.div
-            style={{ rotateX, rotateY }}
+            style={isDesktop ? { rotateX, rotateY } : undefined}
             onMouseMove={handleMouse}
             onMouseLeave={handleMouseLeave}
-            className="w-full max-w-[280px] sm:max-w-[310px] aspect-[3/5] rounded-[24px] sm:rounded-[28px] bg-white/40 border border-white/80 p-4 sm:p-5 shadow-[0_30px_70px_rgba(210,200,180,0.35)] backdrop-blur-xl relative group cursor-grab active:cursor-grabbing flex flex-col justify-between"
+            className="w-full max-w-[280px] sm:max-w-[310px] aspect-[3/5] rounded-[24px] sm:rounded-[28px] bg-white/90 lg:bg-white/40 border border-white/80 p-4 sm:p-5 shadow-[0_10px_30px_rgba(210,200,180,0.25)] lg:shadow-[0_30px_70px_rgba(210,200,180,0.35)] lg:backdrop-blur-xl relative group cursor-grab active:cursor-grabbing flex flex-col justify-between"
           >
             <div className="absolute inset-0 rounded-[24px] sm:rounded-[28px] bg-gradient-to-tr from-rose-400/10 via-purple-400/0 to-cyan-400/10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="flex justify-between items-center z-10">
@@ -217,7 +231,7 @@ export const Landing: React.FC = () => {
           transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
           className="absolute top-[28%] left-[2%] w-24 h-24 rounded-2xl border-4 border-white shadow-xl overflow-hidden bg-white z-0 hidden lg:block pointer-events-auto cursor-pointer hover:scale-105 transition-transform"
         >
-          <img src="/stickers/cute-angry-cat.jpg" className="w-full h-full object-cover" alt="Cute Angry Cat" />
+          <img src="/stickers/cute-angry-cat.jpg" className="w-full h-full object-cover" alt="Cute Angry Cat" loading="lazy" />
         </motion.div>
 
         <div className="max-w-5xl mx-auto relative z-10">
