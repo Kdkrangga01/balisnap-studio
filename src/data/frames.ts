@@ -1062,18 +1062,6 @@ export const frames: FrameTemplate[] = [
     ]
   },
   {
-    id: "custom-1784637740427-ln93",
-    name: "Kawai",
-    slots: 2,
-    category: "cute",
-    src: "/templates/custom-1784637740427-ln93.png",
-    width: 736, height: 1308,
-    slotCoords: [
-      { x: 340, y: 476, w: 273, h: 283, rx: 8 },
-      { x: 48, y: 809, w: 305, h: 301, rx: 9 }
-    ]
-  },
-  {
     id: "custom-1784637773555-camr",
     name: "Vintage koran",
     slots: 3,
@@ -1139,6 +1127,30 @@ export const frames: FrameTemplate[] = [
     slotCoords: [
       { x: 91, y: 101, w: 323, h: 330, rx: 10 },
       { x: 250, y: 648, w: 344, h: 348, rx: 10 }
+    ]
+  },
+  {
+    id: "custom-1784638914224-t68k",
+    name: "1 photo frame kawai",
+    slots: 1,
+    category: "cute",
+    src: "/templates/custom-1784638914224-t68k.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 217, y: 385, w: 405, h: 501, rx: 12 }
+    ]
+  },
+  {
+    id: "custom-1784638948066-87pn",
+    name: "Frame Band",
+    slots: 3,
+    category: "filmstrip",
+    src: "/templates/custom-1784638948066-87pn.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 210, y: 196, w: 327, h: 239, rx: 7 },
+      { x: 209, y: 469, w: 327, h: 240, rx: 7 },
+      { x: 207, y: 737, w: 327, h: 240, rx: 7 }
     ]
   }
 ];
