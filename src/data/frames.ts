@@ -987,5 +987,80 @@ export const frames: FrameTemplate[] = [
       { x: 547, y: 540, w: 429, h: 358, rx: 11 },
       { x: 547, y: 938, w: 429, h: 358, rx: 11 }
     ]
+  },
+  {
+    id: "custom-1784636333576-2jx9",
+    name: "Frame Cute Lucu",
+    slots: 2,
+    category: "cute",
+    src: "/templates/custom-1784636333576-2jx9.png",
+    width: 675, height: 1200,
+    slotCoords: [
+      { x: 91, y: 101, w: 323, h: 330, rx: 10 },
+      { x: 250, y: 648, w: 344, h: 348, rx: 10 }
+    ]
+  },
+  {
+    id: "custom-1784636378328-yt0t",
+    name: "Frame Kawai",
+    slots: 4,
+    category: "cute",
+    src: "/templates/custom-1784636378328-yt0t.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 342, y: 115, w: 342, h: 347, rx: 10 },
+      { x: 83, y: 878, w: 344, h: 350, rx: 10 },
+      { x: 379, y: 562, w: 333, h: 339, rx: 10 },
+      { x: 658, y: 933, w: 48, h: 116, rx: 1 }
+    ]
+  },
+  {
+    id: "custom-1784636423699-6r8i",
+    name: "Frame pink cute",
+    slots: 4,
+    category: "cute",
+    src: "/templates/custom-1784636423699-6r8i.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 69, y: 40, w: 392, h: 278, rx: 8 },
+      { x: 61, y: 680, w: 412, h: 294, rx: 9 },
+      { x: 62, y: 1005, w: 412, h: 294, rx: 9 },
+      { x: 480, y: 688, w: 89, h: 73, rx: 2 }
+    ]
+  },
+  {
+    id: "custom-1784636485498-kxdl",
+    name: "Aestetik abstrak",
+    slots: 1,
+    category: "retro",
+    src: "/templates/custom-1784636485498-kxdl.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 36, y: 1005, w: 287, h: 219, rx: 7 }
+    ]
+  },
+  {
+    id: "custom-1784636523212-9oxx",
+    name: "Frame vintage kamera",
+    slots: 2,
+    category: "retro",
+    src: "/templates/custom-1784636523212-9oxx.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 218, y: 175, w: 383, h: 305, rx: 9 },
+      { x: 216, y: 537, w: 368, h: 305, rx: 9 }
+    ]
+  },
+  {
+    id: "custom-1784636560610-nzx9",
+    name: "Frame vintage kamera koran",
+    slots: 2,
+    category: "retro",
+    src: "/templates/custom-1784636560610-nzx9.png",
+    width: 736, height: 1308,
+    slotCoords: [
+      { x: 10, y: 42, w: 432, h: 421, rx: 13 },
+      { x: 264, y: 668, w: 436, h: 431, rx: 13 }
+    ]
   }
 ];
