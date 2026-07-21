@@ -128,7 +128,7 @@ export const Landing: React.FC = () => {
         >
           <motion.div
             variants={itemVariants}
-            className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white border border-[#EAE6DC] text-zinc-600 text-[9px] sm:text-[10px] font-black tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-6 sm:mb-8 shadow-sm backdrop-blur-md relative overflow-hidden group cursor-default"
+            className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white border border-[#EAE6DC] text-zinc-600 text-[9px] sm:text-[10px] font-black tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-6 sm:mb-8 shadow-sm relative overflow-hidden group cursor-default"
           >
             <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-rose-500 animate-spin duration-1000 shrink-0" />
             <span>The High-End Digital Photobooth</span>
@@ -190,21 +190,39 @@ export const Landing: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none" />
 
               <div className="bg-zinc-900 rounded-md flex-1 w-full flex items-center justify-center relative overflow-hidden group/slot">
-                <div className="absolute inset-0 bg-cover bg-center opacity-90 transition-opacity group-hover/slot:opacity-100" style={{ backgroundImage: "url('/cat1.png')" }} />
+                <img
+                  src="/cat1.png"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover/slot:opacity-100"
+                />
                 <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 z-10" />
-                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 4 }} className="absolute bottom-1 right-1 text-xs">🌸</motion.div>
+                <div className="hidden lg:block absolute bottom-1 right-1 text-xs">🌸</div>
               </div>
 
               <div className="bg-zinc-900 rounded-md flex-1 w-full flex items-center justify-center relative overflow-hidden group/slot">
-                <div className="absolute inset-0 bg-cover bg-center opacity-90 transition-opacity group-hover/slot:opacity-100" style={{ backgroundImage: "url('/cat2.jpg')" }} />
+                <img
+                  src="/cat2.jpg"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover/slot:opacity-100"
+                />
                 <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 z-10" />
-                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute top-1 left-1 text-xs">💖</motion.div>
+                <div className="hidden lg:block absolute top-1 left-1 text-xs">💖</div>
               </div>
 
               <div className="bg-zinc-900 rounded-md flex-1 w-full flex items-center justify-center relative overflow-hidden group/slot">
-                <div className="absolute inset-0 bg-cover bg-center opacity-90 transition-opacity group-hover/slot:opacity-100" style={{ backgroundImage: "url('/cat3.png')" }} />
+                <img
+                  src="/cat3.png"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover/slot:opacity-100"
+                />
                 <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 z-10" />
-                <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute bottom-1 right-1 text-xs">✨</motion.div>
+                <div className="hidden lg:block absolute bottom-1 right-1 text-xs">✨</div>
               </div>
 
               <div className="text-center font-serif tracking-[0.2em] sm:tracking-[0.25em] text-[9px] sm:text-[10px] text-zinc-500 font-bold pt-1.5 border-t border-zinc-900 z-10">
@@ -231,7 +249,7 @@ export const Landing: React.FC = () => {
           transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
           className="absolute top-[28%] left-[2%] w-24 h-24 rounded-2xl border-4 border-white shadow-xl overflow-hidden bg-white z-0 hidden lg:block pointer-events-auto cursor-pointer hover:scale-105 transition-transform"
         >
-          <img src="/stickers/cute-angry-cat.jpg" className="w-full h-full object-cover" alt="Cute Angry Cat" loading="lazy" />
+          <img src="/stickers/cute-angry-cat.jpg" className="w-full h-full object-cover" alt="Cute Angry Cat" loading="lazy" decoding="async" />
         </motion.div>
 
         <div className="max-w-5xl mx-auto relative z-10">
