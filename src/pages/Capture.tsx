@@ -118,6 +118,27 @@ export const Capture: React.FC = () => {
   const [isMirrorMode, setIsMirrorMode] = useState<boolean>(true);
   const [timerInterval, setTimerInterval] = useState<number>(3);
 
+  // Melacak orientasi viewport agar preview kamera bisa menyesuaikan rasio
+  // (mobile/portrait pakai rasio lebih tinggi supaya wajah tidak terpotong,
+  // desktop/landscape tetap pakai 16:9).
+  const [isPortraitView, setIsPortraitView] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return window.innerHeight >= window.innerWidth;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsPortraitView(window.innerHeight >= window.innerWidth);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
+
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -245,12 +266,17 @@ export const Capture: React.FC = () => {
 
   const { slots: totalSlots, name: frameName } = selectedFrame;
 
+  // PENTING: tidak lagi memaksa `aspectRatio` maupun `min` width/height ke hardware.
+  // Memaksa rasio 16:9 langsung di videoConstraints membuat kamera depan HP
+  // (yang native-nya portrait) di-crop di level driver kamera sebelum sampai ke
+  // browser, sehingga wajah tampak "zoom" parah dan terpotong. Dengan hanya
+  // memberi nilai `ideal`, browser akan mengambil FOV kamera secara penuh/asli,
+  // dan pemotongan tampilan cukup diatur lewat CSS (object-fit) di bawah.
   const getVideoConstraints = () => {
     return {
       facingMode: 'user',
-      width: { ideal: 1920, min: 1280 },
-      height: { ideal: 1080, min: 720 },
-      aspectRatio: 16 / 9
+      width: { ideal: 1280 },
+      height: { ideal: 1280 },
     };
   };
 
@@ -342,7 +368,7 @@ export const Capture: React.FC = () => {
     <>
       <div
         onMouseMove={handleKawaiiMouseMove}
-        className="min-h-screen w-full bg-[#FFFDF6] text-zinc-800 py-3 px-4 sm:px-6 lg:px-12 relative overflow-hidden antialiased font-sans flex flex-col items-center justify-between group/canvas select-none"
+        className="min-h-screen w-full bg-[#FFFDF6] text-zinc-800 py-3 px-3 sm:px-6 lg:px-12 relative overflow-hidden antialiased font-sans flex flex-col items-center justify-between group/canvas select-none"
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#EFEBE2_1px,transparent_1px),linear-gradient(to_bottom,#EFEBE2_1px,transparent_1px)] bg-[size:44px_44px] opacity-[0.9] pointer-events-none z-0" />
 
@@ -387,9 +413,9 @@ export const Capture: React.FC = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/10 backdrop-blur-md"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/10 backdrop-blur-md px-4"
             >
-              <motion.div variants={popupVariants} initial="hidden" animate="visible" exit="exit" className="bg-white border-4 border-rose-100 rounded-[36px] p-8 text-center shadow-2xl max-w-sm mx-4">
+              <motion.div variants={popupVariants} initial="hidden" animate="visible" exit="exit" className="bg-white border-4 border-rose-100 rounded-[36px] p-8 text-center shadow-2xl max-w-sm w-full mx-4">
                 <motion.div animate={{ rotate: [0, 12, -12, 12, 0] }} transition={{ repeat: Infinity, duration: 1 }} className="text-6xl mb-4">🎉</motion.div>
                 <h2 className="font-serif text-2xl font-black text-zinc-900 leading-tight">Semua Slot Terisi!</h2>
                 <p className="text-zinc-500 text-xs mt-2 font-light">Potret selesai! Tekan <strong className="text-pink-500 font-bold">Lanjut ke Editor</strong> untuk merangkai ornamen lucu.</p>
@@ -411,13 +437,13 @@ export const Capture: React.FC = () => {
                 <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
                 Kembali
               </button>
-              <h1 className="font-serif text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight leading-none">
+              <h1 className="font-serif text-xl sm:text-2xl md:text-3xl font-black text-zinc-900 tracking-tight leading-none">
                 Ambil{' '}
                 <span className="font-sans font-black italic bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 text-transparent bg-clip-text">
                   Foto Sesi
                 </span>
               </h1>
-              <p className="text-zinc-400 text-[11px] font-normal flex items-center justify-center sm:justify-start gap-2 mt-1">
+              <p className="text-zinc-400 text-[10px] sm:text-[11px] font-normal flex items-center justify-center sm:justify-start gap-2 mt-1 flex-wrap">
                 <Layers className="w-3.5 h-3.5 text-pink-400" />
                 <span>Katalog Bingkai: <strong className="font-bold text-zinc-700">"{frameName}"</strong></span>
                 <span className="text-rose-200">•</span>
@@ -425,7 +451,7 @@ export const Capture: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-center">
               <button
                 onClick={() => { setIsAutoShooting(false); clearPhotos(); }}
                 className="px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white border border-rose-100 text-pink-400 hover:bg-rose-50/50 shadow-sm transition-all"
@@ -451,17 +477,24 @@ export const Capture: React.FC = () => {
           )}
 
           {/* TWO-COLUMN CONTENT GRID */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center w-full flex-1 overflow-hidden min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-center w-full flex-1 overflow-hidden min-h-0">
 
             {/* LEFT COLUMN: WEBCAM VIEWFINDER */}
-            <div className="lg:col-span-8 flex flex-col justify-center gap-2.5 h-full w-full min-h-0 overflow-hidden relative">
+            <div className="lg:col-span-8 flex flex-col justify-center gap-2 sm:gap-2.5 h-full w-full min-h-0 overflow-hidden relative">
               <div className="absolute top-[-6px] left-1/2 -translate-x-1/2 w-24 h-4 bg-pink-200/40 backdrop-blur-sm border border-white/40 skew-x-[-12deg] z-20 shadow-sm pointer-events-none flex items-center justify-center text-[7px] text-pink-500 font-bold tracking-widest uppercase">BALISNAP</div>
 
+              {/*
+                Container preview kamera: rasio sekarang adaptif.
+                - Portrait/mobile: rasio 3/4 (lebih tinggi) supaya wajah penuh, tidak dipotong sisi kiri-kanan.
+                - Landscape/desktop: tetap 16/9 seperti semula.
+                object-fit tetap "cover" tapi karena rasio kontainer sudah mendekati rasio wajah,
+                crop yang terjadi jauh lebih minim.
+              */}
               <div
-                className="relative bg-zinc-950 border-4 border-rose-100 shadow-[0_15px_40px_rgba(253,244,245,0.6)] rounded-[28px] overflow-hidden mx-auto w-full max-w-4xl flex-1 min-h-0"
+                className="relative bg-zinc-950 border-4 border-rose-100 shadow-[0_15px_40px_rgba(253,244,245,0.6)] rounded-[20px] sm:rounded-[28px] overflow-hidden mx-auto w-full max-w-4xl flex-1 min-h-0"
                 style={{
-                  aspectRatio: '16/9',
-                  maxHeight: '54vh',
+                  aspectRatio: isPortraitView ? '3 / 4' : '16 / 9',
+                  maxHeight: isPortraitView ? '62vh' : '58vh',
                 }}
               >
                 {hasCamera ? (
@@ -474,7 +507,7 @@ export const Capture: React.FC = () => {
                     videoConstraints={getVideoConstraints()}
                     onUserMedia={handleUserMedia}
                     onUserMediaError={handleUserMediaError}
-                    className="w-full h-full object-cover camera-mirror"
+                    className="w-full h-full object-cover object-center camera-mirror"
                     style={{ filter: activeFilterStyle }}
                   />
                 ) : (
@@ -491,23 +524,29 @@ export const Capture: React.FC = () => {
                   <div className="border-r border-white" /><div className="border-r border-white" /><div />
                 </div>
 
-                {/* HUD Overlay Labels */}
-                <div className="absolute top-3 left-3 bg-zinc-950/80 backdrop-blur-md text-white text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-white/10">
-                  <div className={`w-1.5 h-1.5 rounded-full ${isAutoShooting ? 'bg-red-500 animate-ping' : 'bg-pink-400'}`} />
-                  <span>{isAutoShooting ? 'AUTO SEQUENCING...' : `SLOT #${activeSlot + 1} VIEW`}</span>
-                </div>
+                {/* HUD Overlay Row: dulu 3 badge diposisikan absolute pakai angka "magic"
+                    (right-24, right-3, dll) yang gampang tabrakan di layar sempit.
+                    Sekarang pakai flex justify-between supaya otomatis menyesuaikan lebar layar. */}
+                <div className="absolute top-2 sm:top-3 left-2 sm:left-3 right-2 sm:right-3 flex items-center justify-between gap-1.5 z-10 pointer-events-none">
+                  <div className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[9px] font-black tracking-widest uppercase px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-white/10 pointer-events-auto max-w-[55%]">
+                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isAutoShooting ? 'bg-red-500 animate-ping' : 'bg-pink-400'}`} />
+                    <span className="truncate">{isAutoShooting ? 'AUTO SEQUENCING...' : `SLOT #${activeSlot + 1} VIEW`}</span>
+                  </div>
 
-                <button
-                  onClick={() => setIsMirrorMode(!isMirrorMode)}
-                  className="absolute top-3 right-24 bg-zinc-950/80 backdrop-blur-md text-white text-[8px] font-black tracking-widest uppercase px-2.5 py-1.5 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 flex items-center gap-1"
-                >
-                  <RefreshCw className="w-2.5 h-2.5 text-pink-300" />
-                  <span>{isMirrorMode ? 'Mirror: On' : 'Mirror: Off'}</span>
-                </button>
+                  <div className="flex items-center gap-1.5 pointer-events-auto flex-shrink-0">
+                    <button
+                      onClick={() => setIsMirrorMode(!isMirrorMode)}
+                      className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[8px] font-black tracking-widest uppercase px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 flex items-center gap-1 whitespace-nowrap"
+                    >
+                      <RefreshCw className="w-2.5 h-2.5 text-pink-300 flex-shrink-0" />
+                      <span className="hidden xs:inline">{isMirrorMode ? 'Mirror: On' : 'Mirror: Off'}</span>
+                    </button>
 
-                <div className="absolute top-3 right-3 bg-zinc-950/80 backdrop-blur-md text-zinc-300 text-[8px] font-black px-2.5 py-1.5 rounded-full border border-white/10 flex items-center gap-1">
-                  <Settings className="w-2.5 h-2.5 text-pink-300 animate-spin-slow" />
-                  <span>{actualResolution ? `${actualResolution.width}×${actualResolution.height}` : '1920×1080 Full HD'}</span>
+                    <div className="hidden sm:flex bg-zinc-950/80 backdrop-blur-md text-zinc-300 text-[8px] font-black px-2.5 py-1.5 rounded-full border border-white/10 items-center gap-1 whitespace-nowrap">
+                      <Settings className="w-2.5 h-2.5 text-pink-300 animate-spin-slow" />
+                      <span>{actualResolution ? `${actualResolution.width}×${actualResolution.height}` : 'Full HD'}</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Countdown display */}
@@ -524,7 +563,7 @@ export const Capture: React.FC = () => {
                         initial={{ scale: 0.4, rotate: -15, opacity: 0 }}
                         animate={{ scale: 1.2, rotate: 0, opacity: 1 }}
                         exit={{ scale: 0.8, rotate: 15, opacity: 0 }}
-                        className="font-sans font-black text-white text-8xl tracking-tighter drop-shadow-md select-none"
+                        className="font-sans font-black text-white text-6xl sm:text-8xl tracking-tighter drop-shadow-md select-none"
                       >
                         {countdown}
                       </motion.span>
@@ -559,13 +598,13 @@ export const Capture: React.FC = () => {
 
               {/* Filters selector container */}
               <div className="w-full flex justify-center flex-shrink-0">
-                <div className="bg-white border-2 border-rose-50 px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1.5 overflow-x-auto max-w-full">
-                  <span className="text-[8px] font-black tracking-wider uppercase text-zinc-400 mr-1 flex items-center gap-0.5"><Smile className="w-3 h-3 text-pink-400" /> Filter:</span>
+                <div className="bg-white border-2 border-rose-50 px-2.5 sm:px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1.5 overflow-x-auto max-w-full">
+                  <span className="text-[8px] font-black tracking-wider uppercase text-zinc-400 mr-1 flex items-center gap-0.5 flex-shrink-0"><Smile className="w-3 h-3 text-pink-400" /> Filter:</span>
                   {CAMERA_FILTERS.map((fStr) => (
                     <button
                       key={fStr.id}
                       onClick={() => setActiveFilter(fStr.id)}
-                      className={`px-2.5 py-1 text-[9px] font-black rounded-lg transition-all border whitespace-nowrap ${activeFilter === fStr.id
+                      className={`px-2.5 py-1 text-[9px] font-black rounded-lg transition-all border whitespace-nowrap flex-shrink-0 ${activeFilter === fStr.id
                         ? 'bg-gradient-to-r from-pink-400 to-rose-400 text-white border-transparent shadow-sm'
                         : 'bg-zinc-50 text-zinc-500 border-rose-100/40 hover:bg-rose-50/20'}`}
                     >
@@ -576,20 +615,20 @@ export const Capture: React.FC = () => {
               </div>
 
               {/* Lower button panel operational deck */}
-              <div className="bg-white border-2 border-rose-100 p-3.5 rounded-[20px] shadow-[0_6px_25px_rgba(253,244,245,0.4)] flex flex-col sm:flex-row items-center justify-between gap-3 w-full flex-shrink-0">
+              <div className="bg-white border-2 border-rose-100 p-3 sm:p-3.5 rounded-[20px] shadow-[0_6px_25px_rgba(253,244,245,0.4)] flex flex-col sm:flex-row items-center justify-between gap-3 w-full flex-shrink-0">
                 <div className="flex gap-2 w-full sm:w-auto relative">
                   <button
                     onClick={startSingleClickMultiShoot}
                     disabled={countdown !== null || !hasCamera || isProcessingPhoto || isAutoShooting}
-                    className="px-5 py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none disabled:opacity-40 shadow-[0_3px_10px_rgba(244,63,94,0.15)]"
+                    className="px-4 sm:px-5 py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none disabled:opacity-40 shadow-[0_3px_10px_rgba(244,63,94,0.15)]"
                   >
-                    <Camera className="w-3.5 h-3.5 text-white" />
-                    {isAutoShooting ? 'Rentetan...' : 'Mulai Foto Otomatis ✨'}
+                    <Camera className="w-3.5 h-3.5 text-white flex-shrink-0" />
+                    <span className="truncate">{isAutoShooting ? 'Rentetan...' : 'Mulai Foto Otomatis ✨'}</span>
                   </button>
                   <button
                     onClick={() => { setIsAutoShooting(false); fileInputRef.current?.click(); }}
                     disabled={isProcessingPhoto || isAutoShooting}
-                    className="px-4 py-3 bg-white border-2 border-rose-100 text-pink-400 hover:bg-rose-50/30 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-sm flex-1 sm:flex-none disabled:opacity-30"
+                    className="px-4 py-3 bg-white border-2 border-rose-100 text-pink-400 hover:bg-rose-50/30 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-sm flex-1 sm:flex-none disabled:opacity-30"
                   >
                     <Upload className="w-3.5 h-3.5 text-pink-300" />
                     Upload
@@ -598,7 +637,7 @@ export const Capture: React.FC = () => {
                 </div>
 
                 {/* Timer Deck */}
-                <div className="flex bg-[#FFFDF9] border-2 border-rose-50 rounded-lg p-0.5 shadow-inner items-center">
+                <div className="flex bg-[#FFFDF9] border-2 border-rose-50 rounded-lg p-0.5 shadow-inner items-center flex-shrink-0">
                   <span className="text-[7px] font-black font-mono text-zinc-400 px-1.5 uppercase border-r border-rose-100 mr-0.5">Timer:</span>
                   {[3, 5, 7].map((sec) => (
                     <button
@@ -613,7 +652,7 @@ export const Capture: React.FC = () => {
                 </div>
 
                 {/* Pulse bars component visual */}
-                <div className="hidden md:flex items-center gap-1 border-2 border-rose-50 bg-[#FFFDF9] py-1.5 px-2.5 rounded-lg shadow-inner text-[8px] font-black text-pink-300 uppercase select-none font-mono">
+                <div className="hidden md:flex items-center gap-1 border-2 border-rose-50 bg-[#FFFDF9] py-1.5 px-2.5 rounded-lg shadow-inner text-[8px] font-black text-pink-300 uppercase select-none font-mono flex-shrink-0">
                   <Activity className="w-3 h-3 text-pink-400 animate-pulse" />
                   <div className="flex items-end gap-0.5 h-3 w-12">
                     {[0.6, 0.9, 0.4, 0.8, 0.5, 0.9, 0.3].map((bVal, i) => (
@@ -630,7 +669,7 @@ export const Capture: React.FC = () => {
                 <button
                   onClick={handleDemoPhoto}
                   disabled={isAutoShooting}
-                  className="px-4 py-3 bg-purple-50 text-purple-500 border border-purple-100 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all disabled:opacity-30 flex-shrink-0"
+                  className="px-4 py-3 bg-purple-50 text-purple-500 border border-purple-100 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all disabled:opacity-30 flex-shrink-0"
                 >
                   Demo
                 </button>
@@ -639,10 +678,10 @@ export const Capture: React.FC = () => {
 
             {/* RIGHT COLUMN: PROGRESS SLOT TRACKER SIDEBAR */}
             <div className="lg:col-span-4 w-full h-full flex flex-col justify-center min-h-0 overflow-hidden">
-              <div className="bg-white border-4 border-rose-50 p-5 rounded-[28px] shadow-[0_12px_30px_rgba(255,192,203,0.12)] flex flex-col max-h-full overflow-hidden">
+              <div className="bg-white border-4 border-rose-50 p-4 sm:p-5 rounded-[22px] sm:rounded-[28px] shadow-[0_12px_30px_rgba(255,192,203,0.12)] flex flex-col max-h-full overflow-hidden">
 
                 <div className="flex items-center justify-between mb-4 border-b-2 border-dashed border-rose-100 pb-2 flex-shrink-0">
-                  <h3 className="font-serif text-base font-black text-zinc-900 flex items-center gap-1.5">
+                  <h3 className="font-serif text-sm sm:text-base font-black text-zinc-900 flex items-center gap-1.5">
                     <Grid className="w-3.5 h-3.5 text-pink-400" />
                     Progres Slot
                   </h3>
