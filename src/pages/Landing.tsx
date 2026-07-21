@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePhotobooth } from '../context/PhotoboothContext';
-import { Camera, Sparkles, Image as ImageIcon, Heart, ArrowRight, Layers, ShieldCheck, Zap, Maximize2 } from 'lucide-react';
+import { Camera, Sparkles, Image as ImageIcon, Heart, ArrowRight, Layers, ShieldCheck, Maximize2 } from 'lucide-react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 
 export const Landing: React.FC = () => {
@@ -46,9 +46,9 @@ export const Landing: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F5] text-zinc-900 selection:bg-rose-100 overflow-x-hidden relative font-sans antialiased">
+    <div className="min-h-screen w-full max-w-[100vw] bg-[#FAF9F5] text-zinc-900 selection:bg-rose-100 overflow-x-hidden relative font-sans antialiased">
 
-      {/* ===== EMOTE KIYOMO CUTE & AESTHETIC ===== */}
+      {/* ===== EMOTE KIYOMO CUTE & AESTHETIC (desktop only, tidak mengganggu mobile) ===== */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <motion.div animate={{ y: [0, -15, 0], rotate: [0, 5, -5, 0] }} transition={{ repeat: Infinity, duration: 3.5 }} className="absolute top-[10%] left-[3%] text-5xl opacity-80 hidden lg:block">🎀</motion.div>
         <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute top-[6%] right-[18%] text-5xl opacity-80 hidden lg:block">✨</motion.div>
@@ -72,13 +72,13 @@ export const Landing: React.FC = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="px-6 md:px-12 py-6 border-b border-[#EAE6DC]/60 flex justify-between items-center bg-[#FAF9F5]/60 backdrop-blur-xl sticky top-0 z-50 shadow-[0_4px_30px_rgba(234,230,220,0.2)]"
+        className="px-4 sm:px-6 md:px-12 py-4 sm:py-6 border-b border-[#EAE6DC]/60 flex justify-between items-center bg-[#FAF9F5]/60 backdrop-blur-xl sticky top-0 z-50 shadow-[0_4px_30px_rgba(234,230,220,0.2)]"
       >
-        <div className="flex items-center gap-3 group cursor-pointer">
-          <span className="font-serif tracking-[0.2em] text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-zinc-950 via-zinc-800 to-zinc-600">
+        <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer">
+          <span className="font-serif tracking-[0.15em] sm:tracking-[0.2em] text-lg sm:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-zinc-950 via-zinc-800 to-zinc-600">
             BALISNAP
           </span>
-          <span className="text-[8px] tracking-[0.35em] font-black bg-gradient-to-r from-rose-500 via-purple-600 to-indigo-600 text-transparent bg-clip-text border border-rose-200 px-2.5 py-0.5 rounded-full bg-white/80 shadow-sm transition-all duration-300 group-hover:scale-105">
+          <span className="text-[7px] sm:text-[8px] tracking-[0.25em] sm:tracking-[0.35em] font-black bg-gradient-to-r from-rose-500 via-purple-600 to-indigo-600 text-transparent bg-clip-text border border-rose-200 px-2 sm:px-2.5 py-0.5 rounded-full bg-white/80 shadow-sm transition-all duration-300 group-hover:scale-105">
             STUDIO
           </span>
         </div>
@@ -88,7 +88,7 @@ export const Landing: React.FC = () => {
             Cara Kerja
             <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-rose-400 to-purple-500 group-hover:w-full transition-all duration-300" />
           </a>
-          <a href="#features" className="hover:text-zinc-950 transition-colors relative group py-1">
+          <a href="#cara-kerja" className="hover:text-zinc-950 transition-colors relative group py-1">
             Spesifikasi
             <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-rose-400 to-purple-500 group-hover:w-full transition-all duration-300" />
           </a>
@@ -98,31 +98,31 @@ export const Landing: React.FC = () => {
           whileHover={{ scale: 1.02, y: -1 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setStep('select-frame')}
-          className="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] bg-zinc-950 text-white hover:bg-zinc-900 transition-all duration-300 shadow-xl shadow-zinc-950/10 flex items-center gap-2 group"
+          className="px-3.5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] bg-zinc-950 text-white hover:bg-zinc-900 transition-all duration-300 shadow-xl shadow-zinc-950/10 flex items-center gap-1.5 sm:gap-2 group whitespace-nowrap"
         >
-          Ambil Foto <Camera className="w-3.5 h-3.5 transition-transform group-hover:rotate-12 text-rose-300" />
+          Ambil Foto <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform group-hover:rotate-12 text-rose-300 shrink-0" />
         </motion.button>
       </motion.header>
 
       {/* Hero Section */}
-      <main className="relative max-w-7xl mx-auto px-6 pt-16 pb-28 z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-10 sm:pt-16 pb-16 sm:pb-28 z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 sm:gap-12 items-center">
         <motion.div
           initial="hidden"
           animate="visible"
           variants={containerVariants}
-          className="lg:col-span-7 text-left flex flex-col items-start"
+          className="lg:col-span-7 text-left flex flex-col items-start w-full"
         >
           <motion.div
             variants={itemVariants}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#EAE6DC] text-zinc-600 text-[10px] font-black tracking-[0.2em] uppercase mb-8 shadow-sm backdrop-blur-md relative overflow-hidden group cursor-default"
+            className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white border border-[#EAE6DC] text-zinc-600 text-[9px] sm:text-[10px] font-black tracking-[0.15em] sm:tracking-[0.2em] uppercase mb-6 sm:mb-8 shadow-sm backdrop-blur-md relative overflow-hidden group cursor-default"
           >
-            <Sparkles className="w-3.5 h-3.5 text-rose-500 animate-spin duration-1000" />
-            The High-End Digital Photobooth
+            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-rose-500 animate-spin duration-1000 shrink-0" />
+            <span>The High-End Digital Photobooth</span>
           </motion.div>
 
           <motion.h1
             variants={itemVariants}
-            className="font-serif font-normal text-5xl md:text-7xl lg:text-8xl tracking-tight leading-[1.05] text-zinc-950 mb-8"
+            className="font-serif font-normal text-4xl sm:text-5xl md:text-7xl lg:text-8xl tracking-tight leading-[1.1] sm:leading-[1.05] text-zinc-950 mb-6 sm:mb-8 break-words"
           >
             Capturing <br />
             <span className="font-sans font-black italic bg-gradient-to-r from-rose-500 via-purple-600 to-cyan-500 text-transparent bg-clip-text drop-shadow-sm">
@@ -133,20 +133,20 @@ export const Landing: React.FC = () => {
 
           <motion.p
             variants={itemVariants}
-            className="text-zinc-500 text-sm md:text-base font-normal tracking-wide max-w-xl mb-12 leading-relaxed"
+            className="text-zinc-500 text-sm md:text-base font-normal tracking-wide max-w-xl mb-8 sm:mb-12 leading-relaxed"
           >
             Transformasikan momentum terbaik Anda ke dalam tata letak bingkai premium berstandar kurasi galeri seni. Responsif, instan, dan terenkripsi penuh dari browser Anda.
           </motion.p>
 
-          <motion.div variants={itemVariants} className="relative group cursor-pointer">
+          <motion.div variants={itemVariants} className="relative group cursor-pointer w-full sm:w-auto">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-rose-400 via-purple-500 to-cyan-400 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500" />
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setStep('select-frame')}
-              className="relative px-10 py-5 bg-white border border-[#EAE6DC] rounded-2xl text-zinc-950 font-black tracking-[0.2em] uppercase text-xs shadow-xl transition-all duration-300 flex items-center gap-4 overflow-hidden group-hover:bg-zinc-950 group-hover:text-white group-hover:border-zinc-950"
+              className="relative w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-white border border-[#EAE6DC] rounded-2xl text-zinc-950 font-black tracking-[0.15em] sm:tracking-[0.2em] uppercase text-xs shadow-xl transition-all duration-300 flex items-center justify-center gap-3 sm:gap-4 overflow-hidden group-hover:bg-zinc-950 group-hover:text-white group-hover:border-zinc-950"
             >
-              Mulai Sesi Foto <ArrowRight className="w-4 h-4 text-rose-500 group-hover:translate-x-1 transition-transform" />
+              Mulai Sesi Foto <ArrowRight className="w-4 h-4 text-rose-500 group-hover:translate-x-1 transition-transform shrink-0" />
             </motion.button>
           </motion.div>
         </motion.div>
@@ -155,68 +155,68 @@ export const Landing: React.FC = () => {
           initial={{ opacity: 0, scale: 0.95, x: 40 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           transition={{ duration: 0.8, type: 'spring' }}
-          className="lg:col-span-5 flex justify-center items-center perspective-[1000px]"
+          className="lg:col-span-5 flex justify-center items-center w-full lg:perspective-[1000px]"
         >
           <motion.div
             style={{ rotateX, rotateY }}
             onMouseMove={handleMouse}
             onMouseLeave={handleMouseLeave}
-            className="w-full max-w-[310px] h-[520px] rounded-[28px] bg-white/40 border border-white/80 p-5 shadow-[0_30px_70px_rgba(210,200,180,0.35)] backdrop-blur-xl relative group cursor-grab active:cursor-grabbing flex flex-col justify-between"
+            className="w-full max-w-[280px] sm:max-w-[310px] aspect-[3/5] rounded-[24px] sm:rounded-[28px] bg-white/40 border border-white/80 p-4 sm:p-5 shadow-[0_30px_70px_rgba(210,200,180,0.35)] backdrop-blur-xl relative group cursor-grab active:cursor-grabbing flex flex-col justify-between"
           >
-            <div className="absolute inset-0 rounded-[28px] bg-gradient-to-tr from-rose-400/10 via-purple-400/0 to-cyan-400/10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute inset-0 rounded-[24px] sm:rounded-[28px] bg-gradient-to-tr from-rose-400/10 via-purple-400/0 to-cyan-400/10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="flex justify-between items-center z-10">
-              <span className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">BALISNAP PREVIEW</span>
-              <div className="w-7 h-7 rounded-full bg-white/90 shadow-sm border border-[#EAE6DC] flex items-center justify-center text-zinc-700">
+              <span className="text-[9px] sm:text-[10px] font-black tracking-widest text-zinc-400 uppercase">BALISNAP PREVIEW</span>
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 shadow-sm border border-[#EAE6DC] flex items-center justify-center text-zinc-700 shrink-0">
                 <Maximize2 className="w-3 h-3" />
               </div>
             </div>
 
             {/* GRID DENGAN GAMBAR ESTETIK */}
-            <div className="w-full flex-1 my-5 bg-zinc-950 rounded-xl p-3 shadow-inner relative overflow-hidden flex flex-col gap-2.5 justify-between">
+            <div className="w-full flex-1 my-4 sm:my-5 bg-zinc-950 rounded-xl p-2.5 sm:p-3 shadow-inner relative overflow-hidden flex flex-col gap-2 sm:gap-2.5 justify-between">
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none" />
 
               <div className="bg-zinc-900 rounded-md flex-1 w-full flex items-center justify-center relative overflow-hidden group/slot">
                 <div className="absolute inset-0 bg-cover bg-center opacity-90 transition-opacity group-hover/slot:opacity-100" style={{ backgroundImage: "url('/cat1.png')" }} />
-                <ImageIcon className="w-6 h-6 text-white/40 z-10" />
+                <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 z-10" />
                 <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 4 }} className="absolute bottom-1 right-1 text-xs">🌸</motion.div>
               </div>
 
               <div className="bg-zinc-900 rounded-md flex-1 w-full flex items-center justify-center relative overflow-hidden group/slot">
                 <div className="absolute inset-0 bg-cover bg-center opacity-90 transition-opacity group-hover/slot:opacity-100" style={{ backgroundImage: "url('/cat2.jpg')" }} />
-                <Camera className="w-6 h-6 text-white/40 z-10" />
+                <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 z-10" />
                 <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute top-1 left-1 text-xs">💖</motion.div>
               </div>
 
               <div className="bg-zinc-900 rounded-md flex-1 w-full flex items-center justify-center relative overflow-hidden group/slot">
                 <div className="absolute inset-0 bg-cover bg-center opacity-90 transition-opacity group-hover/slot:opacity-100" style={{ backgroundImage: "url('/cat3.png')" }} />
-                <Sparkles className="w-6 h-6 text-white/40 z-10" />
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 z-10" />
                 <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute bottom-1 right-1 text-xs">✨</motion.div>
               </div>
 
-              <div className="text-center font-serif tracking-[0.25em] text-[10px] text-zinc-500 font-bold pt-1.5 border-t border-zinc-900 z-10">
+              <div className="text-center font-serif tracking-[0.2em] sm:tracking-[0.25em] text-[9px] sm:text-[10px] text-zinc-500 font-bold pt-1.5 border-t border-zinc-900 z-10">
                 BALISNAP STUDIO
               </div>
             </div>
 
-            <div className="flex justify-between items-center text-[11px] text-zinc-500 font-medium z-10">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>Premium Matte Finish</span>
+            <div className="flex justify-between items-center text-[10px] sm:text-[11px] text-zinc-500 font-medium z-10 gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                <span className="truncate">Premium Matte Finish</span>
               </div>
-              <span className="font-mono text-zinc-400">4:3 Aspect</span>
+              <span className="font-mono text-zinc-400 shrink-0">4:3 Aspect</span>
             </div>
           </motion.div>
         </motion.div>
       </main>
 
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={containerVariants} className="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 w-full mb-28">
+      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={containerVariants} className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 w-full mb-16 sm:mb-28">
         {[{ title: 'Architectural Grids', desc: 'Presisi struktur bingkai matematis.', icon: <Layers className="w-5 h-5" /> }, { title: 'Curated Badges', desc: 'Ratusan elemen grafis mikro.', icon: <Heart className="w-5 h-5" /> }, { title: 'Chromium Export', desc: 'Kompresi tanpa kehilangan detail.', icon: <Camera className="w-5 h-5" /> }, { title: 'Absolute Discretion', desc: 'Pemrosesan enkripsi lokal.', icon: <ShieldCheck className="w-5 h-5" /> }].map((item, idx) => (
-          <motion.div key={idx} variants={itemVariants} className="p-8 rounded-[24px] bg-white border border-[#EAE6DC]/80 shadow-[0_4px_24px_rgba(234,230,220,0.1)] hover:border-zinc-400/50 hover:bg-white/90 transition-all duration-300 text-left relative overflow-hidden group">
+          <motion.div key={idx} variants={itemVariants} className="p-6 sm:p-8 rounded-[20px] sm:rounded-[24px] bg-white border border-[#EAE6DC]/80 shadow-[0_4px_24px_rgba(234,230,220,0.1)] hover:border-zinc-400/50 hover:bg-white/90 transition-all duration-300 text-left relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-rose-400 via-purple-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="w-12 h-12 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DC] flex items-center justify-center text-zinc-800 mb-6 shadow-sm group-hover:text-white group-hover:bg-zinc-950 group-hover:border-zinc-950 transition-all duration-300">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DC] flex items-center justify-center text-zinc-800 mb-4 sm:mb-6 shadow-sm group-hover:text-white group-hover:bg-zinc-950 group-hover:border-zinc-950 transition-all duration-300">
               {item.icon}
             </div>
-            <h3 className="font-bold text-base text-zinc-900 mb-2 tracking-wide font-serif">
+            <h3 className="font-bold text-sm sm:text-base text-zinc-900 mb-2 tracking-wide font-serif">
               {item.title}
             </h3>
             <p className="text-zinc-500 text-xs leading-relaxed font-normal">
@@ -227,8 +227,8 @@ export const Landing: React.FC = () => {
       </motion.div>
 
       {/* Procedural Section (Workflow Berkelas) */}
-      <section id="cara-kerja" className="relative border-t border-[#EAE6DC]/60 bg-white/40 backdrop-blur-md py-28 px-6 overflow-hidden">
-        {/* Live Angry Cat Sticker - Positioned inside relative section context */}
+      <section id="cara-kerja" className="relative border-t border-[#EAE6DC]/60 bg-white/40 backdrop-blur-md py-16 sm:py-28 px-4 sm:px-6 overflow-hidden">
+        {/* Live Angry Cat Sticker - desktop only */}
         <motion.div
           animate={{ y: [0, -12, 0], rotate: [-12, -6, -12] }}
           transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
@@ -243,15 +243,15 @@ export const Landing: React.FC = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-20"
+            className="text-center mb-14 sm:mb-20"
           >
-            <h2 className="text-[10px] font-black tracking-[0.3em] text-purple-600 uppercase mb-3">EXQUISITE WORKFLOW</h2>
-            <h3 className="font-serif font-normal text-3xl md:text-5xl tracking-tight text-zinc-950">
+            <h2 className="text-[9px] sm:text-[10px] font-black tracking-[0.25em] sm:tracking-[0.3em] text-purple-600 uppercase mb-3">EXQUISITE WORKFLOW</h2>
+            <h3 className="font-serif font-normal text-2xl sm:text-3xl md:text-5xl tracking-tight text-zinc-950 px-2">
               Tiga Tahap Kreasi Estetik
             </h3>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-16 relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 sm:gap-16 relative">
             {[
               { step: 'I', title: 'Pilih Proporsi', desc: 'Tentukan layout bingkai dengan variasi rasio dan jumlah grid sesuai narasi momentum Anda.' },
               { step: 'II', title: 'Abadikan Sudut', desc: 'Aktifkan lensa kamera resolusi tinggi dengan interval pewaktu terintegrasi secara mulus.' },
@@ -265,10 +265,10 @@ export const Landing: React.FC = () => {
                 transition={{ duration: 0.6, delay: i * 0.12 }}
                 className="relative group text-left flex flex-col items-start"
               >
-                <span className="font-serif italic font-black text-6xl text-rose-200/60 mb-4 select-none group-hover:text-rose-400/40 transition-colors duration-500">
+                <span className="font-serif italic font-black text-5xl sm:text-6xl text-rose-200/60 mb-4 select-none group-hover:text-rose-400/40 transition-colors duration-500">
                   {card.step}
                 </span>
-                <h4 className="font-serif font-bold text-lg text-zinc-900 mb-2 group-hover:text-zinc-950 transition-colors">
+                <h4 className="font-serif font-bold text-base sm:text-lg text-zinc-900 mb-2 group-hover:text-zinc-950 transition-colors">
                   {card.title}
                 </h4>
                 <p className="text-zinc-500 text-xs leading-relaxed font-normal">
@@ -280,50 +280,13 @@ export const Landing: React.FC = () => {
         </div>
       </section>
 
-      {/* Showcase Call To Action Banner */}
-      <section id="features" className="relative max-w-7xl mx-auto py-28 px-6 overflow-visible">
-        {/* Live Helmet Cat Sticker - Placed in section context for correct layout layering */}
-        <motion.div
-          animate={{ y: [0, 12, 0], rotate: [12, 6, 12] }}
-          transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-          className="absolute -top-[12%] right-[1%] w-24 h-24 rounded-2xl border-4 border-white shadow-xl overflow-hidden bg-white z-20 hidden lg:block pointer-events-auto cursor-pointer hover:scale-105 transition-transform"
-        >
-          <img src="/stickers/cute-helmet-cat.jpg" className="w-full h-full object-cover" alt="Cute Helmet Cat" />
-        </motion.div>
-
-        <div className="bg-white border border-[#EAE6DC] rounded-[32px] p-8 md:p-16 shadow-[0_20px_60px_rgba(234,230,220,0.15)] relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-12 backdrop-blur-sm">
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-rose-200/20 to-transparent rounded-full blur-[100px] pointer-events-none" />
-
-          <div className="max-w-2xl text-left">
-            <div className="flex items-center gap-2 mb-4 text-purple-600 text-[10px] font-black uppercase tracking-widest">
-              <Zap className="w-4 h-4 text-rose-400" /> Instant Frame Rendering Engine
-            </div>
-            <h3 className="text-3xl md:text-5xl font-serif font-normal text-zinc-950 tracking-tight mb-6 leading-tight">
-              Siap untuk merajut memori visual yang berkelas?
-            </h3>
-            <p className="text-zinc-500 text-xs md:text-sm leading-relaxed font-normal mb-0 max-w-xl">
-              Tidak ada kompromi pada kualitas. BaliSnap menggabungkan efisiensi kompilasi gambar modern dengan keindahan estetika tradisional studio foto premium.
-            </p>
-          </div>
-
-          <motion.button
-            whileHover={{ scale: 1.03, y: -2 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setStep('select-frame')}
-            className="px-10 py-5 bg-zinc-950 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-zinc-900 transition-all shadow-xl shadow-zinc-950/20 shrink-0"
-          >
-            Mulai Sesi Sekarang
-          </motion.button>
-        </div>
-      </section>
-
       {/* Footer Minimalis Galeri */}
-      <footer className="py-16 px-6 border-t border-[#EAE6DC]/60 bg-[#FAF9F5] text-center text-[10px] text-zinc-400 font-bold relative z-10">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
-          <p className="tracking-[0.15em]">
+      <footer className="py-10 sm:py-16 px-4 sm:px-6 border-t border-[#EAE6DC]/60 bg-[#FAF9F5] text-center text-[10px] text-zinc-400 font-bold relative z-10">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
+          <p className="tracking-[0.1em] sm:tracking-[0.15em]">
             &copy; {new Date().getFullYear()} BALISNAP STUDIO. ALL RIGHTS RESERVED.
           </p>
-          <p className="tracking-[0.3em] bg-gradient-to-r from-rose-500 via-purple-600 to-indigo-600 text-transparent bg-clip-text">
+          <p className="tracking-[0.2em] sm:tracking-[0.3em] bg-gradient-to-r from-rose-500 via-purple-600 to-indigo-600 text-transparent bg-clip-text">
             CRAFTED FOR ULTRA-CLEAN VISUAL EXPRESSION.
           </p>
         </div>
