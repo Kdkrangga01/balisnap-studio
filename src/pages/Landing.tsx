@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePhotobooth } from '../context/PhotoboothContext';
-import { Camera, Sparkles, Image as ImageIcon, Heart, ArrowRight, Layers, ShieldCheck, Maximize2 } from 'lucide-react';
+import { Camera, Sparkles, Image as ImageIcon, ArrowRight, Maximize2 } from 'lucide-react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 
 export const Landing: React.FC = () => {
@@ -209,23 +209,6 @@ export const Landing: React.FC = () => {
         </motion.div>
       </main>
 
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }} variants={containerVariants} className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 w-full mb-16 sm:mb-28">
-        {[{ title: 'Architectural Grids', desc: 'Presisi struktur bingkai matematis.', icon: <Layers className="w-5 h-5" /> }, { title: 'Curated Badges', desc: 'Ratusan elemen grafis mikro.', icon: <Heart className="w-5 h-5" /> }, { title: 'Chromium Export', desc: 'Kompresi tanpa kehilangan detail.', icon: <Camera className="w-5 h-5" /> }, { title: 'Absolute Discretion', desc: 'Pemrosesan enkripsi lokal.', icon: <ShieldCheck className="w-5 h-5" /> }].map((item, idx) => (
-          <motion.div key={idx} variants={itemVariants} className="p-6 sm:p-8 rounded-[20px] sm:rounded-[24px] bg-white border border-[#EAE6DC]/80 shadow-[0_4px_24px_rgba(234,230,220,0.1)] hover:border-zinc-400/50 hover:bg-white/90 transition-all duration-300 text-left relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-rose-400 via-purple-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#FAF9F5] border border-[#EAE6DC] flex items-center justify-center text-zinc-800 mb-4 sm:mb-6 shadow-sm group-hover:text-white group-hover:bg-zinc-950 group-hover:border-zinc-950 transition-all duration-300">
-              {item.icon}
-            </div>
-            <h3 className="font-bold text-sm sm:text-base text-zinc-900 mb-2 tracking-wide font-serif">
-              {item.title}
-            </h3>
-            <p className="text-zinc-500 text-xs leading-relaxed font-normal">
-              {item.desc}
-            </p>
-          </motion.div>
-        ))}
-      </motion.div>
-
       {/* Procedural Section (Workflow Berkelas) */}
       <section id="cara-kerja" className="relative border-t border-[#EAE6DC]/60 bg-white/40 backdrop-blur-md py-16 sm:py-28 px-4 sm:px-6 overflow-hidden">
         {/* Live Angry Cat Sticker - desktop only */}
@@ -293,4 +276,4 @@ export const Landing: React.FC = () => {
       </footer>
     </div>
   );
-};
+};g
