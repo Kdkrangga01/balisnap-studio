@@ -570,7 +570,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
             />
           )}
 
-          {/* Layer Stiker (Multi-Sticker Auto Render) */}
+          {/* Layer Stiker Overlay (Dengan Ukuran Proporsional Besar) */}
           {stickers.map((st) => (
             <StickerElement
               key={st.id}
@@ -599,7 +599,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
             <Transformer
               ref={trRef}
               boundBoxFunc={(oldBox, newBox) => {
-                if (Math.abs(newBox.width) < 30 || Math.abs(newBox.height) < 30) return oldBox;
+                if (Math.abs(newBox.width) < 20 || Math.abs(newBox.height) < 20) return oldBox;
                 return newBox;
               }}
               keepRatio={true}
@@ -633,6 +633,14 @@ const StickerElement: React.FC<StickerElementProps> = ({ sticker, onClick, onCha
 
   if (!loadedImg || !selectedFrame) return null;
 
+  // DITINGKATKAN KEMBALI AGAR SESUAI CONTOH FOTO (Ukuran Standar Base = 180px)
+  const baseStandardSize = 180;
+  const maxDim = Math.max(loadedImg.width, loadedImg.height) || 180;
+  const normFactor = baseStandardSize / maxDim;
+
+  const finalScaleX = sticker.scaleX * normFactor;
+  const finalScaleY = sticker.scaleY * normFactor;
+
   return (
     <KonvaImage
       ref={shapeRef}
@@ -640,8 +648,8 @@ const StickerElement: React.FC<StickerElementProps> = ({ sticker, onClick, onCha
       image={loadedImg}
       x={sticker.x}
       y={sticker.y}
-      scaleX={sticker.scaleX}
-      scaleY={sticker.scaleY}
+      scaleX={finalScaleX}
+      scaleY={finalScaleY}
       rotation={sticker.rotation}
       draggable={!isPreviewMode}
       onClick={onClick}
@@ -654,11 +662,12 @@ const StickerElement: React.FC<StickerElementProps> = ({ sticker, onClick, onCha
       }}
       onTransformEnd={() => {
         const node = shapeRef.current;
+        if (!node) return;
         onChange({
           x: node.x(),
           y: node.y(),
-          scaleX: node.scaleX(),
-          scaleY: node.scaleY(),
+          scaleX: node.scaleX() / normFactor,
+          scaleY: node.scaleY() / normFactor,
           rotation: node.rotation()
         });
       }}
@@ -707,6 +716,7 @@ const TextElement: React.FC<TextElementProps> = ({ textData, onClick, onChange, 
       }}
       onTransformEnd={() => {
         const node = shapeRef.current;
+        if (!node) return;
         onChange({
           x: node.x(),
           y: node.y(),

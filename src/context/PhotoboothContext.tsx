@@ -282,7 +282,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  // 1. TAMBAH STIKER TUNGGAL
+  // 1. TAMBAH STIKER MANUAL
   const addSticker = (stickerId: string, overridePosition?: { x: number; y: number }) => {
     const id = `sticker-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     let posX = selectedFrame ? selectedFrame.width / 2 : 150;
@@ -298,8 +298,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       stickerId,
       x: posX,
       y: posY,
-      scaleX: 0.4,
-      scaleY: 0.4,
+      scaleX: 0.35,
+      scaleY: 0.35,
       rotation: (Math.random() * 20) - 10
     };
 
@@ -307,7 +307,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setSelectedId(id);
   };
 
-  // 2. AUTO-SPREAD STIKER DENGAN SKALA PAS DI SUDUT FRAME FOTO
+  // 2. AUTO-SPREAD PAKET STIKER KE LAYER OVERLAY DENGAN POSISI & SKALA PAS
   const applyStickerPack = (packId: string) => {
     const pack = stickerPacks.find(p => p.id === packId);
     if (!pack || !selectedFrame) return;
@@ -315,13 +315,14 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const shuffledStickers = [...pack.stickers].sort(() => 0.5 - Math.random());
     const newStickers: CanvasSticker[] = [];
 
+    // Menyebarkan variasi stiker ke tiap sudut tiap bingkai foto di layer teratas
     selectedFrame.slotCoords.forEach((slot, slotIdx) => {
-      const offset = 25;
+      const offset = 22;
       const corners = [
-        { x: slot.x + offset, y: slot.y + offset }, // Top-Left
-        { x: slot.x + slot.w - offset, y: slot.y + offset }, // Top-Right
-        { x: slot.x + offset, y: slot.y + slot.h - offset }, // Bottom-Left
-        { x: slot.x + slot.w - offset, y: slot.y + slot.h - offset }, // Bottom-Right
+        { x: slot.x + offset, y: slot.y + offset },          // Kiri Atas
+        { x: slot.x + slot.w - offset, y: slot.y + offset }, // Kanan Atas
+        { x: slot.x + offset, y: slot.y + slot.h - offset }, // Kiri Bawah
+        { x: slot.x + slot.w - offset, y: slot.y + slot.h - offset } // Kanan Bawah
       ];
 
       corners.forEach((spot, cornerIdx) => {
@@ -334,8 +335,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           stickerId: stickerSrc,
           x: spot.x,
           y: spot.y,
-          scaleX: 0.35,
-          scaleY: 0.35,
+          scaleX: 0.28,
+          scaleY: 0.28,
           rotation: (Math.random() * 24) - 12
         });
       });
