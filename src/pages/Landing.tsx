@@ -276,4 +276,4 @@ export const Landing: React.FC = () => {
       </footer>
     </div>
   );
-};g
+};
