@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { FrameTemplate } from '../data/frames';
 import type { FrameColorId } from '../data/frameColors';
 import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/frameDb';
-
+import { stickerPacks } from '../data/stickers';
 
 export interface CanvasSticker {
   id: string;
@@ -40,6 +40,7 @@ interface PhotoboothContextProps {
   clearPhotos: () => void;
   stickers: CanvasSticker[];
   addSticker: (stickerId: string, overridePosition?: { x: number; y: number }) => void;
+  applyStickerPack: (packId: string) => void;
   updateSticker: (id: string, attrs: Partial<CanvasSticker>) => void;
   removeSticker: (id: string) => void;
   texts: CanvasText[];
@@ -99,7 +100,6 @@ interface PhotoboothContextProps {
   deleteCustomFrame: (id: string) => void;
 }
 
-
 const PhotoboothContext = createContext<PhotoboothContextProps | undefined>(undefined);
 
 export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -135,6 +135,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return stored ? JSON.parse(stored) : [];
     } catch { return []; }
   });
+
   const toggleFavoriteColor = (color: string) => {
     setFavoriteColors(prev => {
       const next = prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color];
@@ -149,6 +150,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return stored ? JSON.parse(stored) : [];
     } catch { return []; }
   });
+
   const addRecentColor = (color: string) => {
     setRecentColors(prev => {
       const filtered = prev.filter(c => c !== color);
@@ -164,6 +166,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return stored ? JSON.parse(stored) : [];
     } catch { return []; }
   });
+
   const toggleFavoriteWallpaper = (id: string) => {
     setFavoriteWallpapers(prev => {
       const next = prev.includes(id) ? prev.filter(w => w !== id) : [...prev, id];
@@ -178,6 +181,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return stored ? JSON.parse(stored) : [];
     } catch { return []; }
   });
+
   const addRecentWallpaper = (id: string) => {
     setRecentWallpapers(prev => {
       const filtered = prev.filter(w => w !== id);
@@ -193,6 +197,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return stored ? JSON.parse(stored) : [];
     } catch { return []; }
   });
+
   const toggleFavoriteSticker = (id: string) => {
     setFavoriteStickers(prev => {
       const next = prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id];
@@ -201,14 +206,10 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   };
 
-
-  // Load custom frames from IndexedDB on mount (with automatic migration from localStorage)
   useEffect(() => {
     const initCustomFrames = async () => {
       try {
         let dbFrames = await loadCustomFrames();
-
-        // Migration from localStorage if it exists
         const saved = localStorage.getItem('balisnap_custom_frames');
         if (saved) {
           try {
@@ -223,37 +224,22 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               }
               dbFrames = migratedList;
               localStorage.removeItem('balisnap_custom_frames');
-              console.log('Successfully migrated custom frames from localStorage to IndexedDB.');
             }
           } catch (e) {
-            console.error("Failed to parse and migrate custom frames from localStorage:", e);
+            console.error("Failed to parse local custom frames:", e);
           }
         }
-
         setCustomFrames(dbFrames);
       } catch (err) {
-        console.error("Failed to load custom frames from IndexedDB:", err);
-        // Safe fallback to localStorage if IndexedDB fails entirely
-        const saved = localStorage.getItem('balisnap_custom_frames');
-        if (saved) {
-          try {
-            setCustomFrames(JSON.parse(saved));
-          } catch (e) {
-            console.error("Failed to parse fallback custom frames:", e);
-          }
-        }
+        console.error("Failed to load custom frames:", err);
       }
     };
-
     initCustomFrames();
   }, []);
 
-
-  // Automatically resize photos array when selectedFrame changes
   useEffect(() => {
     if (selectedFrame) {
       setPhotos(new Array(selectedFrame.slots).fill(null));
-      // Clear stickers and text when resetting frame
       setStickers([]);
       setTexts([]);
       setSelectedId(null);
@@ -277,7 +263,6 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, [selectedFrame]);
 
-
   const selectFrame = (frame: FrameTemplate) => {
     setSelectedFrame(frame);
     setStep('capture');
@@ -297,97 +282,15 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  // Canvas Actions
+  // 1. TAMBAH STIKER TUNGGAL
   const addSticker = (stickerId: string, overridePosition?: { x: number; y: number }) => {
     const id = `sticker-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-
-    let posX = selectedFrame ? selectedFrame.width / 2 - 50 : 150;
-    let posY = selectedFrame ? selectedFrame.height / 2 - 50 : 150;
-
-    // Sedikit variasi skala tiap kali nempel (0.40 - 0.50) supaya tidak semua
-    // stiker terlihat identik ukurannya persis, kesannya lebih "ditempel tangan".
-    let initialScale = 0.4 + Math.random() * 0.1;
-
-    // Rotasi kecil acak. Stiker photobooth yang enak dilihat biasanya sedikit
-    // miring (bukan lurus sempurna 0deg), jadi terasa natural/scrapbook-style.
-    let initialRotation = (Math.random() * 24) - 12; // antara -12deg s/d +12deg
+    let posX = selectedFrame ? selectedFrame.width / 2 : 150;
+    let posY = selectedFrame ? selectedFrame.height / 2 : 150;
 
     if (overridePosition) {
       posX = overridePosition.x;
       posY = overridePosition.y;
-    } else if (selectedFrame && selectedFrame.slotCoords.length > 0) {
-      // SMART IN-SLOT PLACEMENT ALGORITHM
-      // Kita bikin beberapa titik kandidat di dalam tiap slot foto (bingkai),
-      // lalu pilih yang paling "kosong" & enak dilihat berdasarkan skor.
-      const candidates: { x: number; y: number; score: number }[] = [];
-
-      selectedFrame.slotCoords.forEach((slot) => {
-        const sW = slot.w;
-        const sH = slot.h;
-        const targetStickerSize = Math.min(sW, sH) * 0.25;
-        const offset = 18; // Margin di dalam slot supaya stiker tidak kepotong tepi
-
-        // Titik kandidat: 4 sudut (paling natural, tidak nutupin wajah di tengah)
-        // + 4 titik tengah-tepi sebagai cadangan kalau sudut-sudut sudah penuh,
-        // supaya stiker masih bisa nyebar rapi walau slot sudah cukup ramai.
-        const corners = [
-          { x: slot.x + offset + targetStickerSize / 2, y: slot.y + offset + targetStickerSize / 2 }, // Top Left
-          { x: slot.x + sW - offset - targetStickerSize / 2, y: slot.y + offset + targetStickerSize / 2 }, // Top Right
-          { x: slot.x + offset + targetStickerSize / 2, y: slot.y + sH - offset - targetStickerSize / 2 }, // Bottom Left
-          { x: slot.x + sW - offset - targetStickerSize / 2, y: slot.y + sH - offset - targetStickerSize / 2 }, // Bottom Right
-          { x: slot.x + sW / 2, y: slot.y + offset + targetStickerSize / 2 }, // Top Mid
-          { x: slot.x + sW / 2, y: slot.y + sH - offset - targetStickerSize / 2 }, // Bottom Mid
-          { x: slot.x + offset + targetStickerSize / 2, y: slot.y + sH / 2 }, // Left Mid
-          { x: slot.x + sW - offset - targetStickerSize / 2, y: slot.y + sH / 2 }, // Right Mid
-        ];
-
-        corners.forEach((c) => {
-          let score = 0;
-
-          // Penalty for overlapping existing stickers
-          stickers.forEach((existing) => {
-            const dist = Math.hypot(existing.x - c.x, existing.y - c.y);
-            if (dist < 90) {
-              score -= 1000;
-            } else {
-              score += dist * 0.05;
-            }
-          });
-
-          // Minor bonus for bottom corners which look more natural for overlays
-          if (c.y > slot.y + sH / 2) {
-            score += 40;
-          }
-
-          // Sudut (bukan titik tengah-tepi) sedikit lebih diprioritaskan karena
-          // secara visual lebih "aman" dari wajah yang biasanya ada di tengah.
-          const isCorner =
-            (c.x < slot.x + sW / 2 - 4 || c.x > slot.x + sW / 2 + 4) &&
-            (c.y < slot.y + sH / 2 - 4 || c.y > slot.y + sH / 2 + 4);
-          if (isCorner) score += 15;
-
-          // Penalty for slots that already have multiple stickers to distribute them evenly
-          const stickersInThisSlot = stickers.filter((existing) =>
-            existing.x >= slot.x && existing.x <= slot.x + sW &&
-            existing.y >= slot.y && existing.y <= slot.y + sH
-          ).length;
-          score -= stickersInThisSlot * 300;
-
-          candidates.push({ ...c, score });
-        });
-      });
-
-      if (candidates.length > 0) {
-        // Sort by score descending and pick the best spot
-        candidates.sort((a, b) => b.score - a.score);
-        const best = candidates[0];
-
-        // Jitter halus (+/- 8px) supaya posisi tidak persis pixel-perfect sama
-        // setiap kali menempel di sudut yang sama -> kesannya lebih hidup/organik.
-        const jitter = 8;
-        posX = best.x + (Math.random() * jitter * 2 - jitter);
-        posY = best.y + (Math.random() * jitter * 2 - jitter);
-      }
     }
 
     const newSticker: CanvasSticker = {
@@ -395,13 +298,50 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       stickerId,
       x: posX,
       y: posY,
-      scaleX: initialScale,
-      scaleY: initialScale,
-      rotation: overridePosition ? 0 : initialRotation
+      scaleX: 0.4,
+      scaleY: 0.4,
+      rotation: (Math.random() * 20) - 10
     };
 
     setStickers(prev => [...prev, newSticker]);
     setSelectedId(id);
+  };
+
+  // 2. AUTO-SPREAD STIKER DENGAN SKALA PAS DI SUDUT FRAME FOTO
+  const applyStickerPack = (packId: string) => {
+    const pack = stickerPacks.find(p => p.id === packId);
+    if (!pack || !selectedFrame) return;
+
+    const shuffledStickers = [...pack.stickers].sort(() => 0.5 - Math.random());
+    const newStickers: CanvasSticker[] = [];
+
+    selectedFrame.slotCoords.forEach((slot, slotIdx) => {
+      const offset = 25;
+      const corners = [
+        { x: slot.x + offset, y: slot.y + offset }, // Top-Left
+        { x: slot.x + slot.w - offset, y: slot.y + offset }, // Top-Right
+        { x: slot.x + offset, y: slot.y + slot.h - offset }, // Bottom-Left
+        { x: slot.x + slot.w - offset, y: slot.y + slot.h - offset }, // Bottom-Right
+      ];
+
+      corners.forEach((spot, cornerIdx) => {
+        const stIndex = (slotIdx + cornerIdx) % shuffledStickers.length;
+        const stickerSrc = shuffledStickers[stIndex];
+        const id = `auto-sticker-${Date.now()}-${slotIdx}-${cornerIdx}`;
+
+        newStickers.push({
+          id,
+          stickerId: stickerSrc,
+          x: spot.x,
+          y: spot.y,
+          scaleX: 0.35,
+          scaleY: 0.35,
+          rotation: (Math.random() * 24) - 12
+        });
+      });
+    });
+
+    setStickers(newStickers);
   };
 
   const updateSticker = (id: string, attrs: Partial<CanvasSticker>) => {
@@ -447,37 +387,13 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const addCustomFrame = (frame: FrameTemplate) => {
     setCustomFrames(prev => [...prev, frame]);
-    saveCustomFrame(frame).catch(err => {
-      console.error("Failed to save custom frame to IndexedDB:", err);
-      // Failover to localStorage
-      try {
-        const saved = localStorage.getItem('balisnap_custom_frames');
-        const list = saved ? JSON.parse(saved) : [];
-        list.push(frame);
-        localStorage.setItem('balisnap_custom_frames', JSON.stringify(list));
-      } catch (e) {
-        console.error("Failed to save custom frame to localStorage fallback:", e);
-      }
-    });
+    saveCustomFrame(frame).catch(err => console.error("Error saving frame DB:", err));
   };
 
   const deleteCustomFrame = (id: string) => {
     setCustomFrames(prev => prev.filter(f => f.id !== id));
-    removeCustomFrame(id).catch(err => {
-      console.error("Failed to delete custom frame from IndexedDB:", err);
-      // Failover to localStorage
-      try {
-        const saved = localStorage.getItem('balisnap_custom_frames');
-        if (saved) {
-          const list = JSON.parse(saved).filter((f: any) => f.id !== id);
-          localStorage.setItem('balisnap_custom_frames', JSON.stringify(list));
-        }
-      } catch (e) {
-        console.error("Failed to delete custom frame from localStorage fallback:", e);
-      }
-    });
+    removeCustomFrame(id).catch(err => console.error("Error deleting frame DB:", err));
   };
-
 
   const resetAll = () => {
     setStep('landing');
@@ -505,75 +421,19 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setWallpaperScaleMode('fill');
   };
 
-
   return (
     <PhotoboothContext.Provider value={{
-      step,
-      setStep,
-      selectedFrame,
-      selectFrame,
-      photos,
-      setPhotoAtSlot,
-      clearPhotos,
-      stickers,
-      addSticker,
-      updateSticker,
-      removeSticker,
-      texts,
-      addText,
-      updateText,
-      removeText,
-      selectedId,
-      setSelectedId,
-      appliedFilter,
-      setAppliedFilter,
-      frameColor,
-      setFrameColor,
-
-      frameStyle,
-      setFrameStyle,
-      borderThickness,
-      setBorderThickness,
-      borderRadius,
-      setBorderRadius,
-      shadowIntensity,
-      setShadowIntensity,
-      shadowBlur,
-      setShadowBlur,
-      shadowColor,
-      setShadowColor,
-      frameOpacity,
-      setFrameOpacity,
-      framePadding,
-      setFramePadding,
-      innerMargin,
-      setInnerMargin,
-      outerMargin,
-      setOuterMargin,
-      wallpaperId,
-      setWallpaperId,
-      wallpaperUpload,
-      setWallpaperUpload,
-      wallpaperBlur,
-      setWallpaperBlur,
-      wallpaperOpacity,
-      setWallpaperOpacity,
-      wallpaperScaleMode,
-      setWallpaperScaleMode,
-      favoriteColors,
-      toggleFavoriteColor,
-      recentColors,
-      addRecentColor,
-      favoriteWallpapers,
-      toggleFavoriteWallpaper,
-      recentWallpapers,
-      addRecentWallpaper,
-      favoriteStickers,
-      toggleFavoriteSticker,
-      resetAll,
-      customFrames,
-      addCustomFrame,
-      deleteCustomFrame
+      step, setStep, selectedFrame, selectFrame, photos, setPhotoAtSlot, clearPhotos,
+      stickers, addSticker, applyStickerPack, updateSticker, removeSticker, texts, addText, updateText, removeText,
+      selectedId, setSelectedId, appliedFilter, setAppliedFilter, frameColor, setFrameColor,
+      frameStyle, setFrameStyle, borderThickness, setBorderThickness, borderRadius, setBorderRadius,
+      shadowIntensity, setShadowIntensity, shadowBlur, setShadowBlur, shadowColor, setShadowColor,
+      frameOpacity, setFrameOpacity, framePadding, setFramePadding, innerMargin, setInnerMargin,
+      outerMargin, setOuterMargin, wallpaperId, setWallpaperId, wallpaperUpload, setWallpaperUpload,
+      wallpaperBlur, setWallpaperBlur, wallpaperOpacity, setWallpaperOpacity, wallpaperScaleMode, setWallpaperScaleMode,
+      favoriteColors, toggleFavoriteColor, recentColors, addRecentColor, favoriteWallpapers, toggleFavoriteWallpaper,
+      recentWallpapers, addRecentWallpaper, favoriteStickers, toggleFavoriteSticker, resetAll, customFrames,
+      addCustomFrame, deleteCustomFrame
     }}>
       {children}
     </PhotoboothContext.Provider>
