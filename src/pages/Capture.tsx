@@ -74,12 +74,9 @@ function fitDataUrlNoCrop(
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
-      if (filterId === 'sweet-pink') {
-        ctx.filter = 'contrast(102%) brightness(108%) saturate(115%) sepia(8%)';
-      } else if (filterId === 'retro') {
-        ctx.filter = 'contrast(95%) brightness(98%) sepia(25%) saturate(90%)';
-      } else if (filterId === 'bw') {
-        ctx.filter = 'grayscale(100%) contrast(115%) brightness(102%)';
+      const currentFilterObj = CAMERA_FILTERS.find((f) => f.id === filterId);
+      if (currentFilterObj && currentFilterObj.filterCss) {
+        ctx.filter = currentFilterObj.filterCss;
       } else {
         ctx.filter = 'none';
       }
@@ -582,6 +579,8 @@ export const Capture: React.FC = () => {
                   <div className="border-r border-b border-white" /><div className="border-r border-b border-white" /><div className="border-b border-white" />
                   <div className="border-r border-white" /><div className="border-r border-white" /><div />
                 </div>
+
+
 
                 {/* HUD Overlay Row: dulu 3 badge diposisikan absolute pakai angka "magic"
                     (right-24, right-3, dll) yang gampang tabrakan di layar sempit.

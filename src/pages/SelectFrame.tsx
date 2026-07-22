@@ -3,25 +3,7 @@ import { usePhotobooth } from '../context/PhotoboothContext';
 import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import {
-  ArrowLeft,
-  Palette,
-  Sparkles,
-  Search,
-  X,
-  Filter,
-  Grid3x3,
-  Images,
-  Clock,
-  RefreshCw,
-  Heart,
-  Upload,
-  Trash2,
-  RotateCcw,
-  CheckCircle2,
-  ScanSearch,
-  EyeOff,
-  Eye,
-  Pencil,
+  ArrowLeft, Palette, Sparkles, Search, X, Filter, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, Trash2, RotateCcw, CheckCircle2, ScanSearch, EyeOff, Eye, Pencil,
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
 
@@ -29,6 +11,101 @@ type SlotCoord = FrameTemplate['slotCoords'][number];
 
 const HIDDEN_FRAMES_STORAGE_KEY = 'balisnap-hidden-frames';
 const FRAME_NAME_OVERRIDES_STORAGE_KEY = 'balisnap-frame-name-overrides';
+
+// Component khusus dengan Algoritma Flood-Fill Removal yang presisi
+const TransparentLogo: React.FC<{ src: string; className?: string }> = ({ src, className }) => {
+  const [transparentSrc, setTransparentSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = src;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const width = img.naturalWidth;
+      const height = img.naturalHeight;
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+
+      const visited = new Uint8Array(width * height);
+      const queue: number[] = [];
+
+      for (let x = 0; x < width; x++) {
+        queue.push(x, 0);
+        queue.push(x, height - 1);
+      }
+      for (let y = 0; y < height; y++) {
+        queue.push(0, y);
+        queue.push(width - 1, y);
+      }
+
+      while (queue.length > 0) {
+        const cy = queue.pop()!;
+        const cx = queue.pop()!;
+        const idx = cy * width + cx;
+
+        if (visited[idx]) continue;
+        visited[idx] = 1;
+
+        const pIdx = idx * 4;
+        const r = data[pIdx];
+        const g = data[pIdx + 1];
+        const b = data[pIdx + 2];
+
+        const isBackground = (r > 160 && g > 145 && b > 120) || (r > 200 && g > 200 && b > 200);
+
+        if (isBackground) {
+          data[pIdx + 3] = 0;
+
+          const neighbors = [
+            [cx + 1, cy],
+            [cx - 1, cy],
+            [cx, cy + 1],
+            [cx, cy - 1]
+          ];
+
+          for (const [nx, ny] of neighbors) {
+            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+              const nIdx = ny * width + nx;
+              if (!visited[nIdx]) {
+                queue.push(nx, ny);
+              }
+            }
+          }
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      setTransparentSrc(canvas.toDataURL('image/png'));
+    };
+  }, [src]);
+
+  return (
+    <motion.img
+      src={transparentSrc || src}
+      alt="BaliSnap Studio Logo"
+      className={className}
+      animate={{
+        scale: [1, 1.03, 1],
+        rotate: [0, 1.5, -1.5, 0],
+      }}
+      transition={{
+        duration: 5,
+        ease: "easeInOut",
+        repeat: Infinity,
+        repeatType: "mirror"
+      }}
+      whileHover={{ scale: 1.05 }}
+    />
+  );
+};
 
 function loadHiddenFrameIds(): Set<string> {
   try {
@@ -209,7 +286,6 @@ function autoDetectPhotoSlots(
     chosen.push(c);
   }
 
-  // Pengurutan pintar untuk Deteksi Otomatis: Urutkan Kolom Kiri dulu dari atas ke bawah, baru Kolom Kanan
   chosen.sort((a, b) => {
     const colA = Math.floor(a.x / (width / 2));
     const colB = Math.floor(b.x / (width / 2));
@@ -263,27 +339,14 @@ function generateGridSlots(width: number, height: number, numSlots: number): Slo
     const usableH = height - framePaddingTop - framePaddingBottom - (gutterY * (rows - 1));
     const cellH = usableH / rows;
 
-    // SINKRONISASI INDEX URUTAN STRIP: Loop lajur Kolom dulu baru Baris ke bawah
     for (let col = 0; col < cols; col++) {
       for (let row = 0; row < rows; row++) {
-        const x = Math.round(
-          col === 0
-            ? framePaddingX
-            : framePaddingX + cellW + centerDividerW
-        );
+        const x = Math.round(col === 0 ? framePaddingX : framePaddingX + cellW + centerDividerW);
         const y = Math.round(framePaddingTop + row * (cellH + gutterY));
-
-        slots.push({
-          x,
-          y,
-          w: Math.round(cellW),
-          h: Math.round(cellH),
-          rx: Math.round(Math.min(cellW, cellH) * 0.02),
-        });
+        slots.push({ x, y, w: Math.round(cellW), h: Math.round(cellH), rx: Math.round(Math.min(cellW, cellH) * 0.02) });
       }
     }
   } else {
-    // Mode Default untuk Single Strip / 1 Kolom
     const marginX = width * 0.08;
     const marginY = height * 0.08;
     const gutterY = rows > 1 ? height * 0.02 : 0;
@@ -298,13 +361,7 @@ function generateGridSlots(width: number, height: number, numSlots: number): Slo
       const col = i % cols;
       const x = Math.round(marginX + col * cellW);
       const y = Math.round(marginY + row * (cellH + gutterY));
-      slots.push({
-        x,
-        y,
-        w: Math.round(cellW),
-        h: Math.round(cellH),
-        rx: Math.round(Math.min(cellW, cellH) * 0.02),
-      });
+      slots.push({ x, y, w: Math.round(cellW), h: Math.round(cellH), rx: Math.round(Math.min(cellW, cellH) * 0.02) });
     }
   }
   return slots;
@@ -352,14 +409,13 @@ const CursorTrail: React.FC = () => {
   );
 };
 
-// PERBAIKAN: Ubah prop `style` menjadi `categoryStyle`
 const FrameCard: React.FC<{
   frame: FrameTemplate;
   idx: number;
   isTrending: boolean;
   isFavorite: boolean;
   isCustom: boolean;
-  categoryStyle: any; // <-- Ganti nama
+  categoryStyle: any;
   onFavorite: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
   onEdit: (e: React.MouseEvent) => void;
@@ -384,34 +440,20 @@ const FrameCard: React.FC<{
           )}
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={onFavorite}
-            className="w-9 h-9 rounded-2xl bg-rose-50/60 border border-rose-100 flex items-center justify-center hover:bg-rose-100 shadow-sm transition-transform active:scale-90"
-          >
+          <button onClick={onFavorite} className="w-9 h-9 rounded-2xl bg-rose-50/60 border border-rose-100 flex items-center justify-center hover:bg-rose-100 shadow-sm transition-transform active:scale-90">
             <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'fill-pink-500 text-pink-500' : 'text-rose-300'}`} />
           </button>
-          <button
-            onClick={onEdit}
-            className="w-9 h-9 rounded-2xl bg-sky-50/60 border border-sky-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-sky-500 hover:text-white shadow-sm active:scale-90"
-          >
+          <button onClick={onEdit} className="w-9 h-9 rounded-2xl bg-sky-50/60 border border-sky-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-sky-500 hover:text-white shadow-sm active:scale-90">
             <Pencil className="w-4 h-4 text-sky-400 group-hover:text-sky-400 hover:!text-white" />
           </button>
-          <button
-            onClick={onDelete}
-            className="w-9 h-9 rounded-2xl bg-purple-50 border border-purple-100 text-purple-400 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-500 hover:text-white"
-          >
+          <button onClick={onDelete} className="w-9 h-9 rounded-2xl bg-purple-50 border border-purple-100 text-purple-400 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-500 hover:text-white">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       <div className="relative aspect-[3/4] w-full bg-gradient-to-b from-rose-50/30 to-purple-50/30 rounded-2xl p-4 flex items-center justify-center border border-rose-100/40 overflow-hidden mb-4 shadow-inner group-hover:bg-white transition-colors duration-300">
-        <img
-          src={frame.src}
-          alt={frame.name}
-          className="max-w-full max-h-full object-contain drop-shadow-[0_10px_25px_rgba(255,182,193,0.2)] group-hover:scale-[1.06] transition-transform duration-500 ease-out"
-          loading="lazy"
-        />
+        <img src={frame.src} alt={frame.name} className="max-w-full max-h-full object-contain drop-shadow-[0_10px_25px_rgba(255,182,193,0.2)] group-hover:scale-[1.06] transition-transform duration-500 ease-out" loading="lazy" />
         <div className="absolute inset-0 bg-pink-400/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
           <span className="px-4 py-2 rounded-full bg-white text-pink-500 font-black text-[10px] tracking-widest uppercase shadow-md flex items-center gap-1.5 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
             <Eye className="w-4 h-4" /> Intip Frame
@@ -420,9 +462,7 @@ const FrameCard: React.FC<{
       </div>
 
       <div className="w-full pt-3 border-t-2 border-dashed border-rose-100/60">
-        <h3 className="font-serif font-black text-zinc-800 text-base line-clamp-1 group-hover:text-pink-500 transition-colors">
-          {frame.name}
-        </h3>
+        <h3 className="font-serif font-black text-zinc-800 text-base line-clamp-1 group-hover:text-pink-500 transition-colors">{frame.name}</h3>
         <div className="flex items-center justify-between mt-2.5 text-[9px] font-black uppercase tracking-wider text-zinc-400">
           <span className="flex items-center gap-1 text-pink-500 bg-pink-50 px-2 py-0.5 rounded-md">
             <Images className="w-3.5 h-3.5" /> {frame.slots} Slot Foto
@@ -446,7 +486,6 @@ export const SelectFrame: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'name'>('popular');
-  const [_hoveredFrame, _setHoveredFrame] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const [previewFrame, setPreviewFrame] = useState<FrameTemplate | null>(null);
@@ -556,11 +595,7 @@ export const SelectFrame: React.FC = () => {
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
 
   const [customSlotCoords, setCustomSlotCoords] = useState<(SlotCoord | null)[]>([null]);
-
-  const [_selectedSlotIndex, setSelectedSlotIndex] = useState<number>(0);
   const [isAutoDetecting, setIsAutoDetecting] = useState(false);
-  const [_autoDetectedCount, setAutoDetectedCount] = useState<number | null>(null);
-
 
   const rawAllFrames = useMemo(
     () => [...frames, ...customFrames].filter((f) => !hiddenFrameIds.has(f.id)),
@@ -626,8 +661,6 @@ export const SelectFrame: React.FC = () => {
       workingCanvasRef.current = bestCanvas;
       setPreviewSrc(bestCanvas.toDataURL('image/png'));
       setCustomSlotCoords(bestDetected);
-      setAutoDetectedCount(bestFound);
-      setSelectedSlotIndex(0);
       setUploadError(null);
       setIsAutoDetecting(false);
     }, 30);
@@ -654,8 +687,6 @@ export const SelectFrame: React.FC = () => {
       setUploadImageDims({ w: canvas.width, h: canvas.height });
       setPreviewSrc(canvas.toDataURL('image/png'));
       setCustomSlotCoords(Array(uploadSlots).fill(null));
-      setSelectedSlotIndex(0);
-      setAutoDetectedCount(null);
       runAutoDetect(uploadSlots);
     };
     img.src = dataUrl;
@@ -674,9 +705,11 @@ export const SelectFrame: React.FC = () => {
     };
     reader.readAsDataURL(file);
   }, [initWorkingCanvas]);
+
   const _handleResetAll = useCallback(() => {
     runAutoDetect(uploadSlots);
   }, [uploadSlots, runAutoDetect]);
+
   const handleRemoveImage = useCallback(() => {
     workingCanvasRef.current = null;
     originalCanvasRef.current = null;
@@ -744,10 +777,7 @@ export const SelectFrame: React.FC = () => {
       setPreviewSrc(null);
       setUploadImageDims(null);
       setUploadError(null);
-      setCustomSlotCoords([null])
-      setSelectedSlotIndex(0);
-      setAutoDetectedCount(null);
-
+      setCustomSlotCoords([null]);
     }, 1200);
   }, [uploadName, uploadImageDims, uploadSlots, uploadCategory, customSlotCoords, allSlotsFilled, addCustomFrame, deleteCustomFrame]);
 
@@ -908,13 +938,20 @@ export const SelectFrame: React.FC = () => {
                 <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
                 Kembali
               </button>
-              <h1 className="font-serif text-4xl sm:text-5xl font-black text-zinc-900 tracking-tight leading-tight">
-                Pilih{' '}
-                <span className="font-sans font-black italic bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 text-transparent bg-clip-text drop-shadow-[0_2px_6px_rgba(255,182,193,0.2)]">
-                  Bingkai Lucu
-                </span>{' '}
-                Kamu! ✨
-              </h1>
+              <div className="flex items-center gap-4 mb-2">
+                {/* LOGO DENGAN CLEAN FLOOD-FILL BACKGROUND REMOVER */}
+                <TransparentLogo
+                  src="/logo.png"
+                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain drop-shadow-[0_4px_8px_rgba(244,63,94,0.2)] shrink-0"
+                />
+                <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-zinc-900 tracking-tight leading-tight">
+                  Pilih{' '}
+                  <span className="font-sans font-black italic bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 text-transparent bg-clip-text drop-shadow-[0_2px_6px_rgba(255,182,193,0.2)]">
+                    Bingkai Lucu
+                  </span>{' '}
+                  Kamu! ✨
+                </h1>
+              </div>
               <p className="text-zinc-500 text-xs sm:text-sm mt-1.5 font-normal max-w-xl">
                 Yuk, temukan <span className="font-bold text-pink-500 bg-pink-50 px-2 py-0.5 rounded-md border border-pink-100">{allFrames.length}</span> pilihan layout gemas buat abadikan momen serumu!
               </p>
@@ -942,10 +979,8 @@ export const SelectFrame: React.FC = () => {
             </div>
           </div>
 
-          {/* FULL HORIZONTAL MASTER CONTROL DECK */}
+          {/* Master Control Deck */}
           <div className="w-full bg-white border-2 border-rose-100 p-5 rounded-[24px] shadow-[0_8px_24px_rgba(253,244,245,0.4)] flex flex-col gap-5 text-left">
-
-            {/* Row 1: Search & Sorting */}
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 w-full">
               <div className="relative sm:col-span-8 w-full">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
@@ -985,7 +1020,6 @@ export const SelectFrame: React.FC = () => {
               </div>
             </div>
 
-            {/* Row 2: Grid Sizes Selection Filters */}
             <div className="space-y-2">
               <div className="text-[9px] font-black uppercase tracking-widest text-pink-400 flex items-center gap-1.5">
                 <Grid3x3 className="w-3.5 h-3.5" /> <span>Kuantitas Grid Slot</span>
@@ -1006,7 +1040,6 @@ export const SelectFrame: React.FC = () => {
               </div>
             </div>
 
-            {/* Row 3: Curated Themes Filters */}
             <div className="space-y-2">
               <div className="text-[9px] font-black uppercase tracking-widest text-pink-400 flex items-center gap-1.5">
                 <Palette className="w-3.5 h-3.5 " /> <span>Kurasi Tema Estetika</span>
@@ -1034,10 +1067,9 @@ export const SelectFrame: React.FC = () => {
                 })}
               </div>
             </div>
-
           </div>
 
-          {/* FULL-WIDTH KATALOG */}
+          {/* KATALOG */}
           <div className="w-full">
             {filteredFrames.length > 0 ? (
               <motion.div
@@ -1060,7 +1092,7 @@ export const SelectFrame: React.FC = () => {
                       isTrending={isTrending}
                       isFavorite={isFavorite}
                       isCustom={isCustom}
-                      categoryStyle={style} // PERBAIKAN: ganti prop name
+                      categoryStyle={style}
                       onFavorite={(e) => toggleFavorite(frame.id, e)}
                       onDelete={(e) => handleDeleteFrame(frame, e)}
                       onEdit={(e) => handleOpenRename(frame, e)}
@@ -1091,7 +1123,7 @@ export const SelectFrame: React.FC = () => {
         </div>
       </div>
 
-      {/* ===== PREVIEW MODAL FRAME ===== */}
+      {/* PREVIEW MODAL */}
       <AnimatePresence>
         {previewVisible && previewFrame && (
           <motion.div
@@ -1187,7 +1219,7 @@ export const SelectFrame: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* ===== MODAL: UBAH NAMA FRAME ===== */}
+      {/* MODAL UBAH NAMA */}
       <AnimatePresence>
         {renameTarget && (
           <motion.div
@@ -1241,26 +1273,11 @@ export const SelectFrame: React.FC = () => {
 
               <div className="p-6 pt-0 flex flex-col gap-2">
                 <div className="flex gap-3">
-                  <button
-                    onClick={handleCloseRename}
-                    className="flex-1 py-2.5 bg-white border-2 border-rose-100 rounded-xl text-xs font-bold text-zinc-500"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    onClick={handleSaveRename}
-                    className="flex-1 py-2.5 bg-gradient-to-r from-pink-400 to-rose-400 text-white font-black text-xs tracking-widest uppercase rounded-xl shadow-md"
-                  >
-                    Simpan
-                  </button>
+                  <button onClick={handleCloseRename} className="flex-1 py-2.5 bg-white border-2 border-rose-100 rounded-xl text-xs font-bold text-zinc-500">Batal</button>
+                  <button onClick={handleSaveRename} className="flex-1 py-2.5 bg-gradient-to-r from-pink-400 to-rose-400 text-white font-black text-xs tracking-widest uppercase rounded-xl shadow-md">Simpan</button>
                 </div>
                 {frameNameOverrides[renameTarget.id] && (
-                  <button
-                    onClick={handleResetRenameToDefault}
-                    className="text-[10px] font-bold text-zinc-400 hover:text-rose-500 self-center mt-1"
-                  >
-                    Kembalikan ke nama asli
-                  </button>
+                  <button onClick={handleResetRenameToDefault} className="text-[10px] font-bold text-zinc-400 hover:text-rose-500 self-center mt-1">Kembalikan ke nama asli</button>
                 )}
               </div>
             </motion.div>
@@ -1268,7 +1285,7 @@ export const SelectFrame: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* ===== KUSTOM UPLOAD STUDIO MODAL ===== */}
+      {/* UPLOAD STUDIO MODAL */}
       <AnimatePresence>
         {isUploadModalOpen && (
           <motion.div
@@ -1359,10 +1376,7 @@ export const SelectFrame: React.FC = () => {
                       <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleFileChange} className="hidden" />
 
                       {!previewSrc ? (
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="w-full py-8 border-2 border-dashed border-rose-100 rounded-xl bg-zinc-50 flex flex-col items-center justify-center gap-1 cursor-pointer"
-                        >
+                        <button onClick={() => fileInputRef.current?.click()} className="w-full py-8 border-2 border-dashed border-rose-100 rounded-xl bg-zinc-50 flex flex-col items-center justify-center gap-1 cursor-pointer">
                           <Upload className="w-5 h-5 text-zinc-400" />
                           <span className="text-xs font-bold text-zinc-700">Pilih berkas kompilasi gambar</span>
                           <span className="text-[9px] text-zinc-400">PNG, JPG, WEBP maks 10 MB</span>
@@ -1380,12 +1394,7 @@ export const SelectFrame: React.FC = () => {
 
                     {previewSrc && uploadImageDims && (
                       <div className="space-y-3 bg-zinc-50 border border-rose-100 rounded-xl p-4">
-                        <div
-                          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black ${isAutoDetecting
-                            ? 'bg-sky-50 border border-sky-100 text-sky-500'
-                            : 'bg-emerald-50 border border-emerald-200 text-emerald-600'
-                            }`}
-                        >
+                        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black ${isAutoDetecting ? 'bg-sky-50 border border-sky-100 text-sky-500' : 'bg-emerald-50 border border-emerald-200 text-emerald-600'}`}>
                           {isAutoDetecting ? (
                             <>
                               <ScanSearch className="w-3.5 h-3.5 animate-pulse" />
@@ -1410,11 +1419,7 @@ export const SelectFrame: React.FC = () => {
                             backgroundSize: '12px 14px',
                           }}
                         >
-                          <img
-                            src={previewSrc}
-                            alt="Workspace"
-                            className="max-w-full max-h-full object-contain"
-                          />
+                          <img src={previewSrc} alt="Workspace" className="max-w-full max-h-full object-contain" />
                         </div>
 
                         <div className="flex justify-end items-center text-[10px] font-bold">

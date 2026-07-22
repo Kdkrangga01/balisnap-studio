@@ -166,6 +166,27 @@ export function useLoadedImage(src: string | null) {
   return image;
 }
 
+export function useLoadedStickerImage(src: string | null) {
+  const [image, setImage] = useState<HTMLImageElement | null>(null);
+
+  useEffect(() => {
+    if (!src) {
+      setImage(null);
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      setImage(img);
+    };
+    img.onerror = () => console.error("Failed to load sticker image:", src);
+    img.src = src;
+  }, [src]);
+
+  return image;
+}
+
 interface PhotoCanvasProps {
   stageRef: React.RefObject<any>;
   containerWidth: number;
@@ -759,7 +780,7 @@ interface StickerElementProps {
 }
 
 const StickerElement: React.FC<StickerElementProps> = ({ sticker, onClick, onChange, isPreviewMode = false }) => {
-  const loadedImg = useLoadedImage(sticker.stickerId);
+  const loadedImg = useLoadedStickerImage(sticker.stickerId);
   const shapeRef = useRef<any>(null);
   const { selectedFrame } = usePhotobooth();
 

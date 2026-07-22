@@ -4,16 +4,23 @@ import type { StickerItem, StickerPack } from '../../data/stickers';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 import { Heart, Sparkles } from 'lucide-react';
 
+const StickerThumbnail: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
+  return <img src={src} alt={alt} className={className} />;
+};
+
 export const StickerPanel: React.FC = () => {
   const { addSticker, applyStickerPack, favoriteStickers, toggleFavoriteSticker } = usePhotobooth();
   const [activeCategory, setActiveCategory] = useState<string>('packs');
 
   const categories = [
     { id: 'packs', name: '✨ Paket Auto-Spread' },
-    { id: 'all', name: 'Semua' },
-    { id: 'favorit', name: 'Favorit' },
+    { id: 'cat', name: '🐱 Kucing' },
+    { id: 'nailong', name: '🐲 Nailong' },
+    { id: 'aesthetic', name: '✨ Aesthetic' },
     { id: 'cute', name: 'Kawaii' },
-    { id: 'emoji', name: 'Emoji' }
+    { id: 'emoji', name: 'Emoji' },
+    { id: 'all', name: 'Semua' },
+    { id: 'favorit', name: 'Favorit' }
   ];
 
   const filteredStickers = activeCategory === 'all'
@@ -51,7 +58,7 @@ export const StickerPanel: React.FC = () => {
               className="flex flex-col items-center justify-center p-3 bg-ivory-dark rounded-xl border border-cream/60 hover:border-gold-light hover:bg-white hover:shadow-lg transition-all group duration-200 text-center"
             >
               <div className="relative mb-2">
-                <img
+                <StickerThumbnail
                   src={pack.icon}
                   alt={pack.name}
                   className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-200"
@@ -85,7 +92,7 @@ export const StickerPanel: React.FC = () => {
                   className="flex items-center justify-center p-2 bg-ivory-dark rounded-xl border border-cream/40 hover:border-gold-light hover:bg-white hover:shadow-md transition-all w-full h-14 group duration-200"
                   title={sticker.name}
                 >
-                  <img
+                  <StickerThumbnail
                     src={sticker.src}
                     alt={sticker.name}
                     className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-200"

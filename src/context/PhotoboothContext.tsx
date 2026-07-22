@@ -114,35 +114,96 @@ interface PhotoboothContextProps {
   deleteCustomFrame: (id: string) => void;
 }
 
-const PhotoboothContext = createContext<PhotoboothContextProps | undefined>(undefined);
+const PhotoboothContext = createContext<PhotoboothContextProps | undefined>(undefined);const SESSION_KEY = 'balisnap_active_session_v1';
+
+const getInitialSession = () => {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error("Failed to parse session storage:", e);
+  }
+  return null;
+};
 
 export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [step, setStep] = useState<StepType>('landing');
-  const [selectedFrame, setSelectedFrame] = useState<FrameTemplate | null>(null);
-  const [photos, setPhotos] = useState<(string | null)[]>([]);
-  const [photoTransforms, setPhotoTransforms] = useState<PhotoTransform[]>([]);
-  const [stickers, setStickers] = useState<CanvasSticker[]>([]);
-  const [texts, setTexts] = useState<CanvasText[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [appliedFilter, setAppliedFilter] = useState<FilterType>('normal');
-  const [frameColor, setFrameColor] = useState<FrameColorId>('original');
+  const savedSession = getInitialSession();
+
+  const [step, setStep] = useState<StepType>(savedSession?.step || 'landing');
+  const [selectedFrame, setSelectedFrame] = useState<FrameTemplate | null>(savedSession?.selectedFrame || null);
+  const [photos, setPhotos] = useState<(string | null)[]>(savedSession?.photos || []);
+  const [photoTransforms, setPhotoTransforms] = useState<PhotoTransform[]>(savedSession?.photoTransforms || []);
+  const [stickers, setStickers] = useState<CanvasSticker[]>(savedSession?.stickers || []);
+  const [texts, setTexts] = useState<CanvasText[]>(savedSession?.texts || []);
+  const [selectedId, setSelectedId] = useState<string | null>(savedSession?.selectedId || null);
+  const [appliedFilter, setAppliedFilter] = useState<FilterType>(savedSession?.appliedFilter || 'normal');
+  const [frameColor, setFrameColor] = useState<FrameColorId>(savedSession?.frameColor || 'original');
   const [customFrames, setCustomFrames] = useState<FrameTemplate[]>([]);
 
-  const [frameStyle, setFrameStyle] = useState<string>('solid');
-  const [borderThickness, setBorderThickness] = useState<number>(0);
-  const [borderRadius, setBorderRadius] = useState<number>(10);
-  const [shadowIntensity, setShadowIntensity] = useState<number>(0);
-  const [shadowBlur, setShadowBlur] = useState<number>(5);
-  const [shadowColor, setShadowColor] = useState<string>('#000000');
-  const [frameOpacity, setFrameOpacity] = useState<number>(1);
-  const [framePadding, setFramePadding] = useState<number>(0);
-  const [innerMargin, setInnerMargin] = useState<number>(0);
-  const [outerMargin, setOuterMargin] = useState<number>(0);
-  const [wallpaperId, setWallpaperId] = useState<string>('');
-  const [wallpaperUpload, setWallpaperUpload] = useState<string>('');
-  const [wallpaperBlur, setWallpaperBlur] = useState<number>(0);
-  const [wallpaperOpacity, setWallpaperOpacity] = useState<number>(1);
-  const [wallpaperScaleMode, setWallpaperScaleMode] = useState<'fit' | 'fill' | 'crop' | 'stretch'>('fill');
+  const [frameStyle, setFrameStyle] = useState<string>(savedSession?.frameStyle || 'solid');
+  const [borderThickness, setBorderThickness] = useState<number>(savedSession?.borderThickness ?? 0);
+  const [borderRadius, setBorderRadius] = useState<number>(savedSession?.borderRadius ?? 10);
+  const [shadowIntensity, setShadowIntensity] = useState<number>(savedSession?.shadowIntensity ?? 0);
+  const [shadowBlur, setShadowBlur] = useState<number>(savedSession?.shadowBlur ?? 5);
+  const [shadowColor, setShadowColor] = useState<string>(savedSession?.shadowColor || '#000000');
+  const [frameOpacity, setFrameOpacity] = useState<number>(savedSession?.frameOpacity ?? 1);
+  const [framePadding, setFramePadding] = useState<number>(savedSession?.framePadding ?? 0);
+  const [innerMargin, setInnerMargin] = useState<number>(savedSession?.innerMargin ?? 0);
+  const [outerMargin, setOuterMargin] = useState<number>(savedSession?.outerMargin ?? 0);
+  const [wallpaperId, setWallpaperId] = useState<string>(savedSession?.wallpaperId || '');
+  const [wallpaperUpload, setWallpaperUpload] = useState<string>(savedSession?.wallpaperUpload || '');
+  const [wallpaperBlur, setWallpaperBlur] = useState<number>(savedSession?.wallpaperBlur ?? 0);
+  const [wallpaperOpacity, setWallpaperOpacity] = useState<number>(savedSession?.wallpaperOpacity ?? 1);
+  const [wallpaperScaleMode, setWallpaperScaleMode] = useState<'fit' | 'fill' | 'crop' | 'stretch'>(savedSession?.wallpaperScaleMode || 'fill');
+
+  // Menyimpan otomatis sesi ke sessionStorage tiap ada perubahan state aktif
+  useEffect(() => {
+    try {
+      if (step === 'landing') {
+        sessionStorage.removeItem(SESSION_KEY);
+      } else {
+        const payload = {
+          step,
+          selectedFrame,
+          photos,
+          photoTransforms,
+          stickers,
+          texts,
+          selectedId,
+          appliedFilter,
+          frameColor,
+          frameStyle,
+          borderThickness,
+          borderRadius,
+          shadowIntensity,
+          shadowBlur,
+          shadowColor,
+          frameOpacity,
+          framePadding,
+          innerMargin,
+          outerMargin,
+          wallpaperId,
+          wallpaperUpload,
+          wallpaperBlur,
+          wallpaperOpacity,
+          wallpaperScaleMode,
+        };
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+      }
+    } catch (e) {
+      console.error("Failed to save session state:", e);
+    }
+  }, [
+    step, selectedFrame, photos, photoTransforms, stickers, texts, selectedId, appliedFilter,
+    frameColor, frameStyle, borderThickness, borderRadius, shadowIntensity, shadowBlur,
+    shadowColor, frameOpacity, framePadding, innerMargin, outerMargin, wallpaperId,
+    wallpaperUpload, wallpaperBlur, wallpaperOpacity, wallpaperScaleMode
+  ]);
 
   const [favoriteColors, setFavoriteColors] = useState<string[]>(() => {
     try {
@@ -252,35 +313,30 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     initCustomFrames();
   }, []);
 
-  useEffect(() => {
-    if (selectedFrame) {
-      setPhotos(new Array(selectedFrame.slots).fill(null));
-      setPhotoTransforms(new Array(selectedFrame.slots).fill(null).map(() => ({ x: 0, y: 0, zoom: DEFAULT_PHOTO_ZOOM })));
-      setStickers([]);
-      setTexts([]);
-      setSelectedId(null);
-      setAppliedFilter('normal');
-      setFrameColor('original');
-      setFrameStyle('solid');
-      setBorderThickness(0);
-      setBorderRadius(10);
-      setShadowIntensity(0);
-      setShadowBlur(5);
-      setShadowColor('#000000');
-      setFrameOpacity(1);
-      setFramePadding(0);
-      setInnerMargin(0);
-      setOuterMargin(0);
-      setWallpaperId('');
-      setWallpaperUpload('');
-      setWallpaperBlur(0);
-      setWallpaperOpacity(1);
-      setWallpaperScaleMode('fill');
-    }
-  }, [selectedFrame]);
-
   const selectFrame = (frame: FrameTemplate) => {
     setSelectedFrame(frame);
+    setPhotos(new Array(frame.slots).fill(null));
+    setPhotoTransforms(new Array(frame.slots).fill(null).map(() => ({ x: 0, y: 0, zoom: DEFAULT_PHOTO_ZOOM })));
+    setStickers([]);
+    setTexts([]);
+    setSelectedId(null);
+    setAppliedFilter('normal');
+    setFrameColor('original');
+    setFrameStyle('solid');
+    setBorderThickness(0);
+    setBorderRadius(10);
+    setShadowIntensity(0);
+    setShadowBlur(5);
+    setShadowColor('#000000');
+    setFrameOpacity(1);
+    setFramePadding(0);
+    setInnerMargin(0);
+    setOuterMargin(0);
+    setWallpaperId('');
+    setWallpaperUpload('');
+    setWallpaperBlur(0);
+    setWallpaperOpacity(1);
+    setWallpaperScaleMode('fill');
     setStep('capture');
   };
 
@@ -446,6 +502,9 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const resetAll = () => {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {}
     setStep('landing');
     setSelectedFrame(null);
     setPhotos([]);

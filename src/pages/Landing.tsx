@@ -3,11 +3,108 @@ import { usePhotobooth } from '../context/PhotoboothContext';
 import { Camera, Sparkles, Image as ImageIcon, ArrowRight, Maximize2 } from 'lucide-react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 
+// Component khusus dengan Algoritma Flood-Fill Removal yang presisi
+const TransparentLogo: React.FC<{ src: string; className?: string }> = ({ src, className }) => {
+  const [transparentSrc, setTransparentSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = src;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const width = img.naturalWidth;
+      const height = img.naturalHeight;
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+
+      // Algoritma Flood Fill dari sudut-sudut gambar untuk menghapus background luar murni
+      const visited = new Uint8Array(width * height);
+      const queue: number[] = [];
+
+      // Memasukkan piksel tepi luar canvas ke antrean
+      for (let x = 0; x < width; x++) {
+        queue.push(x, 0);
+        queue.push(x, height - 1);
+      }
+      for (let y = 0; y < height; y++) {
+        queue.push(0, y);
+        queue.push(width - 1, y);
+      }
+
+      while (queue.length > 0) {
+        const cy = queue.pop()!;
+        const cx = queue.pop()!;
+        const idx = cy * width + cx;
+
+        if (visited[idx]) continue;
+        visited[idx] = 1;
+
+        const pIdx = idx * 4;
+        const r = data[pIdx];
+        const g = data[pIdx + 1];
+        const b = data[pIdx + 2];
+
+        // Toleransi deteksi warna latar/bercak luar (krem, putih, bercak vintage)
+        const isBackground = (r > 160 && g > 145 && b > 120) || (r > 200 && g > 200 && b > 200);
+
+        if (isBackground) {
+          data[pIdx + 3] = 0; // Hapus piksel bercak background jadi transparan
+
+          // Periksa tetangga 4 arah
+          const neighbors = [
+            [cx + 1, cy],
+            [cx - 1, cy],
+            [cx, cy + 1],
+            [cx, cy - 1]
+          ];
+
+          for (const [nx, ny] of neighbors) {
+            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+              const nIdx = ny * width + nx;
+              if (!visited[nIdx]) {
+                queue.push(nx, ny);
+              }
+            }
+          }
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      setTransparentSrc(canvas.toDataURL('image/png'));
+    };
+  }, [src]);
+
+  return (
+    <motion.img
+      src={transparentSrc || src}
+      alt="BaliSnap Studio Logo"
+      className={className}
+      animate={{
+        scale: [1, 1.03, 1],
+        rotate: [0, 1.5, -1.5, 0],
+      }}
+      transition={{
+        duration: 5,
+        ease: "easeInOut",
+        repeat: Infinity,
+        repeatType: "mirror"
+      }}
+      whileHover={{ scale: 1.05 }}
+    />
+  );
+};
+
 export const Landing: React.FC = () => {
   const { setStep } = usePhotobooth();
 
-  // Tilt 3D effect hanya aktif di desktop (pointer mouse), dimatikan total di mobile
-  // supaya tidak ada compositing layer / transform tambahan yang membebani scroll.
   const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
@@ -27,10 +124,8 @@ export const Landing: React.FC = () => {
   function handleMouse(event: React.MouseEvent<HTMLDivElement, MouseEvent>) {
     if (!isDesktop) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseX = event.clientX - rect.left - width / 2;
-    const mouseY = event.clientY - rect.top - height / 2;
+    const mouseX = event.clientX - rect.left - rect.width / 2;
+    const mouseY = event.clientY - rect.top - rect.height / 2;
     x.set(mouseX);
     y.set(mouseY);
   }
@@ -62,7 +157,7 @@ export const Landing: React.FC = () => {
   return (
     <div className="min-h-screen w-full max-w-[100vw] bg-[#FAF9F5] text-zinc-900 selection:bg-rose-100 overflow-x-hidden relative font-sans antialiased">
 
-      {/* ===== EMOTE KIYOMO CUTE & AESTHETIC (desktop only, tidak mengganggu mobile) ===== */}
+      {/* ===== EMOTE KIYOMO CUTE & AESTHETIC ===== */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <motion.div animate={{ y: [0, -15, 0], rotate: [0, 5, -5, 0] }} transition={{ repeat: Infinity, duration: 3.5 }} className="absolute top-[10%] left-[3%] text-5xl opacity-80 hidden lg:block">🎀</motion.div>
         <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute top-[6%] right-[18%] text-5xl opacity-80 hidden lg:block">✨</motion.div>
@@ -73,12 +168,12 @@ export const Landing: React.FC = () => {
         <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute top-[62%] right-[5%] text-3xl opacity-50 hidden lg:block">🍓</motion.div>
       </div>
 
-      {/* Iridescent Organic Light Blobs - blur dikecilkan di mobile agar scroll ringan */}
+      {/* Iridescent Light Blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-gradient-to-tr from-rose-200/50 via-amber-100/40 to-cyan-200/30 rounded-full blur-[60px] sm:blur-[100px] lg:blur-[160px] pointer-events-none mix-blend-multiply" />
       <div className="absolute top-[20%] right-[-20%] w-[60vw] h-[60vw] bg-gradient-to-bl from-purple-100/60 via-teal-50/50 to-orange-100/40 rounded-full blur-[60px] sm:blur-[100px] lg:blur-[180px] pointer-events-none mix-blend-multiply" />
       <div className="absolute bottom-[-10%] left-[10%] w-[50vw] h-[50vw] bg-gradient-to-r from-emerald-100/40 via-indigo-100/50 to-pink-100/30 rounded-full blur-[60px] sm:blur-[100px] lg:blur-[140px] pointer-events-none mix-blend-multiply" />
 
-      {/* Luxury Editorial Grid Overlay */}
+      {/* Grid Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#EAE6DC_1px,transparent_1px),linear-gradient(to_bottom,#EAE6DC_1px,transparent_1px)] bg-[size:40px_40px] opacity-[0.5] pointer-events-none" />
 
       {/* Header / Navbar */}
@@ -86,15 +181,22 @@ export const Landing: React.FC = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="px-4 sm:px-6 md:px-12 py-4 sm:py-6 border-b border-[#EAE6DC]/60 flex justify-between items-center bg-[#FAF9F5]/90 backdrop-blur-sm sticky top-0 z-50 shadow-[0_4px_30px_rgba(234,230,220,0.2)]"
+        className="px-4 sm:px-6 md:px-12 py-3 sm:py-4 border-b border-[#EAE6DC]/60 flex justify-between items-center bg-[#FAF9F5]/90 backdrop-blur-sm sticky top-0 z-50 shadow-[0_4px_30px_rgba(234,230,220,0.2)]"
       >
-        <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer">
-          <span className="font-serif tracking-[0.15em] sm:tracking-[0.2em] text-lg sm:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-zinc-950 via-zinc-800 to-zinc-600">
-            BALISNAP
-          </span>
-          <span className="text-[7px] sm:text-[8px] tracking-[0.25em] sm:tracking-[0.35em] font-black bg-gradient-to-r from-rose-500 via-purple-600 to-indigo-600 text-transparent bg-clip-text border border-rose-200 px-2 sm:px-2.5 py-0.5 rounded-full bg-white/80 shadow-sm transition-all duration-300 group-hover:scale-105">
-            STUDIO
-          </span>
+        <div className="flex items-center gap-2.5 sm:gap-3.5 group cursor-pointer">
+          {/* LOGO DENGAN CLEAN FLOOD-FILL BACKGROUND REMOVER */}
+          <TransparentLogo
+            src="/logo.png"
+            className="w-12 h-12 sm:w-16 sm:h-16 object-contain drop-shadow-[0_4px_10px_rgba(180,140,80,0.15)] shrink-0"
+          />
+          <div className="flex flex-col">
+            <span className="font-serif tracking-[0.15em] sm:tracking-[0.2em] text-base sm:text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-zinc-950 via-zinc-800 to-zinc-600 leading-none">
+              BALISNAP
+            </span>
+            <span className="text-[7px] sm:text-[8px] tracking-[0.25em] sm:tracking-[0.35em] font-black bg-gradient-to-r from-rose-500 via-purple-600 to-indigo-600 text-transparent bg-clip-text mt-0.5 uppercase">
+              STUDIO
+            </span>
+          </div>
         </div>
 
         <nav className="hidden md:flex gap-12 text-[10px] font-black tracking-[0.25em] text-zinc-500 uppercase">
@@ -185,42 +287,24 @@ export const Landing: React.FC = () => {
               </div>
             </div>
 
-            {/* GRID DENGAN GAMBAR ESTETIK */}
+            {/* Preview Grid */}
             <div className="w-full flex-1 my-4 sm:my-5 bg-zinc-950 rounded-xl p-2.5 sm:p-3 shadow-inner relative overflow-hidden flex flex-col gap-2 sm:gap-2.5 justify-between">
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent pointer-events-none" />
 
               <div className="bg-zinc-900 rounded-md flex-1 w-full flex items-center justify-center relative overflow-hidden group/slot">
-                <img
-                  src="/cat1.png"
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover/slot:opacity-100"
-                />
+                <img src="/cat1.png" alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover/slot:opacity-100" />
                 <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 z-10" />
                 <div className="hidden lg:block absolute bottom-1 right-1 text-xs">🌸</div>
               </div>
 
               <div className="bg-zinc-900 rounded-md flex-1 w-full flex items-center justify-center relative overflow-hidden group/slot">
-                <img
-                  src="/cat2.jpg"
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover/slot:opacity-100"
-                />
+                <img src="/cat2.jpg" alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover/slot:opacity-100" />
                 <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 z-10" />
                 <div className="hidden lg:block absolute top-1 left-1 text-xs">💖</div>
               </div>
 
               <div className="bg-zinc-900 rounded-md flex-1 w-full flex items-center justify-center relative overflow-hidden group/slot">
-                <img
-                  src="/cat3.png"
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover/slot:opacity-100"
-                />
+                <img src="/cat3.png" alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover/slot:opacity-100" />
                 <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white/40 z-10" />
                 <div className="hidden lg:block absolute bottom-1 right-1 text-xs">✨</div>
               </div>
@@ -241,9 +325,8 @@ export const Landing: React.FC = () => {
         </motion.div>
       </main>
 
-      {/* Procedural Section (Workflow Berkelas) */}
+      {/* Workflow Section */}
       <section id="cara-kerja" className="relative border-t border-[#EAE6DC]/60 bg-white/40 py-16 sm:py-28 px-4 sm:px-6 overflow-hidden">
-        {/* Live Angry Cat Sticker - desktop only */}
         <motion.div
           animate={{ y: [0, -12, 0], rotate: [-12, -6, -12] }}
           transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
@@ -295,7 +378,7 @@ export const Landing: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer Minimalis Galeri */}
+      {/* Footer */}
       <footer className="py-10 sm:py-16 px-4 sm:px-6 border-t border-[#EAE6DC]/60 bg-[#FAF9F5] text-center text-[10px] text-zinc-400 font-bold relative z-10">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
           <p className="tracking-[0.1em] sm:tracking-[0.15em]">
