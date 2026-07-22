@@ -923,22 +923,6 @@ export const frames: FrameTemplate[] = [
     ]
   },
   {
-    id: "custom-1784543722837-eopz",
-    name: "Frame White Maroon",
-    slots: 6,
-    category: "korean",
-    src: "/templates/custom-1784543722837-eopz.png",
-    width: 1023, height: 1537,
-    slotCoords: [
-      { x: 86, y: 73, w: 388, h: 397, rx: 12 },
-      { x: 85, y: 502, w: 389, h: 395, rx: 12 },
-      { x: 86, y: 929, w: 388, h: 396, rx: 12 },
-      { x: 586, y: 74, w: 391, h: 396, rx: 12 },
-      { x: 586, y: 503, w: 391, h: 394, rx: 12 },
-      { x: 586, y: 931, w: 391, h: 394, rx: 12 }
-    ]
-  },
-  {
     id: "custom-1784544196068-ee8i",
     name: "Frame Kucing Kawai",
     slots: 6,
@@ -1140,22 +1124,6 @@ export const frames: FrameTemplate[] = [
       { x: 210, y: 196, w: 327, h: 239, rx: 7 },
       { x: 209, y: 469, w: 327, h: 240, rx: 7 },
       { x: 207, y: 737, w: 327, h: 240, rx: 7 }
-    ]
-  },
-  {
-    id: "custom-1784715493137-qh6l",
-    name: "Clasic Frame",
-    slots: 6,
-    category: "retro",
-    src: "/templates/custom-1784715493137-qh6l.png",
-    width: 1023, height: 1537,
-    slotCoords: [
-      { x: 86, y: 73, w: 388, h: 397, rx: 12 },
-      { x: 85, y: 502, w: 389, h: 395, rx: 12 },
-      { x: 86, y: 929, w: 388, h: 396, rx: 12 },
-      { x: 586, y: 74, w: 391, h: 396, rx: 12 },
-      { x: 586, y: 503, w: 391, h: 394, rx: 12 },
-      { x: 586, y: 931, w: 391, h: 394, rx: 12 }
     ]
   }
 ];
