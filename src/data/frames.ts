@@ -1015,17 +1015,6 @@ export const frames: FrameTemplate[] = [
     ]
   },
   {
-    id: "custom-1784636485498-kxdl",
-    name: "Aestetik abstrak",
-    slots: 1,
-    category: "retro",
-    src: "/templates/custom-1784636485498-kxdl.png",
-    width: 736, height: 1308,
-    slotCoords: [
-      { x: 36, y: 1005, w: 287, h: 219, rx: 7 }
-    ]
-  },
-  {
     id: "custom-1784636523212-9oxx",
     name: "Frame vintage kamera",
     slots: 2,

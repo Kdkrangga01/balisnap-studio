@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 import { frameColors } from '../../data/frameColors';
-import { wallpapers, wallpaperCategories } from '../../data/wallpapers';
 import { presets } from '../../data/presets';
 import {
     Palette,
     Sliders,
-    Image as ImageIcon,
     Sparkles,
-    Heart,
-    Upload,
-    Check,
-    Undo
+    Heart
 } from 'lucide-react';
 
 export const FrameColorPanel: React.FC = () => {
@@ -25,18 +20,13 @@ export const FrameColorPanel: React.FC = () => {
         shadowColor, setShadowColor,
         frameOpacity, setFrameOpacity,
         framePadding, setFramePadding,
-        wallpaperId, setWallpaperId,
-        wallpaperUpload, setWallpaperUpload,
-        wallpaperBlur, setWallpaperBlur,
-        wallpaperOpacity, setWallpaperOpacity,
-        wallpaperScaleMode, setWallpaperScaleMode,
+        setWallpaperId,
         favoriteColors, toggleFavoriteColor,
         recentColors, addRecentColor,
         setAppliedFilter
     } = usePhotobooth();
 
-    const [subTab, setSubTab] = useState<'color' | 'detail' | 'wallpaper' | 'preset'>('color');
-    const [activeWallpaperCat, setActiveWallpaperCat] = useState<string>('all');
+    const [subTab, setSubTab] = useState<'color' | 'detail' | 'preset'>('color');
     const [customHex, setCustomHex] = useState<string>('#ffffff');
 
     // ------------------------------------------------------------
@@ -62,18 +52,6 @@ export const FrameColorPanel: React.FC = () => {
         addRecentColor(val);
     };
 
-    const handleWallpaperUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const src = ev.target?.result as string;
-            setWallpaperUpload(src);
-            setWallpaperId(''); // Clear predefined wallpaper
-        };
-        reader.readAsDataURL(file);
-    };
-
     const handleApplyPreset = (preset: typeof presets[0]) => {
         setFrameColor(preset.frameColor);
         setAppliedFilter(preset.appliedFilter);
@@ -85,11 +63,6 @@ export const FrameColorPanel: React.FC = () => {
         setFrameOpacity(preset.frameOpacity);
     };
 
-    // Filtered wallpapers based on category
-    const filteredWallpapers = wallpapers.filter(w =>
-        activeWallpaperCat === 'all' || w.category === activeWallpaperCat
-    );
-
     return (
         <div className="flex flex-col gap-4 text-charcoal">
             {/* Sub tabs */}
@@ -97,7 +70,6 @@ export const FrameColorPanel: React.FC = () => {
                 {[
                     { id: 'color', label: 'Warna', icon: Palette },
                     { id: 'detail', label: 'Detail', icon: Sliders },
-                    { id: 'wallpaper', label: 'Wallpaper', icon: ImageIcon },
                     { id: 'preset', label: 'Preset', icon: Sparkles },
                 ].map(t => (
                     <button
@@ -345,152 +317,7 @@ export const FrameColorPanel: React.FC = () => {
                 </div>
             )}
 
-            {subTab === 'wallpaper' && (
-                <div className="flex flex-col gap-3">
-                    {/* Upload Wallpaper */}
-                    <div className="flex items-center gap-3 bg-ivory-dark/30 p-2.5 rounded-xl border border-cream/10">
-                        <button
-                            onClick={() => document.getElementById('wallpaper-file-input')?.click()}
-                            className="px-4 py-2 rounded-xl bg-white hover:bg-amber-50/50 text-charcoal border border-cream/30 text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 w-full justify-center"
-                        >
-                            <Upload className="w-3.5 h-3.5 text-mahogany" />
-                            Unggah Wallpaper Sendiri
-                        </button>
-                        <input
-                            id="wallpaper-file-input"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleWallpaperUpload}
-                            className="hidden"
-                        />
-                    </div>
 
-                    {/* Wallpaper category filters */}
-                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                        {wallpaperCategories.map(cat => (
-                            <button
-                                key={cat.id}
-                                onClick={() => setActiveWallpaperCat(cat.id)}
-                                className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider flex-shrink-0 transition-all flex items-center gap-1 ${activeWallpaperCat === cat.id
-                                    ? 'bg-mahogany text-white'
-                                    : 'bg-cream-light text-charcoal/60 hover:bg-cream'
-                                    }`}
-                            >
-                                <span>{cat.emoji}</span>
-                                {cat.name}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Wallpapers Swatches */}
-                    <div>
-                        <div className="grid grid-cols-4 gap-2 max-h-[140px] overflow-y-auto pr-1 custom-scroll">
-                            {/* Option to clear wallpaper */}
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setWallpaperId('');
-                                    setWallpaperUpload('');
-                                }}
-                                className={`h-12 rounded-lg border border-dashed border-cream/40 flex flex-col items-center justify-center text-[9px] font-bold text-charcoal/40 hover:border-mahogany hover:text-mahogany transition-all ${!wallpaperId && !wallpaperUpload ? 'ring-2 ring-gold border-solid bg-gold-light/10' : ''
-                                    }`}
-                            >
-                                <Undo className="w-4 h-4 mb-0.5" />
-                                Kosong
-                            </button>
-
-                            {/* Custom Uploaded Preview */}
-                            {wallpaperUpload && (
-                                <button
-                                    type="button"
-                                    onClick={() => setWallpaperId('')}
-                                    className={`h-12 rounded-lg border overflow-hidden relative ${!wallpaperId ? 'ring-2 ring-gold' : ''
-                                        }`}
-                                >
-                                    <img src={wallpaperUpload} alt="Uploaded" className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                        <Check className="w-4 h-4 text-white" />
-                                    </div>
-                                </button>
-                            )}
-
-                            {/* Curated list */}
-                            {filteredWallpapers.map(w => {
-                                const isSelected = wallpaperId === w.id;
-                                return (
-                                    <button
-                                        key={w.id}
-                                        type="button"
-                                        onClick={() => {
-                                            setWallpaperId(w.id);
-                                            setWallpaperUpload('');
-                                        }}
-                                        title={w.name}
-                                        className={`h-12 rounded-lg border shadow-sm transition-all relative ${isSelected ? 'ring-2 ring-gold scale-95 border-gold shadow-md' : 'hover:scale-98'
-                                            }`}
-                                        style={{ background: w.previewCss }}
-                                    >
-                                        {isSelected && (
-                                            <span className="absolute inset-0 bg-black/25 flex items-center justify-center rounded-lg">
-                                                <Check className="w-4 h-4 text-white" />
-                                            </span>
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Wallpaper Edit sliders */}
-                    {(wallpaperId || wallpaperUpload) && (
-                        <div className="border-t border-cream/10 pt-2.5 flex flex-col gap-2.5 text-xs">
-                            <div className="flex gap-2">
-                                <div className="flex-1">
-                                    <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/40 mb-1">Blur Wallpaper ({wallpaperBlur}px)</span>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="15"
-                                        value={wallpaperBlur}
-                                        onChange={(e) => setWallpaperBlur(Number(e.target.value))}
-                                        className="w-full accent-mahogany cursor-pointer"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/40 mb-1">Transparansi ({Math.round(wallpaperOpacity * 100)}%)</span>
-                                    <input
-                                        type="range"
-                                        min="0.1"
-                                        max="1"
-                                        step="0.05"
-                                        value={wallpaperOpacity}
-                                        onChange={(e) => setWallpaperOpacity(Number(e.target.value))}
-                                        className="w-full accent-mahogany cursor-pointer"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/40 mb-1.5">Skala / Pengepasan Wallpaper</span>
-                                <div className="grid grid-cols-4 gap-1.5">
-                                    {['fill', 'fit', 'crop', 'stretch'].map(mode => (
-                                        <button
-                                            key={mode}
-                                            onClick={() => setWallpaperScaleMode(mode as any)}
-                                            className={`py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider border transition-all ${wallpaperScaleMode === mode
-                                                ? 'border-mahogany bg-mahogany/5 text-mahogany'
-                                                : 'border-cream/20 hover:border-cream text-charcoal/50'
-                                                }`}
-                                        >
-                                            {mode}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
 
             {subTab === 'preset' && (
                 <div className="flex flex-col gap-3">
