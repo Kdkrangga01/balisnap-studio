@@ -489,4 +489,4 @@ export const stickerPacks: StickerPack[] = [
       "/stickers/bubble-ootd.svg"
     ]
   }
-];
+]

@@ -38,8 +38,8 @@ export const StickerPanel: React.FC = () => {
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
             className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${activeCategory === cat.id
-                ? 'bg-mahogany text-white shadow-md'
-                : 'bg-cream-light text-charcoal/60 hover:bg-cream'
+              ? 'bg-mahogany text-white shadow-md'
+              : 'bg-cream-light text-charcoal/60 hover:bg-cream'
               }`}
           >
             {cat.name}

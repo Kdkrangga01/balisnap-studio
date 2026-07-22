@@ -12,101 +12,6 @@ type SlotCoord = FrameTemplate['slotCoords'][number];
 const HIDDEN_FRAMES_STORAGE_KEY = 'balisnap-hidden-frames';
 const FRAME_NAME_OVERRIDES_STORAGE_KEY = 'balisnap-frame-name-overrides';
 
-// Component khusus dengan Algoritma Flood-Fill Removal yang presisi
-const TransparentLogo: React.FC<{ src: string; className?: string }> = ({ src, className }) => {
-  const [transparentSrc, setTransparentSrc] = useState<string | null>(null);
-
-  useEffect(() => {
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.src = src;
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const width = img.naturalWidth;
-      const height = img.naturalHeight;
-      canvas.width = width;
-      canvas.height = height;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      ctx.drawImage(img, 0, 0);
-      const imageData = ctx.getImageData(0, 0, width, height);
-      const data = imageData.data;
-
-      const visited = new Uint8Array(width * height);
-      const queue: number[] = [];
-
-      for (let x = 0; x < width; x++) {
-        queue.push(x, 0);
-        queue.push(x, height - 1);
-      }
-      for (let y = 0; y < height; y++) {
-        queue.push(0, y);
-        queue.push(width - 1, y);
-      }
-
-      while (queue.length > 0) {
-        const cy = queue.pop()!;
-        const cx = queue.pop()!;
-        const idx = cy * width + cx;
-
-        if (visited[idx]) continue;
-        visited[idx] = 1;
-
-        const pIdx = idx * 4;
-        const r = data[pIdx];
-        const g = data[pIdx + 1];
-        const b = data[pIdx + 2];
-
-        const isBackground = (r > 160 && g > 145 && b > 120) || (r > 200 && g > 200 && b > 200);
-
-        if (isBackground) {
-          data[pIdx + 3] = 0;
-
-          const neighbors = [
-            [cx + 1, cy],
-            [cx - 1, cy],
-            [cx, cy + 1],
-            [cx, cy - 1]
-          ];
-
-          for (const [nx, ny] of neighbors) {
-            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-              const nIdx = ny * width + nx;
-              if (!visited[nIdx]) {
-                queue.push(nx, ny);
-              }
-            }
-          }
-        }
-      }
-
-      ctx.putImageData(imageData, 0, 0);
-      setTransparentSrc(canvas.toDataURL('image/png'));
-    };
-  }, [src]);
-
-  return (
-    <motion.img
-      src={transparentSrc || src}
-      alt="BaliSnap Studio Logo"
-      className={className}
-      animate={{
-        scale: [1, 1.03, 1],
-        rotate: [0, 1.5, -1.5, 0],
-      }}
-      transition={{
-        duration: 5,
-        ease: "easeInOut",
-        repeat: Infinity,
-        repeatType: "mirror"
-      }}
-      whileHover={{ scale: 1.05 }}
-    />
-  );
-};
-
 function loadHiddenFrameIds(): Set<string> {
   try {
     const stored = localStorage.getItem(HIDDEN_FRAMES_STORAGE_KEY);
@@ -928,7 +833,7 @@ export const SelectFrame: React.FC = () => {
 
         <div className="max-w-7xl w-full relative z-10 flex flex-col gap-8">
 
-          {/* Heading Layout */}
+          {/* Heading Layout Tanpa Gambar Logo */}
           <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left border-b-4 border-dashed border-rose-200 pb-8 gap-6 w-full">
             <div className="flex flex-col items-center md:items-start">
               <button
@@ -939,11 +844,6 @@ export const SelectFrame: React.FC = () => {
                 Kembali
               </button>
               <div className="flex items-center gap-4 mb-2">
-                {/* LOGO DENGAN CLEAN FLOOD-FILL BACKGROUND REMOVER */}
-                <TransparentLogo
-                  src="/logo.png"
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain drop-shadow-[0_4px_8px_rgba(244,63,94,0.2)] shrink-0"
-                />
                 <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-zinc-900 tracking-tight leading-tight">
                   Pilih{' '}
                   <span className="font-sans font-black italic bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 text-transparent bg-clip-text drop-shadow-[0_2px_6px_rgba(255,182,193,0.2)]">
