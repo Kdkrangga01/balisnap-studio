@@ -27,9 +27,19 @@ const CAMERA_FILTERS = [
   { id: 'bw', label: 'B&W Elegant 🖤', filterCss: 'grayscale(100%) contrast(115%) brightness(102%)' }
 ];
 
-function cropDataUrlToAspect(
+// PENTING: fungsi ini SENGAJA TIDAK memotong (crop) foto sama sekali lagi.
+// Sebelumnya foto dipaksa dipotong center supaya pas dengan rasio kotak
+// slot -> ini menghilangkan sebagian konten foto secara permanen (mis.
+// kepala/badan kepotong), sehingga saat ditampilkan di bingkai akhir foto
+// terlihat "zoom"/kebesaran padahal sebenarnya itu karena datanya memang
+// sudah hilang sebagian sejak awal. Sekarang foto disimpan UTUH apa adanya
+// (rasio asli dipertahankan), hanya diperkecil kalau ukurannya kelewat
+// besar (supaya file tidak berat). Penyesuaian bentuk ke kotak slot
+// (supaya "pas", tidak kebesaran/kekecilan, tanpa kehilangan konten)
+// sepenuhnya diserahkan ke PhotoCanvas (contain-fit) saat foto dirender
+// ke dalam bingkai.
+function fitDataUrlNoCrop(
   dataUrl: string,
-  targetAspect: number,
   maxLongSide: number,
   filterId: string
 ): Promise<string> {
@@ -42,22 +52,9 @@ function cropDataUrlToAspect(
         reject(new Error('Gambar tidak valid (dimensi 0).'));
         return;
       }
-      const srcAspect = srcW / srcH;
 
-      let cropW = srcW;
-      let cropH = srcH;
-      if (srcAspect > targetAspect) {
-        cropW = Math.round(srcH * targetAspect);
-        cropH = srcH;
-      } else {
-        cropW = srcW;
-        cropH = Math.round(srcW / targetAspect);
-      }
-      const cropX = Math.round((srcW - cropW) / 2);
-      const cropY = Math.round((srcH - cropH) / 2);
-
-      let outW = cropW;
-      let outH = cropH;
+      let outW = srcW;
+      let outH = srcH;
       const longSide = Math.max(outW, outH);
       if (longSide > maxLongSide) {
         const scale = maxLongSide / longSide;
@@ -87,10 +84,12 @@ function cropDataUrlToAspect(
         ctx.filter = 'none';
       }
 
-      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, outW, outH);
+      // Digambar utuh (bukan cropX/cropY/cropW/cropH lagi), seluruh foto
+      // sumber ikut masuk, hanya diskalakan ke outW x outH.
+      ctx.drawImage(img, 0, 0, srcW, srcH, 0, 0, outW, outH);
       resolve(canvas.toDataURL('image/jpeg', 0.98));
     };
-    img.onerror = () => reject(new Error('Gagal memuat gambar untuk di-crop.'));
+    img.onerror = () => reject(new Error('Gagal memuat gambar.'));
     img.src = dataUrl;
   });
 }
@@ -164,6 +163,28 @@ export const Capture: React.FC = () => {
     }
     return 16 / 9;
   }, [selectedFrame]);
+
+  // Menghitung ukuran thumbnail preview (di panel "Progres Slot") supaya
+  // rasio kontainer SELALU identik dengan rasio foto yang sudah di-crop
+  // (slotAspect). Sebelumnya width dan height dihitung/‌dibatasi terpisah
+  // (height tetap 46px, width dibatasi maxWidth 64px tanpa menyesuaikan
+  // height) -> begitu slotAspect cukup lebar, rasio kontainer jadi BEDA
+  // dari rasio foto asli, sehingga object-cover memotong ulang foto dan
+  // hasilnya terlihat zoom/kepotong (kebesaran) dibanding foto demo yang
+  // kebetulan rasionya mendekati kotak. Dengan menghitung width & height
+  // bersamaan lalu membatasi keduanya sekaligus, rasio kontainer selalu
+  // sama persis dengan foto -> pas, tidak kebesaran atau kekecilan.
+  const getThumbnailBoxSize = useCallback((slotAspect: number) => {
+    const maxW = 64;
+    const maxH = 46;
+    let w = Math.round(maxH * slotAspect);
+    let h = maxH;
+    if (w > maxW) {
+      w = maxW;
+      h = Math.round(maxW / slotAspect);
+    }
+    return { width: w, height: h };
+  }, []);
 
   const selectNextEmptySlot = useCallback(
     (currentPhotos: (string | null)[]) => {
@@ -262,11 +283,10 @@ export const Capture: React.FC = () => {
     setCaptureError(null);
     setIsProcessingPhoto(true);
 
-    const targetAspect = getSlotAspectRatio(activeSlot);
     const maxLongSide = 2048;
     const capturedSlot = activeSlot;
 
-    cropDataUrlToAspect(imageSrc, targetAspect, maxLongSide, activeFilter)
+    fitDataUrlNoCrop(imageSrc, maxLongSide, activeFilter)
       .then((croppedSrc) => {
         // 1. Perbarui state context global
         setPhotoAtSlot(capturedSlot, croppedSrc);
@@ -356,14 +376,13 @@ export const Capture: React.FC = () => {
       if (typeof reader.result !== 'string') return;
 
       const rawSrc = reader.result;
-      const targetAspect = getSlotAspectRatio(activeSlot);
       const maxLongSide = 2048;
       const targetSlot = activeSlot;
 
       setIsProcessingPhoto(true);
       setCaptureError(null);
 
-      cropDataUrlToAspect(rawSrc, targetAspect, maxLongSide, activeFilter)
+      fitDataUrlNoCrop(rawSrc, maxLongSide, activeFilter)
         .then((croppedSrc) => {
           setPhotoAtSlot(targetSlot, croppedSrc);
           const updatedPhotos = [...photosStateRef.current];
@@ -372,8 +391,8 @@ export const Capture: React.FC = () => {
           setTimeout(() => selectNextEmptySlot(updatedPhotos), 300);
         })
         .catch((err) => {
-          console.error("Gagal melakukan auto-crop upload, mencoba pemotongan fallback...", err);
-          cropDataUrlToAspect(rawSrc, targetAspect, 1024, 'none')
+          console.error("Gagal memproses foto upload, mencoba fallback...", err);
+          fitDataUrlNoCrop(rawSrc, 1024, 'none')
             .then((fallbackSrc) => {
               setPhotoAtSlot(targetSlot, fallbackSrc);
               const updatedPhotos = [...photosStateRef.current];
@@ -736,6 +755,7 @@ export const Capture: React.FC = () => {
                     const hasPhoto = photo !== null;
                     const isActive = index === activeSlot;
                     const slotAspect = getSlotAspectRatio(index);
+                    const thumbBox = getThumbnailBoxSize(slotAspect);
 
                     return (
                       <div
@@ -751,13 +771,12 @@ export const Capture: React.FC = () => {
                         <div
                           className="rounded-lg overflow-hidden flex items-center justify-center bg-[#FFFDF9] border border-rose-100 flex-shrink-0 relative shadow-sm"
                           style={{
-                            height: '46px',
-                            width: `${Math.round(46 * slotAspect)}px`,
-                            maxWidth: '64px',
+                            height: `${thumbBox.height}px`,
+                            width: `${thumbBox.width}px`,
                           }}
                         >
                           {hasPhoto ? (
-                            <img src={photo} alt={`Slot ${index + 1}`} className="w-full h-full object-cover" />
+                            <img src={photo} alt={`Slot ${index + 1}`} className="w-full h-full object-cover" style={{ objectPosition: '50% 25%' }} />
                           ) : (
                             <ImageIcon className="w-3.5 h-3.5 text-rose-200" />
                           )}

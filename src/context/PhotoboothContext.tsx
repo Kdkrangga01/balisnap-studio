@@ -4,6 +4,17 @@ import type { FrameColorId } from '../data/frameColors';
 import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/frameDb';
 import { stickerPacks } from '../data/stickers';
 
+// Konstanta zoom foto, dipakai bareng oleh context & kanvas biar konsisten.
+export const DEFAULT_PHOTO_ZOOM = 1.3; // level zoom awal (sama seperti sebelumnya, cover-fit + sedikit ruang geser)
+export const MIN_PHOTO_ZOOM = 0.5;     // paling kecil, foto jadi 50% dari slot
+export const MAX_PHOTO_ZOOM = 2.5;     // paling besar, foto di-zoom in 250%
+
+export interface PhotoTransform {
+  x: number;
+  y: number;
+  zoom: number;
+}
+
 export interface CanvasSticker {
   id: string;
   stickerId: string;
@@ -38,6 +49,9 @@ interface PhotoboothContextProps {
   photos: (string | null)[];
   setPhotoAtSlot: (index: number, dataUrl: string | null) => void;
   clearPhotos: () => void;
+  photoTransforms: PhotoTransform[];
+  updatePhotoTransform: (index: number, transform: Partial<PhotoTransform>) => void;
+  resetPhotoTransform: (index: number) => void;
   stickers: CanvasSticker[];
   addSticker: (stickerId: string, overridePosition?: { x: number; y: number }) => void;
   applyStickerPack: (packId: string) => void;
@@ -106,6 +120,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [step, setStep] = useState<StepType>('landing');
   const [selectedFrame, setSelectedFrame] = useState<FrameTemplate | null>(null);
   const [photos, setPhotos] = useState<(string | null)[]>([]);
+  const [photoTransforms, setPhotoTransforms] = useState<PhotoTransform[]>([]);
   const [stickers, setStickers] = useState<CanvasSticker[]>([]);
   const [texts, setTexts] = useState<CanvasText[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -240,6 +255,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   useEffect(() => {
     if (selectedFrame) {
       setPhotos(new Array(selectedFrame.slots).fill(null));
+      setPhotoTransforms(new Array(selectedFrame.slots).fill(null).map(() => ({ x: 0, y: 0, zoom: DEFAULT_PHOTO_ZOOM })));
       setStickers([]);
       setTexts([]);
       setSelectedId(null);
@@ -274,12 +290,40 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       next[index] = dataUrl;
       return next;
     });
+    // Foto di slot ini berubah (baru diambil / dihapus) -> posisi geser &
+    // zoom sebelumnya sudah tidak relevan, jadi direset ke tengah & default.
+    setPhotoTransforms(prev => {
+      const next = [...prev];
+      next[index] = { x: 0, y: 0, zoom: DEFAULT_PHOTO_ZOOM };
+      return next;
+    });
   };
 
   const clearPhotos = () => {
     if (selectedFrame) {
       setPhotos(new Array(selectedFrame.slots).fill(null));
+      setPhotoTransforms(new Array(selectedFrame.slots).fill(null).map(() => ({ x: 0, y: 0, zoom: DEFAULT_PHOTO_ZOOM })));
     }
+  };
+
+  // Geser posisi & zoom foto di dalam bingkainya (pan + zoom). Dipanggil
+  // saat user selesai drag / scroll-zoom foto di kanvas, atau tekan
+  // tombol perbesar/perkecil di panel.
+  const updatePhotoTransform = (index: number, transform: Partial<PhotoTransform>) => {
+    setPhotoTransforms(prev => {
+      const next = [...prev];
+      const current = next[index] || { x: 0, y: 0, zoom: DEFAULT_PHOTO_ZOOM };
+      next[index] = { ...current, ...transform };
+      return next;
+    });
+  };
+
+  const resetPhotoTransform = (index: number) => {
+    setPhotoTransforms(prev => {
+      const next = [...prev];
+      next[index] = { x: 0, y: 0, zoom: DEFAULT_PHOTO_ZOOM };
+      return next;
+    });
   };
 
   // TAMBAH 1 STIKER MANUAL (UKURAN SEDANG PAS)
@@ -405,6 +449,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setStep('landing');
     setSelectedFrame(null);
     setPhotos([]);
+    setPhotoTransforms([]);
     setStickers([]);
     setTexts([]);
     setSelectedId(null);
@@ -430,6 +475,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   return (
     <PhotoboothContext.Provider value={{
       step, setStep, selectedFrame, selectFrame, photos, setPhotoAtSlot, clearPhotos,
+      photoTransforms, updatePhotoTransform, resetPhotoTransform,
       stickers, addSticker, applyStickerPack, updateSticker, removeSticker, texts, addText, updateText, removeText,
       selectedId, setSelectedId, appliedFilter, setAppliedFilter, frameColor, setFrameColor,
       frameStyle, setFrameStyle, borderThickness, setBorderThickness, borderRadius, setBorderRadius,

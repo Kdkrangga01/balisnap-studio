@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Transformer, Rect, Group } from 'react-konva';
 import Konva from 'konva';
-import { usePhotobooth } from '../../context/PhotoboothContext';
+import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MIN_PHOTO_ZOOM, MAX_PHOTO_ZOOM } from '../../context/PhotoboothContext';
 import type { CanvasSticker, CanvasText } from '../../context/PhotoboothContext';
 import { applyFilterToImage, detectTransparentSlots } from '../../lib/utils';
 import { frameColors } from '../../data/frameColors';
@@ -143,6 +143,11 @@ function keyOutBackgroundColor(canvas: HTMLCanvasElement, tolerance = 28): HTMLC
   return canvas;
 }
 
+// Foto punya "zoom" per-slot yang bisa diubah user (scroll-wheel / tombol
+// +-), disimpan di photoTransforms[index].zoom. Ini cuma step besaran
+// perubahan tiap 1x scroll wheel di kanvas.
+const PHOTO_ZOOM_WHEEL_STEP = 0.08;
+
 export function useLoadedImage(src: string | null) {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
 
@@ -171,6 +176,8 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
   const {
     selectedFrame,
     photos,
+    photoTransforms,
+    updatePhotoTransform,
     stickers,
     updateSticker,
     texts,
@@ -398,7 +405,9 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
 
   useEffect(() => {
     if (trRef.current) {
-      if (selectedId) {
+      // Foto (id "photo-N") cuma bisa digeser, bukan di-resize/rotate,
+      // jadi Transformer kotak-kotak resize tidak dipasang untuk foto.
+      if (selectedId && !selectedId.startsWith('photo-')) {
         const stage = stageRef.current;
         const selectedNode = stage.findOne(`#${selectedId}`);
         if (selectedNode) {
@@ -512,18 +521,66 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
             const imageRatio = imgW / imgH;
             const drawRatio = drawW / drawH;
 
+            // COVER-FIT PRESISI SATU KALI, dengan BIAS KE ATAS untuk crop
+            // vertikal: kalau bagian atas/bawah foto yang perlu dipotong
+            // (kasus foto potret/selfie dimasukkan ke kotak yang lebih
+            // landscape/pendek), potongan TIDAK dibagi rata 50/50 seperti
+            // crop-tengah biasa -- karena itu yang bikin wajah (biasanya ada
+            // di 1/3-1/2 bagian atas foto) ikut kepotong. Sebagai gantinya,
+            // titik "jangkar" crop digeser ke ~25% dari atas, jadi bagian
+            // yang paling banyak dipotong adalah BAWAH foto (badan/kaki),
+            // bukan atas (kepala). Ini heuristik (bukan deteksi wajah AI),
+            // tapi cukup efektif untuk mayoritas foto potret/selfie.
             let cropWidth = imgW;
             let cropHeight = imgH;
             let cropX = 0;
             let cropY = 0;
 
             if (imageRatio > drawRatio) {
+              // Sisi kiri-kanan yang kepotong -> subjek biasanya di tengah
+              // secara horizontal, jadi tetap center-crop.
               cropWidth = imgH * drawRatio;
               cropX = (imgW - cropWidth) / 2;
             } else {
+              // Sisi atas-bawah yang kepotong -> anchor ke atas (25%),
+              // bukan ke tengah (50%), supaya wajah tetap ikut.
               cropHeight = imgW / drawRatio;
-              cropY = (imgH - cropHeight) / 2;
+              const verticalAnchor = 0.25;
+              cropY = Math.max(0, Math.min(imgH - cropHeight, (imgH - cropHeight) * verticalAnchor));
             }
+
+            // ==== FITUR: GESER (PAN) & ZOOM POSISI FOTO DI DALAM BINGKAI ====
+            // Setiap foto punya level "zoom" sendiri (default DEFAULT_PHOTO_ZOOM,
+            // bisa diperbesar/diperkecil user). Foto dirender pada ukuran
+            // drawW/drawH dikali zoom tsb, lalu digeser (offset) dan
+            // di-clamp supaya:
+            //  - kalau zoom >= 1 (foto lebih besar dari slot): tidak pernah
+            //    ada celah kosong, foto selalu menutupi penuh slotnya.
+            //  - kalau zoom < 1 (foto di-"perkecil"): fotonya tetap
+            //    dibatasi supaya tidak keluar dari area slotnya sendiri,
+            //    sementara wallpaper/background di lapisan bawah TIDAK
+            //    ikut berubah/bergerak sama sekali (fotonya independen).
+            // Posisi geser + zoom disimpan per-slot di context
+            // (photoTransforms) dan cuma direset kalau fotonya diganti/
+            // dihapus atau pilih bingkai baru.
+            const photoElId = `photo-${index}`;
+            const isPhotoSelected = selectedId === photoElId;
+            const transform = photoTransforms[index] || { x: 0, y: 0, zoom: DEFAULT_PHOTO_ZOOM };
+            const zoom = transform.zoom ?? DEFAULT_PHOTO_ZOOM;
+            const renderW = drawW * zoom;
+            const renderH = drawH * zoom;
+            const baseX = drawX - (renderW - drawW) / 2;
+            const baseY = drawY - (renderH - drawH) / 2;
+            const maxOffsetX = Math.abs(renderW - drawW) / 2;
+            const maxOffsetY = Math.abs(renderH - drawH) / 2;
+            const clampedOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, transform.x));
+            const clampedOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, transform.y));
+            const imageX = baseX + clampedOffsetX;
+            const imageY = baseY + clampedOffsetY;
+
+            const selectPhoto = () => {
+              if (!isPreviewMode) setSelectedId(photoElId);
+            };
 
             return (
               <Group key={`photo-${index}`}>
@@ -544,19 +601,95 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
 
                 <Group clipFunc={clipFunc}>
                   <KonvaImage
+                    id={photoElId}
+                    name="photo-slot"
                     image={photoImg}
-                    x={drawX}
-                    y={drawY}
-                    width={drawW}
-                    height={drawH}
+                    x={imageX}
+                    y={imageY}
+                    width={renderW}
+                    height={renderH}
                     crop={{ x: cropX, y: cropY, width: cropWidth, height: cropHeight }}
+                    draggable={!isPreviewMode}
+                    onClick={selectPhoto}
+                    onTap={selectPhoto}
+                    onTouchStart={selectPhoto}
+                    onMouseEnter={(e) => {
+                      if (isPreviewMode) return;
+                      const container = e.target.getStage()?.container();
+                      if (container) container.style.cursor = 'crosshair';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (isPreviewMode) return;
+                      const container = e.target.getStage()?.container();
+                      if (container) container.style.cursor = 'default';
+                    }}
+                    onWheel={(e) => {
+                      if (isPreviewMode) return;
+                      // Scroll cuma ngezoom kalau fotonya lagi dipilih dulu
+                      // (biar gak ke-zoom gak sengaja pas scroll halaman).
+                      if (!isPhotoSelected) return;
+                      e.evt.preventDefault();
+                      const direction = e.evt.deltaY > 0 ? -1 : 1; // scroll ke bawah = perkecil
+                      const nextZoom = Math.max(
+                        MIN_PHOTO_ZOOM,
+                        Math.min(MAX_PHOTO_ZOOM, zoom + direction * PHOTO_ZOOM_WHEEL_STEP)
+                      );
+                      const nextRenderW = drawW * nextZoom;
+                      const nextRenderH = drawH * nextZoom;
+                      const nextMaxOffsetX = Math.abs(nextRenderW - drawW) / 2;
+                      const nextMaxOffsetY = Math.abs(nextRenderH - drawH) / 2;
+                      updatePhotoTransform(index, {
+                        zoom: nextZoom,
+                        x: Math.max(-nextMaxOffsetX, Math.min(nextMaxOffsetX, transform.x)),
+                        y: Math.max(-nextMaxOffsetY, Math.min(nextMaxOffsetY, transform.y)),
+                      });
+                    }}
+                    onDragMove={(e) => {
+                      // Kunci pergerakan supaya foto tidak pernah keluar
+                      // dari margin yang tersedia (mencegah celah kosong).
+                      const node = e.target;
+                      const offX = Math.max(-maxOffsetX, Math.min(maxOffsetX, node.x() - baseX));
+                      const offY = Math.max(-maxOffsetY, Math.min(maxOffsetY, node.y() - baseY));
+                      node.x(baseX + offX);
+                      node.y(baseY + offY);
+                    }}
+                    onDragEnd={(e) => {
+                      const node = e.target;
+                      const offX = Math.max(-maxOffsetX, Math.min(maxOffsetX, node.x() - baseX));
+                      const offY = Math.max(-maxOffsetY, Math.min(maxOffsetY, node.y() - baseY));
+                      updatePhotoTransform(index, { x: offX, y: offY });
+                      const container = e.target.getStage()?.container();
+                      if (container) container.style.cursor = 'default';
+                    }}
                   />
                 </Group>
+
+                {/* Penanda foto sedang dipilih & bisa digeser */}
+                {isPhotoSelected && !isPreviewMode && (
+                  <Rect
+                    x={pX}
+                    y={pY}
+                    width={pW}
+                    height={pH}
+                    cornerRadius={borderRadius}
+                    stroke="#C9A66B"
+                    strokeWidth={2.5 / scale}
+                    dash={[6 / scale, 4 / scale]}
+                    listening={false}
+                  />
+                )}
               </Group>
             );
           })}
 
           {/* Layer Frame Overlay */}
+          {/* listening selalu false: kalau true, node ini (walau visualnya
+              berlubang transparan di area slot foto) tetap menangkap SEMUA
+              klik/drag di area foto karena Konva meng-hit-test Image
+              berdasarkan bounding box, bukan alpha -- jadi klik/geser foto
+              di bawahnya gak akan pernah sampai. Klik di area bingkai yang
+              kosong tetap otomatis dianggap "klik area kosong" oleh
+              handleStageMouseDown karena e.target jatuh ke Stage. */}
           {processedFrameImg && (
             <KonvaImage
               image={processedFrameImg}
@@ -565,7 +698,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
               width={frameWidth}
               height={frameHeight}
               name="frame-overlay"
-              listening={!isPreviewMode}
+              listening={false}
             />
           )}
 

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePhotobooth } from '../context/PhotoboothContext';
+import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MIN_PHOTO_ZOOM, MAX_PHOTO_ZOOM } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { FilterPanel } from '../components/editor/FilterPanel';
 import { FrameColorPanel } from '../components/editor/FrameColorPanel';
@@ -23,6 +23,10 @@ import {
   X,
   Grid3x3,
   Zap,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  ImageIcon,
 } from 'lucide-react';
 
 export const Editor: React.FC = () => {
@@ -38,6 +42,9 @@ export const Editor: React.FC = () => {
     stickers: canvasStickers,
     texts: canvasTexts,
     photos,
+    photoTransforms,
+    updatePhotoTransform,
+    resetPhotoTransform,
   } = usePhotobooth();
 
   const stageRef = useRef<any>(null);
@@ -69,7 +76,9 @@ export const Editor: React.FC = () => {
   const totalElements = canvasStickers.length + canvasTexts.length;
 
   const handleDeleteSelected = () => {
-    if (!selectedId) return;
+    // Foto (id "photo-N") cuma bisa digeser posisinya, bukan dihapus lewat
+    // sini -- jadi tombol/hapus hanya berlaku untuk stiker & teks.
+    if (!selectedId || selectedId.startsWith('photo-')) return;
     setShowDeleteConfirm(true);
   };
 
@@ -85,7 +94,7 @@ export const Editor: React.FC = () => {
   };
 
   const handleDuplicate = () => {
-    if (!selectedId) return;
+    if (!selectedId || selectedId.startsWith('photo-')) return;
     if (selectedId.startsWith('sticker-')) {
       const sticker = canvasStickers.find((s) => s.id === selectedId);
       if (sticker) {
@@ -133,7 +142,31 @@ export const Editor: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedId, canvasStickers, canvasTexts]);
 
-  const hasSelectedElement = selectedId !== null;
+  const hasSelectedElement = selectedId !== null && !selectedId.startsWith('photo-');
+
+  // Kalau yang lagi dipilih di kanvas itu foto (bukan stiker/teks), ambil
+  // index slotnya buat kontrol zoom.
+  const selectedPhotoIndex = selectedId?.startsWith('photo-')
+    ? parseInt(selectedId.replace('photo-', ''), 10)
+    : null;
+  const selectedPhotoZoom = selectedPhotoIndex !== null
+    ? (photoTransforms[selectedPhotoIndex]?.zoom ?? DEFAULT_PHOTO_ZOOM)
+    : DEFAULT_PHOTO_ZOOM;
+  const PHOTO_ZOOM_BUTTON_STEP = 0.15;
+
+  const handlePhotoZoom = (direction: 1 | -1) => {
+    if (selectedPhotoIndex === null) return;
+    const nextZoom = Math.max(
+      MIN_PHOTO_ZOOM,
+      Math.min(MAX_PHOTO_ZOOM, selectedPhotoZoom + direction * PHOTO_ZOOM_BUTTON_STEP)
+    );
+    updatePhotoTransform(selectedPhotoIndex, { zoom: nextZoom });
+  };
+
+  const handlePhotoZoomReset = () => {
+    if (selectedPhotoIndex === null) return;
+    resetPhotoTransform(selectedPhotoIndex);
+  };
 
   return (
     <div className="min-h-screen bg-[#FFFDF6] py-4 px-3 md:py-8 md:px-6 relative overflow-hidden selection:bg-gold-light/40">
@@ -218,6 +251,14 @@ export const Editor: React.FC = () => {
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-1 h-1 rounded-full bg-gold/40" />
+                Klik &amp; geser foto buat atur posisi
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-gold/40" />
+                Scroll foto terpilih buat zoom
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-gold/40" />
                 <kbd className="px-1 py-0.5 bg-white/50 rounded text-[8px] border border-cream/20">Del</kbd> hapus
               </span>
               <span className="flex items-center gap-1">
@@ -248,8 +289,8 @@ export const Editor: React.FC = () => {
                         setSelectedId(null);
                       }}
                       className={`relative py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${isActive
-                          ? 'bg-white text-mahogany shadow-sm ring-1 ring-gold/20'
-                          : 'text-charcoal/50 hover:text-charcoal hover:bg-white/40'
+                        ? 'bg-white text-mahogany shadow-sm ring-1 ring-gold/20'
+                        : 'text-charcoal/50 hover:text-charcoal hover:bg-white/40'
                         }`}
                     >
                       <tab.icon className="w-3.5 h-3.5" />
@@ -298,6 +339,55 @@ export const Editor: React.FC = () => {
                           className="p-1.5 bg-red-50/80 hover:bg-red-100 rounded-lg text-red-500 hover:text-red-600 border border-red-200/50 transition-all"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : selectedPhotoIndex !== null ? (
+                  <motion.div
+                    key="selected-photo-zoom"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between bg-gradient-to-r from-gold-light/15 to-gold-light/5 border border-gold/30 p-2.5 rounded-xl transition-all">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gold/20 flex items-center justify-center">
+                          <ImageIcon className="w-3.5 h-3.5 text-gold-dark" />
+                        </div>
+                        <div className="text-left">
+                          <span className="text-[11px] font-bold text-charcoal">
+                            Foto {selectedPhotoIndex + 1}
+                          </span>
+                          <p className="text-[9px] text-charcoal/40">
+                            Geser di kanvas • Zoom {Math.round(selectedPhotoZoom * 100)}%
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handlePhotoZoom(-1)}
+                          disabled={selectedPhotoZoom <= MIN_PHOTO_ZOOM}
+                          className="p-1.5 bg-white/80 hover:bg-white rounded-lg text-charcoal/50 hover:text-mahogany border border-cream/20 transition-all shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Perkecil foto"
+                        >
+                          <ZoomOut className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handlePhotoZoom(1)}
+                          disabled={selectedPhotoZoom >= MAX_PHOTO_ZOOM}
+                          className="p-1.5 bg-white/80 hover:bg-white rounded-lg text-charcoal/50 hover:text-mahogany border border-cream/20 transition-all shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Perbesar foto"
+                        >
+                          <ZoomIn className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={handlePhotoZoomReset}
+                          className="p-1.5 bg-white/80 hover:bg-white rounded-lg text-charcoal/50 hover:text-mahogany border border-cream/20 transition-all shadow-sm"
+                          title="Reset posisi & zoom"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
