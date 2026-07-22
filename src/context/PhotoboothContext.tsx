@@ -114,7 +114,7 @@ interface PhotoboothContextProps {
   deleteCustomFrame: (id: string) => void;
 }
 
-const PhotoboothContext = createContext<PhotoboothContextProps | undefined>(undefined);const SESSION_KEY = 'balisnap_active_session_v1';
+const PhotoboothContext = createContext<PhotoboothContextProps | undefined>(undefined); const SESSION_KEY = 'balisnap_active_session_v1';
 
 const getInitialSession = () => {
   try {
@@ -504,7 +504,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const resetAll = () => {
     try {
       sessionStorage.removeItem(SESSION_KEY);
-    } catch {}
+    } catch { }
     setStep('landing');
     setSelectedFrame(null);
     setPhotos([]);
