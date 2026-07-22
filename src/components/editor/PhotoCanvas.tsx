@@ -166,25 +166,88 @@ export function useLoadedImage(src: string | null) {
   return image;
 }
 
-export function useLoadedStickerImage(src: string | null) {
-  const [image, setImage] = useState<HTMLImageElement | null>(null);
+// Ukuran target render stiker di canvas (dalam koordinat frame).
+// Stiker akan di-pre-downscale ke resolusi ini menggunakan bicubic
+// interpolation di offscreen canvas SEBELUM diberikan ke Konva,
+// supaya tidak ada pixelation dari downscaling Konva/Canvas2D yang
+// kualitasnya rendah.
+const STICKER_RENDER_SIZE = 240;
+
+export function useLoadedStickerImage(src: string | null): { image: HTMLCanvasElement | HTMLImageElement | null; displaySize: number } {
+  const [result, setResult] = useState<{ image: HTMLCanvasElement | HTMLImageElement | null; displaySize: number }>({ image: null, displaySize: STICKER_RENDER_SIZE });
 
   useEffect(() => {
     if (!src) {
-      setImage(null);
+      setResult({ image: null, displaySize: STICKER_RENDER_SIZE });
       return;
     }
 
     const img = new Image();
     img.crossOrigin = 'Anonymous';
     img.onload = () => {
-      setImage(img);
+      const srcW = img.width;
+      const srcH = img.height;
+      const maxDim = Math.max(srcW, srcH) || 1;
+
+      // Jika gambar sudah kecil (SVG / inline data URI yang kecil), pakai langsung
+      // tanpa downscale karena sudah sesuai ukuran dan biasanya vektor.
+      if (maxDim <= STICKER_RENDER_SIZE * 1.5) {
+        setResult({ image: img, displaySize: maxDim });
+        return;
+      }
+
+      // Pre-downscale menggunakan offscreen canvas dengan bicubic interpolation.
+      // Ini JAUH lebih halus daripada membiarkan Konva/Canvas2D downscale
+      // gambar 900px+ langsung ke ~120px dengan interpolasi biasa.
+      const scale = STICKER_RENDER_SIZE / maxDim;
+      const targetW = Math.round(srcW * scale);
+      const targetH = Math.round(srcH * scale);
+
+      // Multi-step downscale: turunkan ukuran bertahap (max 2x per step)
+      // untuk kualitas interpolasi terbaik — ini teknik yang sama dipakai
+      // oleh Photoshop dan editor gambar profesional.
+      let currentCanvas = document.createElement('canvas');
+      currentCanvas.width = srcW;
+      currentCanvas.height = srcH;
+      let ctx = currentCanvas.getContext('2d')!;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0);
+
+      let curW = srcW;
+      let curH = srcH;
+
+      while (curW > targetW * 2 || curH > targetH * 2) {
+        const nextW = Math.max(targetW, Math.round(curW / 2));
+        const nextH = Math.max(targetH, Math.round(curH / 2));
+        const stepCanvas = document.createElement('canvas');
+        stepCanvas.width = nextW;
+        stepCanvas.height = nextH;
+        const stepCtx = stepCanvas.getContext('2d')!;
+        stepCtx.imageSmoothingEnabled = true;
+        stepCtx.imageSmoothingQuality = 'high';
+        stepCtx.drawImage(currentCanvas, 0, 0, curW, curH, 0, 0, nextW, nextH);
+        currentCanvas = stepCanvas;
+        curW = nextW;
+        curH = nextH;
+      }
+
+      // Final step ke ukuran target
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = targetW;
+      finalCanvas.height = targetH;
+      const finalCtx = finalCanvas.getContext('2d')!;
+      finalCtx.imageSmoothingEnabled = true;
+      finalCtx.imageSmoothingQuality = 'high';
+      finalCtx.drawImage(currentCanvas, 0, 0, curW, curH, 0, 0, targetW, targetH);
+
+      setResult({ image: finalCanvas, displaySize: STICKER_RENDER_SIZE });
     };
     img.onerror = () => console.error("Failed to load sticker image:", src);
     img.src = src;
   }, [src]);
 
-  return image;
+  return result;
 }
 
 interface PhotoCanvasProps {
@@ -455,6 +518,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
         height={stageHeight}
         scaleX={scale}
         scaleY={scale}
+        pixelRatio={Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2.5)}
         onMouseDown={handleStageMouseDown}
         onTouchStart={handleStageMouseDown}
       >
@@ -780,15 +844,20 @@ interface StickerElementProps {
 }
 
 const StickerElement: React.FC<StickerElementProps> = ({ sticker, onClick, onChange, isPreviewMode = false }) => {
-  const loadedImg = useLoadedStickerImage(sticker.stickerId);
+  const { image: loadedImg } = useLoadedStickerImage(sticker.stickerId);
   const shapeRef = useRef<any>(null);
   const { selectedFrame } = usePhotobooth();
 
   if (!loadedImg || !selectedFrame) return null;
 
   // BASE SIZE 120px = UKURAN SEDANG PAS (SEKITAR 1/5 TINGGI SLOT FOTO, SANGAT ENAK DILIHAT)
+  // Karena gambar sudah di-pre-downscale ke STICKER_RENDER_SIZE (~240px),
+  // normFactor-nya sekarang ~0.5 bukan ~0.13, jadi Konva tidak perlu
+  // melakukan downscale drastis yang menyebabkan pixelation.
   const baseStandardSize = 120;
-  const maxDim = Math.max(loadedImg.width, loadedImg.height) || 120;
+  const imgW = loadedImg instanceof HTMLCanvasElement ? loadedImg.width : loadedImg.width;
+  const imgH = loadedImg instanceof HTMLCanvasElement ? loadedImg.height : loadedImg.height;
+  const maxDim = Math.max(imgW, imgH) || 120;
   const normFactor = baseStandardSize / maxDim;
 
   const finalScaleX = sticker.scaleX * normFactor;
@@ -805,6 +874,8 @@ const StickerElement: React.FC<StickerElementProps> = ({ sticker, onClick, onCha
       scaleY={finalScaleY}
       rotation={sticker.rotation}
       draggable={!isPreviewMode}
+      perfectDrawEnabled={true}
+      imageSmoothingEnabled={true}
       onClick={onClick}
       onTouchStart={onClick}
       onDragEnd={(e) => {
@@ -824,8 +895,8 @@ const StickerElement: React.FC<StickerElementProps> = ({ sticker, onClick, onCha
           rotation: node.rotation()
         });
       }}
-      offsetX={loadedImg.width / 2}
-      offsetY={loadedImg.height / 2}
+      offsetX={imgW / 2}
+      offsetY={imgH / 2}
     />
   );
 };

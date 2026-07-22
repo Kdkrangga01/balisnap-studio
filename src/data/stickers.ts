@@ -2,13 +2,13 @@ export interface StickerItem {
   id: string;
   name: string;
   src: string;
-  category: 'cute' | 'text' | 'emoji' | 'washi' | 'badge' | 'cat' | 'nailong' | 'aesthetic';
+  category: 'cute' | 'text' | 'emoji' | 'washi' | 'badge' | 'cat' | 'nailong' | 'aesthetic' | 'anime';
 }
 
 export interface StickerPack {
   id: string;
   name: string;
-  category: 'cute' | 'text' | 'emoji' | 'washi' | 'badge' | 'cat' | 'nailong' | 'aesthetic';
+  category: 'cute' | 'text' | 'emoji' | 'washi' | 'badge' | 'cat' | 'nailong' | 'aesthetic' | 'anime';
   icon: string;
   stickers: string[];
 }
@@ -117,11 +117,11 @@ export const stickers: StickerItem[] = [
   // ==========================================
   // 🐱 STIKER KUCING REAL PHOTO PINTEREST (DIE-CUT CUTOUT)
   // ==========================================
-  { id: "cute-angry-cat", name: "Real Angry Ragdoll Cat (Doodle Outline)", src: "/stickers/cute-angry-cat.jpg", category: "cat" },
-  { id: "cute-helmet-cat", name: "Real Kitten Wearing Helmet", src: "/stickers/cute-helmet-cat.jpg", category: "cat" },
-  { id: "cat-hipster", name: "Real Hipster Cat Sunglasses", src: "/stickers/cat-hipster.png.jpg", category: "cat" },
-  { id: "cat-blue-ribbon-real", name: "Real Cat Blue Ribbon", src: "/stickers/cat-blue-ribbon.png.jpg", category: "cat" },
-  { id: "cat-pink-ribbon-real", name: "Real Cat Pink Ribbon", src: "/stickers/cat-pink-ribbon.png.jpg", category: "cat" },
+  { id: "cute-angry-cat", name: "Real Angry Ragdoll Cat (Doodle Outline)", src: "/stickers/cute-angry-cat.png", category: "cat" },
+  { id: "cute-helmet-cat", name: "Real Kitten Wearing Helmet", src: "/stickers/cute-helmet-cat.png", category: "cat" },
+  { id: "cat-hipster", name: "Real Hipster Cat Sunglasses", src: "/stickers/cat-hipster.png", category: "cat" },
+  { id: "cat-blue-ribbon-real", name: "Real Cat Blue Ribbon", src: "/stickers/cat-blue-ribbon.png", category: "cat" },
+  { id: "cat-pink-ribbon-real", name: "Real Cat Pink Ribbon", src: "/stickers/cat-pink-ribbon.png", category: "cat" },
   { id: "cat-scooter-red", name: "Real Cat Scooter Red", src: STICKER_CAT_SCOOTER, category: "cat" },
   { id: "cat-sunflower-hood", name: "Real Cat Sunflower Hood", src: STICKER_CAT_SUNFLOWER, category: "cat" },
   { id: "cat-banana-suit", name: "Real Cat Banana Suit", src: STICKER_CAT_BANANA, category: "cat" },
@@ -324,13 +324,103 @@ export const stickers: StickerItem[] = [
   { id: "badge-star", name: "Star Badge Medal", src: "/stickers/badge-star.svg", category: "badge" },
   { id: "emoji-camera", name: "Photo Camera", src: "/stickers/emoji-camera.svg", category: "emoji" },
   { id: "disco-ball", name: "Disco Ball", src: "/stickers/disco-ball.svg", category: "badge" },
-  { id: "vinyl-record", name: "Vinyl Record", src: "/stickers/vinyl-record.svg", category: "badge" }
+  { id: "vinyl-record", name: "Vinyl Record", src: "/stickers/vinyl-record.svg", category: "badge" },
+
+  // ==========================================
+  // 🏴‍☠️ STIKER ONE PIECE & LUFFY (NEW)
+  // ==========================================
+  { id: "monkey-dluffy", name: "Monkey D. Luffy Pirate", src: "/stickers/monkey-dluffy.png", category: "anime" },
+  { id: "luffy-onpeace", name: "Luffy One Piece Peace Sign", src: "/stickers/luffy-onpeace.png", category: "anime" },
+  { id: "luffy-boon", name: "Luffy Cute Smile", src: "/stickers/luffy-boon.png", category: "anime" },
+  { id: "kapal-luffy", name: "Kapal Bajak Laut Going Merry / Sunny", src: "/stickers/kapal-luffy.png", category: "anime" },
+
+  // ==========================================
+  // 🖤 STIKER BLACK Y2K & GOTHIC DARK (NEW)
+  // ==========================================
+  { id: "black-spider", name: "Black Spider Dark Y2K", src: "/stickers/black-spider.png", category: "aesthetic" },
+  { id: "black-kupu", name: "Black Butterfly Aesthetic", src: "/stickers/black-kupu.png", category: "aesthetic" },
+  { id: "black-floower", name: "Black Flower Dark Rose", src: "/stickers/black-floower.png", category: "aesthetic" },
+  { id: "star-girl", name: "Star Girl Aesthetic Cutout", src: "/stickers/star-girl.png", category: "aesthetic" },
+  { id: "converse-chiolino", name: "Converse Chiolino Sneakers", src: "/stickers/converse-chiolino.png", category: "aesthetic" },
+  { id: "chioo-del", name: "Chioo Cute Cutout", src: "/stickers/chioo-del.png", category: "aesthetic" },
+
+  // ==========================================
+  // 🦊 STIKER HEWAN KAWAII EXTRA (NEW)
+  // ==========================================
+  { id: "cute-corgi", name: "Cute Corgi Dog", src: "/stickers/cute-corgi.svg", category: "cute" },
+  { id: "cute-duckling", name: "Cute Yellow Duckling", src: "/stickers/cute-duckling.svg", category: "cute" },
+  { id: "cute-fox", name: "Cute Red Fox", src: "/stickers/cute-fox.svg", category: "cute" },
+  { id: "cute-otter", name: "Cute Playful Otter", src: "/stickers/cute-otter.svg", category: "cute" },
+  { id: "cute-panda", name: "Cute Panda Bear", src: "/stickers/cute-panda.svg", category: "cute" },
+  { id: "cute-penguin", name: "Cute Baby Penguin", src: "/stickers/cute-penguin.svg", category: "cute" },
+  { id: "cute-unicorn", name: "Cute Magical Unicorn", src: "/stickers/cute-unicorn.svg", category: "cute" },
+  { id: "cute-boba-svg", name: "Cute Boba Drink SVG", src: "/stickers/cute-boba.svg", category: "cute" },
+
+  // ==========================================
+  // 🐱 STIKER REAL CATS PNG CLEAN CUTOUTS (NEW)
+  // ==========================================
+  { id: "cat-blue-ribbon-clean", name: "Real Cat Blue Ribbon PNG", src: "/stickers/cat-blue-ribbon-clean.png", category: "cat" },
+  { id: "cat-hipster-clean", name: "Real Cat Hipster PNG", src: "/stickers/cat-hipster-clean.png", category: "cat" },
+  { id: "cat-pink-ribbon-clean", name: "Real Cat Pink Ribbon PNG", src: "/stickers/cat-pink-ribbon-clean.png", category: "cat" },
+  { id: "cute-angry-cat-png", name: "Real Angry Cat PNG", src: "/stickers/cute-angry-cat.png", category: "cat" },
+  { id: "cute-helmet-cat-png", name: "Real Kitten Helmet PNG", src: "/stickers/cute-helmet-cat.png", category: "cat" },
+  { id: "dino-yellow-clean", name: "Nailong Yellow Clean PNG", src: "/stickers/dino-yellow-clean.png", category: "nailong" }
 ];
 
 // ============================================================================
 // PAKET AUTO-SPREAD BARU (KUCING SQUAD, NAILONG PARTY, AESTHETIC Y2K & SPIDERMAN)
 // ============================================================================
 export const stickerPacks: StickerPack[] = [
+  {
+    id: "pack-luffy-onepiece",
+    name: "One Piece Luffy Pirate 🏴‍☠️",
+    category: "anime",
+    icon: "/stickers/monkey-dluffy.png",
+    stickers: [
+      "/stickers/monkey-dluffy.png",
+      "/stickers/luffy-onpeace.png",
+      "/stickers/luffy-boon.png",
+      "/stickers/kapal-luffy.png"
+    ]
+  },
+  {
+    id: "pack-black-gothic",
+    name: "Dark Y2K & Spider 🖤",
+    category: "aesthetic",
+    icon: "/stickers/black-spider.png",
+    stickers: [
+      "/stickers/black-spider.png",
+      "/stickers/black-kupu.png",
+      "/stickers/black-floower.png",
+      "/stickers/star-girl.png"
+    ]
+  },
+  {
+    id: "pack-chioo-street",
+    name: "Streetwear & Shoes 👟",
+    category: "aesthetic",
+    icon: "/stickers/converse-chiolino.png",
+    stickers: [
+      "/stickers/converse-chiolino.png",
+      "/stickers/chioo-del.png",
+      "/stickers/converse-chiolino.png",
+      "/stickers/chioo-del.png"
+    ]
+  },
+  {
+    id: "pack-animal-squad",
+    name: "Cute Animal Squad 🦊",
+    category: "cute",
+    icon: "/stickers/cute-corgi.svg",
+    stickers: [
+      "/stickers/cute-corgi.svg",
+      "/stickers/cute-fox.svg",
+      "/stickers/cute-panda.svg",
+      "/stickers/cute-duckling.svg",
+      "/stickers/cute-unicorn.svg",
+      "/stickers/cute-otter.svg"
+    ]
+  },
   {
     id: "pack-cat-squad",
     name: "Real Cat Photo Pinterest 🐱",
@@ -418,26 +508,14 @@ export const stickerPacks: StickerPack[] = [
     ]
   },
   {
-    id: "pack-nailong-snoopy",
-    name: "Nailong Full Body & Snoopy 💛",
-    category: "cute",
-    icon: STICKER_NAILONG_FULL,
-    stickers: [
-      STICKER_NAILONG_FULL,
-      STICKER_SNOOPY_HEARTS,
-      STICKER_NAILONG_FULL,
-      STICKER_SNOOPY_HEARTS
-    ]
-  },
-  {
     id: "pack-cat-classic",
     name: "Kucing Cute Pack 🐾",
     category: "cute",
     icon: "/stickers/cute-cat.svg",
     stickers: [
       "/stickers/cute-cat.svg",
-      "/stickers/cute-angry-cat.jpg",
-      "/stickers/cute-helmet-cat.jpg",
+      "/stickers/cute-angry-cat.png",
+      "/stickers/cute-helmet-cat.png",
       "/stickers/cute-heart.svg"
     ]
   },

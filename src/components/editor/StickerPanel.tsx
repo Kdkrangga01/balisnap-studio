@@ -16,6 +16,7 @@ export const StickerPanel: React.FC = () => {
     { id: 'packs', name: '✨ Paket Auto-Spread' },
     { id: 'cat', name: '🐱 Kucing' },
     { id: 'nailong', name: '🐲 Nailong' },
+    { id: 'anime', name: '🏴‍☠️ One Piece' },
     { id: 'aesthetic', name: '✨ Aesthetic' },
     { id: 'cute', name: 'Kawaii' },
     { id: 'emoji', name: 'Emoji' },
