@@ -2,8 +2,9 @@ import React, { useRef, useState, useEffect } from 'react';
 import { usePhotobooth } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { exportHighResCanvas, downloadBase64Image } from '../lib/exportImage';
-import { ArrowLeft, Download, RotateCcw, Check, Share2, Sparkles, Heart } from 'lucide-react';
+import { ArrowLeft, Download, RotateCcw, Check, Share2, Sparkles, Heart, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export const Preview: React.FC = () => {
   const {
@@ -15,6 +16,8 @@ export const Preview: React.FC = () => {
   const stageRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState<number>(450);
+  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
+  const [downloadedImageUri, setDownloadedImageUri] = useState<string | null>(null);
 
   // Measure container for responsive stage sizing
   useEffect(() => {
@@ -28,6 +31,17 @@ export const Preview: React.FC = () => {
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
     }
+  }, []);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowSuccessModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Trigger celebratory confetti on mount
@@ -59,13 +73,14 @@ export const Preview: React.FC = () => {
 
   if (!selectedFrame) return null;
 
-  // Handle Export high-res and trigger full confetti storm
+  // Handle Export high-res and trigger full confetti storm + show pop up modal
   const handleDownload = () => {
     if (stageRef.current) {
       const dataUrl = exportHighResCanvas(stageRef.current, 1800);
       if (dataUrl) {
         const timestamp = new Date().toISOString().slice(0, 10);
         downloadBase64Image(dataUrl, `balisnap-studio-${timestamp}.png`);
+        setDownloadedImageUri(dataUrl);
 
         confetti({
           particleCount: 150,
@@ -73,6 +88,8 @@ export const Preview: React.FC = () => {
           origin: { y: 0.6 },
           colors: ['#F472B6', '#FBBF24', '#38BDF8', '#EC4899', '#10B981', '#3B82F6']
         });
+
+        setShowSuccessModal(true);
       }
     }
   };
@@ -197,6 +214,106 @@ export const Preview: React.FC = () => {
         </div>
 
       </div>
+
+      {/* ===== POP-UP MODAL UNDUH BERHASIL ===== */}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/50 backdrop-blur-sm"
+            onClick={() => setShowSuccessModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+              className="bg-white border-4 border-rose-100 rounded-[32px] max-w-sm sm:max-w-md w-full p-6 md:p-8 shadow-[0_25px_60px_-15px_rgba(244,114,182,0.35)] relative overflow-hidden text-center flex flex-col items-center gap-4 z-50 select-none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Cute top tape accent */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-4.5 bg-pink-200/50 border border-white/60 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center text-[7px] text-pink-600 font-bold tracking-widest uppercase">
+                ✨ BALISNAP MEMORIES ✨
+              </div>
+
+              {/* Close Button X */}
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="absolute top-4 right-4 w-9 h-9 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-full flex items-center justify-center transition-all shadow-sm group"
+                aria-label="Tutup"
+              >
+                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </button>
+
+              {/* Animated Success Badge Icon */}
+              <div className="mt-3 w-16 h-16 bg-gradient-to-tr from-emerald-400 to-teal-300 rounded-full flex items-center justify-center shadow-lg shadow-emerald-200/70 animate-bounce" style={{ animationDuration: '2.2s' }}>
+                <Check className="w-9 h-9 text-white stroke-[3.5]" />
+              </div>
+
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full">
+                <Sparkles className="w-3.5 h-3.5" />
+                Unduh Berhasil!
+              </div>
+
+              {/* Modal Heading */}
+              <h3 className="font-serif text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight leading-snug">
+                Frame Photobooth Berhasil Diunduh!{' '}
+                <Heart className="inline-block w-5 h-5 text-pink-400 fill-current animate-pulse align-text-top" />
+              </h3>
+
+              {/* Modal Description */}
+              <p className="text-zinc-500 text-xs sm:text-sm font-medium leading-relaxed max-w-xs">
+                Foto kenangan photobooth resolusi tinggi (HD) Anda telah berhasil tersimpan di perangkat Anda.
+              </p>
+
+              {/* Downloaded Image Thumbnail Card */}
+              {downloadedImageUri && (
+                <div className="my-1 p-2.5 bg-gradient-to-b from-pink-50/80 to-rose-50/30 border-2 border-rose-100 rounded-2xl shadow-inner max-h-52 overflow-hidden flex items-center justify-center relative group">
+                  <img
+                    src={downloadedImageUri}
+                    alt="Preview Frame Photobooth"
+                    className="max-h-44 object-contain rounded-xl shadow-md transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-2.5 w-full mt-2">
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full py-3.5 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  Selesai &amp; Simpan
+                </button>
+
+                <div className="grid grid-cols-2 gap-2 w-full">
+                  <button
+                    onClick={handleDownload}
+                    className="py-3 bg-white hover:bg-rose-50/60 text-zinc-700 border border-rose-200/80 font-black tracking-wider uppercase text-[10px] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5"
+                  >
+                    <Download className="w-3.5 h-3.5 text-pink-500" />
+                    Unduh Lagi
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowSuccessModal(false);
+                      setStep('editor');
+                    }}
+                    className="py-3 bg-white hover:bg-rose-50/60 text-zinc-700 border border-rose-200/80 font-black tracking-wider uppercase text-[10px] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5 text-pink-500" />
+                    Edit Foto
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
