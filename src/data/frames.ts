@@ -1205,5 +1205,21 @@ export const frames: FrameTemplate[] = [
       { x: 187, y: 701, w: 553, h: 375, rx: 11 },
       { x: 297, y: 1165, w: 496, h: 362, rx: 11 }
     ]
+  },
+  {
+    id: "custom-1785062752844-1473",
+    name: "Vintage scrapbook photo",
+    slots: 6,
+    category: "retro",
+    src: "/templates/custom-1785062752844-1473.png",
+    width: 1023, height: 1537,
+    slotCoords: [
+      { x: 165, y: 298, w: 325, h: 284, rx: 9 },
+      { x: 165, y: 594, w: 325, h: 284, rx: 9 },
+      { x: 165, y: 890, w: 325, h: 383, rx: 10 },
+      { x: 529, y: 298, w: 324, h: 284, rx: 9 },
+      { x: 529, y: 594, w: 324, h: 284, rx: 9 },
+      { x: 530, y: 891, w: 323, h: 381, rx: 10 }
+    ]
   }
 ];
