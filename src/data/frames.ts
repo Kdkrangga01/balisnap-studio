@@ -773,22 +773,6 @@ export const frames: FrameTemplate[] = [
     ]
   },
   {
-    id: "custom-1784427858645-l97f",
-    name: "Frame Bunga",
-    slots: 6,
-    category: "korean",
-    src: "/templates/custom-1784427858645-l97f.png",
-    width: 1037, height: 1516,
-    slotCoords: [
-      { x: 205, y: 130, w: 188, h: 220, rx: 6 },
-      { x: 602, y: 160, w: 378, h: 386, rx: 11 },
-      { x: 210, y: 608, w: 170, h: 209, rx: 5 },
-      { x: 735, y: 683, w: 163, h: 233, rx: 5 },
-      { x: 143, y: 1035, w: 273, h: 321, rx: 8 },
-      { x: 593, y: 1114, w: 376, h: 372, rx: 11 }
-    ]
-  },
-  {
     id: "custom-1784428020314-mq4y",
     name: "Frame 4 Grid",
     slots: 4,
@@ -1097,19 +1081,85 @@ export const frames: FrameTemplate[] = [
     ]
   },
   {
-    id: "custom-1785057748756-18am",
-    name: "Frame vintage poto lookup",
-    slots: 6,
+    id: "custom-1785059330165-00th",
+    name: "Vintage aprove",
+    slots: 8,
     category: "retro",
-    src: "/templates/custom-1785057748756-18am.png",
+    src: "/templates/custom-1785059330165-00th.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 69, y: 57, w: 369, h: 256, rx: 8 },
+      { x: 69, y: 370, w: 369, h: 260, rx: 8 },
+      { x: 69, y: 685, w: 369, h: 232, rx: 7 },
+      { x: 69, y: 974, w: 369, h: 234, rx: 7 },
+      { x: 578, y: 57, w: 372, h: 256, rx: 8 },
+      { x: 578, y: 370, w: 372, h: 260, rx: 8 },
+      { x: 578, y: 685, w: 372, h: 232, rx: 7 },
+      { x: 578, y: 974, w: 372, h: 234, rx: 7 }
+    ]
+  },
+  {
+    id: "custom-1785059867455-4qiw",
+    name: "Frame memory lane",
+    slots: 4,
+    category: "polaroid",
+    src: "/templates/custom-1785059867455-4qiw.png",
     width: 1023, height: 1537,
     slotCoords: [
-      { x: 56, y: 61, w: 404, h: 406, rx: 12 },
-      { x: 56, y: 491, w: 404, h: 406, rx: 12 },
-      { x: 56, y: 922, w: 404, h: 382, rx: 11 },
-      { x: 560, y: 61, w: 404, h: 406, rx: 12 },
-      { x: 560, y: 492, w: 404, h: 405, rx: 12 },
-      { x: 560, y: 922, w: 404, h: 382, rx: 11 }
+      { x: 51, y: 267, w: 423, h: 498, rx: 13 },
+      { x: 52, y: 840, w: 421, h: 500, rx: 13 },
+      { x: 548, y: 267, w: 423, h: 498, rx: 13 },
+      { x: 549, y: 840, w: 354, h: 500, rx: 11 }
+    ]
+  },
+  {
+    id: "custom-1785060047710-p3nk",
+    name: "Vintage clasic",
+    slots: 4,
+    category: "retro",
+    src: "/templates/custom-1785060047710-p3nk.png",
+    width: 1023, height: 1537,
+    slotCoords: [
+      { x: 48, y: 199, w: 433, h: 576, rx: 13 },
+      { x: 48, y: 823, w: 433, h: 576, rx: 13 },
+      { x: 532, y: 199, w: 431, h: 576, rx: 13 },
+      { x: 532, y: 823, w: 431, h: 576, rx: 13 }
+    ]
+  },
+  {
+    id: "custom-1785060667497-704w",
+    name: "Frame snapshorts",
+    slots: 8,
+    category: "retro",
+    src: "/templates/custom-1785060667497-704w.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 60, y: 164, w: 410, h: 303, rx: 9 },
+      { x: 59, y: 496, w: 411, h: 302, rx: 9 },
+      { x: 59, y: 827, w: 411, h: 301, rx: 9 },
+      { x: 59, y: 1159, w: 411, h: 293, rx: 9 },
+      { x: 554, y: 164, w: 412, h: 303, rx: 9 },
+      { x: 554, y: 496, w: 412, h: 302, rx: 9 },
+      { x: 554, y: 827, w: 412, h: 301, rx: 9 },
+      { x: 554, y: 1159, w: 412, h: 293, rx: 9 }
+    ]
+  },
+  {
+    id: "custom-1785061260692-dw6g",
+    name: "MEMORIES",
+    slots: 8,
+    category: "retro",
+    src: "/templates/custom-1785061260692-dw6g.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 115, y: 233, w: 356, h: 263, rx: 8 },
+      { x: 116, y: 529, w: 353, h: 257, rx: 8 },
+      { x: 116, y: 819, w: 355, h: 260, rx: 8 },
+      { x: 116, y: 1112, w: 355, h: 261, rx: 8 },
+      { x: 553, y: 234, w: 356, h: 262, rx: 8 },
+      { x: 553, y: 529, w: 355, h: 257, rx: 8 },
+      { x: 553, y: 819, w: 355, h: 260, rx: 8 },
+      { x: 553, y: 1112, w: 356, h: 260, rx: 8 }
     ]
   }
 ];

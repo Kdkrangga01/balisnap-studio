@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import type { FrameColorId } from '../data/frameColors';
 import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/frameDb';
@@ -286,6 +287,9 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const initCustomFrames = async () => {
       try {
         let dbFrames = await loadCustomFrames();
+        const presetIds = new Set(frames.map((f) => f.id));
+        dbFrames = dbFrames.filter((f) => !presetIds.has(f.id));
+
         const saved = localStorage.getItem('balisnap_custom_frames');
         if (saved) {
           try {
@@ -293,7 +297,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             if (Array.isArray(localFrames) && localFrames.length > 0) {
               const migratedList = [...dbFrames];
               for (const frame of localFrames) {
-                if (!migratedList.some(f => f.id === frame.id)) {
+                if (!migratedList.some(f => f.id === frame.id) && !presetIds.has(frame.id)) {
                   await saveCustomFrame(frame);
                   migratedList.push(frame);
                 }
@@ -492,7 +496,10 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const addCustomFrame = (frame: FrameTemplate) => {
-    setCustomFrames(prev => [...prev, frame]);
+    setCustomFrames(prev => {
+      if (prev.some(f => f.id === frame.id)) return prev;
+      return [...prev, frame];
+    });
     saveCustomFrame(frame).catch(err => console.error("Error saving frame DB:", err));
   };
 

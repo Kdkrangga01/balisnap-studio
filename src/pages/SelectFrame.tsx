@@ -535,10 +535,17 @@ export const SelectFrame: React.FC = () => {
   const [customSlotCoords, setCustomSlotCoords] = useState<(SlotCoord | null)[]>([null]);
   const [isAutoDetecting, setIsAutoDetecting] = useState(false);
 
-  const rawAllFrames = useMemo(
-    () => [...frames, ...customFrames].filter((f) => !hiddenFrameIds.has(f.id)),
-    [customFrames, hiddenFrameIds]
-  );
+  const rawAllFrames = useMemo(() => {
+    const seenIds = new Set<string>();
+    const result: FrameTemplate[] = [];
+    for (const f of [...customFrames, ...frames]) {
+      if (!seenIds.has(f.id) && !hiddenFrameIds.has(f.id)) {
+        seenIds.add(f.id);
+        result.push(f);
+      }
+    }
+    return result;
+  }, [customFrames, hiddenFrameIds]);
 
   const allFrames = useMemo(
     () => rawAllFrames.map((f) => (frameNameOverrides[f.id] ? { ...f, name: frameNameOverrides[f.id] } : f)),
