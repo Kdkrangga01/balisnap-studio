@@ -969,20 +969,6 @@ export const frames: FrameTemplate[] = [
     ]
   },
   {
-    id: "custom-1784636423699-6r8i",
-    name: "Frame pink cute",
-    slots: 4,
-    category: "cute",
-    src: "/templates/custom-1784636423699-6r8i.png",
-    width: 736, height: 1308,
-    slotCoords: [
-      { x: 69, y: 40, w: 392, h: 278, rx: 8 },
-      { x: 61, y: 680, w: 412, h: 294, rx: 9 },
-      { x: 62, y: 1005, w: 412, h: 294, rx: 9 },
-      { x: 480, y: 688, w: 89, h: 73, rx: 2 }
-    ]
-  },
-  {
     id: "custom-1784636523212-9oxx",
     name: "Frame vintage kamera",
     slots: 2,
@@ -1108,6 +1094,22 @@ export const frames: FrameTemplate[] = [
       { x: 210, y: 196, w: 327, h: 239, rx: 7 },
       { x: 209, y: 469, w: 327, h: 240, rx: 7 },
       { x: 207, y: 737, w: 327, h: 240, rx: 7 }
+    ]
+  },
+  {
+    id: "custom-1785057748756-18am",
+    name: "Frame vintage poto lookup",
+    slots: 6,
+    category: "retro",
+    src: "/templates/custom-1785057748756-18am.png",
+    width: 1023, height: 1537,
+    slotCoords: [
+      { x: 56, y: 61, w: 404, h: 406, rx: 12 },
+      { x: 56, y: 491, w: 404, h: 406, rx: 12 },
+      { x: 56, y: 922, w: 404, h: 382, rx: 11 },
+      { x: 560, y: 61, w: 404, h: 406, rx: 12 },
+      { x: 560, y: 492, w: 404, h: 405, rx: 12 },
+      { x: 560, y: 922, w: 404, h: 382, rx: 11 }
     ]
   }
 ];

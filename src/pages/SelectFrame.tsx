@@ -344,15 +344,27 @@ const FrameCard: React.FC<{
             </span>
           )}
         </div>
-        <div className="flex gap-2">
-          <button onClick={onFavorite} className="w-9 h-9 rounded-2xl bg-rose-50/60 border border-rose-100 flex items-center justify-center hover:bg-rose-100 shadow-sm transition-transform active:scale-90">
+        <div className="flex gap-1.5 z-20">
+          <button
+            onClick={(e) => { e.stopPropagation(); onFavorite(e); }}
+            className="w-9 h-9 rounded-2xl bg-rose-50/70 border border-rose-100 flex items-center justify-center hover:bg-rose-100 shadow-sm transition-all active:scale-90"
+            title="Favorit"
+          >
             <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'fill-pink-500 text-pink-500' : 'text-rose-300'}`} />
           </button>
-          <button onClick={onEdit} className="w-9 h-9 rounded-2xl bg-sky-50/60 border border-sky-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-sky-500 hover:text-white shadow-sm active:scale-90">
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(e); }}
+            className="w-9 h-9 rounded-2xl bg-sky-50/80 border border-sky-100 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-sky-500 hover:text-white shadow-sm active:scale-90"
+            title="Ubah Nama"
+          >
             <Pencil className="w-4 h-4 text-sky-400 group-hover:text-sky-400 hover:!text-white" />
           </button>
-          <button onClick={onDelete} className="w-9 h-9 rounded-2xl bg-purple-50 border border-purple-100 text-purple-400 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-500 hover:text-white">
-            <Trash2 className="w-4 h-4" />
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(e); }}
+            className="w-9 h-9 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-500 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-rose-500 hover:text-white shadow-sm active:scale-90"
+            title="Hapus Frame"
+          >
+            <Trash2 className="w-4 h-4 text-rose-500 hover:text-white" />
           </button>
         </div>
       </div>
@@ -462,25 +474,50 @@ export const SelectFrame: React.FC = () => {
     handleCloseRename();
   }, [renameTarget, handleCloseRename]);
 
-  const handleDeleteFrame = useCallback((frame: FrameTemplate, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const [deleteTarget, setDeleteTarget] = useState<FrameTemplate | null>(null);
+  const [deleteToastMessage, setDeleteToastMessage] = useState<string | null>(null);
+
+  const handleOpenDeleteConfirm = useCallback((frame: FrameTemplate, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    setDeleteTarget(frame);
+  }, []);
+
+  const handleCloseDeleteConfirm = useCallback(() => {
+    setDeleteTarget(null);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!deleteTarget) return;
+
+    const frameId = deleteTarget.id;
+    const frameName = deleteTarget.name;
+
     setHiddenFrameIds((prev) => {
       const next = new Set(prev);
-      next.add(frame.id);
+      next.add(frameId);
       return next;
     });
 
-    if (frame.id.startsWith('custom-')) {
-      deleteCustomFrame(frame.id);
+    if (frameId.startsWith('custom-') || customFrames.some((c) => c.id === frameId)) {
+      deleteCustomFrame(frameId);
       fetch('/api/delete-frame', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: frame.id }),
+        body: JSON.stringify({ id: frameId }),
       }).catch((err) => {
         console.warn('Permanent file deletion failed:', err);
       });
     }
-  }, [deleteCustomFrame]);
+
+    setDeleteTarget(null);
+    setDeleteToastMessage(`Bingkai "${frameName}" berhasil dihapus ✨`);
+    setTimeout(() => {
+      setDeleteToastMessage(null);
+    }, 3000);
+  }, [deleteTarget, customFrames, deleteCustomFrame]);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadName, setUploadName] = useState('');
@@ -542,6 +579,8 @@ export const SelectFrame: React.FC = () => {
         if (foundCount >= slots) break;
       }
 
+      const gridSlots = generateGridSlots(original.width, original.height, slots);
+
       if (bestFound < slots || bestDetected.some(s => s === null)) {
         const gridCanvas = document.createElement('canvas');
         gridCanvas.width = original.width;
@@ -549,19 +588,29 @@ export const SelectFrame: React.FC = () => {
         const gridCtx = gridCanvas.getContext('2d');
         if (gridCtx) {
           gridCtx.drawImage(original, 0, 0);
-          const gridSlots = generateGridSlots(original.width, original.height, slots);
           gridSlots.forEach((s) => gridCtx.clearRect(s.x, s.y, s.w, s.h));
           bestCanvas = gridCanvas;
-          bestDetected = gridSlots;
-          bestFound = slots;
         }
       }
 
-      if (!bestCanvas) { setIsAutoDetecting(false); return; }
+      const finalSlots: SlotCoord[] = Array.from({ length: slots }).map((_, i) => {
+        return bestDetected[i] || gridSlots[i] || { x: 0, y: 0, w: original.width, h: original.height, rx: 10 };
+      });
+
+      if (!bestCanvas) {
+        bestCanvas = document.createElement('canvas');
+        bestCanvas.width = original.width;
+        bestCanvas.height = original.height;
+        const ctx = bestCanvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(original, 0, 0);
+          gridSlots.forEach((s) => ctx.clearRect(s.x, s.y, s.w, s.h));
+        }
+      }
 
       workingCanvasRef.current = bestCanvas;
       setPreviewSrc(bestCanvas.toDataURL('image/png'));
-      setCustomSlotCoords(bestDetected);
+      setCustomSlotCoords(finalSlots);
       setUploadError(null);
       setIsAutoDetecting(false);
     }, 30);
@@ -570,25 +619,38 @@ export const SelectFrame: React.FC = () => {
   const initWorkingCanvas = useCallback((dataUrl: string) => {
     const img = new window.Image();
     img.onload = () => {
+      // Scale down max dimension to 2000px for smooth performance & IndexedDB stability
+      const MAX_DIM = 2000;
+      let targetW = img.naturalWidth;
+      let targetH = img.naturalHeight;
+      if (targetW > MAX_DIM || targetH > MAX_DIM) {
+        const ratio = Math.min(MAX_DIM / targetW, MAX_DIM / targetH);
+        targetW = Math.round(targetW * ratio);
+        targetH = Math.round(targetH * ratio);
+      }
+
       const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
+      canvas.width = targetW;
+      canvas.height = targetH;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      ctx.drawImage(img, 0, 0);
+      ctx.drawImage(img, 0, 0, targetW, targetH);
 
       const originalCopy = document.createElement('canvas');
-      originalCopy.width = canvas.width;
-      originalCopy.height = canvas.height;
+      originalCopy.width = targetW;
+      originalCopy.height = targetH;
       originalCopy.getContext('2d')?.drawImage(canvas, 0, 0);
 
       workingCanvasRef.current = canvas;
       originalCanvasRef.current = originalCopy;
 
-      setUploadImageDims({ w: canvas.width, h: canvas.height });
+      setUploadImageDims({ w: targetW, h: targetH });
       setPreviewSrc(canvas.toDataURL('image/png'));
       setCustomSlotCoords(Array(uploadSlots).fill(null));
       runAutoDetect(uploadSlots);
+    };
+    img.onerror = () => {
+      setUploadError('Gagal memproses file gambar. Silakan gunakan format file gambar lain.');
     };
     img.src = dataUrl;
   }, [uploadSlots, runAutoDetect]);
@@ -596,8 +658,8 @@ export const SelectFrame: React.FC = () => {
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) { setUploadError('Ekstensi tidak valid.'); return; }
-    if (file.size > 10 * 1024 * 1024) { setUploadError('Maksimal ukuran file 10 MB.'); return; }
+    if (!file.type.startsWith('image/')) { setUploadError('Ekstensi file tidak valid. Harap pilih gambar.'); return; }
+    if (file.size > 15 * 1024 * 1024) { setUploadError('Ukuran file maksimal 15 MB.'); return; }
     setUploadError(null);
     const reader = new FileReader();
     reader.onload = (ev) => {
@@ -630,12 +692,15 @@ export const SelectFrame: React.FC = () => {
     }
   }, [runAutoDetect]);
 
-  const allSlotsFilled = customSlotCoords.length === uploadSlots && customSlotCoords.every((s) => s !== null);
-
   const handleUploadSubmit = useCallback(() => {
     if (!uploadName.trim()) { setUploadError('Nama frame harus diisi.'); return; }
-    if (!workingCanvasRef.current || !uploadImageDims) { setUploadError('Pilih file gambar frame.'); return; }
-    if (!allSlotsFilled) { setUploadError(`Konfigurasi belum lengkap (${customSlotCoords.filter(s => s).length}/${uploadSlots} selesai).`); return; }
+    if (!workingCanvasRef.current || !uploadImageDims) { setUploadError('Pilih file gambar frame terlebih dahulu.'); return; }
+
+    const validSlots = customSlotCoords.filter((s): s is NonNullable<typeof s> => s !== null);
+    if (validSlots.length < uploadSlots) {
+      const grid = generateGridSlots(uploadImageDims.w, uploadImageDims.h, uploadSlots);
+      validSlots.push(...grid.slice(validSlots.length));
+    }
 
     const finalSrc = workingCanvasRef.current.toDataURL('image/png');
     const id = `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
@@ -647,24 +712,20 @@ export const SelectFrame: React.FC = () => {
       src: finalSrc,
       width: uploadImageDims.w,
       height: uploadImageDims.h,
-      slotCoords: customSlotCoords.filter((s): s is NonNullable<typeof s> => s !== null),
+      slotCoords: validSlots,
     };
+
+    // Permanently save custom frame in IndexedDB and local state
     addCustomFrame(newFrame);
 
+    // Optional background sync to dev server if available (never delete from IndexedDB!)
     fetch('/api/save-frame', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newFrame),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          deleteCustomFrame(id);
-        }
-      })
-      .catch((err) => {
-        console.warn('Permanent file save failed:', err);
-      });
+    }).catch(() => {
+      // Ignore background sync errors
+    });
 
     setUploadSuccess(true);
     setTimeout(() => {
@@ -680,7 +741,7 @@ export const SelectFrame: React.FC = () => {
       setUploadError(null);
       setCustomSlotCoords([null]);
     }, 1200);
-  }, [uploadName, uploadImageDims, uploadSlots, uploadCategory, customSlotCoords, allSlotsFilled, addCustomFrame, deleteCustomFrame]);
+  }, [uploadName, uploadImageDims, uploadSlots, uploadCategory, customSlotCoords, addCustomFrame]);
 
   const trendingIds = ['film-classic-1', 'polaroid-single', 'korean-pink-3', 'cute-hearts-1', 'retro-vintage-1'];
 
@@ -979,7 +1040,7 @@ export const SelectFrame: React.FC = () => {
                       isCustom={isCustom}
                       categoryStyle={style}
                       onFavorite={(e) => toggleFavorite(frame.id, e)}
-                      onDelete={(e) => handleDeleteFrame(frame, e)}
+                      onDelete={(e) => handleOpenDeleteConfirm(frame, e)}
                       onEdit={(e) => handleOpenRename(frame, e)}
                       onClick={() => handleFrameClick(frame)}
                     />
@@ -1170,6 +1231,72 @@ export const SelectFrame: React.FC = () => {
         )}
       </AnimatePresence>
 
+      {/* MODAL KONFIRMASI HAPUS FRAME */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <motion.div
+            variants={overlayVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed inset-0 z-[80] bg-zinc-950/40 backdrop-blur-md flex items-center justify-center p-4 select-none"
+            onClick={handleCloseDeleteConfirm}
+          >
+            <motion.div
+              variants={popupVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="relative max-w-sm w-full bg-white border-4 border-rose-100 rounded-[28px] shadow-2xl overflow-hidden flex flex-col text-center p-6 md:p-8"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button onClick={handleCloseDeleteConfirm} className="absolute top-4 right-4 z-20 w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-400 hover:bg-rose-100 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="w-14 h-14 bg-rose-50 border border-rose-200 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce" style={{ animationDuration: '2s' }}>
+                <Trash2 className="w-7 h-7 text-rose-500" />
+              </div>
+
+              <h2 className="font-serif text-xl font-bold text-zinc-800 mb-1">Hapus Bingkai Ini?</h2>
+              <p className="text-xs text-zinc-500 leading-relaxed mb-5">
+                Apakah Anda yakin ingin menghapus bingkai <span className="font-bold text-zinc-800">"{deleteTarget.name}"</span>? Bingkai ini tidak akan lagi ditampilkan di katalog Anda.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCloseDeleteConfirm}
+                  className="flex-1 py-3 bg-white border-2 border-rose-100 rounded-xl text-xs font-bold text-zinc-500 hover:bg-rose-50 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="flex-1 py-3 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xs tracking-wider uppercase rounded-xl shadow-md transition-all"
+                >
+                  Hapus Bingkai
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* TOAST NOTIFIKASI SUKSES HAPUS */}
+      <AnimatePresence>
+        {deleteToastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] bg-zinc-900/90 backdrop-blur-md text-white text-xs font-bold px-5 py-3 rounded-full shadow-2xl border border-white/20 flex items-center gap-2 pointer-events-none select-none"
+          >
+            <Sparkles className="w-4 h-4 text-pink-400" />
+            {deleteToastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* UPLOAD STUDIO MODAL */}
       <AnimatePresence>
         {isUploadModalOpen && (
@@ -1258,13 +1385,20 @@ export const SelectFrame: React.FC = () => {
 
                     <div>
                       <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1">File Gambar *</label>
-                      <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleFileChange} className="hidden" />
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onClick={(e) => { (e.target as HTMLInputElement).value = ''; }}
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
 
                       {!previewSrc ? (
-                        <button onClick={() => fileInputRef.current?.click()} className="w-full py-8 border-2 border-dashed border-rose-100 rounded-xl bg-zinc-50 flex flex-col items-center justify-center gap-1 cursor-pointer">
-                          <Upload className="w-5 h-5 text-zinc-400" />
+                        <button onClick={() => fileInputRef.current?.click()} className="w-full py-8 border-2 border-dashed border-rose-200/80 hover:border-pink-300 rounded-xl bg-rose-50/20 hover:bg-rose-50/40 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors">
+                          <Upload className="w-5 h-5 text-pink-400 animate-bounce" />
                           <span className="text-xs font-bold text-zinc-700">Pilih berkas kompilasi gambar</span>
-                          <span className="text-[9px] text-zinc-400">PNG, JPG, WEBP maks 10 MB</span>
+                          <span className="text-[9px] text-zinc-400">PNG, JPG, WEBP maks 15 MB</span>
                         </button>
                       ) : (
                         <div className="px-4 py-2 bg-zinc-50 border border-rose-100 rounded-xl flex justify-between items-center text-[10px]">
@@ -1288,7 +1422,7 @@ export const SelectFrame: React.FC = () => {
                           ) : (
                             <>
                               <CheckCircle2 className="w-3.5 h-3.5" />
-                              Semua {uploadSlots} area foto otomatis transparan & pas — bingkai aslinya tetap sama. Siap didaftarkan!
+                              Semua {uploadSlots} area foto otomatis transparan &amp; pas — bingkai aslinya tetap sama. Siap didaftarkan!
                             </>
                           )}
                         </div>
@@ -1320,8 +1454,14 @@ export const SelectFrame: React.FC = () => {
 
               {!uploadSuccess && (
                 <div className="p-6 border-t border-rose-100/60 bg-[#FFFDF9] flex gap-3">
-                  <button onClick={() => setIsUploadModalOpen(false)} className="flex-1 py-2.5 bg-white border-2 border-rose-100 rounded-xl text-xs font-bold text-zinc-500">Batal</button>
-                  <button onClick={handleUploadSubmit} disabled={!allSlotsFilled} className="flex-1 py-2.5 bg-zinc-950 text-white text-xs font-black tracking-widest uppercase rounded-xl disabled:opacity-35">Daftarkan Frame</button>
+                  <button onClick={() => setIsUploadModalOpen(false)} className="flex-1 py-3 bg-white border-2 border-rose-100 rounded-xl text-xs font-bold text-zinc-500 hover:bg-rose-50/50 transition-colors">Batal</button>
+                  <button
+                    onClick={handleUploadSubmit}
+                    disabled={!uploadName.trim() || !previewSrc || isAutoDetecting}
+                    className="flex-1 py-3 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-black text-xs tracking-widest uppercase rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Daftarkan Frame ✨
+                  </button>
                 </div>
               )}
             </motion.div>
