@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { usePhotobooth } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
-import { exportHighResCanvas, downloadBase64Image } from '../lib/exportImage';
-import { ArrowLeft, Download, RotateCcw, Check, Share2, Sparkles, Heart, X } from 'lucide-react';
+import { exportHighResCanvas, saveOrShareImage, dataURItoBlob } from '../lib/exportImage';
+import { ArrowLeft, Download, RotateCcw, Check, Share2, Sparkles, Heart, X, ExternalLink } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -74,13 +74,16 @@ export const Preview: React.FC = () => {
   if (!selectedFrame) return null;
 
   // Handle Export high-res and trigger full confetti storm + show pop up modal
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (stageRef.current) {
       const dataUrl = exportHighResCanvas(stageRef.current, 1800);
       if (dataUrl) {
         const timestamp = new Date().toISOString().slice(0, 10);
-        downloadBase64Image(dataUrl, `balisnap-studio-${timestamp}.png`);
+        const filename = `balisnap-studio-${timestamp}.png`;
         setDownloadedImageUri(dataUrl);
+
+        // Smart download or trigger native share sheet on mobile (iOS/Android)
+        await saveOrShareImage(dataUrl, filename);
 
         confetti({
           particleCount: 150,
@@ -94,17 +97,30 @@ export const Preview: React.FC = () => {
     }
   };
 
-  // Share via Web Share API (if supported)
+  // Share via Web Share API or save image directly
   const handleShare = async () => {
-    if (stageRef.current && navigator.share) {
-      const dataUrl = exportHighResCanvas(stageRef.current, 1200);
-      if (dataUrl) {
-        try {
-          const blob = await (await fetch(dataUrl)).blob();
-          const file = new File([blob], 'balisnap-photo.png', { type: 'image/png' });
-          await navigator.share({ files: [file], title: 'BaliSnap Studio Photo' });
-        } catch {
-          // User cancelled or not supported
+    const dataUrl = downloadedImageUri || (stageRef.current ? exportHighResCanvas(stageRef.current, 1800) : null);
+    if (dataUrl) {
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `balisnap-studio-${timestamp}.png`;
+      await saveOrShareImage(dataUrl, filename);
+    }
+  };
+
+  // Open high-res image Blob in a new tab for direct long-press save
+  const handleOpenImageTab = () => {
+    if (downloadedImageUri) {
+      try {
+        const blob = dataURItoBlob(downloadedImageUri);
+        const blobUrl = URL.createObjectURL(blob);
+        const newWin = window.open(blobUrl, '_blank');
+        if (!newWin) {
+          window.location.href = blobUrl;
+        }
+      } catch {
+        const newWin = window.open(downloadedImageUri, '_blank');
+        if (!newWin) {
+          window.location.href = downloadedImageUri;
         }
       }
     }
@@ -230,7 +246,7 @@ export const Preview: React.FC = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.85, opacity: 0, y: 20 }}
               transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-              className="bg-white border-4 border-rose-100 rounded-[32px] max-w-sm sm:max-w-md w-full p-6 md:p-8 shadow-[0_25px_60px_-15px_rgba(244,114,182,0.35)] relative overflow-hidden text-center flex flex-col items-center gap-4 z-50 select-none"
+              className="bg-white border-4 border-rose-100 rounded-[32px] max-w-sm sm:max-w-md w-full p-6 md:p-8 shadow-[0_25px_60px_-15px_rgba(244,114,182,0.35)] relative overflow-hidden text-center flex flex-col items-center gap-3.5 z-50 select-none max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Cute top tape accent */}
@@ -248,8 +264,8 @@ export const Preview: React.FC = () => {
               </button>
 
               {/* Animated Success Badge Icon */}
-              <div className="mt-3 w-16 h-16 bg-gradient-to-tr from-emerald-400 to-teal-300 rounded-full flex items-center justify-center shadow-lg shadow-emerald-200/70 animate-bounce" style={{ animationDuration: '2.2s' }}>
-                <Check className="w-9 h-9 text-white stroke-[3.5]" />
+              <div className="mt-2 w-14 h-14 bg-gradient-to-tr from-emerald-400 to-teal-300 rounded-full flex items-center justify-center shadow-lg shadow-emerald-200/70 animate-bounce" style={{ animationDuration: '2.2s' }}>
+                <Check className="w-8 h-8 text-white stroke-[3.5]" />
               </div>
 
               <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full">
@@ -263,39 +279,48 @@ export const Preview: React.FC = () => {
                 <Heart className="inline-block w-5 h-5 text-pink-400 fill-current animate-pulse align-text-top" />
               </h3>
 
-              {/* Modal Description */}
-              <p className="text-zinc-500 text-xs sm:text-sm font-medium leading-relaxed max-w-xs">
-                Foto kenangan photobooth resolusi tinggi (HD) Anda telah berhasil tersimpan di perangkat Anda.
-              </p>
+              {/* Mobile Friendly Gallery Tip Box */}
+              <div className="w-full p-3 bg-rose-50/90 border border-rose-100/80 rounded-2xl text-[11px] text-zinc-600 leading-relaxed font-medium text-left flex items-start gap-2.5 select-auto">
+                <span className="text-base flex-shrink-0">📱</span>
+                <div>
+                  <span className="font-bold text-pink-600">Pengguna HP:</span> Jika foto belum masuk otomatis ke Galeri, <span className="font-semibold underline text-pink-600">tekan &amp; tahan foto</span> di bawah ini lalu pilih <b>"Simpan Gambar" (Save Image)</b>, atau gunakan tombol <b>Simpan ke Galeri HP</b>.
+                </div>
+              </div>
 
-              {/* Downloaded Image Thumbnail Card */}
+              {/* Downloaded Image Thumbnail Card (Long-pressable on mobile) */}
               {downloadedImageUri && (
-                <div className="my-1 p-2.5 bg-gradient-to-b from-pink-50/80 to-rose-50/30 border-2 border-rose-100 rounded-2xl shadow-inner max-h-52 overflow-hidden flex items-center justify-center relative group">
+                <div
+                  className="my-1 p-2 bg-gradient-to-b from-pink-50/80 to-rose-50/30 border-2 border-rose-100 rounded-2xl shadow-inner max-h-52 overflow-hidden flex items-center justify-center relative group select-auto cursor-pointer"
+                  onClick={handleOpenImageTab}
+                  title="Klik untuk melihat foto ukuran penuh"
+                >
                   <img
                     src={downloadedImageUri}
                     alt="Preview Frame Photobooth"
-                    className="max-h-44 object-contain rounded-xl shadow-md transition-transform duration-300 group-hover:scale-105"
+                    className="max-h-44 object-contain rounded-xl shadow-md transition-transform duration-300 group-hover:scale-105 select-auto touch-manipulation"
+                    style={{ WebkitTouchCallout: 'default', pointerEvents: 'auto' }}
                   />
                 </div>
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-2.5 w-full mt-2">
+              <div className="flex flex-col gap-2 w-full mt-1">
+                {/* Primary Button: Save to Mobile Gallery / Native Share */}
                 <button
-                  onClick={() => setShowSuccessModal(false)}
+                  onClick={handleShare}
                   className="w-full py-3.5 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                 >
-                  <Check className="w-4 h-4" />
-                  Selesai &amp; Simpan
+                  <Share2 className="w-4 h-4" />
+                  Simpan ke Galeri HP / Share
                 </button>
 
                 <div className="grid grid-cols-2 gap-2 w-full">
                   <button
-                    onClick={handleDownload}
-                    className="py-3 bg-white hover:bg-rose-50/60 text-zinc-700 border border-rose-200/80 font-black tracking-wider uppercase text-[10px] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5"
+                    onClick={handleOpenImageTab}
+                    className="py-2.5 bg-white hover:bg-rose-50/60 text-zinc-700 border border-rose-200/80 font-black tracking-wider uppercase text-[10px] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5"
                   >
-                    <Download className="w-3.5 h-3.5 text-pink-500" />
-                    Unduh Lagi
+                    <ExternalLink className="w-3.5 h-3.5 text-pink-500" />
+                    Buka Foto Full
                   </button>
 
                   <button
@@ -303,12 +328,19 @@ export const Preview: React.FC = () => {
                       setShowSuccessModal(false);
                       setStep('editor');
                     }}
-                    className="py-3 bg-white hover:bg-rose-50/60 text-zinc-700 border border-rose-200/80 font-black tracking-wider uppercase text-[10px] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5"
+                    className="py-2.5 bg-white hover:bg-rose-50/60 text-zinc-700 border border-rose-200/80 font-black tracking-wider uppercase text-[10px] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5"
                   >
                     <ArrowLeft className="w-3.5 h-3.5 text-pink-500" />
                     Edit Foto
                   </button>
                 </div>
+
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 font-bold tracking-widest uppercase text-[10px] rounded-xl transition-colors mt-0.5"
+                >
+                  Selesai &amp; Tutup
+                </button>
               </div>
             </motion.div>
           </motion.div>

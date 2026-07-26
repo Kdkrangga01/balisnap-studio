@@ -6,7 +6,6 @@ import { FilterPanel } from '../components/editor/FilterPanel';
 import { FrameColorPanel } from '../components/editor/FrameColorPanel';
 import { StickerPanel } from '../components/editor/StickerPanel';
 import { TextPanel } from '../components/editor/TextPanel';
-import { stickers } from '../data/stickers';
 import {
   ArrowLeft,
   Sparkles,
@@ -116,15 +115,6 @@ export const Editor: React.FC = () => {
     }
   };
 
-  const handleShuffleStickers = () => {
-    const count = 3 + Math.floor(Math.random() * 2);
-    for (let i = 0; i < count; i++) {
-      const randomIndex = Math.floor(Math.random() * stickers.length);
-      const chosen = stickers[randomIndex];
-      addSticker(chosen.src);
-    }
-  };
-
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -209,14 +199,6 @@ export const Editor: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            <button
-              onClick={handleShuffleStickers}
-              className="px-3.5 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/70 backdrop-blur-sm hover:bg-white text-charcoal border border-cream/30 transition-all shadow-sm flex items-center gap-1.5"
-            >
-              <Sparkles className="w-3 h-3 text-gold" />
-              <span className="hidden xs:inline">Acak</span>
-              <span className="xs:hidden">✨</span>
-            </button>
             <button
               onClick={() => setStep('preview')}
               className="relative px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-mahogany to-mahogany-dark text-white shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 overflow-hidden group"
