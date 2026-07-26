@@ -3,7 +3,7 @@ import { usePhotobooth } from '../context/PhotoboothContext';
 import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import {
-  ArrowLeft, Palette, Sparkles, Search, X, Filter, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, Trash2, RotateCcw, CheckCircle2, ScanSearch, EyeOff, Eye, Pencil,
+  ArrowLeft, Palette, Sparkles, Search, X, Filter, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, Trash2, CheckCircle2, ScanSearch, Eye, Pencil,
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
 
@@ -482,10 +482,6 @@ export const SelectFrame: React.FC = () => {
     }
   }, [deleteCustomFrame]);
 
-  const handleRestoreHiddenFrames = useCallback(() => {
-    setHiddenFrameIds(new Set());
-  }, []);
-
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadName, setUploadName] = useState('');
   const [uploadCategory, setUploadCategory] = useState<FrameTemplate['category']>('custom');
@@ -858,17 +854,6 @@ export const SelectFrame: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
-              {hiddenFrameIds.size > 0 && (
-                <button
-                  onClick={handleRestoreHiddenFrames}
-                  className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white border border-purple-100 text-[10px] font-black tracking-widest uppercase text-purple-400 hover:bg-purple-50 transition-all shadow-sm"
-                >
-                  <EyeOff className="w-3.5 h-3.5" />
-                  Membuka ({hiddenFrameIds.size})
-                  <RotateCcw className="w-3 h-3" />
-                </button>
-              )}
-
               <button
                 onClick={() => setIsUploadModalOpen(true)}
                 className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-pink-400 to-rose-400 text-white font-black text-[10px] uppercase tracking-widest shadow-[0_6px_15px_rgba(244,63,94,0.15)] hover:opacity-90 transition-all w-full sm:w-auto"

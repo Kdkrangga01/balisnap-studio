@@ -773,22 +773,6 @@ export const frames: FrameTemplate[] = [
     ]
   },
   {
-    id: "custom-1784427621408-sjjs",
-    name: "Frame Bintang",
-    slots: 6,
-    category: "korean",
-    src: "/templates/custom-1784427621408-sjjs.png",
-    width: 1036, height: 1519,
-    slotCoords: [
-      { x: 188, y: 259, w: 188, h: 213, rx: 6 },
-      { x: 699, y: 313, w: 153, h: 172, rx: 5 },
-      { x: 89, y: 606, w: 359, h: 347, rx: 10 },
-      { x: 688, y: 693, w: 193, h: 239, rx: 6 },
-      { x: 183, y: 1056, w: 195, h: 235, rx: 6 },
-      { x: 683, y: 1125, w: 183, h: 225, rx: 5 }
-    ]
-  },
-  {
     id: "custom-1784427858645-l97f",
     name: "Frame Bunga",
     slots: 6,
