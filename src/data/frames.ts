@@ -1161,5 +1161,49 @@ export const frames: FrameTemplate[] = [
       { x: 553, y: 819, w: 355, h: 260, rx: 8 },
       { x: 553, y: 1112, w: 356, h: 260, rx: 8 }
     ]
+  },
+  {
+    id: "custom-1785061916665-bj6m",
+    name: "Good times scrapbook",
+    slots: 8,
+    category: "retro",
+    src: "/templates/custom-1785061916665-bj6m.png",
+    width: 941, height: 1672,
+    slotCoords: [
+      { x: 140, y: 310, w: 293, h: 252, rx: 8 },
+      { x: 140, y: 598, w: 293, h: 252, rx: 8 },
+      { x: 140, y: 889, w: 293, h: 252, rx: 8 },
+      { x: 140, y: 1180, w: 293, h: 253, rx: 8 },
+      { x: 522, y: 310, w: 293, h: 252, rx: 8 },
+      { x: 521, y: 598, w: 294, h: 253, rx: 8 },
+      { x: 521, y: 889, w: 294, h: 252, rx: 8 },
+      { x: 521, y: 1180, w: 294, h: 253, rx: 8 }
+    ]
+  },
+  {
+    id: "custom-1785062162831-hvny",
+    name: "Scrapbook of cherished memories",
+    slots: 3,
+    category: "retro",
+    src: "/templates/custom-1785062162831-hvny.png",
+    width: 941, height: 1672,
+    slotCoords: [
+      { x: 339, y: 141, w: 492, h: 389, rx: 12 },
+      { x: 193, y: 611, w: 542, h: 397, rx: 12 },
+      { x: 234, y: 1090, w: 519, h: 371, rx: 11 }
+    ]
+  },
+  {
+    id: "custom-1785062373382-c13q",
+    name: "Good times and beautiful moments",
+    slots: 3,
+    category: "retro",
+    src: "/templates/custom-1785062373382-c13q.png",
+    width: 941, height: 1672,
+    slotCoords: [
+      { x: 303, y: 209, w: 501, h: 388, rx: 12 },
+      { x: 187, y: 701, w: 553, h: 375, rx: 11 },
+      { x: 297, y: 1165, w: 496, h: 362, rx: 11 }
+    ]
   }
 ];
