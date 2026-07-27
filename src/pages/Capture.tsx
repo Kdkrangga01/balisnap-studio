@@ -559,16 +559,16 @@ export const Capture: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-center w-full flex-1 overflow-hidden min-h-0">
 
             {/* LEFT COLUMN: WEBCAM VIEWFINDER */}
-            <div className="lg:col-span-8 flex flex-col justify-center gap-2 sm:gap-2.5 h-full w-full min-h-0 overflow-hidden relative">
+            <div className="lg:col-span-8 flex flex-col justify-center gap-2 sm:gap-2.5 h-full w-full min-h-0 overflow-hidden relative pt-3">
 
-              {/* Badge Washi Tape */}
-              <div className="absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 px-3.5 h-5 sm:h-6 bg-purple-300/80 backdrop-blur-md border border-white/80 skew-x-[-12deg] z-30 shadow-sm pointer-events-none flex items-center justify-center text-[8px] sm:text-[9px] text-purple-900 font-black tracking-widest uppercase rounded-sm">
+              {/* Badge Washi Tape (Dinaikkan sedikit ke atas melayang di luar border frame agar tidak menutupi tombol) */}
+              <div className="absolute -top-1.5 sm:top-0 left-1/2 -translate-x-1/2 px-3.5 h-5 sm:h-6 bg-purple-300/90 backdrop-blur-md border border-white/90 skew-x-[-12deg] z-30 shadow-md pointer-events-none flex items-center justify-center text-[8px] sm:text-[9px] text-purple-950 font-black tracking-widest uppercase rounded-sm">
                 BALISNAP FX STUDIO
               </div>
 
-              {/* Viewfinder Frame */}
+              {/* Viewfinder Frame (Ditambahkan padding-top pt-5 sm:pt-4 agar HUD tidak sesak) */}
               <div
-                className="relative bg-zinc-950 border-4 border-purple-200/80 shadow-[0_20px_50px_rgba(216,180,254,0.4)] rounded-[20px] sm:rounded-[28px] overflow-hidden mx-auto w-full max-w-4xl flex-1 min-h-0 group pt-2"
+                className="relative bg-zinc-950 border-4 border-purple-200/80 shadow-[0_20px_50px_rgba(216,180,254,0.4)] rounded-[20px] sm:rounded-[28px] overflow-hidden mx-auto w-full max-w-4xl flex-1 min-h-0 group pt-5 sm:pt-4"
                 style={{
                   aspectRatio: cameraAspect,
                   maxHeight: isPortraitView ? '62vh' : '78vh',
@@ -613,18 +613,18 @@ export const Capture: React.FC = () => {
 
                 {/* HUD Overlay Top */}
                 <div className="absolute top-2 sm:top-3 left-2 sm:left-3 right-2 sm:right-3 flex items-center justify-between gap-1.5 z-20 pointer-events-none">
-                  <div className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[9px] font-black tracking-widest uppercase px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-white/10 pointer-events-auto max-w-[55%]">
+                  <div className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[9px] font-black tracking-widest uppercase px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-white/10 pointer-events-auto max-w-[45%] xs:max-w-[55%]">
                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isAutoShooting ? 'bg-red-500 animate-ping' : 'bg-purple-400'}`} />
-                    <span className="truncate">{isAutoShooting ? 'AUTO SEQUENCING...' : `SLOT #${activeSlot + 1} VIEW`}</span>
+                    <span className="truncate">{isAutoShooting ? 'AUTO...' : `SLOT #${activeSlot + 1}`}</span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 pointer-events-auto flex-shrink-0">
+                  <div className="flex items-center gap-1 sm:gap-1.5 pointer-events-auto flex-shrink-0">
                     <button
                       onClick={() => setIsBeautyMode(!isBeautyMode)}
                       className={`bg-zinc-950/80 backdrop-blur-md text-[7px] sm:text-[8px] font-black uppercase px-2 py-1.5 rounded-full shadow-md border border-white/10 transition-all active:scale-95 flex items-center gap-1 ${isBeautyMode ? 'text-pink-300 border-pink-400/50' : 'text-zinc-400'}`}
                       title="Toggle Beauty Cam Blur"
                     >
-                      <Sparkle className="w-3 h-3" />
+                      <Sparkle className="w-3 h-3 flex-shrink-0" />
                       <span>{isBeautyMode ? 'Beauty: ON' : 'Beauty: OFF'}</span>
                     </button>
 
@@ -654,7 +654,7 @@ export const Capture: React.FC = () => {
 
                     <button
                       onClick={() => setIsMirrorMode(!isMirrorMode)}
-                      className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[8px] font-black tracking-widest uppercase px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 flex items-center gap-1 whitespace-nowrap"
+                      className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[8px] font-black tracking-widest uppercase p-1.5 sm:px-2.5 sm:py-1.5 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 flex items-center gap-1 whitespace-nowrap"
                     >
                       <RefreshCw className="w-2.5 h-2.5 text-purple-300 flex-shrink-0" />
                       <span className="hidden xs:inline">{isMirrorMode ? 'Mirror: On' : 'Mirror: Off'}</span>
