@@ -4,7 +4,6 @@ import { usePhotobooth } from '../context/PhotoboothContext';
 import { generateDemoPhoto } from '../lib/utils';
 import {
   ArrowLeft,
-  Camera,
   Upload,
   RefreshCw,
   Sparkles,
@@ -17,31 +16,76 @@ import {
   Settings,
   Activity,
   Smile,
+  Volume2,
+  VolumeX,
+  Zap,
+  Wand2,
+  Sun,
+  Sparkle
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
 
 const CAMERA_FILTERS = [
-  { id: 'none', label: 'Natural ✨', filterCss: 'contrast(100%) brightness(100%) saturate(100%)' },
-  { id: 'sweet-pink', label: 'Sweet Pink 🎀', filterCss: 'contrast(102%) brightness(108%) saturate(115%) sepia(8%) hue-rotate(-10deg)' },
-  { id: 'retro', label: 'Retro Film 🎞️', filterCss: 'contrast(95%) brightness(98%) sepia(25%) saturate(90%)' },
-  { id: 'bw', label: 'B&W Elegant 🖤', filterCss: 'grayscale(100%) contrast(115%) brightness(102%)' }
+  { id: 'none', label: 'Natural ✨', filterCss: 'contrast(100%) saturate(100%)' },
+  { id: 'soft-glow', label: 'Korea Soft Glow 🌸', filterCss: 'contrast(98%) brightness(108%) saturate(110%) blur(0.3px)' },
+  { id: 'y2k-gloss', label: 'Y2K Glossy 💅', filterCss: 'contrast(112%) brightness(105%) saturate(130%) hue-rotate(-5deg)' },
+  { id: 'indie-vibes', label: 'Indie Film 🎞️', filterCss: 'contrast(92%) brightness(102%) sepia(20%) saturate(95%)' },
+  { id: 'moody-cyber', label: 'Moody Cyber 🌃', filterCss: 'contrast(115%) brightness(98%) saturate(125%) hue-rotate(15deg)' },
+  { id: 'sweet-pink', label: 'Sweet Pink 🎀', filterCss: 'contrast(102%) saturate(115%) sepia(8%) hue-rotate(-10deg)' },
+  { id: 'bw-elegant', label: 'B&W Vintage 🖤', filterCss: 'grayscale(100%) contrast(118%) brightness(102%)' }
 ];
 
-// PENTING: fungsi ini SENGAJA TIDAK memotong (crop) foto sama sekali lagi.
-// Sebelumnya foto dipaksa dipotong center supaya pas dengan rasio kotak
-// slot -> ini menghilangkan sebagian konten foto secara permanen (mis.
-// kepala/badan kepotong), sehingga saat ditampilkan di bingkai akhir foto
-// terlihat "zoom"/kebesaran padahal sebenarnya itu karena datanya memang
-// sudah hilang sebagian sejak awal. Sekarang foto disimpan UTUH apa adanya
-// (rasio asli dipertahankan), hanya diperkecil kalau ukurannya kelewat
-// besar (supaya file tidak berat). Penyesuaian bentuk ke kotak slot
-// (supaya "pas", tidak kebesaran/kekecilan, tanpa kehilangan konten)
-// sepenuhnya diserahkan ke PhotoCanvas (contain-fit) saat foto dirender
-// ke dalam bingkai.
+// Helper Audio Synth
+const playBeepSound = () => {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.15);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.15);
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const playShutterSound = () => {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const bufferSize = ctx.sampleRate * 0.1;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 1000;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 function fitDataUrlNoCrop(
   dataUrl: string,
   maxLongSide: number,
-  filterId: string
+  filterId: string,
+  brightnessLevel: number,
+  isBeautyMode: boolean
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
@@ -75,14 +119,11 @@ function fitDataUrlNoCrop(
       ctx.imageSmoothingQuality = 'high';
 
       const currentFilterObj = CAMERA_FILTERS.find((f) => f.id === filterId);
-      if (currentFilterObj && currentFilterObj.filterCss) {
-        ctx.filter = currentFilterObj.filterCss;
-      } else {
-        ctx.filter = 'none';
-      }
+      const filterCss = currentFilterObj ? currentFilterObj.filterCss : 'none';
+      const beautyCss = isBeautyMode ? 'blur(0.5px) contrast(98%)' : '';
 
-      // Digambar utuh (bukan cropX/cropY/cropW/cropH lagi), seluruh foto
-      // sumber ikut masuk, hanya diskalakan ke outW x outH.
+      ctx.filter = `brightness(${brightnessLevel}%) ${filterCss === 'none' ? '' : filterCss} ${beautyCss}`.trim();
+
       ctx.drawImage(img, 0, 0, srcW, srcH, 0, 0, outW, outH);
       resolve(canvas.toDataURL('image/jpeg', 0.98));
     };
@@ -111,12 +152,16 @@ export const Capture: React.FC = () => {
   const [isAutoShooting, setIsAutoShooting] = useState<boolean>(false);
 
   const [activeFilter, setActiveFilter] = useState<string>('none');
+  const [brightness, setBrightness] = useState<number>(105);
+  const [isBeautyMode, setIsBeautyMode] = useState<boolean>(false);
   const [isMirrorMode, setIsMirrorMode] = useState<boolean>(true);
   const [timerInterval, setTimerInterval] = useState<number>(3);
 
-  // Melacak orientasi viewport agar preview kamera bisa menyesuaikan rasio
-  // (mobile/portrait pakai rasio lebih tinggi supaya wajah tidak terpotong,
-  // desktop/landscape tetap pakai 16:9).
+  // States Opsi Tampilan & Fitur Pendukung
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [showWatermark, setShowWatermark] = useState<boolean>(true);
+  const [gridOverlay, setGridOverlay] = useState<boolean>(true);
+
   const [isPortraitView, setIsPortraitView] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
     return window.innerHeight >= window.innerWidth;
@@ -138,7 +183,6 @@ export const Capture: React.FC = () => {
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sinkronisasi mutlak referensi array state agar pembacaan sekuensial tidak miss
   const photosStateRef = useRef<(string | null)[]>(photos);
   useEffect(() => {
     photosStateRef.current = photos;
@@ -161,16 +205,6 @@ export const Capture: React.FC = () => {
     return 16 / 9;
   }, [selectedFrame]);
 
-  // Menghitung ukuran thumbnail preview (di panel "Progres Slot") supaya
-  // rasio kontainer SELALU identik dengan rasio foto yang sudah di-crop
-  // (slotAspect). Sebelumnya width dan height dihitung/‌dibatasi terpisah
-  // (height tetap 46px, width dibatasi maxWidth 64px tanpa menyesuaikan
-  // height) -> begitu slotAspect cukup lebar, rasio kontainer jadi BEDA
-  // dari rasio foto asli, sehingga object-cover memotong ulang foto dan
-  // hasilnya terlihat zoom/kepotong (kebesaran) dibanding foto demo yang
-  // kebetulan rasionya mendekati kotak. Dengan menghitung width & height
-  // bersamaan lalu membatasi keduanya sekaligus, rasio kontainer selalu
-  // sama persis dengan foto -> pas, tidak kebesaran atau kekecilan.
   const getThumbnailBoxSize = useCallback((slotAspect: number) => {
     const maxW = 64;
     const maxH = 46;
@@ -195,7 +229,6 @@ export const Capture: React.FC = () => {
         setIsAutoShooting(false);
         setShowCelebration(true);
         setTimeout(() => setShowCelebration(false), 3000);
-        // Fallback aman mengunci indeks terakhir jika semua slot penuh
         const fallbackIndex = totalSlots - 1;
         setActiveSlot(fallbackIndex >= 0 ? fallbackIndex : 0);
         return null;
@@ -204,7 +237,6 @@ export const Capture: React.FC = () => {
     [selectedFrame]
   );
 
-  // Jalankan inisialisasi slot aktif pertama kali berdasarkan slot kosong murni di context
   useEffect(() => {
     if (!selectedFrame) return;
     const { slots: totalSlots } = selectedFrame;
@@ -228,12 +260,6 @@ export const Capture: React.FC = () => {
   };
   const handleUserMediaError = () => setHasCamera(false);
 
-  // Sebagian browser mobile (terutama saat HP di-rotate ke landscape) melaporkan
-  // videoWidth/videoHeight yang BERUBAH dari nilai awal getSettings(). Kalau kita
-  // cuma pakai nilai dari handleUserMedia sekali di awal, kontainer preview jadi
-  // tidak sinkron dengan bentuk asli stream setelah rotate -> wajah kepotong lagi.
-  // Di sini kita dengarkan event 'loadedmetadata' & 'resize' langsung dari elemen
-  // <video>, yang selalu mencerminkan dimensi video yang sesungguhnya saat ini.
   useEffect(() => {
     if (!hasCamera) return;
     const video = webcamRef.current?.video;
@@ -275,6 +301,7 @@ export const Capture: React.FC = () => {
       return;
     }
 
+    if (soundEnabled) playShutterSound();
     setShowFlash(true);
     setTimeout(() => setShowFlash(false), 200);
     setCaptureError(null);
@@ -283,12 +310,10 @@ export const Capture: React.FC = () => {
     const maxLongSide = 2048;
     const capturedSlot = activeSlot;
 
-    fitDataUrlNoCrop(imageSrc, maxLongSide, activeFilter)
+    fitDataUrlNoCrop(imageSrc, maxLongSide, activeFilter, brightness, isBeautyMode)
       .then((croppedSrc) => {
-        // 1. Perbarui state context global
         setPhotoAtSlot(capturedSlot, croppedSrc);
 
-        // 2. Paksa salinan array lokal instan agar pencarian pencocokan indeks berikutnya presisi mutlak
         const updatedPhotos = [...photosStateRef.current];
         updatedPhotos[capturedSlot] = croppedSrc;
 
@@ -306,20 +331,12 @@ export const Capture: React.FC = () => {
         setIsProcessingPhoto(false);
         setIsAutoShooting(false);
       });
-  }, [webcamRef, activeSlot, isAutoShooting, activeFilter, timerInterval, setPhotoAtSlot, selectNextEmptySlot, actualResolution, getSlotAspectRatio]);
+  }, [webcamRef, activeSlot, isAutoShooting, activeFilter, brightness, isBeautyMode, timerInterval, setPhotoAtSlot, selectNextEmptySlot, actualResolution, soundEnabled]);
 
   if (!selectedFrame) return null;
 
   const { slots: totalSlots, name: frameName } = selectedFrame;
 
-  // PENTING: tidak memaksa `aspectRatio`, `min`, ATAU height di videoConstraints.
-  // - Memaksa rasio 16:9 di hardware bikin kamera depan HP (native-nya portrait)
-  //   di-crop duluan oleh driver kamera sebelum sampai ke browser.
-  // - Meminta width DAN height ideal yang sama (mis. 1280x1280) juga bikin
-  //   kamera dipaksa crop jadi persegi oleh hardware -> hasilnya tetap zoom.
-  // Solusinya: minta `ideal width` saja, biarkan browser/kamera memilih tinggi
-  // sesuai rasio asli sensornya. Bentuk box preview di CSS akan MENGIKUTI
-  // dimensi asli ini (lihat `cameraAspect` di bawah), bukan sebaliknya.
   const getVideoConstraints = () => {
     return {
       facingMode: 'user',
@@ -327,10 +344,6 @@ export const Capture: React.FC = () => {
     };
   };
 
-  // Rasio kontainer preview mengikuti dimensi ASLI video (dari state
-  // actualResolution yang selalu ter-update, termasuk saat rotate).
-  // Selama dimensi asli belum diketahui, pakai fallback yang wajar
-  // sesuai orientasi layar saat ini.
   const fallbackAspect = isPortraitView ? 3 / 4 : 4 / 3;
   const cameraAspect =
     actualResolution && actualResolution.width > 0 && actualResolution.height > 0
@@ -360,9 +373,10 @@ export const Capture: React.FC = () => {
       capturePhoto();
       return;
     }
+    if (soundEnabled && countdown > 0) playBeepSound();
     const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
     return () => clearTimeout(timer);
-  }, [countdown, capturePhoto]);
+  }, [countdown, capturePhoto, soundEnabled]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -379,7 +393,7 @@ export const Capture: React.FC = () => {
       setIsProcessingPhoto(true);
       setCaptureError(null);
 
-      fitDataUrlNoCrop(rawSrc, maxLongSide, activeFilter)
+      fitDataUrlNoCrop(rawSrc, maxLongSide, activeFilter, brightness, isBeautyMode)
         .then((croppedSrc) => {
           setPhotoAtSlot(targetSlot, croppedSrc);
           const updatedPhotos = [...photosStateRef.current];
@@ -389,7 +403,7 @@ export const Capture: React.FC = () => {
         })
         .catch((err) => {
           console.error("Gagal memproses foto upload, mencoba fallback...", err);
-          fitDataUrlNoCrop(rawSrc, 1024, 'none')
+          fitDataUrlNoCrop(rawSrc, 1024, 'none', 100, false)
             .then((fallbackSrc) => {
               setPhotoAtSlot(targetSlot, fallbackSrc);
               const updatedPhotos = [...photosStateRef.current];
@@ -418,30 +432,36 @@ export const Capture: React.FC = () => {
 
   const isAllFilled = photos.slice(0, totalSlots).every((p) => p !== null);
   const filledCount = photos.slice(0, totalSlots).filter((p) => p !== null).length;
-  const activeFilterStyle = CAMERA_FILTERS.find(f => f.id === activeFilter)?.filterCss || 'none';
+
+  const selectedFilterObj = CAMERA_FILTERS.find(f => f.id === activeFilter);
+  const activeFilterCss = selectedFilterObj ? selectedFilterObj.filterCss : '';
+  const beautyCss = isBeautyMode ? 'blur(0.5px) contrast(98%)' : '';
+  const combinedFilterStyle = `brightness(${brightness}%) ${activeFilterCss} ${beautyCss}`.trim();
 
   return (
     <>
       <div
         onMouseMove={handleKawaiiMouseMove}
-        className="min-h-screen w-full bg-[#FFFDF6] text-zinc-800 py-3 px-3 sm:px-6 lg:px-12 relative overflow-hidden antialiased font-sans flex flex-col items-center justify-between group/canvas select-none"
+        className="min-h-screen w-full bg-[#FAF6FF] text-zinc-800 py-3 px-3 sm:px-6 lg:px-12 relative overflow-hidden antialiased font-sans flex flex-col items-center justify-between group/canvas select-none"
       >
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#EFEBE2_1px,transparent_1px),linear-gradient(to_bottom,#EFEBE2_1px,transparent_1px)] bg-[size:44px_44px] opacity-[0.9] pointer-events-none z-0" />
+        {/* Animated Background Mesh */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-pink-200/40 via-purple-100/20 to-cyan-100/30 pointer-events-none z-0" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#E9D5FF_1px,transparent_1px),linear-gradient(to_bottom,#E9D5FF_1px,transparent_1px)] bg-[size:36px_36px] opacity-[0.5] pointer-events-none z-0" />
 
-        {/* Floating Emojis */}
-        <div className="absolute top-20 left-6 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block" style={{ animationDuration: '3s' }}>🎀</div>
-        <div className="absolute top-1/2 left-8 text-2xl animate-pulse pointer-events-none opacity-50 hidden xl:block text-pink-300"><Sparkles className="w-5 h-5 fill-current" /></div>
-        <div className="absolute bottom-28 left-10 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block" style={{ animationDuration: '4.5s' }}>🧸</div>
-        <div className="absolute top-28 right-6 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block" style={{ animationDuration: '3.5s' }}>💖</div>
-        <div className="absolute bottom-20 right-8 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block" style={{ animationDuration: '4s' }}>✨</div>
+        {/* Floating Animated Aesthetics */}
+        <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }} className="absolute top-16 left-8 text-3xl pointer-events-none opacity-80 hidden xl:block z-0">🌸</motion.div>
+        <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }} className="absolute top-1/2 left-10 text-2xl pointer-events-none text-purple-400 hidden xl:block z-0"><Sparkles className="w-6 h-6 fill-current animate-pulse" /></motion.div>
+        <motion.div animate={{ y: [0, 12, 0] }} transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }} className="absolute bottom-24 left-12 text-3xl pointer-events-none opacity-80 hidden xl:block z-0">🍧</motion.div>
+        <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }} className="absolute top-24 right-10 text-3xl pointer-events-none opacity-80 hidden xl:block z-0">🔮</motion.div>
+        <motion.div animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }} className="absolute bottom-20 right-12 text-3xl pointer-events-none opacity-80 hidden xl:block z-0">✨</motion.div>
 
         <motion.div
-          className="pointer-events-none absolute -inset-px opacity-0 group-hover/canvas:opacity-100 transition duration-300 hidden md:block z-0"
+          className="pointer-events-none absolute -inset-px opacity-0 group-hover/canvas:opacity-100 transition duration-500 hidden md:block z-0"
           style={{
             background: useMotionTemplate`
               radial-gradient(
-                550px circle at ${bX}px ${bY}px,
-                rgba(255, 182, 193, 0.12),
+                600px circle at ${bX}px ${bY}px,
+                rgba(216, 180, 254, 0.25),
                 transparent 80%
               )
             `,
@@ -455,9 +475,11 @@ export const Capture: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-white z-50 pointer-events-none"
-              transition={{ duration: 0.15 }}
-            />
+              className="fixed inset-0 bg-white z-[100] pointer-events-none flex items-center justify-center"
+              transition={{ duration: 0.1 }}
+            >
+              <div className="w-full h-full bg-pink-100/30 backdrop-blur-3xl" />
+            </motion.div>
           )}
         </AnimatePresence>
 
@@ -469,12 +491,13 @@ export const Capture: React.FC = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/10 backdrop-blur-md px-4"
+              className="fixed inset-0 z-[90] flex items-center justify-center bg-zinc-950/20 backdrop-blur-md px-4"
             >
-              <motion.div variants={popupVariants} initial="hidden" animate="visible" exit="exit" className="bg-white border-4 border-rose-100 rounded-[36px] p-8 text-center shadow-2xl max-w-sm w-full mx-4">
-                <motion.div animate={{ rotate: [0, 12, -12, 12, 0] }} transition={{ repeat: Infinity, duration: 1 }} className="text-6xl mb-4">🎉</motion.div>
-                <h2 className="font-serif text-2xl font-black text-zinc-900 leading-tight">Semua Slot Terisi!</h2>
-                <p className="text-zinc-500 text-xs mt-2 font-light">Potret selesai! Tekan <strong className="text-pink-500 font-bold">Lanjut ke Editor</strong> untuk merangkai ornamen lucu.</p>
+              <motion.div variants={popupVariants} initial="hidden" animate="visible" exit="exit" className="bg-white/90 backdrop-blur-xl border-4 border-purple-200 rounded-[36px] p-8 text-center shadow-[0_20px_50px_rgba(168,85,247,0.3)] max-w-sm w-full mx-4 relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-28 h-28 bg-purple-200/50 rounded-full blur-xl pointer-events-none" />
+                <motion.div animate={{ rotate: [0, 15, -15, 15, 0], scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 1.2 }} className="text-6xl mb-4 relative z-10">🎉</motion.div>
+                <h2 className="font-serif text-2xl font-black text-zinc-900 leading-tight">Sesi Selesai!</h2>
+                <p className="text-zinc-500 text-xs mt-2 font-light">Semua foto lengkap! Klik <strong className="text-purple-600 font-bold">Lanjut ke Editor</strong> untuk berkreasi.</p>
               </motion.div>
             </motion.div>
           )}
@@ -484,40 +507,40 @@ export const Capture: React.FC = () => {
         <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col justify-between relative z-10 gap-2 overflow-hidden py-1">
 
           {/* Header Row */}
-          <div className="flex flex-col sm:flex-row justify-between items-center border-b-4 border-dashed border-rose-100 pb-3 gap-2 w-full flex-shrink-0">
+          <div className="flex flex-col sm:flex-row justify-between items-center border-b-4 border-dashed border-purple-200/70 pb-3 gap-2 w-full flex-shrink-0">
             <div className="text-center sm:text-left">
               <button
                 onClick={() => { setIsAutoShooting(false); setStep('select-frame'); }}
-                className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-600 font-black text-[10px] tracking-[0.25em] uppercase mb-1 transition-colors group px-2.5 py-1 bg-pink-50 rounded-full border border-pink-100/40"
+                className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-black text-[10px] tracking-[0.25em] uppercase mb-1 transition-all group px-3 py-1 bg-purple-50 hover:bg-purple-100 rounded-full border border-purple-200/80 shadow-sm"
               >
                 <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
                 Kembali
               </button>
-              <h1 className="font-serif text-xl sm:text-2xl md:text-3xl font-black text-zinc-900 tracking-tight leading-none">
-                Ambil{' '}
-                <span className="font-sans font-black italic bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 text-transparent bg-clip-text">
-                  Foto Sesi
+              <h1 className="font-serif text-xl sm:text-2xl md:text-3xl font-black text-zinc-900 tracking-tight leading-normal flex items-center gap-2 justify-center sm:justify-start">
+                <span>Studio</span>
+                <span className="font-sans font-black italic bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 text-transparent bg-clip-text pr-2 py-0.5 inline-block">
+                  Foto Digital
                 </span>
               </h1>
               <p className="text-zinc-400 text-[10px] sm:text-[11px] font-normal flex items-center justify-center sm:justify-start gap-2 mt-1 flex-wrap">
-                <Layers className="w-3.5 h-3.5 text-pink-400" />
+                <Layers className="w-3.5 h-3.5 text-purple-400" />
                 <span>Katalog Bingkai: <strong className="font-bold text-zinc-700">"{frameName}"</strong></span>
-                <span className="text-rose-200">•</span>
-                <span className="bg-pink-50 text-pink-500 font-black px-1.5 py-0.5 rounded text-[10px]">{totalSlots} Slot Foto</span>
+                <span className="text-purple-200">•</span>
+                <span className="bg-purple-100/80 text-purple-700 font-black px-2 py-0.5 rounded-full text-[10px] shadow-sm">{totalSlots} Slot Foto</span>
               </p>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap justify-center">
               <button
                 onClick={() => { setIsAutoShooting(false); clearPhotos(); }}
-                className="px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white border border-rose-100 text-pink-400 hover:bg-rose-50/50 shadow-sm transition-all"
+                className="px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/80 backdrop-blur-sm border border-purple-100 text-purple-500 hover:bg-purple-50 shadow-sm transition-all active:scale-95"
               >
                 Ulangi Sesi
               </button>
               <button
                 onClick={() => { setIsAutoShooting(false); setStep('editor'); }}
                 disabled={!isAllFilled}
-                className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md flex items-center gap-1.5 ${isAllFilled ? 'bg-gradient-to-r from-pink-400 to-rose-400 text-white hover:opacity-90' : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'}`}
+                className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md flex items-center gap-1.5 ${isAllFilled ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-rose-400 text-white hover:opacity-95 active:scale-95 shadow-purple-200' : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'}`}
               >
                 <span>Lanjut ke Editor</span>
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -526,7 +549,7 @@ export const Capture: React.FC = () => {
           </div>
 
           {captureError && (
-            <div className="flex items-center gap-2 p-2 bg-rose-50 border border-rose-100 rounded-xl text-rose-600 text-xs font-semibold flex-shrink-0">
+            <div className="flex items-center gap-2 p-2 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs font-semibold flex-shrink-0 shadow-sm">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
               <span>{captureError}</span>
             </div>
@@ -537,17 +560,15 @@ export const Capture: React.FC = () => {
 
             {/* LEFT COLUMN: WEBCAM VIEWFINDER */}
             <div className="lg:col-span-8 flex flex-col justify-center gap-2 sm:gap-2.5 h-full w-full min-h-0 overflow-hidden relative">
-              <div className="absolute top-[-6px] left-1/2 -translate-x-1/2 w-24 h-4 bg-pink-200/40 backdrop-blur-sm border border-white/40 skew-x-[-12deg] z-20 shadow-sm pointer-events-none flex items-center justify-center text-[7px] text-pink-500 font-bold tracking-widest uppercase">BALISNAP</div>
 
-              {/*
-                Container preview kamera: rasionya sekarang mengikuti PERSIS rasio
-                video asli (cameraAspect, dari actualResolution). Karena kontainer
-                dan video punya rasio yang sama persis, object-cover tidak perlu
-                memotong apa pun -> wajah selalu penuh, baik saat HP tegak (portrait)
-                maupun saat di-rotate ke landscape.
-              */}
+              {/* PERBAIKAN: Washi Tape Badge posisi aman (top-1) & rapih tanpa kepotong */}
+              <div className="absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 px-3.5 h-5 sm:h-6 bg-purple-300/80 backdrop-blur-md border border-white/80 skew-x-[-12deg] z-30 shadow-sm pointer-events-none flex items-center justify-center text-[8px] sm:text-[9px] text-purple-900 font-black tracking-widest uppercase rounded-sm">
+                BALISNAP FX STUDIO
+              </div>
+
+              {/* Viewfinder Frame */}
               <div
-                className="relative bg-zinc-950 border-4 border-rose-100 shadow-[0_15px_40px_rgba(253,244,245,0.6)] rounded-[20px] sm:rounded-[28px] overflow-hidden mx-auto w-full max-w-4xl flex-1 min-h-0"
+                className="relative bg-zinc-950 border-4 border-purple-200/80 shadow-[0_20px_50px_rgba(216,180,254,0.4)] rounded-[20px] sm:rounded-[28px] overflow-hidden mx-auto w-full max-w-4xl flex-1 min-h-0 group pt-2"
                 style={{
                   aspectRatio: cameraAspect,
                   maxHeight: isPortraitView ? '62vh' : '78vh',
@@ -564,64 +585,103 @@ export const Capture: React.FC = () => {
                     onUserMedia={handleUserMedia}
                     onUserMediaError={handleUserMediaError}
                     className="w-full h-full object-cover object-center camera-mirror"
-                    style={{ filter: activeFilterStyle }}
+                    style={{ filter: combinedFilterStyle }}
                   />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-400 p-4 bg-zinc-900 text-center">
-                    <AlertCircle className="w-8 h-8 text-pink-300 mb-2" />
+                    <AlertCircle className="w-8 h-8 text-purple-300 mb-2 animate-bounce" />
                     <h3 className="font-serif font-bold text-sm text-zinc-200">Kamera Tidak Terdeteksi</h3>
                   </div>
                 )}
 
-                {/* Composition Grid Lines */}
-                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-[0.15] border border-white/20">
-                  <div className="border-r border-b border-white" /><div className="border-r border-b border-white" /><div className="border-b border-white" />
-                  <div className="border-r border-b border-white" /><div className="border-r border-b border-white" /><div className="border-b border-white" />
-                  <div className="border-r border-white" /><div className="border-r border-white" /><div />
-                </div>
+                {/* Grid Lines Overlay */}
+                {gridOverlay && (
+                  <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-[0.22] border border-white/30 transition-opacity">
+                    <div className="border-r border-b border-white" /><div className="border-r border-b border-white" /><div className="border-b border-white" />
+                    <div className="border-r border-b border-white" /><div className="border-r border-b border-white" /><div className="border-b border-white" />
+                    <div className="border-r border-white" /><div className="border-r border-white" /><div />
+                  </div>
+                )}
 
+                {/* Watermark Overlay */}
+                {showWatermark && (
+                  <div className="absolute bottom-6 left-5 z-20 pointer-events-none flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-white/90 font-mono text-[9px] uppercase tracking-wider shadow-lg">
+                    <Sparkles className="w-3 h-3 text-purple-300 animate-spin-slow" />
+                    <span>BALISNAP • BOOTH LIVE</span>
+                  </div>
+                )}
 
-
-                {/* HUD Overlay Row: dulu 3 badge diposisikan absolute pakai angka "magic"
-                    (right-24, right-3, dll) yang gampang tabrakan di layar sempit.
-                    Sekarang pakai flex justify-between supaya otomatis menyesuaikan lebar layar. */}
-                <div className="absolute top-2 sm:top-3 left-2 sm:left-3 right-2 sm:right-3 flex items-center justify-between gap-1.5 z-10 pointer-events-none">
+                {/* HUD Overlay Top */}
+                <div className="absolute top-2 sm:top-3 left-2 sm:left-3 right-2 sm:right-3 flex items-center justify-between gap-1.5 z-20 pointer-events-none">
                   <div className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[9px] font-black tracking-widest uppercase px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-white/10 pointer-events-auto max-w-[55%]">
-                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isAutoShooting ? 'bg-red-500 animate-ping' : 'bg-pink-400'}`} />
+                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isAutoShooting ? 'bg-red-500 animate-ping' : 'bg-purple-400'}`} />
                     <span className="truncate">{isAutoShooting ? 'AUTO SEQUENCING...' : `SLOT #${activeSlot + 1} VIEW`}</span>
                   </div>
 
                   <div className="flex items-center gap-1.5 pointer-events-auto flex-shrink-0">
                     <button
+                      onClick={() => setIsBeautyMode(!isBeautyMode)}
+                      className={`bg-zinc-950/80 backdrop-blur-md text-[7px] sm:text-[8px] font-black uppercase px-2 py-1.5 rounded-full shadow-md border border-white/10 transition-all active:scale-95 flex items-center gap-1 ${isBeautyMode ? 'text-pink-300 border-pink-400/50' : 'text-zinc-400'}`}
+                      title="Toggle Beauty Cam Blur"
+                    >
+                      <Sparkle className="w-3 h-3" />
+                      <span>{isBeautyMode ? 'Beauty: ON' : 'Beauty: OFF'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => setSoundEnabled(!soundEnabled)}
+                      className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[8px] font-black uppercase p-1.5 sm:p-2 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 flex items-center justify-center"
+                      title="Toggle Sound"
+                    >
+                      {soundEnabled ? <Volume2 className="w-3 h-3 text-emerald-400" /> : <VolumeX className="w-3 h-3 text-rose-400" />}
+                    </button>
+
+                    <button
+                      onClick={() => setGridOverlay(!gridOverlay)}
+                      className={`bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[8px] font-black uppercase p-1.5 sm:p-2 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 ${gridOverlay ? 'text-purple-300' : 'text-zinc-500'}`}
+                      title="Toggle Grid"
+                    >
+                      <Grid className="w-3 h-3" />
+                    </button>
+
+                    <button
+                      onClick={() => setShowWatermark(!showWatermark)}
+                      className={`bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[8px] font-black uppercase p-1.5 sm:p-2 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 ${showWatermark ? 'text-amber-300' : 'text-zinc-500'}`}
+                      title="Toggle Watermark Stamp"
+                    >
+                      <Wand2 className="w-3 h-3" />
+                    </button>
+
+                    <button
                       onClick={() => setIsMirrorMode(!isMirrorMode)}
                       className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[8px] font-black tracking-widest uppercase px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 flex items-center gap-1 whitespace-nowrap"
                     >
-                      <RefreshCw className="w-2.5 h-2.5 text-pink-300 flex-shrink-0" />
+                      <RefreshCw className="w-2.5 h-2.5 text-purple-300 flex-shrink-0" />
                       <span className="hidden xs:inline">{isMirrorMode ? 'Mirror: On' : 'Mirror: Off'}</span>
                     </button>
 
                     <div className="hidden sm:flex bg-zinc-950/80 backdrop-blur-md text-zinc-300 text-[8px] font-black px-2.5 py-1.5 rounded-full border border-white/10 items-center gap-1 whitespace-nowrap">
-                      <Settings className="w-2.5 h-2.5 text-pink-300 animate-spin-slow" />
+                      <Settings className="w-2.5 h-2.5 text-purple-300 animate-spin-slow" />
                       <span>{actualResolution ? `${actualResolution.width}×${actualResolution.height}` : 'Full HD'}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Countdown display */}
+                {/* Countdown Display */}
                 <AnimatePresence>
                   {countdown !== null && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="absolute inset-0 flex items-center justify-center bg-zinc-950/40 backdrop-blur-[1px] z-10"
+                      className="absolute inset-0 flex items-center justify-center bg-zinc-950/40 backdrop-blur-[2px] z-30"
                     >
                       <motion.span
                         key={countdown}
-                        initial={{ scale: 0.4, rotate: -15, opacity: 0 }}
-                        animate={{ scale: 1.2, rotate: 0, opacity: 1 }}
-                        exit={{ scale: 0.8, rotate: 15, opacity: 0 }}
-                        className="font-sans font-black text-white text-6xl sm:text-8xl tracking-tighter drop-shadow-md select-none"
+                        initial={{ scale: 0.3, rotate: -20, opacity: 0 }}
+                        animate={{ scale: 1.3, rotate: 0, opacity: 1 }}
+                        exit={{ scale: 0.7, rotate: 20, opacity: 0 }}
+                        className="font-sans font-black text-white text-7xl sm:text-9xl tracking-tighter drop-shadow-[0_10px_25px_rgba(168,85,247,0.6)] select-none"
                       >
                         {countdown}
                       </motion.span>
@@ -629,96 +689,113 @@ export const Capture: React.FC = () => {
                   )}
                 </AnimatePresence>
 
-                {/* Processing Loader */}
+                {/* Processing Overlay */}
                 <AnimatePresence>
                   {isProcessingPhoto && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="absolute inset-0 flex items-center justify-center bg-zinc-950/50 backdrop-blur-sm z-10"
+                      className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/60 backdrop-blur-sm z-30 gap-2"
                     >
-                      <div className="w-6 h-6 border-2 border-pink-300 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-8 h-8 border-3 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-white text-[10px] font-black uppercase tracking-widest animate-pulse">Menyimpan Foto...</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                {/* Slot bar dots indicator overlay */}
-                <div className="absolute bottom-3 left-3 right-3 flex gap-1 z-10">
+                {/* Slot Indicator Bars */}
+                <div className="absolute bottom-3 left-3 right-3 flex gap-1 z-20">
                   {Array.from({ length: totalSlots }).map((_, idx) => (
                     <div
                       key={idx}
-                      className={`h-1 flex-1 rounded-full transition-all duration-300 ${photos[idx] ? 'bg-emerald-400' : idx === activeSlot ? 'bg-pink-400' : 'bg-white/20'}`}
+                      className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${photos[idx] ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : idx === activeSlot ? 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]' : 'bg-white/20'}`}
                     />
                   ))}
                 </div>
               </div>
 
-              {/* Filters selector container */}
-              <div className="w-full flex justify-center flex-shrink-0">
-                <div className="bg-white border-2 border-rose-50 px-2.5 sm:px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1.5 overflow-x-auto max-w-full">
-                  <span className="text-[8px] font-black tracking-wider uppercase text-zinc-400 mr-1 flex items-center gap-0.5 flex-shrink-0"><Smile className="w-3 h-3 text-pink-400" /> Filter:</span>
+              {/* Filter IG-Style Bar & Brightness Adjustment */}
+              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2 flex-shrink-0">
+                {/* Aesthetic IG Filters */}
+                <div className="bg-white/90 backdrop-blur-md border border-purple-100 px-3 py-2 rounded-2xl shadow-sm flex items-center gap-1.5 overflow-x-auto max-w-full custom-scroll flex-1">
+                  <span className="text-[8px] font-black tracking-wider uppercase text-zinc-400 mr-1 flex items-center gap-0.5 flex-shrink-0"><Smile className="w-3.5 h-3.5 text-purple-400" /> Filter IG:</span>
                   {CAMERA_FILTERS.map((fStr) => (
                     <button
                       key={fStr.id}
                       onClick={() => setActiveFilter(fStr.id)}
-                      className={`px-2.5 py-1 text-[9px] font-black rounded-lg transition-all border whitespace-nowrap flex-shrink-0 ${activeFilter === fStr.id
-                        ? 'bg-gradient-to-r from-pink-400 to-rose-400 text-white border-transparent shadow-sm'
-                        : 'bg-zinc-50 text-zinc-500 border-rose-100/40 hover:bg-rose-50/20'}`}
+                      className={`px-3 py-1 text-[9px] font-black rounded-xl transition-all border whitespace-nowrap flex-shrink-0 active:scale-95 ${activeFilter === fStr.id
+                        ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-rose-400 text-white border-transparent shadow-sm'
+                        : 'bg-zinc-50 text-zinc-500 border-purple-100/60 hover:bg-purple-50/40'}`}
                     >
                       {fStr.label}
                     </button>
                   ))}
                 </div>
+
+                {/* Brightness Adjustment Slider */}
+                <div className="bg-white/90 backdrop-blur-md border border-purple-100 px-3 py-2 rounded-2xl shadow-sm flex items-center gap-2 flex-shrink-0">
+                  <Sun className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                  <input
+                    type="range"
+                    min="80"
+                    max="140"
+                    value={brightness}
+                    onChange={(e) => setBrightness(Number(e.target.value))}
+                    className="w-16 sm:w-24 accent-purple-500 cursor-pointer h-1.5 bg-purple-100 rounded-lg"
+                    title="Atur Kecerahan"
+                  />
+                  <span className="text-[9px] font-mono font-bold text-purple-600 w-7">{brightness}%</span>
+                </div>
               </div>
 
-              {/* Lower button panel operational deck */}
-              <div className="bg-white border-2 border-rose-100 p-3 sm:p-3.5 rounded-[20px] shadow-[0_6px_25px_rgba(253,244,245,0.4)] flex flex-col sm:flex-row items-center justify-between gap-3 w-full flex-shrink-0">
+              {/* Lower Deck Operational Buttons */}
+              <div className="bg-white/90 backdrop-blur-md border-2 border-purple-100 p-3 sm:p-3.5 rounded-[22px] shadow-[0_8px_30px_rgba(216,180,254,0.3)] flex flex-col sm:flex-row items-center justify-between gap-3 w-full flex-shrink-0">
                 <div className="flex gap-2 w-full sm:w-auto relative">
                   <button
                     onClick={startSingleClickMultiShoot}
                     disabled={countdown !== null || !hasCamera || isProcessingPhoto || isAutoShooting}
-                    className="px-4 sm:px-5 py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none disabled:opacity-40 shadow-[0_3px_10px_rgba(244,63,94,0.15)]"
+                    className="px-4 sm:px-5 py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-400 text-white rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none disabled:opacity-40 shadow-[0_4px_15px_rgba(168,85,247,0.3)] hover:shadow-purple-300 active:scale-95"
                   >
-                    <Camera className="w-3.5 h-3.5 text-white flex-shrink-0" />
+                    <Zap className="w-3.5 h-3.5 text-yellow-200 fill-current flex-shrink-0" />
                     <span className="truncate">{isAutoShooting ? 'Rentetan...' : 'Mulai Foto Otomatis ✨'}</span>
                   </button>
                   <button
                     onClick={() => { setIsAutoShooting(false); fileInputRef.current?.click(); }}
                     disabled={isProcessingPhoto || isAutoShooting}
-                    className="px-4 py-3 bg-white border-2 border-rose-100 text-pink-400 hover:bg-rose-50/30 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-sm flex-1 sm:flex-none disabled:opacity-30"
+                    className="px-4 py-3 bg-white border-2 border-purple-100 text-purple-600 hover:bg-purple-50/50 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-sm flex-1 sm:flex-none disabled:opacity-30 active:scale-95"
                   >
-                    <Upload className="w-3.5 h-3.5 text-pink-300" />
+                    <Upload className="w-3.5 h-3.5 text-purple-400" />
                     Upload
                   </button>
                   <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
                 </div>
 
                 {/* Timer Deck */}
-                <div className="flex bg-[#FFFDF9] border-2 border-rose-50 rounded-lg p-0.5 shadow-inner items-center flex-shrink-0">
-                  <span className="text-[7px] font-black font-mono text-zinc-400 px-1.5 uppercase border-r border-rose-100 mr-0.5">Timer:</span>
+                <div className="flex bg-[#FBF7FF] border-2 border-purple-100/70 rounded-xl p-1 shadow-inner items-center flex-shrink-0">
+                  <span className="text-[7px] font-black font-mono text-zinc-400 px-1.5 uppercase border-r border-purple-100 mr-0.5">Timer:</span>
                   {[3, 5, 7].map((sec) => (
                     <button
                       key={sec}
                       disabled={isAutoShooting || countdown !== null}
                       onClick={() => setTimerInterval(sec)}
-                      className={`px-2 py-0.5 rounded-md text-[9px] font-black font-mono transition-all disabled:opacity-40 ${timerInterval === sec ? 'bg-zinc-950 text-white' : 'text-zinc-400'}`}
+                      className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black font-mono transition-all disabled:opacity-40 active:scale-95 ${timerInterval === sec ? 'bg-zinc-950 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-600'}`}
                     >
                       {sec}s
                     </button>
                   ))}
                 </div>
 
-                {/* Pulse bars component visual */}
-                <div className="hidden md:flex items-center gap-1 border-2 border-rose-50 bg-[#FFFDF9] py-1.5 px-2.5 rounded-lg shadow-inner text-[8px] font-black text-pink-300 uppercase select-none font-mono flex-shrink-0">
-                  <Activity className="w-3 h-3 text-pink-400 animate-pulse" />
+                {/* Audio pulse graphic */}
+                <div className="hidden md:flex items-center gap-1 border-2 border-purple-50 bg-[#FBF7FF] py-1.5 px-2.5 rounded-xl shadow-inner text-[8px] font-black text-purple-300 uppercase select-none font-mono flex-shrink-0">
+                  <Activity className="w-3 h-3 text-purple-500 animate-pulse" />
                   <div className="flex items-end gap-0.5 h-3 w-12">
                     {[0.6, 0.9, 0.4, 0.8, 0.5, 0.9, 0.3].map((bVal, i) => (
                       <motion.div
                         key={i}
                         animate={{ scaleY: [bVal, bVal * 0.2, bVal * 1.3, bVal] }}
                         transition={{ repeat: Infinity, duration: 0.7 + (i % 2) * 0.2, ease: 'easeInOut' }}
-                        className="w-full h-full bg-pink-400/40 rounded-t origin-bottom"
+                        className="w-full h-full bg-purple-400/40 rounded-t origin-bottom"
                       />
                     ))}
                   </div>
@@ -727,7 +804,7 @@ export const Capture: React.FC = () => {
                 <button
                   onClick={handleDemoPhoto}
                   disabled={isAutoShooting}
-                  className="px-4 py-3 bg-purple-50 text-purple-500 border border-purple-100 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all disabled:opacity-30 flex-shrink-0"
+                  className="px-4 py-3 bg-pink-50 text-pink-600 border border-pink-100 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all disabled:opacity-30 flex-shrink-0 hover:bg-pink-100 active:scale-95"
                 >
                   Demo
                 </button>
@@ -736,14 +813,14 @@ export const Capture: React.FC = () => {
 
             {/* RIGHT COLUMN: PROGRESS SLOT TRACKER SIDEBAR */}
             <div className="lg:col-span-4 w-full h-full flex flex-col justify-center min-h-0 overflow-hidden">
-              <div className="bg-white border-4 border-rose-50 p-4 sm:p-5 rounded-[22px] sm:rounded-[28px] shadow-[0_12px_30px_rgba(255,192,203,0.12)] flex flex-col max-h-full overflow-hidden">
+              <div className="bg-white/90 backdrop-blur-md border-4 border-purple-100/60 p-4 sm:p-5 rounded-[22px] sm:rounded-[28px] shadow-[0_12px_35px_rgba(216,180,254,0.25)] flex flex-col max-h-full overflow-hidden">
 
-                <div className="flex items-center justify-between mb-4 border-b-2 border-dashed border-rose-100 pb-2 flex-shrink-0">
+                <div className="flex items-center justify-between mb-4 border-b-2 border-dashed border-purple-100 pb-2 flex-shrink-0">
                   <h3 className="font-serif text-sm sm:text-base font-black text-zinc-900 flex items-center gap-1.5">
-                    <Grid className="w-3.5 h-3.5 text-pink-400" />
+                    <Grid className="w-3.5 h-3.5 text-purple-500" />
                     Progres Slot
                   </h3>
-                  <span className="text-[9px] font-black tracking-wider text-pink-500 bg-pink-50 border border-pink-100 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[9px] font-black tracking-wider text-purple-600 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full shadow-sm">
                     {filledCount} / {totalSlots} Terisi
                   </span>
                 </div>
@@ -761,14 +838,14 @@ export const Capture: React.FC = () => {
                         key={index}
                         onClick={() => { if (!isAutoShooting) setActiveSlot(index); }}
                         className={`flex items-center gap-3 p-2 rounded-xl border-2 transition-all duration-300 ${isAutoShooting ? 'cursor-not-allowed' : 'cursor-pointer'} ${isActive
-                          ? 'border-pink-400 bg-rose-50/20 shadow-sm ring-1 ring-pink-300'
+                          ? 'border-purple-400 bg-purple-50/40 shadow-sm ring-1 ring-purple-300'
                           : hasPhoto
                             ? 'border-emerald-100 bg-emerald-50/20'
-                            : 'border-rose-50 bg-transparent hover:border-rose-200'
+                            : 'border-purple-50 bg-transparent hover:border-purple-200'
                           }`}
                       >
                         <div
-                          className="rounded-lg overflow-hidden flex items-center justify-center bg-[#FFFDF9] border border-rose-100 flex-shrink-0 relative shadow-sm"
+                          className="rounded-lg overflow-hidden flex items-center justify-center bg-[#FAF6FF] border border-purple-100 flex-shrink-0 relative shadow-sm"
                           style={{
                             height: `${thumbBox.height}px`,
                             width: `${thumbBox.width}px`,
@@ -777,10 +854,10 @@ export const Capture: React.FC = () => {
                           {hasPhoto ? (
                             <img src={photo} alt={`Slot ${index + 1}`} className="w-full h-full object-cover" style={{ objectPosition: '50% 25%' }} />
                           ) : (
-                            <ImageIcon className="w-3.5 h-3.5 text-rose-200" />
+                            <ImageIcon className="w-3.5 h-3.5 text-purple-200" />
                           )}
                           {isActive && !hasPhoto && (
-                            <div className="absolute inset-0 bg-pink-400/5 border border-pink-300 rounded-lg animate-pulse" />
+                            <div className="absolute inset-0 bg-purple-400/10 border border-purple-400 rounded-lg animate-pulse" />
                           )}
                         </div>
 
@@ -789,7 +866,7 @@ export const Capture: React.FC = () => {
                             <span className="text-xs font-black text-zinc-800">Slot # {index + 1}</span>
                             {hasPhoto && <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />}
                           </div>
-                          <p className="text-[9px] font-black uppercase tracking-wider text-pink-400 mt-0.5">
+                          <p className="text-[9px] font-black uppercase tracking-wider text-purple-500 mt-0.5">
                             {hasPhoto ? '✦ Tersimpan' : isActive ? '● Dibidik' : '✦ Antrean'}
                           </p>
                         </div>
@@ -798,14 +875,14 @@ export const Capture: React.FC = () => {
                   })}
                 </div>
 
-                <div className="mt-4 pt-2 border-t-2 border-dashed border-rose-100 flex-shrink-0">
+                <div className="mt-4 pt-2 border-t-2 border-dashed border-purple-100 flex-shrink-0">
                   {isAutoShooting ? (
                     <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-700 text-[10px] font-bold flex items-center gap-1.5 shadow-sm animate-pulse">
                       <Sparkles className="w-3.5 h-3.5 flex-shrink-0 text-indigo-500 animate-spin" />
                       <span>Mode berantai aktif dengan jeda {timerInterval}s!</span>
                     </div>
                   ) : !isAllFilled ? (
-                    <div className="flex items-start gap-2 p-2 bg-amber-50/60 border border-amber-100 rounded-xl text-amber-800 text-[10px] font-medium leading-tight">
+                    <div className="flex items-start gap-2 p-2 bg-amber-50/70 border border-amber-100 rounded-xl text-amber-800 text-[10px] font-medium leading-tight">
                       <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-500" />
                       <span>Lengkapi matriks slot foto untuk lanjut hias.</span>
                     </div>
@@ -826,11 +903,11 @@ export const Capture: React.FC = () => {
       </div>
 
       <style>{`
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #FBCFE8; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #E9D5FF; border-radius: 10px; }
         .camera-mirror { transform: scaleX(${isMirrorMode ? '-1' : '1'}); }
-        .animate-spin-slow { animation: spin 6s linear infinite; }
+        .animate-spin-slow { animation: spin 8s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
     </>

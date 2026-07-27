@@ -6,7 +6,7 @@ import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/fra
 import { stickerPacks } from '../data/stickers';
 
 // Konstanta zoom foto, dipakai bareng oleh context & kanvas biar konsisten.
-export const DEFAULT_PHOTO_ZOOM = 1.3; // level zoom awal (sama seperti sebelumnya, cover-fit + sedikit ruang geser)
+export const DEFAULT_PHOTO_ZOOM = 1.0; // level zoom awal (cover-fit presisi otomatis pas di slot bingkai)
 export const MIN_PHOTO_ZOOM = 0.5;     // paling kecil, foto jadi 50% dari slot
 export const MAX_PHOTO_ZOOM = 2.5;     // paling besar, foto di-zoom in 250%
 
@@ -68,6 +68,10 @@ interface PhotoboothContextProps {
   setAppliedFilter: (filter: FilterType) => void;
   frameColor: FrameColorId;
   setFrameColor: (color: FrameColorId) => void;
+  cardColor: string;
+  setCardColor: (color: string) => void;
+  lineColor: string;
+  setLineColor: (color: string) => void;
 
   frameStyle: string;
   setFrameStyle: (style: string) => void;
@@ -99,6 +103,10 @@ interface PhotoboothContextProps {
   setWallpaperOpacity: (val: number) => void;
   wallpaperScaleMode: 'fit' | 'fill' | 'crop' | 'stretch';
   setWallpaperScaleMode: (val: 'fit' | 'fill' | 'crop' | 'stretch') => void;
+  photoBlendMode: string;
+  setPhotoBlendMode: (val: string) => void;
+  photoOpacity: number;
+  setPhotoOpacity: (val: number) => void;
   favoriteColors: string[];
   toggleFavoriteColor: (color: string) => void;
   recentColors: string[];
@@ -144,6 +152,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [selectedId, setSelectedId] = useState<string | null>(savedSession?.selectedId || null);
   const [appliedFilter, setAppliedFilter] = useState<FilterType>(savedSession?.appliedFilter || 'normal');
   const [frameColor, setFrameColor] = useState<FrameColorId>(savedSession?.frameColor || 'original');
+  const [cardColor, setCardColor] = useState<string>(savedSession?.cardColor || '#ffffff');
+  const [lineColor, setLineColor] = useState<string>(savedSession?.lineColor || 'original');
   const [customFrames, setCustomFrames] = useState<FrameTemplate[]>([]);
 
   const [frameStyle, setFrameStyle] = useState<string>(savedSession?.frameStyle || 'solid');
@@ -161,6 +171,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [wallpaperBlur, setWallpaperBlur] = useState<number>(savedSession?.wallpaperBlur ?? 0);
   const [wallpaperOpacity, setWallpaperOpacity] = useState<number>(savedSession?.wallpaperOpacity ?? 1);
   const [wallpaperScaleMode, setWallpaperScaleMode] = useState<'fit' | 'fill' | 'crop' | 'stretch'>(savedSession?.wallpaperScaleMode || 'fill');
+  const [photoBlendMode, setPhotoBlendMode] = useState<string>('source-over');
+  const [photoOpacity, setPhotoOpacity] = useState<number>(1);
 
   // Menyimpan otomatis sesi ke sessionStorage tiap ada perubahan state aktif
   useEffect(() => {
@@ -193,6 +205,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           wallpaperBlur,
           wallpaperOpacity,
           wallpaperScaleMode,
+          photoBlendMode,
+          photoOpacity,
         };
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
       }
@@ -203,7 +217,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     step, selectedFrame, photos, photoTransforms, stickers, texts, selectedId, appliedFilter,
     frameColor, frameStyle, borderThickness, borderRadius, shadowIntensity, shadowBlur,
     shadowColor, frameOpacity, framePadding, innerMargin, outerMargin, wallpaperId,
-    wallpaperUpload, wallpaperBlur, wallpaperOpacity, wallpaperScaleMode
+    wallpaperUpload, wallpaperBlur, wallpaperOpacity, wallpaperScaleMode, photoBlendMode, photoOpacity
   ]);
 
   const [favoriteColors, setFavoriteColors] = useState<string[]>(() => {
@@ -544,11 +558,13 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       photoTransforms, updatePhotoTransform, resetPhotoTransform,
       stickers, addSticker, applyStickerPack, updateSticker, removeSticker, texts, addText, updateText, removeText,
       selectedId, setSelectedId, appliedFilter, setAppliedFilter, frameColor, setFrameColor,
+      cardColor, setCardColor, lineColor, setLineColor,
       frameStyle, setFrameStyle, borderThickness, setBorderThickness, borderRadius, setBorderRadius,
       shadowIntensity, setShadowIntensity, shadowBlur, setShadowBlur, shadowColor, setShadowColor,
       frameOpacity, setFrameOpacity, framePadding, setFramePadding, innerMargin, setInnerMargin,
       outerMargin, setOuterMargin, wallpaperId, setWallpaperId, wallpaperUpload, setWallpaperUpload,
       wallpaperBlur, setWallpaperBlur, wallpaperOpacity, setWallpaperOpacity, wallpaperScaleMode, setWallpaperScaleMode,
+      photoBlendMode, setPhotoBlendMode, photoOpacity, setPhotoOpacity,
       favoriteColors, toggleFavoriteColor, recentColors, addRecentColor, favoriteWallpapers, toggleFavoriteWallpaper,
       recentWallpapers, addRecentWallpaper, favoriteStickers, toggleFavoriteSticker, resetAll, customFrames,
       addCustomFrame, deleteCustomFrame

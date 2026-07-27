@@ -10,7 +10,7 @@ export interface FrameTemplate {
   id: string;
   name: string;
   slots: number;
-  category: 'filmstrip' | 'korean' | 'polaroid' | 'cute' | 'retro' | 'custom';
+  category: 'filmstrip' | 'korean' | 'polaroid' | 'cute' | 'retro' | 'custom' | 'studio';
   src: string;
   width: number;
   height: number;
@@ -18,6 +18,58 @@ export interface FrameTemplate {
 }
 
 export const frames: FrameTemplate[] = [
+
+  // ============================================
+  // STUDIO PHOTOBOOTH (simple grid, tirai-merah ready)
+  // ============================================
+  {
+    id: "studio-photobooth-8",
+    name: "Studio 8-Cut 🎪",
+    slots: 8,
+    category: "studio",
+    src: "/templates/studio-photobooth-8.svg",
+    width: 1200, height: 2000,
+    slotCoords: [
+      { x: 26, y: 26, w: 570, h: 481 },
+      { x: 604, y: 26, w: 570, h: 481 },
+      { x: 26, y: 515, w: 570, h: 481 },
+      { x: 604, y: 515, w: 570, h: 481 },
+      { x: 26, y: 1004, w: 570, h: 481 },
+      { x: 604, y: 1004, w: 570, h: 481 },
+      { x: 26, y: 1493, w: 570, h: 481 },
+      { x: 604, y: 1493, w: 570, h: 481 }
+    ]
+  },
+  {
+    id: "studio-photobooth-6",
+    name: "Studio 6-Cut 🎪",
+    slots: 6,
+    category: "studio",
+    src: "/templates/studio-photobooth-6.svg",
+    width: 1200, height: 1600,
+    slotCoords: [
+      { x: 25, y: 25, w: 571, h: 511 },
+      { x: 604, y: 25, w: 571, h: 511 },
+      { x: 25, y: 544, w: 571, h: 511 },
+      { x: 604, y: 544, w: 571, h: 511 },
+      { x: 25, y: 1063, w: 571, h: 511 },
+      { x: 604, y: 1063, w: 571, h: 511 }
+    ]
+  },
+  {
+    id: "studio-photobooth-4",
+    name: "Studio 4-Cut 🎪",
+    slots: 4,
+    category: "studio",
+    src: "/templates/studio-photobooth-4.svg",
+    width: 1200, height: 1200,
+    slotCoords: [
+      { x: 26, y: 26, w: 570, h: 570 },
+      { x: 604, y: 26, w: 570, h: 570 },
+      { x: 26, y: 604, w: 570, h: 570 },
+      { x: 604, y: 604, w: 570, h: 570 }
+    ]
+  },
 
   // ============================================
   // FILM STRIP (6 templates)
@@ -782,8 +834,8 @@ export const frames: FrameTemplate[] = [
     slotCoords: [
       { x: 45, y: 82, w: 477, h: 586, rx: 14 },
       { x: 566, y: 82, w: 473, h: 586, rx: 14 },
-      { x: 566, y: 790, w: 473, h: 585, rx: 14 },
-      { x: 47, y: 791, w: 473, h: 582, rx: 14 }
+      { x: 47, y: 791, w: 473, h: 582, rx: 14 },
+      { x: 566, y: 790, w: 473, h: 585, rx: 14 }
     ]
   },
   {
@@ -834,8 +886,8 @@ export const frames: FrameTemplate[] = [
       { x: 708, y: 468, w: 264, h: 303, rx: 8 },
       { x: 329, y: 527, w: 358, h: 240, rx: 7 },
       { x: 330, y: 785, w: 358, h: 425, rx: 11 },
-      { x: 706, y: 1228, w: 265, h: 222, rx: 7 },
-      { x: 52, y: 1229, w: 260, h: 221, rx: 7 }
+      { x: 52, y: 1229, w: 260, h: 221, rx: 7 },
+      { x: 706, y: 1228, w: 265, h: 222, rx: 7 }
     ]
   },
   {
@@ -848,12 +900,12 @@ export const frames: FrameTemplate[] = [
     slotCoords: [
       { x: 52, y: 113, w: 456, h: 441, rx: 13 },
       { x: 525, y: 128, w: 456, h: 441, rx: 13 },
+      { x: 525, y: 128, w: 456, h: 441, rx: 13 },
+      { x: 525, y: 128, w: 456, h: 441, rx: 13 },
       { x: 42, y: 570, w: 457, h: 441, rx: 13 },
       { x: 515, y: 586, w: 456, h: 441, rx: 13 },
       { x: 49, y: 1028, w: 457, h: 447, rx: 13 },
-      { x: 522, y: 1045, w: 456, h: 441, rx: 13 },
-      { x: 525, y: 128, w: 456, h: 441, rx: 13 },
-      { x: 525, y: 128, w: 456, h: 441, rx: 13 }
+      { x: 522, y: 1045, w: 456, h: 441, rx: 13 }
     ]
   },
   {
@@ -899,10 +951,10 @@ export const frames: FrameTemplate[] = [
     width: 1023, height: 1537,
     slotCoords: [
       { x: 61, y: 108, w: 430, h: 432, rx: 9 },
-      { x: 61, y: 568, w: 430, h: 432, rx: 9 },
-      { x: 61, y: 1028, w: 430, h: 432, rx: 9 },
       { x: 532, y: 108, w: 430, h: 432, rx: 9 },
+      { x: 61, y: 568, w: 430, h: 432, rx: 9 },
       { x: 532, y: 568, w: 430, h: 432, rx: 9 },
+      { x: 61, y: 1028, w: 430, h: 432, rx: 9 },
       { x: 532, y: 1028, w: 430, h: 432, rx: 9 }
     ]
   },
@@ -915,12 +967,12 @@ export const frames: FrameTemplate[] = [
     width: 1023, height: 1537,
     slotCoords: [
       { x: 54, y: 33, w: 428, h: 321, rx: 10 },
-      { x: 54, y: 370, w: 427, h: 316, rx: 9 },
-      { x: 54, y: 702, w: 428, h: 317, rx: 10 },
-      { x: 54, y: 1035, w: 427, h: 316, rx: 9 },
       { x: 561, y: 33, w: 423, h: 321, rx: 10 },
+      { x: 54, y: 370, w: 427, h: 316, rx: 9 },
       { x: 561, y: 370, w: 423, h: 316, rx: 9 },
+      { x: 54, y: 702, w: 428, h: 317, rx: 10 },
       { x: 561, y: 702, w: 423, h: 317, rx: 10 },
+      { x: 54, y: 1035, w: 427, h: 316, rx: 9 },
       { x: 561, y: 1035, w: 423, h: 316, rx: 9 }
     ]
   },
@@ -933,10 +985,10 @@ export const frames: FrameTemplate[] = [
     width: 1023, height: 1537,
     slotCoords: [
       { x: 42, y: 143, w: 432, h: 359, rx: 11 },
-      { x: 45, y: 541, w: 429, h: 357, rx: 11 },
-      { x: 45, y: 938, w: 429, h: 358, rx: 11 },
       { x: 547, y: 143, w: 429, h: 359, rx: 11 },
+      { x: 45, y: 541, w: 429, h: 357, rx: 11 },
       { x: 547, y: 540, w: 429, h: 358, rx: 11 },
+      { x: 45, y: 938, w: 429, h: 358, rx: 11 },
       { x: 547, y: 938, w: 429, h: 358, rx: 11 }
     ]
   },
@@ -1024,11 +1076,11 @@ export const frames: FrameTemplate[] = [
     width: 736, height: 1308,
     slotCoords: [
       { x: 80, y: 49, w: 240, h: 246, rx: 7 },
-      { x: 55, y: 412, w: 276, h: 282, rx: 8 },
-      { x: 48, y: 806, w: 90, h: 79, rx: 2 },
-      { x: 61, y: 930, w: 265, h: 271, rx: 8 },
       { x: 421, y: 212, w: 246, h: 251, rx: 7 },
-      { x: 480, y: 639, w: 226, h: 233, rx: 7 }
+      { x: 55, y: 412, w: 276, h: 282, rx: 8 },
+      { x: 480, y: 639, w: 226, h: 233, rx: 7 },
+      { x: 48, y: 806, w: 90, h: 79, rx: 2 },
+      { x: 61, y: 930, w: 265, h: 271, rx: 8 }
     ]
   },
   {
@@ -1089,12 +1141,12 @@ export const frames: FrameTemplate[] = [
     width: 1024, height: 1536,
     slotCoords: [
       { x: 69, y: 57, w: 369, h: 256, rx: 8 },
-      { x: 69, y: 370, w: 369, h: 260, rx: 8 },
-      { x: 69, y: 685, w: 369, h: 232, rx: 7 },
-      { x: 69, y: 974, w: 369, h: 234, rx: 7 },
       { x: 578, y: 57, w: 372, h: 256, rx: 8 },
+      { x: 69, y: 370, w: 369, h: 260, rx: 8 },
       { x: 578, y: 370, w: 372, h: 260, rx: 8 },
+      { x: 69, y: 685, w: 369, h: 232, rx: 7 },
       { x: 578, y: 685, w: 372, h: 232, rx: 7 },
+      { x: 69, y: 974, w: 369, h: 234, rx: 7 },
       { x: 578, y: 974, w: 372, h: 234, rx: 7 }
     ]
   },
@@ -1107,8 +1159,8 @@ export const frames: FrameTemplate[] = [
     width: 1023, height: 1537,
     slotCoords: [
       { x: 51, y: 267, w: 423, h: 498, rx: 13 },
-      { x: 52, y: 840, w: 421, h: 500, rx: 13 },
       { x: 548, y: 267, w: 423, h: 498, rx: 13 },
+      { x: 52, y: 840, w: 421, h: 500, rx: 13 },
       { x: 549, y: 840, w: 354, h: 500, rx: 11 }
     ]
   },
@@ -1121,8 +1173,8 @@ export const frames: FrameTemplate[] = [
     width: 1023, height: 1537,
     slotCoords: [
       { x: 48, y: 199, w: 433, h: 576, rx: 13 },
-      { x: 48, y: 823, w: 433, h: 576, rx: 13 },
       { x: 532, y: 199, w: 431, h: 576, rx: 13 },
+      { x: 48, y: 823, w: 433, h: 576, rx: 13 },
       { x: 532, y: 823, w: 431, h: 576, rx: 13 }
     ]
   },
@@ -1135,12 +1187,12 @@ export const frames: FrameTemplate[] = [
     width: 1024, height: 1536,
     slotCoords: [
       { x: 60, y: 164, w: 410, h: 303, rx: 9 },
-      { x: 59, y: 496, w: 411, h: 302, rx: 9 },
-      { x: 59, y: 827, w: 411, h: 301, rx: 9 },
-      { x: 59, y: 1159, w: 411, h: 293, rx: 9 },
       { x: 554, y: 164, w: 412, h: 303, rx: 9 },
+      { x: 59, y: 496, w: 411, h: 302, rx: 9 },
       { x: 554, y: 496, w: 412, h: 302, rx: 9 },
+      { x: 59, y: 827, w: 411, h: 301, rx: 9 },
       { x: 554, y: 827, w: 412, h: 301, rx: 9 },
+      { x: 59, y: 1159, w: 411, h: 293, rx: 9 },
       { x: 554, y: 1159, w: 412, h: 293, rx: 9 }
     ]
   },
@@ -1153,12 +1205,12 @@ export const frames: FrameTemplate[] = [
     width: 1024, height: 1536,
     slotCoords: [
       { x: 115, y: 233, w: 356, h: 263, rx: 8 },
-      { x: 116, y: 529, w: 353, h: 257, rx: 8 },
-      { x: 116, y: 819, w: 355, h: 260, rx: 8 },
-      { x: 116, y: 1112, w: 355, h: 261, rx: 8 },
       { x: 553, y: 234, w: 356, h: 262, rx: 8 },
+      { x: 116, y: 529, w: 353, h: 257, rx: 8 },
       { x: 553, y: 529, w: 355, h: 257, rx: 8 },
+      { x: 116, y: 819, w: 355, h: 260, rx: 8 },
       { x: 553, y: 819, w: 355, h: 260, rx: 8 },
+      { x: 116, y: 1112, w: 355, h: 261, rx: 8 },
       { x: 553, y: 1112, w: 356, h: 260, rx: 8 }
     ]
   },
@@ -1171,12 +1223,12 @@ export const frames: FrameTemplate[] = [
     width: 941, height: 1672,
     slotCoords: [
       { x: 140, y: 310, w: 293, h: 252, rx: 8 },
-      { x: 140, y: 598, w: 293, h: 252, rx: 8 },
-      { x: 140, y: 889, w: 293, h: 252, rx: 8 },
-      { x: 140, y: 1180, w: 293, h: 253, rx: 8 },
       { x: 522, y: 310, w: 293, h: 252, rx: 8 },
+      { x: 140, y: 598, w: 293, h: 252, rx: 8 },
       { x: 521, y: 598, w: 294, h: 253, rx: 8 },
+      { x: 140, y: 889, w: 293, h: 252, rx: 8 },
       { x: 521, y: 889, w: 294, h: 252, rx: 8 },
+      { x: 140, y: 1180, w: 293, h: 253, rx: 8 },
       { x: 521, y: 1180, w: 294, h: 253, rx: 8 }
     ]
   },
@@ -1215,11 +1267,23 @@ export const frames: FrameTemplate[] = [
     width: 1023, height: 1537,
     slotCoords: [
       { x: 165, y: 298, w: 325, h: 284, rx: 9 },
-      { x: 165, y: 594, w: 325, h: 284, rx: 9 },
-      { x: 165, y: 890, w: 325, h: 383, rx: 10 },
       { x: 529, y: 298, w: 324, h: 284, rx: 9 },
+      { x: 165, y: 594, w: 325, h: 284, rx: 9 },
       { x: 529, y: 594, w: 324, h: 284, rx: 9 },
+      { x: 165, y: 890, w: 325, h: 383, rx: 10 },
       { x: 530, y: 891, w: 323, h: 381, rx: 10 }
+    ]
+  },
+  {
+    id: "custom-1785149660622-3gj7",
+    name: "Vintage scrapbook",
+    slots: 2,
+    category: "retro",
+    src: "/templates/custom-1785149660622-3gj7.png",
+    width: 941, height: 1672,
+    slotCoords: [
+      { x: 117, y: 243, w: 691, h: 496, rx: 15 },
+      { x: 141, y: 902, w: 666, h: 476, rx: 14 }
     ]
   }
 ];

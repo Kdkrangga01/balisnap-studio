@@ -26,6 +26,7 @@ import {
   ZoomOut,
   RotateCcw,
   ImageIcon,
+  Wand2,
 } from 'lucide-react';
 
 export const Editor: React.FC = () => {
@@ -75,8 +76,6 @@ export const Editor: React.FC = () => {
   const totalElements = canvasStickers.length + canvasTexts.length;
 
   const handleDeleteSelected = () => {
-    // Foto (id "photo-N") cuma bisa digeser posisinya, bukan dihapus lewat
-    // sini -- jadi tombol/hapus hanya berlaku untuk stiker & teks.
     if (!selectedId || selectedId.startsWith('photo-')) return;
     setShowDeleteConfirm(true);
   };
@@ -134,8 +133,6 @@ export const Editor: React.FC = () => {
 
   const hasSelectedElement = selectedId !== null && !selectedId.startsWith('photo-');
 
-  // Kalau yang lagi dipilih di kanvas itu foto (bukan stiker/teks), ambil
-  // index slotnya buat kontrol zoom.
   const selectedPhotoIndex = selectedId?.startsWith('photo-')
     ? parseInt(selectedId.replace('photo-', ''), 10)
     : null;
@@ -159,103 +156,153 @@ export const Editor: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFDF6] py-4 px-3 md:py-8 md:px-6 relative overflow-hidden selection:bg-gold-light/40">
-      {/* 1. SEAMLESS BACKGROUND PATTERN: Grid Kotak-Kotak Cream Seperti Halaman Kamera */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#EFEBE2_1px,transparent_1px),linear-gradient(to_bottom,#EFEBE2_1px,transparent_1px)] bg-[size:44px_44px] opacity-[0.8] pointer-events-none z-0" />
+    <div
+      className="min-h-screen py-5 px-3 md:py-8 md:px-6 relative overflow-hidden text-slate-800 selection:bg-pink-200"
+      style={{
+        background: 'linear-gradient(135deg, #FAF7F2 0%, #F3EBE1 50%, #FAF0E6 100%)'
+      }}
+    >
+      {/* 1. SOFT BRIGHT AMBIENT BLURS */}
+      <div
+        className="absolute top-[-80px] left-[-80px] w-[500px] h-[500px] rounded-full pointer-events-none z-0 blur-[100px] opacity-60"
+        style={{ background: '#FFD1DC' }}
+      />
+      <div
+        className="absolute bottom-[-80px] right-[-80px] w-[550px] h-[550px] rounded-full pointer-events-none z-0 blur-[120px] opacity-50"
+        style={{ background: '#E2D5F8' }}
+      />
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] rounded-full pointer-events-none z-0 blur-[130px] opacity-40"
+        style={{ background: '#FFE5B4' }}
+      />
 
-      {/* 2. FLOATING CUTE SCRAPBOOK ELEMENTS */}
-      <div className="absolute top-24 left-8 text-3xl animate-bounce pointer-events-none opacity-60 hidden xl:block" style={{ animationDuration: '3.2s' }}>🎀</div>
-      <div className="absolute top-1/2 left-12 text-2xl animate-pulse pointer-events-none opacity-40 hidden xl:block text-pink-300"><Sparkles className="w-6 h-6 fill-current" /></div>
-      <div className="absolute bottom-28 left-14 text-3xl animate-bounce pointer-events-none opacity-60 hidden xl:block" style={{ animationDuration: '4.2s' }}>🧸</div>
-      <div className="absolute top-36 right-8 text-3xl animate-bounce pointer-events-none opacity-60 hidden xl:block" style={{ animationDuration: '3.8s' }}>💖</div>
-      <div className="absolute bottom-20 right-12 text-3xl animate-bounce pointer-events-none opacity-60 hidden xl:block" style={{ animationDuration: '4.8s' }}>✨</div>
+      {/* Aesthetic Grid Pattern */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0 opacity-25"
+        style={{
+          backgroundImage: `linear-gradient(to right, #D6C7B2 1px, transparent 1px), linear-gradient(to bottom, #D6C7B2 1px, transparent 1px)`,
+          backgroundSize: '36px 36px'
+        }}
+      />
 
-      {/* Decorative blobs asli tetap ada namun dibuat subtle transparan */}
-      <div className="absolute top-0 right-0 w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none z-0" />
-      <div className="absolute bottom-0 left-0 w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-mahogany/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none z-0" />
+      {/* FLOATING DECORATIONS */}
+      <div className="absolute top-16 left-10 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block drop-shadow-sm" style={{ animationDuration: '3.5s' }}>🎀</div>
+      <div className="absolute top-1/2 left-8 text-2xl animate-pulse pointer-events-none text-pink-400 hidden xl:block"><Sparkles className="w-7 h-7" /></div>
+      <div className="absolute bottom-24 left-12 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block drop-shadow-sm" style={{ animationDuration: '4.5s' }}>🌸</div>
+      <div className="absolute top-28 right-10 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block drop-shadow-sm" style={{ animationDuration: '4s' }}>💖</div>
+      <div className="absolute bottom-20 right-14 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block drop-shadow-sm" style={{ animationDuration: '5s' }}>✨</div>
 
       <div className="max-w-6xl mx-auto relative z-10">
-        {/* ===== HEADER (100% Sesuai Asli) ===== */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
+        {/* ===== HEADER ===== */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
           <div>
             <button
               onClick={() => setStep('capture')}
-              className="flex items-center gap-1.5 text-charcoal/40 hover:text-mahogany font-medium text-[10px] tracking-[0.12em] uppercase mb-1.5 transition-all group"
+              className="flex items-center gap-2 font-semibold text-xs tracking-wider uppercase mb-2 text-rose-500 hover:text-rose-700 transition-all group"
             >
-              <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               Kembali ke Kamera
             </button>
-            <h1 className="font-serif text-2xl md:text-3xl font-bold text-charcoal tracking-tight">
-              <span className="bg-gradient-to-r from-mahogany via-gold to-mahogany bg-clip-text text-transparent bg-[length:200%_100%] animate-[shimmer_6s_ease-in-out_infinite]">
+            <h1 className="font-serif text-3xl md:text-4xl font-black tracking-tight text-slate-800 flex items-center gap-2.5">
+              <span className="bg-gradient-to-r from-rose-500 via-purple-600 to-pink-500 bg-clip-text text-transparent">
                 Studio Editor
               </span>{' '}
               Hias
+              <Wand2 className="w-5 h-5 text-rose-400 animate-spin" style={{ animationDuration: '10s' }} />
             </h1>
-            <p className="text-charcoal/40 text-[11px] flex items-center gap-2 mt-0.5">
-              <Layers className="w-3 h-3" />
+            <p className="text-slate-500 text-xs flex items-center gap-2 mt-1 font-medium">
+              <Layers className="w-4 h-4 text-rose-400" />
               {totalElements} elemen terpasang •{' '}
-              <span className="text-gold-dark font-medium">{filledSlots}/{totalSlots}</span> foto terisi
+              <span className="text-rose-600 font-bold">{filledSlots}/{totalSlots}</span> foto terisi
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setStep('preview')}
-              className="relative px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-mahogany to-mahogany-dark text-white shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 overflow-hidden group"
+              className="relative px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-rose-200 hover:shadow-xl hover:shadow-rose-300 transition-all flex items-center gap-2 overflow-hidden group border border-white/50"
+              style={{
+                background: 'linear-gradient(135deg, #FB7185 0%, #E11D48 100%)',
+              }}
             >
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              <Eye className="w-3.5 h-3.5" />
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              <Eye className="w-4 h-4" />
               <span className="hidden xs:inline">Pratinjau</span>
               <span className="xs:hidden">👁</span>
             </button>
           </div>
         </div>
 
-        {/* ===== MAIN GRID (100% Sesuai Asli) ===== */}
-        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-6">
+        {/* ===== MAIN GRID ===== */}
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6">
 
           {/* LEFT: Canvas Area */}
           <div className="lg:col-span-7 flex flex-col items-center" ref={containerRef}>
-            <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-white/20 bg-white/40 backdrop-blur-sm p-2 md:p-3 relative">
-              {/* WASHI TAPE OVERLAY GRAPHIC */}
-              <div className="absolute top-[2px] left-1/2 -translate-x-1/2 w-24 h-4.5 bg-pink-200/20 backdrop-blur-sm border border-white/30 skew-x-[-10deg] z-20 pointer-events-none flex items-center justify-center text-[6px] text-pink-400 font-bold tracking-widest" />
+            <div
+              className="w-full rounded-3xl p-3 md:p-5 relative border backdrop-blur-xl transition-all shadow-xl shadow-stone-200/50"
+              style={{
+                background: 'rgba(255, 255, 255, 0.75)',
+                borderColor: 'rgba(255, 255, 255, 0.9)',
+              }}
+            >
+              {/* Aesthetic Header Ribbon */}
+              <div
+                className="absolute top-[2px] left-1/2 -translate-x-1/2 w-36 h-6 rounded-full border z-20 pointer-events-none flex items-center justify-center text-[9px] font-bold tracking-widest uppercase text-rose-600 shadow-sm"
+                style={{
+                  background: 'linear-gradient(90deg, #FFE4E6, #F3E8FF)',
+                  borderColor: '#FECDD3',
+                }}
+              >
+                ✨ Canvas Editor ✨
+              </div>
 
-              <div className="flex justify-center">
+              {/* CANVAS CONTAINER */}
+              <div className="flex justify-center relative overflow-hidden rounded-2xl border border-stone-200/60 mt-2 bg-white/50">
                 <PhotoCanvas stageRef={stageRef} containerWidth={canvasWidth} />
               </div>
             </div>
 
             {/* Shortcut hints */}
-            <div className="flex flex-wrap justify-center gap-2 md:gap-4 mt-2 text-[9px] text-charcoal/30 tracking-wider">
-              <span className="flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-gold/40" />
+            <div className="flex flex-wrap justify-center gap-3 md:gap-5 mt-4 text-[10px] text-slate-500 font-semibold tracking-wider">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-400" />
                 Klik elemen
               </span>
-              <span className="flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-gold/40" />
-                Klik &amp; geser foto buat atur posisi
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                Klik &amp; geser foto
               </span>
-              <span className="flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-gold/40" />
-                Scroll foto terpilih buat zoom
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-purple-400" />
+                Scroll zoom foto
               </span>
-              <span className="flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-gold/40" />
-                <kbd className="px-1 py-0.5 bg-white/50 rounded text-[8px] border border-cream/20">Del</kbd> hapus
+              <span className="flex items-center gap-1.5">
+                <kbd className="px-2 py-0.5 bg-white text-slate-700 rounded text-[9px] border border-slate-200 shadow-sm">Del</kbd> hapus
               </span>
-              <span className="flex items-center gap-1">
-                <span className="w-1 h-1 rounded-full bg-gold/40" />
-                <kbd className="px-1 py-0.5 bg-white/50 rounded text-[8px] border border-cream/20">Ctrl+D</kbd> duplikat
+              <span className="flex items-center gap-1.5">
+                <kbd className="px-2 py-0.5 bg-white text-slate-700 rounded text-[9px] border border-slate-200 shadow-sm">Ctrl+D</kbd> duplikat
               </span>
             </div>
           </div>
 
           {/* RIGHT: Control Panel */}
           <div className="lg:col-span-5 flex flex-col gap-4">
-            <div className="bg-white/60 backdrop-blur-xl p-4 md:p-5 rounded-2xl border border-cream/20 shadow-[0_8px_32px_rgba(107,74,58,0.06)] flex flex-col gap-4">
+            <div
+              className="p-5 rounded-3xl border backdrop-blur-xl flex flex-col gap-5 shadow-xl shadow-stone-200/50"
+              style={{
+                background: 'rgba(255, 255, 255, 0.85)',
+                borderColor: 'rgba(255, 255, 255, 0.9)',
+              }}
+            >
 
-              {/* Tool Tabs (Kondisi String Dibuat 100% Klop dengan File Panel Anda) */}
-              <div className="grid grid-cols-4 gap-1 bg-ivory-dark/50 p-1 rounded-xl border border-cream/20">
+              {/* Tool Tabs */}
+              <div
+                className="grid grid-cols-4 gap-1.5 p-1.5 rounded-2xl border"
+                style={{
+                  background: '#F8F1E7',
+                  borderColor: '#EFE5D8'
+                }}
+              >
                 {[
                   { key: 'filter', icon: Sliders, label: 'Filter' },
                   { key: 'frame', icon: Palette, label: 'Frame' },
@@ -270,12 +317,16 @@ export const Editor: React.FC = () => {
                         setActiveTab(tab.key as typeof activeTab);
                         setSelectedId(null);
                       }}
-                      className={`relative py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${isActive
-                        ? 'bg-white text-mahogany shadow-sm ring-1 ring-gold/20'
-                        : 'text-charcoal/50 hover:text-charcoal hover:bg-white/40'
-                        }`}
+                      className="relative py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5"
+                      style={{
+                        background: isActive
+                          ? 'linear-gradient(135deg, #FB7185 0%, #E11D48 100%)'
+                          : 'transparent',
+                        color: isActive ? '#ffffff' : '#64748B',
+                        boxShadow: isActive ? '0 4px 12px rgba(225,29,72,0.25)' : 'none'
+                      }}
                     >
-                      <tab.icon className="w-3.5 h-3.5" />
+                      <tab.icon className="w-4 h-4" />
                       <span className="hidden xs:inline">{tab.label}</span>
                     </button>
                   );
@@ -292,35 +343,41 @@ export const Editor: React.FC = () => {
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="flex items-center justify-between bg-gradient-to-r from-gold-light/15 to-gold-light/5 border border-gold/30 p-2.5 rounded-xl transition-all">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gold/20 flex items-center justify-center">
+                    <div
+                      className="flex items-center justify-between p-3 rounded-2xl border transition-all"
+                      style={{
+                        background: '#FFF1F2',
+                        borderColor: '#FECDD3'
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center border border-rose-200">
                           {selectedId?.startsWith('sticker-') ? (
-                            <Smile className="w-3.5 h-3.5 text-gold-dark" />
+                            <Smile className="w-5 h-5 text-rose-500" />
                           ) : (
-                            <Type className="w-3.5 h-3.5 text-gold-dark" />
+                            <Type className="w-5 h-5 text-rose-500" />
                           )}
                         </div>
                         <div className="text-left">
-                          <span className="text-[11px] font-bold text-charcoal">
+                          <span className="text-xs font-bold text-slate-800">
                             {selectedId?.startsWith('sticker-') ? 'Stiker' : 'Teks'}
                           </span>
-                          <p className="text-[9px] text-charcoal/40">Terpilih</p>
+                          <p className="text-[10px] text-slate-500">Terpilih</p>
                         </div>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-2">
                         <button
                           onClick={handleDuplicate}
-                          className="p-1.5 bg-white/80 hover:bg-white rounded-lg text-charcoal/50 hover:text-mahogany border border-cream/20 transition-all shadow-sm"
+                          className="p-2 bg-white hover:bg-rose-50 rounded-xl text-slate-700 border border-slate-200 transition-all shadow-sm"
                           title="Duplikat (Ctrl+D)"
                         >
-                          <Copy className="w-3.5 h-3.5" />
+                          <Copy className="w-4 h-4" />
                         </button>
                         <button
                           onClick={handleDeleteSelected}
-                          className="p-1.5 bg-red-50/80 hover:bg-red-100 rounded-lg text-red-500 hover:text-red-600 border border-red-200/50 transition-all"
+                          className="p-2 bg-red-50 hover:bg-red-100 rounded-xl text-red-500 border border-red-200 transition-all"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -333,43 +390,49 @@ export const Editor: React.FC = () => {
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="flex items-center justify-between bg-gradient-to-r from-gold-light/15 to-gold-light/5 border border-gold/30 p-2.5 rounded-xl transition-all">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gold/20 flex items-center justify-center">
-                          <ImageIcon className="w-3.5 h-3.5 text-gold-dark" />
+                    <div
+                      className="flex items-center justify-between p-3 rounded-2xl border transition-all"
+                      style={{
+                        background: '#F3E8FF',
+                        borderColor: '#E9D5FF'
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center border border-purple-200">
+                          <ImageIcon className="w-5 h-5 text-purple-600" />
                         </div>
                         <div className="text-left">
-                          <span className="text-[11px] font-bold text-charcoal">
+                          <span className="text-xs font-bold text-slate-800">
                             Foto {selectedPhotoIndex + 1}
                           </span>
-                          <p className="text-[9px] text-charcoal/40">
-                            Geser di kanvas • Zoom {Math.round(selectedPhotoZoom * 100)}%
+                          <p className="text-[10px] text-slate-500">
+                            Geser • Zoom {Math.round(selectedPhotoZoom * 100)}%
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-2">
                         <button
                           onClick={() => handlePhotoZoom(-1)}
                           disabled={selectedPhotoZoom <= MIN_PHOTO_ZOOM}
-                          className="p-1.5 bg-white/80 hover:bg-white rounded-lg text-charcoal/50 hover:text-mahogany border border-cream/20 transition-all shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="p-2 bg-white hover:bg-purple-50 rounded-xl text-slate-700 border border-slate-200 transition-all disabled:opacity-40 shadow-sm"
                           title="Perkecil foto"
                         >
-                          <ZoomOut className="w-3.5 h-3.5" />
+                          <ZoomOut className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handlePhotoZoom(1)}
                           disabled={selectedPhotoZoom >= MAX_PHOTO_ZOOM}
-                          className="p-1.5 bg-white/80 hover:bg-white rounded-lg text-charcoal/50 hover:text-mahogany border border-cream/20 transition-all shadow-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="p-2 bg-white hover:bg-purple-50 rounded-xl text-slate-700 border border-slate-200 transition-all disabled:opacity-40 shadow-sm"
                           title="Perbesar foto"
                         >
-                          <ZoomIn className="w-3.5 h-3.5" />
+                          <ZoomIn className="w-4 h-4" />
                         </button>
                         <button
                           onClick={handlePhotoZoomReset}
-                          className="p-1.5 bg-white/80 hover:bg-white rounded-lg text-charcoal/50 hover:text-mahogany border border-cream/20 transition-all shadow-sm"
+                          className="p-2 bg-white hover:bg-purple-50 rounded-xl text-slate-700 border border-slate-200 transition-all shadow-sm"
                           title="Reset posisi & zoom"
                         >
-                          <RotateCcw className="w-3.5 h-3.5" />
+                          <RotateCcw className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -382,16 +445,16 @@ export const Editor: React.FC = () => {
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-ivory-dark/30 border border-cream/20 rounded-lg text-[9px] text-charcoal/40 text-left">
-                      <AlertCircle className="w-3 h-3" />
+                    <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50/60 border border-amber-200/60 rounded-xl text-xs text-amber-800 text-left">
+                      <AlertCircle className="w-4 h-4 text-amber-500" />
                       Pilih elemen di canvas untuk opsi cepat
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Active Sub-Panel Area (Render Kondisional Mengikuti Fungsi Asli) */}
-              <div className="min-h-[220px] md:min-h-[260px] relative">
+              {/* Active Sub-Panel Area */}
+              <div className="min-h-[220px] md:min-h-[260px] relative text-slate-800">
                 {activeTab === 'filter' && <FilterPanel />}
                 {activeTab === 'frame' && <FrameColorPanel />}
                 {activeTab === 'sticker' && <StickerPanel />}
@@ -399,17 +462,17 @@ export const Editor: React.FC = () => {
               </div>
 
               {/* Info footer */}
-              <div className="flex flex-wrap items-center justify-between gap-1 pt-2.5 border-t border-cream/20 text-[9px] text-charcoal/30">
-                <span className="flex items-center gap-1">
-                  <Grid3x3 className="w-3 h-3" />
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200/60 text-[10px] text-slate-500 font-bold">
+                <span className="flex items-center gap-1.5">
+                  <Grid3x3 className="w-3.5 h-3.5 text-rose-500" />
                   {totalElements} elemen
                 </span>
-                <span className="flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3 text-emerald-400" />
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
                   {filledSlots}/{totalSlots} foto
                 </span>
-                <span className="flex items-center gap-1 truncate max-w-[100px]">
-                  <Zap className="w-3 h-3 text-gold flex-shrink-0" />
+                <span className="flex items-center gap-1.5 truncate max-w-[130px]">
+                  <Zap className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                   <span className="truncate">{selectedFrame.name}</span>
                 </span>
               </div>
@@ -426,7 +489,7 @@ export const Editor: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/50 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
             onClick={() => setShowDeleteConfirm(false)}
           >
             <motion.div
@@ -434,32 +497,32 @@ export const Editor: React.FC = () => {
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.85, y: 20, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 border border-cream/20"
+              className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 border border-slate-100 text-slate-800"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center gap-3 mb-4 text-left">
-                <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center flex-shrink-0">
-                  <Trash2 className="w-5 h-5 text-red-500" />
+              <div className="flex items-center gap-4 mb-4 text-left">
+                <div className="w-12 h-12 rounded-full bg-red-50 border border-red-200 flex items-center justify-center flex-shrink-0">
+                  <Trash2 className="w-6 h-6 text-red-500" />
                 </div>
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-charcoal">Hapus Elemen?</h3>
-                  <p className="text-charcoal/50 text-sm">
+                  <h3 className="font-serif text-lg font-bold">Hapus Elemen?</h3>
+                  <p className="text-slate-500 text-xs mt-0.5">
                     {selectedId?.startsWith('sticker-') ? 'Stiker' : 'Teks'} akan dihapus permanen.
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2.5">
+              <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-ivory-dark/50 hover:bg-ivory-dark text-charcoal/60 font-bold text-[11px] uppercase tracking-wider transition-all"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider transition-all"
                 >
                   Batal
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-[11px] uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                   Hapus
                 </button>
               </div>
@@ -475,12 +538,12 @@ export const Editor: React.FC = () => {
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-charcoal/80 backdrop-blur-md text-white px-5 py-2.5 rounded-xl shadow-2xl flex items-center gap-2.5 border border-white/10"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-800/90 backdrop-blur-md text-white px-6 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 border border-white/20"
           >
-            <Copy className="w-3.5 h-3.5 text-gold" />
-            <span className="text-sm font-medium">Elemen berhasil diduplikasi!</span>
-            <button onClick={() => setShowCopiedToast(false)} className="text-white/40 hover:text-white transition-colors">
-              <X className="w-3.5 h-3.5" />
+            <Copy className="w-4 h-4 text-pink-300" />
+            <span className="text-xs font-bold">Elemen berhasil diduplikasi!</span>
+            <button onClick={() => setShowCopiedToast(false)} className="text-slate-400 hover:text-white transition-colors">
+              <X className="w-4 h-4" />
             </button>
           </motion.div>
         )}
@@ -488,21 +551,14 @@ export const Editor: React.FC = () => {
 
       <style>{`
         .custom-scroll::-webkit-scrollbar {
-          width: 3px;
+          width: 4px;
         }
         .custom-scroll::-webkit-scrollbar-track {
           background: transparent;
         }
         .custom-scroll::-webkit-scrollbar-thumb {
-          background: #D8C3A5;
+          background: #FB7185;
           border-radius: 20px;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb:hover {
-          background: #C9A66B;
-        }
-        @keyframes shimmer {
-          0% { background-position: 0% 0%; }
-          100% { background-position: 200% 0%; }
         }
         @media (min-width: 480px) {
           .xs\\:inline { display: inline; }

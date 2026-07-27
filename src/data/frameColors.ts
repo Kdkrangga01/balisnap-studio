@@ -1,5 +1,7 @@
 export type FrameColorId =
     | 'original'
+    | 'strawberryMilk' | 'matchaLatte' | 'softLilac' | 'butterCream' | 'babyPeach' | 'cloudBlue' | 'mintyFresh'
+    | 'warmVintageCream' | 'antiqueOlive' | 'terracotta' | 'vintageSepia' | 'deepWine' | 'slateBlue' | 'charcoalMinimal'
     | 'pastelPink' | 'pastelBlue' | 'pastelYellow' | 'pastelGreen' | 'pastelLavender' | 'pastelTan'
     | 'maroon' | 'white' | 'black'
     | 'glitterPink' | 'plaidPink' | 'gridBlue' | 'chainBlack' | 'quiltedWhite' | 'quiltedPink'
@@ -79,6 +81,26 @@ export const frameColors: FrameColorOption[] = [
         previewCss: 'repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%) 0 0/10px 10px',
         getFill: () => 'transparent',
     },
+
+    // ---- 🌸 Aesthetic Cute & Kawaii ----
+    { id: 'strawberryMilk', name: 'Strawberry Milk 🍓', previewCss: '#ffd8e4', getFill: solid('#ffd8e4') },
+    { id: 'matchaLatte', name: 'Matcha Latte 🍵', previewCss: '#dbe6c4', getFill: solid('#dbe6c4') },
+    { id: 'softLilac', name: 'Soft Lilac 🔮', previewCss: '#e2d5f8', getFill: solid('#e2d5f8') },
+    { id: 'butterCream', name: 'Butter Cream 🧈', previewCss: '#fff3cc', getFill: solid('#fff3cc') },
+    { id: 'babyPeach', name: 'Baby Peach 🍑', previewCss: '#ffe4d6', getFill: solid('#ffe4d6') },
+    { id: 'cloudBlue', name: 'Cloud Blue ☁️', previewCss: '#d4e9ff', getFill: solid('#d4e9ff') },
+    { id: 'mintyFresh', name: 'Minty Fresh 🌿', previewCss: '#cff2e5', getFill: solid('#cff2e5') },
+
+    // ---- 🎞️ Aesthetic Vintage & Retro ----
+    { id: 'warmVintageCream', name: 'Vintage Cream 📜', previewCss: '#f5efe6', getFill: solid('#f5efe6') },
+    { id: 'antiqueOlive', name: 'Antique Olive 🫒', previewCss: '#6b705c', getFill: solid('#6b705c') },
+    { id: 'terracotta', name: 'Terracotta Warm 🏺', previewCss: '#b56576', getFill: solid('#b56576') },
+    { id: 'vintageSepia', name: 'Vintage Sepia ☕', previewCss: '#d4a373', getFill: solid('#d4a373') },
+    { id: 'deepWine', name: 'Deep Wine Burgundy 🍷', previewCss: '#4a1525', getFill: solid('#4a1525') },
+
+    // ---- 🖤 Modern & Minimalist ----
+    { id: 'slateBlue', name: 'Slate Blue 🏙️', previewCss: '#475569', getFill: solid('#475569') },
+    { id: 'charcoalMinimal', name: 'Charcoal Black 🖤', previewCss: '#18181b', getFill: solid('#18181b') },
 
     // ---- Pastel solids ----
     { id: 'pastelPink', name: 'Pastel Pink', previewCss: '#f7c9dd', getFill: solid('#f7c9dd') },

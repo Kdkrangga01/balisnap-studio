@@ -11,8 +11,7 @@ import {
 
 export const FrameColorPanel: React.FC = () => {
     const {
-        frameColor, setFrameColor,
-        frameStyle, setFrameStyle,
+        lineColor, setLineColor,
         borderThickness, setBorderThickness,
         borderRadius, setBorderRadius,
         shadowIntensity, setShadowIntensity,
@@ -22,37 +21,17 @@ export const FrameColorPanel: React.FC = () => {
         framePadding, setFramePadding,
         setWallpaperId,
         favoriteColors, toggleFavoriteColor,
-        recentColors, addRecentColor,
-        setAppliedFilter
+        addRecentColor,
+        setAppliedFilter,
+        setFrameColor,
+        setCardColor
     } = usePhotobooth();
 
-    const [subTab, setSubTab] = useState<'color' | 'detail' | 'preset'>('color');
-    const [customHex, setCustomHex] = useState<string>('#ffffff');
-
-    // ------------------------------------------------------------
-    // FIX (BaliSnap bugfix): Sebelumnya baris ini memaksa
-    // setFrameColor('original') setiap kali user mengetik hex yang
-    // valid di kolom "Custom Color" -> warna yang diketik user TIDAK
-    // PERNAH benar-benar dipakai, selalu balik ke default. Sekarang
-    // benar-benar menerapkan hex yang diketik.
-    // ------------------------------------------------------------
-    const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        setCustomHex(val);
-        if (/^#[0-9A-F]{6}$/i.test(val)) {
-            setFrameColor(val as any); // FIX: sebelumnya 'original', sekarang pakai hex yang diketik
-            addRecentColor(val);
-        }
-    };
-
-    const handleColorPicker = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        setCustomHex(val);
-        setFrameColor(val as any);
-        addRecentColor(val);
-    };
+    const [subTab, setSubTab] = useState<'line' | 'detail' | 'preset'>('line');
 
     const handleApplyPreset = (preset: typeof presets[0]) => {
+        setLineColor(preset.frameColor);
+        setCardColor('original');
         setFrameColor(preset.frameColor);
         setAppliedFilter(preset.appliedFilter);
         setWallpaperId(preset.wallpaperId);
@@ -63,12 +42,14 @@ export const FrameColorPanel: React.FC = () => {
         setFrameOpacity(preset.frameOpacity);
     };
 
+    const activeLineColor = lineColor || 'original';
+
     return (
         <div className="flex flex-col gap-4 text-charcoal">
             {/* Sub tabs */}
             <div className="flex gap-1 border-b border-cream/20 pb-2">
                 {[
-                    { id: 'color', label: 'Warna', icon: Palette },
+                    { id: 'line', label: 'Warna Garis Pembatas', icon: Palette },
                     { id: 'detail', label: 'Detail', icon: Sliders },
                     { id: 'preset', label: 'Preset', icon: Sparkles },
                 ].map(t => (
@@ -76,80 +57,118 @@ export const FrameColorPanel: React.FC = () => {
                         key={t.id}
                         type="button"
                         onClick={() => setSubTab(t.id as any)}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${subTab === t.id
-                            ? 'bg-mahogany text-white shadow-sm'
-                            : 'text-charcoal/50 hover:bg-cream-light/30'
+                        className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all ${subTab === t.id
+                            ? 'bg-rose-600 text-white shadow-sm'
+                            : 'text-charcoal/60 hover:bg-rose-50'
                             }`}
                     >
-                        <t.icon className="w-3.5 h-3.5" />
+                        <t.icon className="w-3 h-3" />
                         {t.label}
                     </button>
                 ))}
             </div>
 
-            {/* SUB TAB CONTENT */}
-            {subTab === 'color' && (
+            {/* TAB: WARNA GARIS PEMBATAS (DIVIDERS & BORDER) */}
+            {subTab === 'line' && (
                 <div className="flex flex-col gap-3">
-                    {/* Style Category buttons */}
-                    <div className="flex gap-2">
-                        {['solid', 'gradient', 'glassmorphism', 'glossy'].map(style => (
-                            <button
-                                key={style}
-                                onClick={() => setFrameStyle(style)}
-                                className={`flex-1 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider border transition-all ${frameStyle === style
-                                    ? 'border-mahogany bg-mahogany/5 text-mahogany'
-                                    : 'border-cream/20 hover:border-cream text-charcoal/50'
-                                    }`}
-                            >
-                                {style}
-                            </button>
-                        ))}
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-rose-800">
+                            ✏️ Warna Garis Pembatas (Dividers)
+                        </span>
+                        <span className="text-[8px] text-rose-500 font-medium">Ubah warna garis pembatas &amp; border</span>
                     </div>
 
-                    {/* Color Picker & Custom HEX Input */}
-                    <div className="flex items-center gap-3 bg-ivory-dark/30 p-2.5 rounded-xl border border-cream/10">
-                        <div className="relative w-8 h-8 rounded-full overflow-hidden border border-cream/40 shadow-inner flex-shrink-0 cursor-pointer">
-                            <input
-                                type="color"
-                                value={customHex}
-                                onChange={handleColorPicker}
-                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                            />
-                            <div
-                                className="w-full h-full"
-                                style={{ backgroundColor: customHex }}
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <span className="text-[9px] font-bold text-charcoal/40 uppercase">Custom Color</span>
-                            <input
-                                type="text"
-                                value={customHex}
-                                onChange={handleHexChange}
-                                placeholder="#ffffff"
-                                className="w-full bg-white border border-cream/30 rounded-lg px-2.5 py-1 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-gold"
-                            />
-                        </div>
-                    </div>
+                    {/* Custom Line Color Picker & HEX Input */}
+                    {(() => {
+                        const selectedFcOpt = frameColors.find(c => c.id === activeLineColor);
+                        const previewBackground = selectedFcOpt ? selectedFcOpt.previewCss : (activeLineColor.startsWith('#') ? activeLineColor : (activeLineColor === 'original' ? 'repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%) 0 0/10px 10px' : '#18181b'));
+                        const displayName = selectedFcOpt ? selectedFcOpt.name : (activeLineColor === 'original' ? 'Asli (Default)' : activeLineColor);
 
-                    {/* Preset Swatches Grid */}
+                        return (
+                            <div className="flex items-center gap-2.5 bg-white p-2 rounded-xl border border-rose-200 shadow-sm">
+                                <div className="relative w-7 h-7 rounded-full overflow-hidden border border-rose-300 shadow-inner flex-shrink-0 cursor-pointer">
+                                    <input
+                                        type="color"
+                                        value={activeLineColor.startsWith('#') ? activeLineColor : '#18181b'}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setLineColor(val);
+                                            addRecentColor(val);
+                                        }}
+                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                    />
+                                    <div
+                                        className="w-full h-full"
+                                        style={{ background: previewBackground }}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <input
+                                        type="text"
+                                        value={displayName}
+                                        onChange={(e) => {
+                                            const v = e.target.value;
+                                            setLineColor(v);
+                                            if (/^#[0-9A-F]{6}$/i.test(v)) {
+                                                addRecentColor(v);
+                                            }
+                                        }}
+                                        placeholder="#18181b"
+                                        className="w-full bg-rose-50/50 border border-rose-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-zinc-700 focus:outline-none focus:ring-1 focus:ring-rose-400"
+                                    />
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {/* Quick Line Color Buttons */}
                     <div>
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-charcoal/50 mb-2">Palette Pilihan</span>
-                        <div className="grid grid-cols-6 gap-2 max-h-[160px] overflow-y-auto pr-1 custom-scroll">
+                        <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/60 mb-1.5">Warna Garis Populer</span>
+                        <div className="grid grid-cols-4 gap-1.5">
+                            {[
+                                { id: 'original', name: 'Asli (Default)', css: 'repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%) 0 0/10px 10px' },
+                                { id: '#18181b', name: 'Hitam Klasik', css: '#18181b' },
+                                { id: '#ffffff', name: 'Putih Bersih', css: '#ffffff' },
+                                { id: '#3d261d', name: 'Deep Coffee', css: '#3d261d' },
+                                { id: '#d4a373', name: 'Rose Gold', css: '#d4a373' },
+                                { id: '#475569', name: 'Slate Blue', css: '#475569' },
+                                { id: '#5c1414', name: 'Maroon Wine', css: '#5c1414' },
+                                { id: '#ffd8e4', name: 'Pastel Pink', css: '#ffd8e4' },
+                            ].map(l => (
+                                <button
+                                    key={l.id}
+                                    type="button"
+                                    onClick={() => setLineColor(l.id)}
+                                    title={l.name}
+                                    className={`py-1.5 rounded-lg border flex flex-col items-center gap-1 transition-all ${
+                                        activeLineColor === l.id ? 'border-zinc-800 bg-white ring-2 ring-zinc-500 shadow-sm' : 'border-zinc-200 bg-white/60 hover:border-zinc-400'
+                                    }`}
+                                >
+                                    <span className="w-5 h-5 rounded-full border border-black/10 shadow-inner block" style={{ background: l.css }} />
+                                    <span className="text-[8px] font-bold text-zinc-600 truncate w-full text-center px-1">{l.name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Aesthetic Color & Pattern Swatches */}
+                    <div>
+                        <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/60 mb-2">Semua Palette &amp; Pattern Estetik</span>
+                        <div className="grid grid-cols-6 gap-2 max-h-[180px] overflow-y-auto custom-scroll pr-1">
                             {frameColors.map((fc) => {
-                                const isSelected = frameColor === fc.id;
+                                const isSelected = activeLineColor === fc.id || activeLineColor === fc.previewCss;
                                 return (
                                     <div key={fc.id} className="relative group">
                                         <button
-                                            key={fc.id}
                                             type="button"
                                             onClick={() => {
-                                                setFrameColor(fc.id);
+                                                setLineColor(fc.id);
                                                 addRecentColor(fc.previewCss);
                                             }}
                                             title={fc.name}
-                                            className={`flex items-center justify-center p-0.5 rounded-full transition-all duration-200 w-9 h-9 ${isSelected ? 'ring-2 ring-gold ring-offset-1 scale-105' : 'hover:scale-105'
-                                                }`}
+                                            className={`flex items-center justify-center p-0.5 rounded-full transition-all duration-200 w-8 h-8 ${
+                                                isSelected ? 'ring-2 ring-rose-500 ring-offset-1 scale-105 shadow-md' : 'hover:scale-105'
+                                            }`}
                                         >
                                             <span
                                                 className="w-full h-full rounded-full shadow-inner border border-black/10 block"
@@ -169,52 +188,30 @@ export const FrameColorPanel: React.FC = () => {
                             })}
                         </div>
                     </div>
+                </div>
+            )}
 
-                    {/* Recent and Favorites */}
-                    {favoriteColors.length > 0 && (
-                        <div>
-                            <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/40 mb-1">Favorit</span>
-                            <div className="flex flex-wrap gap-1.5">
-                                {favoriteColors.map(c => {
-                                    const fc = frameColors.find(o => o.id === c);
-                                    const preview = fc ? fc.previewCss : c;
-                                    return (
-                                        <button
-                                            key={c}
-                                            onClick={() => setFrameColor(c as any)}
-                                            className="w-6 h-6 rounded-full border border-black/10 shadow-sm"
-                                            style={{ background: preview }}
-                                            title={fc ? fc.name : c}
-                                        />
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {recentColors.length > 0 && (
-                        <div>
-                            <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/40 mb-1">Baru Digunakan</span>
-                            <div className="flex flex-wrap gap-1.5">
-                                {recentColors.map((c, i) => (
-                                    <button
-                                        key={`${c}-${i}`}
-                                        onClick={() => {
-                                            if (c.startsWith('#')) {
-                                                setFrameColor(c as any);
-                                                setCustomHex(c);
-                                            } else {
-                                                const matched = frameColors.find(o => o.previewCss === c);
-                                                if (matched) setFrameColor(matched.id);
-                                            }
-                                        }}
-                                        className="w-6 h-6 rounded-full border border-black/10 shadow-sm"
-                                        style={{ background: c }}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
+            {/* Favorite Colors */}
+            {favoriteColors.length > 0 && (
+                <div>
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/40 mb-1">Favorit</span>
+                    <div className="flex flex-wrap gap-1.5">
+                        {favoriteColors.map(c => {
+                            const fc = frameColors.find(o => o.id === c);
+                            const preview = fc ? fc.previewCss : c;
+                            return (
+                                <button
+                                    key={c}
+                                    onClick={() => {
+                                        setLineColor(c);
+                                    }}
+                                    className="w-6 h-6 rounded-full border border-black/10 shadow-sm"
+                                    style={{ background: preview }}
+                                    title={fc ? fc.name : c}
+                                />
+                            );
+                        })}
+                    </div>
                 </div>
             )}
 
@@ -316,8 +313,6 @@ export const FrameColorPanel: React.FC = () => {
                     </div>
                 </div>
             )}
-
-
 
             {subTab === 'preset' && (
                 <div className="flex flex-col gap-3">

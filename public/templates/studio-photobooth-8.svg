@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="2000" viewBox="0 0 1200 2000">
+  <!-- Studio Photobooth 2x4 (8 slots) - Simple black dividers, transparent photo areas -->
+  <!-- Using fill-rule evenodd: outer rectangle is filled black, inner slot rectangles create transparent holes -->
+  <path fill-rule="evenodd" fill="#0a0a0a" d="
+    M 0 0 H 1200 V 2000 H 0 Z
+    M 26 26 H 596 V 507 H 26 Z
+    M 604 26 H 1174 V 507 H 604 Z
+    M 26 515 H 596 V 996 H 26 Z
+    M 604 515 H 1174 V 996 H 604 Z
+    M 26 1004 H 596 V 1485 H 26 Z
+    M 604 1004 H 1174 V 1485 H 604 Z
+    M 26 1493 H 596 V 1974 H 26 Z
+    M 604 1493 H 1174 V 1974 H 604 Z
+  "/>
+</svg>

@@ -3,7 +3,7 @@ import { usePhotobooth } from '../context/PhotoboothContext';
 import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import {
-  ArrowLeft, Palette, Sparkles, Search, X, Filter, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, Trash2, CheckCircle2, ScanSearch, Eye, Pencil,
+  ArrowLeft, Palette, Sparkles, Search, X, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, Trash2, CheckCircle2, ScanSearch, Eye, Pencil, SlidersHorizontal, LayoutGrid, Grid2X2, BookmarkCheck, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
 
@@ -272,7 +272,7 @@ function generateGridSlots(width: number, height: number, numSlots: number): Slo
   return slots;
 }
 
-const CURSOR_TRAIL_EMOJIS = ['✨', '💖', '🩷', '⭐', '🎀'];
+const CURSOR_TRAIL_EMOJIS = ['✨', '💖', '🌸', '⭐', '🎀', '🦄', '💫'];
 
 const CursorTrail: React.FC = () => {
   const [particles, setParticles] = useState<{ id: number; x: number; y: number; emoji: string }[]>([]);
@@ -282,7 +282,7 @@ const CursorTrail: React.FC = () => {
   useEffect(() => {
     const handleMove = (e: MouseEvent) => {
       const now = Date.now();
-      if (now - lastAddRef.current < 90) return;
+      if (now - lastAddRef.current < 60) return;
       lastAddRef.current = now;
       const id = idCounterRef.current++;
       const emoji = CURSOR_TRAIL_EMOJIS[Math.floor(Math.random() * CURSOR_TRAIL_EMOJIS.length)];
@@ -298,12 +298,12 @@ const CursorTrail: React.FC = () => {
         {particles.map((p) => (
           <motion.span
             key={p.id}
-            initial={{ opacity: 0.9, scale: 0.6, x: p.x, y: p.y }}
-            animate={{ opacity: 0, scale: 1.15, y: p.y - 34 }}
+            initial={{ opacity: 1, scale: 0.6, x: p.x, y: p.y }}
+            animate={{ opacity: 0, scale: 1.4, y: p.y - 45, x: p.x + (Math.random() * 30 - 15) }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.85, ease: 'easeOut' }}
+            transition={{ duration: 0.9, ease: 'easeOut' }}
             onAnimationComplete={() => setParticles((prev) => prev.filter((pp) => pp.id !== p.id))}
-            className="absolute text-base select-none"
+            className="absolute text-base select-none filter drop-shadow-[0_0_8px_rgba(244,114,182,0.8)]"
             style={{ left: 0, top: 0 }}
           >
             {p.emoji}
@@ -312,6 +312,25 @@ const CursorTrail: React.FC = () => {
       </AnimatePresence>
     </div>
   );
+};
+
+const getCategoryBgGradient = (cat: string) => {
+  switch (cat) {
+    case 'polaroid':
+      return 'bg-gradient-to-br from-[#FFFDF9] via-[#FDF6ED] to-[#F7EBD9] border-amber-300/40';
+    case 'korean':
+      return 'bg-gradient-to-br from-[#F5F8FF] via-[#EBF1FF] to-[#DCE6FF] border-indigo-300/40';
+    case 'cute':
+      return 'bg-gradient-to-br from-[#FFF5F8] via-[#FDE8F0] to-[#FBCFE0] border-pink-300/50';
+    case 'retro':
+      return 'bg-gradient-to-br from-[#FAF5EC] via-[#F3E8D3] to-[#E8D4B1] border-amber-400/40';
+    case 'filmstrip':
+      return 'bg-gradient-to-br from-[#F8F9FA] via-[#E9ECEF] to-[#DEE2E6] border-zinc-300/50';
+    case 'custom':
+      return 'bg-gradient-to-br from-[#FAF5FF] via-[#F3E8FF] to-[#E9D5FF] border-purple-300/50';
+    default:
+      return 'bg-gradient-to-br from-[#FFFFFF] via-[#F8F9FA] to-[#F1F3F5] border-zinc-200';
+  }
 };
 
 const FrameCard: React.FC<{
@@ -325,67 +344,77 @@ const FrameCard: React.FC<{
   onDelete: (e: React.MouseEvent) => void;
   onEdit: (e: React.MouseEvent) => void;
   onClick: () => void;
-}> = ({ frame, idx, isTrending, isFavorite, isCustom: _isCustom, categoryStyle, onFavorite, onDelete, onEdit, onClick }) => {
+}> = ({ frame, idx: _idx, isTrending, isFavorite, isCustom: _isCustom, categoryStyle, onFavorite, onDelete, onEdit, onClick }) => {
+  const cardVariants = {
+    hidden: { opacity: 0, y: 30, scale: 0.94 },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: [0.25, 1, 0.5, 1] as const } }
+  };
+
   return (
     <motion.div
-      whileHover={{ y: -10, scale: 1.02, rotate: idx % 2 === 0 ? 0.5 : -0.5 }}
-      whileTap={{ scale: 0.98 }}
+      variants={cardVariants}
+      whileHover={{ y: -10, scale: 1.02 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className="relative bg-white border-4 border-rose-100 rounded-[32px] p-5 flex flex-col justify-between shadow-[0_12px_30px_rgba(253,244,245,0.8)] overflow-hidden text-left cursor-pointer group select-none h-full transition-shadow duration-300 animate-fade-in"
+      className="group relative bg-white/70 hover:bg-white/95 backdrop-blur-xl border-2 border-pink-100/80 hover:border-pink-400/80 rounded-[32px] p-4 flex flex-col justify-between shadow-[0_10px_30px_rgba(244,114,182,0.08)] hover:shadow-[0_20px_45px_rgba(236,72,153,0.22)] transition-all duration-300 cursor-pointer overflow-hidden text-left select-none h-full"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-rose-50/20 via-transparent to-purple-50/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 rounded-[34px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl pointer-events-none" />
 
-      <div className="flex justify-between items-start w-full mb-4 z-10">
-        <div className="flex flex-col gap-1.5 items-start">
-          <span className="text-3xl filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.05)] transform group-hover:scale-125 transition-transform duration-300">{categoryStyle.icon}</span>
+      <div className="flex justify-between items-start w-full mb-3 z-10">
+        <div className="flex flex-col gap-1 items-start">
+          <span className="text-3xl filter drop-shadow-md group-hover:scale-125 transition-transform duration-300">{categoryStyle.icon}</span>
           {isTrending && (
-            <span className="flex items-center gap-1 bg-gradient-to-r from-pink-400 to-rose-400 text-white text-[9px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
-              <Sparkles className="w-2.5 h-2.5 animate-spin" /> Populer
+            <span className="flex items-center gap-1 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-500 text-white text-[9px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-full shadow-md shadow-pink-500/30">
+              <Sparkles className="w-2.5 h-2.5 animate-spin" style={{ animationDuration: '3s' }} /> Hot 🔥
             </span>
           )}
         </div>
+
         <div className="flex gap-1.5 z-20">
           <button
             onClick={(e) => { e.stopPropagation(); onFavorite(e); }}
-            className="w-9 h-9 rounded-2xl bg-rose-50/70 border border-rose-100 flex items-center justify-center hover:bg-rose-100 shadow-sm transition-all active:scale-90"
+            className="w-8 h-8 rounded-2xl bg-white/90 border border-rose-100 flex items-center justify-center hover:bg-rose-50 shadow-sm transition-all active:scale-90"
             title="Favorit"
           >
-            <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'fill-pink-500 text-pink-500' : 'text-rose-300'}`} />
+            <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'fill-pink-500 text-pink-500 scale-110' : 'text-rose-300 hover:text-pink-400'}`} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(e); }}
-            className="w-9 h-9 rounded-2xl bg-sky-50/80 border border-sky-100 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-sky-500 hover:text-white shadow-sm active:scale-90"
+            className="w-8 h-8 rounded-2xl bg-white/90 border border-sky-100 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-sky-50 shadow-sm active:scale-90"
             title="Ubah Nama"
           >
-            <Pencil className="w-4 h-4 text-sky-400 group-hover:text-sky-400 hover:!text-white" />
+            <Pencil className="w-3.5 h-3.5 text-sky-400 hover:text-sky-600" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(e); }}
-            className="w-9 h-9 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-500 flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-rose-500 hover:text-white shadow-sm active:scale-90"
+            className="w-8 h-8 rounded-2xl bg-white/90 border border-rose-100 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-50 shadow-sm active:scale-90"
             title="Hapus Frame"
           >
-            <Trash2 className="w-4 h-4 text-rose-500 hover:text-white" />
+            <Trash2 className="w-3.5 h-3.5 text-rose-400 hover:text-rose-600" />
           </button>
         </div>
       </div>
 
-      <div className="relative aspect-[3/4] w-full bg-gradient-to-b from-rose-50/30 to-purple-50/30 rounded-2xl p-4 flex items-center justify-center border border-rose-100/40 overflow-hidden mb-4 shadow-inner group-hover:bg-white transition-colors duration-300">
-        <img src={frame.src} alt={frame.name} className="max-w-full max-h-full object-contain drop-shadow-[0_10px_25px_rgba(255,182,193,0.2)] group-hover:scale-[1.06] transition-transform duration-500 ease-out" loading="lazy" />
-        <div className="absolute inset-0 bg-pink-400/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
-          <span className="px-4 py-2 rounded-full bg-white text-pink-500 font-black text-[10px] tracking-widest uppercase shadow-md flex items-center gap-1.5 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-            <Eye className="w-4 h-4" /> Intip Frame
+      <div className={`relative aspect-[3/4] w-full ${getCategoryBgGradient(frame.category)} rounded-2xl p-3 flex items-center justify-center border shadow-inner overflow-hidden mb-3.5 transition-all duration-300 z-10`}>
+        <div className="relative w-full h-full bg-white/95 rounded-xl shadow-lg border border-white/90 p-2.5 flex items-center justify-center overflow-hidden">
+          <img src={frame.src} alt={frame.name} className="max-w-full max-h-full object-contain filter drop-shadow-lg group-hover:scale-105 transition-transform duration-500 ease-out" loading="lazy" />
+        </div>
+
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/40 via-zinc-950/10 to-transparent backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-10">
+          <span className="px-4 py-2 rounded-full bg-white text-zinc-900 font-extrabold text-[10px] tracking-wider uppercase shadow-xl flex items-center gap-1.5 transform translate-y-3 group-hover:translate-y-0 transition-all duration-300">
+            <Eye className="w-3.5 h-3.5 text-pink-500 animate-pulse" /> Intip Frame
           </span>
         </div>
       </div>
 
-      <div className="w-full pt-3 border-t-2 border-dashed border-rose-100/60">
-        <h3 className="font-serif font-black text-zinc-800 text-base line-clamp-1 group-hover:text-pink-500 transition-colors">{frame.name}</h3>
-        <div className="flex items-center justify-between mt-2.5 text-[9px] font-black uppercase tracking-wider text-zinc-400">
-          <span className="flex items-center gap-1 text-pink-500 bg-pink-50 px-2 py-0.5 rounded-md">
-            <Images className="w-3.5 h-3.5" /> {frame.slots} Slot Foto
+      <div className="w-full pt-2.5 border-t-2 border-dashed border-rose-100/90 z-10">
+        <h3 className="font-sans font-extrabold text-zinc-800 text-sm line-clamp-1 group-hover:text-pink-600 transition-colors">{frame.name}</h3>
+        <div className="flex items-center justify-between mt-2 text-[10px] font-black text-zinc-400">
+          <span className="flex items-center gap-1 text-pink-600 bg-pink-100/80 px-2.5 py-0.5 rounded-full border border-pink-200/50">
+            <Images className="w-3 h-3 text-pink-500" /> {frame.slots} Slot
           </span>
-          <span className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-md font-medium text-[9px] capitalize">
-            🎀 {frame.category}
+          <span className="bg-purple-100/80 text-purple-700 border border-purple-200/50 px-2.5 py-0.5 rounded-full capitalize">
+            {frame.category}
           </span>
         </div>
       </div>
@@ -404,6 +433,8 @@ export const SelectFrame: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'name'>('popular');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [onlyFavoritesFilter, setOnlyFavoritesFilter] = useState(false);
+  const [gridColsLayout, setGridColsLayout] = useState<'standard' | 'compact'>('standard');
 
   const [previewFrame, setPreviewFrame] = useState<FrameTemplate | null>(null);
   const [previewVisible, setPreviewVisible] = useState(false);
@@ -418,7 +449,7 @@ export const SelectFrame: React.FC = () => {
     bY.set(clientY - top);
   }
 
-  const spotlightBackground = useMotionTemplate`radial-gradient(600px circle at ${bX}px ${bY}px, rgba(244,114,182,0.16), rgba(168,85,247,0.08) 40%, transparent 70%)`;
+  const spotlightBackground = useMotionTemplate`radial-gradient(800px circle at ${bX}px ${bY}px, rgba(236,72,153,0.15), rgba(168,85,247,0.08) 40%, transparent 80%)`;
 
   const [hiddenFrameIds, setHiddenFrameIds] = useState<Set<string>>(() => loadHiddenFrameIds());
 
@@ -626,7 +657,6 @@ export const SelectFrame: React.FC = () => {
   const initWorkingCanvas = useCallback((dataUrl: string) => {
     const img = new window.Image();
     img.onload = () => {
-      // Scale down max dimension to 2000px for smooth performance & IndexedDB stability
       const MAX_DIM = 2000;
       let targetW = img.naturalWidth;
       let targetH = img.naturalHeight;
@@ -722,17 +752,13 @@ export const SelectFrame: React.FC = () => {
       slotCoords: validSlots,
     };
 
-    // Permanently save custom frame in IndexedDB and local state
     addCustomFrame(newFrame);
 
-    // Optional background sync to dev server if available (never delete from IndexedDB!)
     fetch('/api/save-frame', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newFrame),
-    }).catch(() => {
-      // Ignore background sync errors
-    });
+    }).catch(() => { });
 
     setUploadSuccess(true);
     setTimeout(() => {
@@ -753,12 +779,12 @@ export const SelectFrame: React.FC = () => {
   const trendingIds = ['film-classic-1', 'polaroid-single', 'korean-pink-3', 'cute-hearts-1', 'retro-vintage-1'];
 
   const categoryStyles: Record<string, { bg: string; border: string; icon: string; accent: string }> = {
-    filmstrip: { bg: 'from-pink-50/20 via-purple-50/20 to-transparent', border: 'border-pink-100', icon: '🎞️', accent: 'text-pink-500' },
-    korean: { bg: 'from-pink-50/20 via-purple-50/20 to-transparent', border: 'border-pink-100', icon: '🇰🇷', accent: 'text-pink-600' },
-    polaroid: { bg: 'from-pink-50/20 via-purple-50/20 to-transparent', border: 'border-pink-100', icon: '📸', accent: 'text-pink-600' },
-    cute: { bg: 'from-pink-50/20 via-pink-50/20 to-transparent', border: 'border-pink-100', icon: '🎀', accent: 'text-pink-500' },
-    retro: { bg: 'from-pink-50/20 via-purple-50/20 to-transparent', border: 'border-pink-100', icon: '🎫', accent: 'text-pink-600' },
-    custom: { bg: 'from-pink-50/20 via-purple-50/20 to-transparent', border: 'border-pink-100', icon: '📁', accent: 'text-pink-600' },
+    filmstrip: { bg: 'bg-white', border: 'border-pink-100', icon: '🎞️', accent: 'text-pink-500' },
+    korean: { bg: 'bg-white', border: 'border-pink-100', icon: '🇰🇷', accent: 'text-indigo-500' },
+    polaroid: { bg: 'bg-white', border: 'border-pink-100', icon: '📸', accent: 'text-amber-500' },
+    cute: { bg: 'bg-white', border: 'border-pink-100', icon: '🎀', accent: 'text-rose-500' },
+    retro: { bg: 'bg-white', border: 'border-pink-100', icon: '🎫', accent: 'text-amber-600' },
+    custom: { bg: 'bg-white', border: 'border-pink-100', icon: '📁', accent: 'text-purple-500' },
   };
 
   const slotFilters = [
@@ -771,24 +797,39 @@ export const SelectFrame: React.FC = () => {
     { label: '8 Slot', value: 8 },
   ];
 
-  const categoryFilters = [
+  const categoryFilters = useMemo(() => [
     { label: 'Semua Style', value: 'all', emoji: '✨' },
     { label: 'Film Strip', value: 'filmstrip', emoji: '🎞️' },
     { label: 'Korean Style', value: 'korean', emoji: '🇰🇷' },
     { label: 'Polaroid', value: 'polaroid', emoji: '📸' },
     { label: 'Cute Kawaii', value: 'cute', emoji: '🎀' },
     { label: 'Retro Vintage', value: 'retro', emoji: '🎫' },
-    ...(customFrames.length > 0 ? [{ label: 'Custom Upload', value: 'custom', emoji: '📁' }] : []),
-  ];
+    { label: 'Custom Upload', value: 'custom', emoji: '📁' },
+  ], []);
+
+  // Hitung jumlah frame secara presisi per kategori
+  const getCategoryCount = useCallback((category: string) => {
+    if (category === 'all') return allFrames.length;
+    if (category === 'custom') {
+      return allFrames.filter((f) => f.category === 'custom' || f.id.startsWith('custom-')).length;
+    }
+    return allFrames.filter((f) => f.category === category).length;
+  }, [allFrames]);
 
   const filteredFrames = useMemo(() => {
     let result = allFrames.filter((frame) => {
       const matchesSlot = slotFilter === 'all' || frame.slots === slotFilter;
-      const matchesCat = categoryFilter === 'all' || frame.category === categoryFilter;
+      const matchesCat = categoryFilter === 'all'
+        ? true
+        : categoryFilter === 'custom'
+          ? (frame.category === 'custom' || frame.id.startsWith('custom-'))
+          : frame.category === categoryFilter;
+
       const matchesSearch =
         frame.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         frame.category.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesSlot && matchesCat && matchesSearch;
+      const matchesFav = !onlyFavoritesFilter || favorites.has(frame.id);
+      return matchesSlot && matchesCat && matchesSearch && matchesFav;
     });
 
     if (sortBy === 'popular') {
@@ -803,12 +844,7 @@ export const SelectFrame: React.FC = () => {
       result = result.sort((a, b) => a.name.localeCompare(b.name));
     }
     return result;
-  }, [slotFilter, categoryFilter, searchQuery, sortBy, allFrames]);
-
-  const getCategoryCount = (category: string) => {
-    if (category === 'all') return allFrames.length;
-    return allFrames.filter((f) => f.category === category).length;
-  };
+  }, [slotFilter, categoryFilter, searchQuery, sortBy, onlyFavoritesFilter, favorites, allFrames]);
 
   const handleFrameClick = (frame: FrameTemplate) => {
     setPreviewFrame(frame);
@@ -824,12 +860,12 @@ export const SelectFrame: React.FC = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiPieces = useMemo(
     () =>
-      Array.from({ length: 26 }).map((_, i) => ({
+      Array.from({ length: 32 }).map((_, i) => ({
         id: i,
-        angle: (i / 26) * 360 + Math.random() * 12,
-        distance: 90 + Math.random() * 150,
-        emoji: ['✨', '💖', '🎀', '⭐', '💫', '🩷'][i % 6],
-        delay: Math.random() * 0.12,
+        angle: (i / 32) * 360 + Math.random() * 15,
+        distance: 110 + Math.random() * 180,
+        emoji: ['✨', '💖', '🎀', '⭐', '💫', '🌸', '🔮', '🦄'][i % 8],
+        delay: Math.random() * 0.15,
       })),
     []
   );
@@ -851,6 +887,7 @@ export const SelectFrame: React.FC = () => {
     setCategoryFilter('all');
     setSearchQuery('');
     setSortBy('popular');
+    setOnlyFavoritesFilter(false);
   };
 
   const toggleFavorite = (id: string, e: React.MouseEvent) => {
@@ -865,18 +902,18 @@ export const SelectFrame: React.FC = () => {
 
   const gridVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.02 } },
+    visible: { opacity: 1, transition: { staggerChildren: 0.03 } },
   };
 
   const popupVariants = {
-    hidden: { opacity: 0, scale: 0.9, y: 30 },
-    visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 20 } },
-    exit: { opacity: 0, scale: 0.92, y: 15, transition: { duration: 0.15 } },
+    hidden: { opacity: 0, scale: 0.85, y: 30 },
+    visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, stiffness: 400, damping: 25 } },
+    exit: { opacity: 0, scale: 0.88, y: 20, transition: { duration: 0.15 } },
   };
 
   const overlayVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.2 } },
+    visible: { opacity: 1, transition: { duration: 0.25 } },
     exit: { opacity: 0, transition: { duration: 0.15 } },
   };
 
@@ -886,105 +923,138 @@ export const SelectFrame: React.FC = () => {
 
       <div
         onMouseMove={handleKawaiiMouseMove}
-        className="min-h-screen bg-[#FFFDF6] text-zinc-800 selection:bg-pink-100/60 py-6 px-4 sm:px-8 lg:py-12 lg:px-16 relative overflow-x-hidden antialiased font-sans flex flex-col items-center w-full"
+        className="min-h-screen bg-[#FFF0F5] text-zinc-800 selection:bg-pink-300 py-6 px-4 sm:px-6 lg:px-12 relative overflow-x-hidden antialiased font-sans flex flex-col items-center w-full"
       >
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#EFEBE2_1px,transparent_1px),linear-gradient(to_bottom,#EFEBE2_1px,transparent_1px)] bg-[size:44px_44px] opacity-[0.9] pointer-events-none z-0" />
+        <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-200/70 via-purple-100/50 to-pink-100/40 pointer-events-none z-0 animate-pulse" style={{ animationDuration: '6s' }} />
+        <div className="fixed inset-0 bg-[linear-gradient(to_right,#fbcfe8_1px,transparent_1px),linear-gradient(to_bottom,#fbcfe8_1px,transparent_1px)] bg-[size:36px_36px] opacity-30 pointer-events-none z-0" />
 
         <motion.div
-          className="absolute inset-0 pointer-events-none z-[1]"
+          className="fixed inset-0 pointer-events-none z-[1]"
           style={{ background: spotlightBackground }}
         />
 
-        <div className="max-w-7xl w-full relative z-10 flex flex-col gap-8">
+        <div className="max-w-7xl w-full relative z-10 flex flex-col gap-6">
 
-          {/* Heading Layout Tanpa Gambar Logo */}
-          <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left border-b-4 border-dashed border-rose-200 pb-8 gap-6 w-full">
-            <div className="flex flex-col items-center md:items-start">
+          {/* Premium Header Banner */}
+          <header className="flex flex-col md:flex-row justify-between items-center text-center md:text-left bg-white/80 backdrop-blur-2xl border-2 border-white p-6 md:p-8 rounded-[36px] shadow-[0_15px_35px_rgba(244,114,182,0.12)] gap-6 w-full relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-pink-300/30 to-purple-300/20 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="flex flex-col items-center md:items-start z-10">
               <button
                 onClick={() => setStep('landing')}
-                className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-600 font-black text-[10px] tracking-[0.25em] uppercase mb-3 transition-colors group px-3 py-1.5 bg-pink-50 rounded-full border border-pink-100/40"
+                className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-800 font-extrabold text-xs tracking-widest uppercase mb-3 transition-all group px-4 py-1.5 bg-rose-100/80 hover:bg-rose-200/80 rounded-full border border-rose-200 shadow-sm cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
                 Kembali
               </button>
-              <div className="flex items-center gap-4 mb-2">
-                <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-black text-zinc-900 tracking-tight leading-tight">
-                  Pilih{' '}
-                  <span className="font-sans font-black italic bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 text-transparent bg-clip-text drop-shadow-[0_2px_6px_rgba(255,182,193,0.2)]">
-                    Bingkai Lucu
-                  </span>{' '}
-                  Kamu! ✨
-                </h1>
-              </div>
-              <p className="text-zinc-500 text-xs sm:text-sm mt-1.5 font-normal max-w-xl">
-                Yuk, temukan <span className="font-bold text-pink-500 bg-pink-50 px-2 py-0.5 rounded-md border border-pink-100">{allFrames.length}</span> pilihan layout gemas buat abadikan momen serumu!
+              <h1 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-black text-zinc-900 tracking-tight leading-tight">
+                Pilih{' '}
+                <span className="bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-transparent bg-clip-text drop-shadow-sm">
+                  Bingkai Lucu
+                </span>{' '}
+                Kamu! ✨
+              </h1>
+              <p className="text-zinc-500 text-xs sm:text-sm mt-2 font-semibold max-w-xl">
+                Temukan <span className="font-black text-pink-600 bg-pink-100 px-2.5 py-0.5 rounded-full border border-pink-200">{allFrames.length}</span> koleksi layout foto tercantik &amp; paling kekinian!
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
+            <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto z-10">
               <button
                 onClick={() => setIsUploadModalOpen(true)}
-                className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-pink-400 to-rose-400 text-white font-black text-[10px] uppercase tracking-widest shadow-[0_6px_15px_rgba(244,63,94,0.15)] hover:opacity-90 transition-all w-full sm:w-auto"
+                className="group relative flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/40 hover:scale-[1.03] active:scale-95 transition-all duration-300 cursor-pointer w-full sm:w-auto"
               >
-                <Upload className="w-3.5 h-3.5 text-white animate-bounce" />
+                <Upload className="w-4 h-4 text-white animate-bounce" style={{ animationDuration: '2s' }} />
                 Upload Frame Sendiri 🎀
               </button>
             </div>
-          </div>
+          </header>
 
-          {/* Master Control Deck */}
-          <div className="w-full bg-white border-2 border-rose-100 p-5 rounded-[24px] shadow-[0_8px_24px_rgba(253,244,245,0.4)] flex flex-col gap-5 text-left">
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 w-full">
-              <div className="relative sm:col-span-8 w-full">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
+          {/* Master Control Deck & Filters */}
+          <div className="w-full bg-white/80 backdrop-blur-2xl border-2 border-white p-5 md:p-6 rounded-[36px] shadow-[0_12px_30px_rgba(244,114,182,0.1)] flex flex-col gap-5 text-left">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 w-full">
+              <div className="relative md:col-span-6 w-full">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-400" />
                 <input
                   type="text"
-                  placeholder="Cari nama bingkai, kategori cetak imut..."
+                  placeholder="Cari kata kunci bingkai atau style..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-8 py-2.5 bg-rose-50/10 border border-rose-100/50 rounded-xl text-xs text-zinc-800 placeholder-rose-300 focus:outline-none focus:border-pink-300"
+                  className="w-full pl-11 pr-10 py-3 bg-white/90 border-2 border-rose-100 focus:border-pink-400 rounded-2xl text-xs sm:text-sm text-zinc-800 placeholder-rose-300 focus:outline-none focus:ring-4 focus:ring-pink-100 transition-all shadow-sm font-semibold"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-rose-300 hover:text-rose-500">
-                    <X className="w-3.5 h-3.5" />
+                  <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-rose-300 hover:text-rose-500 p-1 cursor-pointer">
+                    <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
 
-              <div className="sm:col-span-4 w-full flex gap-2">
-                <div className="flex items-center bg-white border border-rose-100 rounded-xl px-3 py-2 w-full">
-                  <Clock className="w-3.5 h-3.5 text-pink-400 mr-2" />
+              <div className="md:col-span-6 w-full flex flex-wrap sm:flex-nowrap gap-2">
+                <div className="flex items-center bg-white/90 border-2 border-rose-100 rounded-2xl px-3.5 py-2.5 w-full shadow-sm">
+                  <Clock className="w-4 h-4 text-pink-500 mr-2 flex-shrink-0" />
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-transparent text-xs text-zinc-700 font-black focus:outline-none cursor-pointer w-full"
+                    className="bg-transparent text-xs sm:text-sm font-extrabold text-zinc-700 focus:outline-none cursor-pointer w-full"
                   >
-                    <option value="popular">Paling Favorit ⭐</option>
+                    <option value="popular">Paling Populer ⭐</option>
                     <option value="newest">Koleksi Terbaru</option>
-                    <option value="name">Urutan Abjad A-Z</option>
+                    <option value="name">Abjad A - Z</option>
                   </select>
                 </div>
+
+                <button
+                  onClick={() => setOnlyFavoritesFilter(!onlyFavoritesFilter)}
+                  className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl border-2 font-black text-xs transition-all flex-shrink-0 cursor-pointer ${onlyFavoritesFilter
+                    ? 'bg-rose-500 border-rose-500 text-white shadow-md shadow-rose-500/30'
+                    : 'bg-white/90 border-rose-100 text-rose-400 hover:bg-rose-50'
+                    }`}
+                  title="Filter Hanya Favorit"
+                >
+                  <Heart className={`w-4 h-4 ${onlyFavoritesFilter ? 'fill-white' : ''}`} />
+                  <span className="hidden sm:inline">Favorit ({favorites.size})</span>
+                </button>
+
+                <div className="flex bg-white/90 border-2 border-rose-100 rounded-2xl p-1 gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => setGridColsLayout('standard')}
+                    className={`p-2 rounded-xl transition-all cursor-pointer ${gridColsLayout === 'standard' ? 'bg-pink-500 text-white shadow-sm' : 'text-zinc-400 hover:text-pink-500'}`}
+                    title="Tampilan Standar"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setGridColsLayout('compact')}
+                    className={`p-2 rounded-xl transition-all cursor-pointer ${gridColsLayout === 'compact' ? 'bg-pink-500 text-white shadow-sm' : 'text-zinc-400 hover:text-pink-500'}`}
+                    title="Tampilan Rapat / Padat"
+                  >
+                    <Grid2X2 className="w-4 h-4" />
+                  </button>
+                </div>
+
                 <button
                   onClick={resetFilters}
-                  className="p-2.5 bg-rose-50/40 border border-rose-100 rounded-xl text-pink-400 hover:text-pink-600 flex-shrink-0"
+                  className="p-3 bg-white/90 border-2 border-rose-100 rounded-2xl text-rose-400 hover:text-rose-600 hover:bg-rose-50 shadow-sm transition-all flex-shrink-0 cursor-pointer"
+                  title="Reset Semua Filter"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  <RefreshCw className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
+            {/* Grid Slot Filters - 100% Functioning */}
             <div className="space-y-2">
-              <div className="text-[9px] font-black uppercase tracking-widest text-pink-400 flex items-center gap-1.5">
-                <Grid3x3 className="w-3.5 h-3.5" /> <span>Kuantitas Grid Slot</span>
+              <div className="text-[10px] font-black uppercase tracking-widest text-pink-500 flex items-center gap-1.5">
+                <Grid3x3 className="w-3.5 h-3.5" /> <span>Jumlah Slot Foto</span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {slotFilters.map((sf) => (
                   <button
                     key={sf.value}
                     onClick={() => setSlotFilter(sf.value)}
-                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${slotFilter === sf.value
-                      ? 'bg-gradient-to-r from-pink-400 to-rose-400 text-white border-transparent shadow-sm'
-                      : 'bg-white text-zinc-600 border border-rose-100 hover:border-pink-300'
+                    className={`px-4 py-2 rounded-2xl text-xs font-black transition-all duration-200 cursor-pointer ${slotFilter === sf.value
+                      ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md shadow-pink-500/25 scale-105'
+                      : 'bg-white/80 text-zinc-600 border-2 border-rose-100 hover:border-pink-300 hover:bg-white'
                       }`}
                   >
                     {sf.label}
@@ -993,11 +1063,12 @@ export const SelectFrame: React.FC = () => {
               </div>
             </div>
 
+            {/* Category Filters - 100% Functioning with Dynamic Badge Counts */}
             <div className="space-y-2">
-              <div className="text-[9px] font-black uppercase tracking-widest text-pink-400 flex items-center gap-1.5">
-                <Palette className="w-3.5 h-3.5 " /> <span>Kurasi Tema Estetika</span>
+              <div className="text-[10px] font-black uppercase tracking-widest text-pink-500 flex items-center gap-1.5">
+                <Palette className="w-3.5 h-3.5" /> <span>Kategori Tema Estetika</span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {categoryFilters.map((cf) => {
                   const isActive = categoryFilter === cf.value;
                   const count = getCategoryCount(cf.value);
@@ -1005,14 +1076,14 @@ export const SelectFrame: React.FC = () => {
                     <button
                       key={cf.value}
                       onClick={() => setCategoryFilter(cf.value)}
-                      className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 border transition-all ${isActive
-                        ? 'bg-gradient-to-r from-purple-400 to-pink-500 text-white border-transparent shadow-sm'
-                        : 'bg-white text-zinc-600 border border-rose-100 hover:border-pink-200'
+                      className={`px-4 py-2 rounded-2xl text-xs font-black flex items-center gap-2 transition-all duration-200 border-2 cursor-pointer ${isActive
+                        ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white border-transparent shadow-md shadow-purple-500/25 scale-105'
+                        : 'bg-white/80 text-zinc-600 border-rose-100 hover:border-purple-300 hover:bg-white'
                         }`}
                     >
                       <span>{cf.emoji}</span>
                       <span>{cf.label}</span>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded ${isActive ? 'bg-white/20 text-white' : 'bg-rose-50 text-pink-400'}`}>
+                      <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${isActive ? 'bg-white/25 text-white' : 'bg-rose-100 text-pink-600'}`}>
                         {count}
                       </span>
                     </button>
@@ -1022,14 +1093,17 @@ export const SelectFrame: React.FC = () => {
             </div>
           </div>
 
-          {/* KATALOG */}
+          {/* Catalog Display Section */}
           <div className="w-full">
             {filteredFrames.length > 0 ? (
               <motion.div
                 variants={gridVariants}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 w-full"
+                className={gridColsLayout === 'compact'
+                  ? "grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 w-full"
+                  : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 w-full"
+                }
               >
                 {filteredFrames.map((frame, idx) => {
                   const isTrending = trendingIds.includes(frame.id);
@@ -1056,21 +1130,32 @@ export const SelectFrame: React.FC = () => {
               </motion.div>
             ) : (
               <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-28 bg-white border-2 border-dashed border-rose-100 rounded-[28px] w-full"
+                className="text-center py-20 bg-white/80 backdrop-blur-2xl border-2 border-dashed border-rose-200 rounded-[36px] w-full p-6 shadow-sm"
               >
-                <Filter className="w-10 h-10 text-rose-200 mx-auto mb-3" />
-                <h3 className="font-serif text-lg text-zinc-700">Tidak ada bingkai ditemukan</h3>
-                <p className="text-zinc-400 text-xs mt-1">Coba sesuaikan kata saringan filter kamu di atas ya!</p>
+                <div className="w-16 h-16 bg-rose-100/80 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-400">
+                  <SlidersHorizontal className="w-8 h-8" />
+                </div>
+                <h3 className="font-extrabold text-lg text-zinc-800">Tidak ada bingkai yang cocok</h3>
+                <p className="text-zinc-500 text-xs mt-1 max-w-sm mx-auto font-medium">Coba ubah kata kunci pencarian atau reset filter kamu ya!</p>
                 <button
                   onClick={resetFilters}
-                  className="mt-5 px-5 py-2.5 bg-gradient-to-r from-pink-400 to-rose-400 text-white text-[10px] font-black tracking-widest uppercase rounded-xl"
+                  className="mt-5 px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-pink-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                 >
                   Setel Ulang Filter
                 </button>
               </motion.div>
             )}
+          </div>
+
+          <div className="flex items-center justify-between text-[10px] font-bold text-zinc-400 bg-white/60 backdrop-blur-md border border-white/60 px-5 py-2.5 rounded-full w-full">
+            <span className="flex items-center gap-1.5 text-zinc-500">
+              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" /> Live Ready &amp; Filter Active
+            </span>
+            <span className="flex items-center gap-1 text-pink-500">
+              <BookmarkCheck className="w-3.5 h-3.5" /> Auto-Sync Active
+            </span>
           </div>
 
         </div>
@@ -1084,7 +1169,7 @@ export const SelectFrame: React.FC = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-md flex items-center justify-center p-4"
             onClick={closePreview}
           >
             <motion.div
@@ -1092,54 +1177,53 @@ export const SelectFrame: React.FC = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="relative max-w-sm w-full bg-white border-4 border-rose-100 rounded-[32px] shadow-2xl overflow-hidden flex flex-col text-center"
+              className="relative max-w-sm w-full bg-white/95 backdrop-blur-2xl border-2 border-white rounded-[36px] shadow-2xl overflow-hidden flex flex-col text-center"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={closePreview} className="absolute top-4 right-4 z-20 w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-pink-400">
+              <button onClick={closePreview} className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-pink-600 hover:bg-rose-200 transition-colors cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="p-6 pt-10 overflow-y-auto">
-                <span className="text-[9px] font-black tracking-widest text-pink-400 uppercase mb-4 block">✨ PRATINJAU BINGKAI ✨</span>
+              <div className="p-6 pt-8 overflow-y-auto">
+                <span className="text-[10px] font-black tracking-widest text-pink-500 uppercase mb-3 block">✨ PRATINJAU BINGKAI ✨</span>
 
-                {(() => {
-                  const previewStyle = categoryStyles[previewFrame.category] || categoryStyles.filmstrip;
-                  return (
-                    <div className={`relative rounded-2xl border border-rose-100 bg-gradient-to-br ${previewStyle.bg} p-6 aspect-[3/4] flex items-center justify-center shadow-inner overflow-hidden`}>
-                      <img src={previewFrame.src} alt={previewFrame.name} className="max-w-full max-h-full object-contain drop-shadow-md" />
-                    </div>
-                  );
-                })()}
+                <div className={`relative rounded-3xl border-2 ${getCategoryBgGradient(previewFrame.category)} p-4 aspect-[3/4] flex items-center justify-center shadow-inner overflow-hidden`}>
+                  <div className="relative w-full h-full bg-white rounded-2xl shadow-xl border border-white/90 p-3 flex items-center justify-center overflow-hidden">
+                    <img src={previewFrame.src} alt={previewFrame.name} className="max-w-full max-h-full object-contain filter drop-shadow-md" />
+                  </div>
+                </div>
 
-                <div className="flex items-center justify-center gap-2 mt-5">
-                  <h3 className="font-serif text-xl font-bold text-zinc-950 leading-tight">{previewFrame.name}</h3>
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <h3 className="font-extrabold text-xl text-zinc-900 leading-tight">{previewFrame.name}</h3>
                   <button
                     onClick={(e) => handleOpenRename(previewFrame, e)}
-                    className="w-7 h-7 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-400 hover:bg-sky-500 hover:text-white transition-colors flex-shrink-0"
+                    className="w-7 h-7 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-500 hover:bg-sky-500 hover:text-white transition-colors flex-shrink-0 cursor-pointer"
+                    title="Ubah Nama"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <div className="flex items-center justify-center gap-2 mt-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
-                  <span className="bg-pink-50 border border-pink-100 px-2 py-0.5 rounded text-[10px] text-pink-500 capitalize">
+
+                <div className="flex items-center justify-center gap-2 mt-2 text-xs font-black uppercase tracking-wider text-zinc-400">
+                  <span className="bg-pink-100/80 border border-pink-200 px-3 py-0.5 rounded-full text-[10px] text-pink-600 capitalize">
                     {previewFrame.category}
                   </span>
-                  <span className="flex items-center gap-1"><Images className="w-3.5 h-3.5 text-pink-400" /> {previewFrame.slots} Slots</span>
+                  <span className="flex items-center gap-1 text-zinc-500"><Images className="w-3.5 h-3.5 text-pink-500" /> {previewFrame.slots} Slots</span>
                 </div>
               </div>
 
-              <div className="p-6 border-t border-rose-100/60 bg-[#FFFDF9] flex gap-3 relative">
+              <div className="p-5 border-t border-rose-100 bg-rose-50/50 flex gap-3 relative">
                 <button
                   onClick={closePreview}
                   disabled={isConfirmingSelection}
-                  className="flex-1 py-3 bg-white border-2 border-rose-100 rounded-xl font-bold text-xs text-zinc-500"
+                  className="flex-1 py-3 bg-white border-2 border-rose-200 rounded-2xl font-bold text-xs text-zinc-600 hover:bg-rose-50 transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleConfirmSelectFrame}
                   disabled={isConfirmingSelection}
-                  className="flex-1 py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white font-black text-xs tracking-widest uppercase rounded-xl shadow-md flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-xs tracking-wider uppercase rounded-2xl shadow-lg shadow-pink-500/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isConfirmingSelection ? 'Memuat...' : 'Mulai Foto! ✨'}
                 </button>
@@ -1155,9 +1239,9 @@ export const SelectFrame: React.FC = () => {
                           <motion.span
                             key={p.id}
                             initial={{ x: 0, y: 0, opacity: 1, scale: 0.5, rotate: 0 }}
-                            animate={{ x, y, opacity: 0, scale: 1.2, rotate: p.angle }}
+                            animate={{ x, y, opacity: 0, scale: 1.4, rotate: p.angle }}
                             transition={{ duration: 0.9, delay: p.delay, ease: 'easeOut' }}
-                            className="absolute text-xl"
+                            className="absolute text-xl filter drop-shadow-[0_0_8px_rgba(244,114,182,0.8)]"
                           >
                             {p.emoji}
                           </motion.span>
@@ -1180,7 +1264,7 @@ export const SelectFrame: React.FC = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 z-[70] bg-zinc-950/40 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-[70] bg-zinc-950/60 backdrop-blur-md flex items-center justify-center p-4"
             onClick={handleCloseRename}
           >
             <motion.div
@@ -1188,31 +1272,31 @@ export const SelectFrame: React.FC = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="relative max-w-sm w-full bg-white border-4 border-rose-100 rounded-[28px] shadow-2xl overflow-hidden flex flex-col text-left"
+              className="relative max-w-sm w-full bg-white/95 backdrop-blur-2xl border-2 border-white rounded-[36px] shadow-2xl overflow-hidden flex flex-col text-left"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={handleCloseRename} className="absolute top-4 right-4 z-20 w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-pink-400">
+              <button onClick={handleCloseRename} className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-pink-600 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
 
               <div className="p-6">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-500 flex-shrink-0">
+                <div className="flex items-center gap-3.5 mb-4">
+                  <div className="w-10 h-10 rounded-2xl bg-sky-100 border border-sky-200 flex items-center justify-center text-sky-600 flex-shrink-0">
                     <Pencil className="w-4 h-4" />
                   </div>
                   <div>
-                    <h2 className="font-serif text-lg font-bold text-zinc-800">Ubah Nama Frame</h2>
-                    <p className="text-[10px] text-zinc-400 font-light mt-0.5">Nama baru akan tampil di seluruh katalog.</p>
+                    <h2 className="font-extrabold text-lg text-zinc-900">Ubah Nama Frame</h2>
+                    <p className="text-[11px] text-zinc-400 font-semibold">Nama baru akan tampil di seluruh katalog.</p>
                   </div>
                 </div>
 
                 {renameError && (
-                  <div className="bg-rose-50 border border-rose-100 text-rose-500 text-xs px-4 py-2.5 rounded-xl mb-4">
+                  <div className="bg-rose-50 border border-rose-200 text-rose-500 text-xs px-3.5 py-2 rounded-2xl mb-3 font-semibold">
                     {renameError}
                   </div>
                 )}
 
-                <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1">Nama Frame</label>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1.5">Nama Baru</label>
                 <input
                   type="text"
                   value={renameValue}
@@ -1220,17 +1304,17 @@ export const SelectFrame: React.FC = () => {
                   onKeyDown={(e) => { if (e.key === 'Enter') handleSaveRename(); }}
                   autoFocus
                   placeholder="Masukkan nama frame..."
-                  className="w-full px-3 py-2.5 bg-zinc-50 border border-rose-100 rounded-xl text-sm text-zinc-800 focus:outline-none focus:border-pink-300"
+                  className="w-full px-4 py-3 bg-white border-2 border-rose-100 focus:border-pink-400 rounded-2xl text-xs sm:text-sm text-zinc-800 focus:outline-none focus:ring-4 focus:ring-pink-100 transition-all shadow-sm font-semibold"
                 />
               </div>
 
-              <div className="p-6 pt-0 flex flex-col gap-2">
-                <div className="flex gap-3">
-                  <button onClick={handleCloseRename} className="flex-1 py-2.5 bg-white border-2 border-rose-100 rounded-xl text-xs font-bold text-zinc-500">Batal</button>
-                  <button onClick={handleSaveRename} className="flex-1 py-2.5 bg-gradient-to-r from-pink-400 to-rose-400 text-white font-black text-xs tracking-widest uppercase rounded-xl shadow-md">Simpan</button>
+              <div className="p-5 pt-0 flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <button onClick={handleCloseRename} className="flex-1 py-3 bg-white border-2 border-rose-200 rounded-2xl text-xs font-bold text-zinc-600 hover:bg-rose-50 transition-colors cursor-pointer">Batal</button>
+                  <button onClick={handleSaveRename} className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-xs tracking-wider uppercase rounded-2xl shadow-md cursor-pointer">Simpan</button>
                 </div>
                 {frameNameOverrides[renameTarget.id] && (
-                  <button onClick={handleResetRenameToDefault} className="text-[10px] font-bold text-zinc-400 hover:text-rose-500 self-center mt-1">Kembalikan ke nama asli</button>
+                  <button onClick={handleResetRenameToDefault} className="text-[10px] font-bold text-zinc-400 hover:text-rose-500 self-center mt-1 cursor-pointer">Kembalikan ke nama awal</button>
                 )}
               </div>
             </motion.div>
@@ -1246,7 +1330,7 @@ export const SelectFrame: React.FC = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 z-[80] bg-zinc-950/40 backdrop-blur-md flex items-center justify-center p-4 select-none"
+            className="fixed inset-0 z-[80] bg-zinc-950/60 backdrop-blur-md flex items-center justify-center p-4 select-none"
             onClick={handleCloseDeleteConfirm}
           >
             <motion.div
@@ -1254,32 +1338,32 @@ export const SelectFrame: React.FC = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="relative max-w-sm w-full bg-white border-4 border-rose-100 rounded-[28px] shadow-2xl overflow-hidden flex flex-col text-center p-6 md:p-8"
+              className="relative max-w-sm w-full bg-white/95 backdrop-blur-2xl border-2 border-white rounded-[36px] shadow-2xl overflow-hidden flex flex-col text-center p-6 md:p-8"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={handleCloseDeleteConfirm} className="absolute top-4 right-4 z-20 w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-400 hover:bg-rose-100 transition-colors">
+              <button onClick={handleCloseDeleteConfirm} className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-rose-500 hover:bg-rose-200 transition-colors cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="w-14 h-14 bg-rose-50 border border-rose-200 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce" style={{ animationDuration: '2s' }}>
-                <Trash2 className="w-7 h-7 text-rose-500" />
+              <div className="w-14 h-14 bg-rose-100 border border-rose-200 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce" style={{ animationDuration: '2s' }}>
+                <Trash2 className="w-6 h-6 text-rose-500" />
               </div>
 
-              <h2 className="font-serif text-xl font-bold text-zinc-800 mb-1">Hapus Bingkai Ini?</h2>
-              <p className="text-xs text-zinc-500 leading-relaxed mb-5">
-                Apakah Anda yakin ingin menghapus bingkai <span className="font-bold text-zinc-800">"{deleteTarget.name}"</span>? Bingkai ini tidak akan lagi ditampilkan di katalog Anda.
+              <h2 className="font-extrabold text-xl text-zinc-900 mb-1">Hapus Bingkai Ini?</h2>
+              <p className="text-xs text-zinc-500 leading-relaxed mb-6 font-medium">
+                Apakah Anda yakin ingin menghapus bingkai <span className="font-extrabold text-zinc-800">"{deleteTarget.name}"</span>? Bingkai ini tidak akan lagi ditampilkan di katalog Anda.
               </p>
 
               <div className="flex gap-3">
                 <button
                   onClick={handleCloseDeleteConfirm}
-                  className="flex-1 py-3 bg-white border-2 border-rose-100 rounded-xl text-xs font-bold text-zinc-500 hover:bg-rose-50 transition-colors"
+                  className="flex-1 py-3 bg-white border-2 border-rose-200 rounded-2xl text-xs font-bold text-zinc-600 hover:bg-rose-50 transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleConfirmDelete}
-                  className="flex-1 py-3 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xs tracking-wider uppercase rounded-xl shadow-md transition-all"
+                  className="flex-1 py-3 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xs tracking-wider uppercase rounded-2xl shadow-md transition-all cursor-pointer"
                 >
                   Hapus Bingkai
                 </button>
@@ -1312,63 +1396,63 @@ export const SelectFrame: React.FC = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 z-[60] bg-zinc-950/40 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-[60] bg-zinc-950/60 backdrop-blur-md flex items-center justify-center p-4"
             onClick={() => setIsUploadModalOpen(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-xl bg-white border-4 border-rose-100 rounded-[28px] shadow-xl overflow-hidden max-h-[92vh] flex flex-col text-left"
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-lg bg-white/95 backdrop-blur-2xl border-2 border-white rounded-[36px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col text-left"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={() => setIsUploadModalOpen(false)} className="absolute top-5 right-5 z-20 w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-pink-500">
+              <button onClick={() => setIsUploadModalOpen(false)} className="absolute top-5 right-5 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-pink-600 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
 
               <div className="overflow-y-auto p-6 md:p-8 flex-1">
-                <div className="flex items-center gap-4 mb-6 pb-4 border-b border-rose-100">
-                  <div className="w-11 h-11 rounded-xl bg-zinc-950 flex items-center justify-center text-white">
+                <div className="flex items-center gap-3.5 mb-6 pb-4 border-b border-rose-100">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 flex items-center justify-center text-white shadow-md">
                     <Upload className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <h2 className="font-serif text-xl font-bold text-zinc-800">Unggah Frame Kustom</h2>
-                    <p className="text-[11px] text-zinc-400 font-light mt-0.5">Sistem otomatis mendeteksi transparansi lubang cetakan piksel.</p>
+                    <h2 className="font-extrabold text-xl text-zinc-900">Unggah Frame Kustom</h2>
+                    <p className="text-[11px] text-zinc-400 font-semibold">Sistem otomatis mendeteksi transparansi lubang cetakan piksel.</p>
                   </div>
                 </div>
 
                 {uploadSuccess ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-                    <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle2 className="w-6 h-6" />
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+                    <div className="w-14 h-14 bg-emerald-100 border border-emerald-200 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <CheckCircle2 className="w-7 h-7" />
                     </div>
-                    <h3 className="text-lg font-serif font-black text-zinc-800">Berhasil Terdaftar!</h3>
+                    <h3 className="text-lg font-extrabold text-zinc-800">Berhasil Terdaftar!</h3>
                   </motion.div>
                 ) : (
-                  <div className="space-y-5">
+                  <div className="space-y-4">
                     {uploadError && (
-                      <div className="bg-rose-50 border border-rose-100 text-rose-500 text-xs px-4 py-2.5 rounded-xl">
+                      <div className="bg-rose-50 border border-rose-200 text-rose-500 text-xs px-4 py-2.5 rounded-2xl font-semibold">
                         {uploadError}
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1">Nama Aset *</label>
+                        <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">Nama Frame *</label>
                         <input
                           type="text"
                           value={uploadName}
                           onChange={(e) => setUploadName(e.target.value)}
                           placeholder="Ex: My Frame"
-                          className="w-full px-3 py-2.5 bg-zinc-50 border border-rose-100 rounded-xl text-xs text-zinc-800 focus:outline-none"
+                          className="w-full px-3.5 py-2.5 bg-white border border-rose-100 rounded-2xl text-xs text-zinc-800 focus:outline-none focus:ring-2 focus:ring-pink-300 font-semibold"
                         />
                       </div>
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1">Style Rupa</label>
+                        <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">Style Rupa</label>
                         <select
                           value={uploadCategory}
                           onChange={(e) => setUploadCategory(e.target.value as any)}
-                          className="w-full px-3 py-2.5 bg-zinc-50 border border-rose-100 rounded-xl text-xs text-zinc-700 font-bold focus:outline-none cursor-pointer"
+                          className="w-full px-3.5 py-2.5 bg-white border border-rose-100 rounded-2xl text-xs text-zinc-700 font-black focus:outline-none cursor-pointer"
                         >
                           <option value="custom">Custom Canvas</option>
                           <option value="cute">Cute Kawaii</option>
@@ -1379,11 +1463,11 @@ export const SelectFrame: React.FC = () => {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1">Kuantitas Grid</label>
+                        <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">Grid Slot</label>
                         <select
                           value={uploadSlots}
                           onChange={(e) => handleSlotsChange(Number(e.target.value))}
-                          className="w-full px-3 py-2.5 bg-zinc-50 border border-rose-100 rounded-xl text-xs text-zinc-700 font-black focus:outline-none cursor-pointer"
+                          className="w-full px-3.5 py-2.5 bg-white border border-rose-100 rounded-2xl text-xs text-zinc-700 font-black focus:outline-none cursor-pointer"
                         >
                           {[1, 2, 3, 4, 6, 8].map(n => <option key={n} value={n}>{n} Slot Placeholder</option>)}
                         </select>
@@ -1391,7 +1475,7 @@ export const SelectFrame: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-wider text-zinc-400 mb-1">File Gambar *</label>
+                      <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">File Gambar *</label>
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -1402,25 +1486,25 @@ export const SelectFrame: React.FC = () => {
                       />
 
                       {!previewSrc ? (
-                        <button onClick={() => fileInputRef.current?.click()} className="w-full py-8 border-2 border-dashed border-rose-200/80 hover:border-pink-300 rounded-xl bg-rose-50/20 hover:bg-rose-50/40 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors">
-                          <Upload className="w-5 h-5 text-pink-400 animate-bounce" />
-                          <span className="text-xs font-bold text-zinc-700">Pilih berkas kompilasi gambar</span>
-                          <span className="text-[9px] text-zinc-400">PNG, JPG, WEBP maks 15 MB</span>
+                        <button onClick={() => fileInputRef.current?.click()} className="w-full py-8 border-2 border-dashed border-rose-200 hover:border-pink-400 rounded-2xl bg-rose-50/40 hover:bg-rose-50/70 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors">
+                          <Upload className="w-6 h-6 text-pink-500 animate-bounce" />
+                          <span className="text-xs font-extrabold text-zinc-700">Pilih berkas kompilasi gambar</span>
+                          <span className="text-[10px] text-zinc-400 font-semibold">PNG, JPG, WEBP maks 15 MB</span>
                         </button>
                       ) : (
-                        <div className="px-4 py-2 bg-zinc-50 border border-rose-100 rounded-xl flex justify-between items-center text-[10px]">
-                          <span className="font-mono text-zinc-400 font-bold">{uploadImageDims && `${uploadImageDims.w} × ${uploadImageDims.h} px`}</span>
-                          <div className="flex gap-4 font-bold">
-                            <button onClick={() => fileInputRef.current?.click()} className="text-zinc-600">Ganti</button>
-                            <button onClick={handleRemoveImage} className="text-rose-500">Buang</button>
+                        <div className="px-4 py-2.5 bg-rose-50/50 border border-rose-100 rounded-2xl flex justify-between items-center text-xs">
+                          <span className="font-mono text-zinc-500 font-bold">{uploadImageDims && `${uploadImageDims.w} × ${uploadImageDims.h} px`}</span>
+                          <div className="flex gap-3 font-extrabold">
+                            <button onClick={() => fileInputRef.current?.click()} className="text-zinc-600 hover:text-pink-600 cursor-pointer">Ganti</button>
+                            <button onClick={handleRemoveImage} className="text-rose-500 hover:text-rose-700 cursor-pointer">Buang</button>
                           </div>
                         </div>
                       )}
                     </div>
 
                     {previewSrc && uploadImageDims && (
-                      <div className="space-y-3 bg-zinc-50 border border-rose-100 rounded-xl p-4">
-                        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black ${isAutoDetecting ? 'bg-sky-50 border border-sky-100 text-sky-500' : 'bg-emerald-50 border border-emerald-200 text-emerald-600'}`}>
+                      <div className="space-y-3 bg-zinc-50 border border-rose-100 rounded-2xl p-4">
+                        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black ${isAutoDetecting ? 'bg-sky-50 border border-sky-100 text-sky-600' : 'bg-emerald-50 border border-emerald-200 text-emerald-600'}`}>
                           {isAutoDetecting ? (
                             <>
                               <ScanSearch className="w-3.5 h-3.5 animate-pulse" />
@@ -1434,7 +1518,7 @@ export const SelectFrame: React.FC = () => {
                           )}
                         </div>
 
-                        <span className="text-[9px] font-black uppercase text-zinc-400 block">Pratinjau Bingkai</span>
+                        <span className="text-[10px] font-black uppercase text-zinc-400 block">Pratinjau Bingkai</span>
 
                         <div
                           className="relative border border-rose-100 rounded-xl overflow-hidden mx-auto bg-white flex items-center justify-center shadow-sm"
@@ -1449,7 +1533,7 @@ export const SelectFrame: React.FC = () => {
                         </div>
 
                         <div className="flex justify-end items-center text-[10px] font-bold">
-                          <button onClick={_handleResetAll} className="text-zinc-500 hover:text-pink-500 transition-colors">
+                          <button onClick={_handleResetAll} className="text-zinc-500 hover:text-pink-500 transition-colors cursor-pointer">
                             Deteksi Ulang
                           </button>
                         </div>
@@ -1460,12 +1544,12 @@ export const SelectFrame: React.FC = () => {
               </div>
 
               {!uploadSuccess && (
-                <div className="p-6 border-t border-rose-100/60 bg-[#FFFDF9] flex gap-3">
-                  <button onClick={() => setIsUploadModalOpen(false)} className="flex-1 py-3 bg-white border-2 border-rose-100 rounded-xl text-xs font-bold text-zinc-500 hover:bg-rose-50/50 transition-colors">Batal</button>
+                <div className="p-5 border-t border-rose-100 bg-rose-50/50 flex gap-3">
+                  <button onClick={() => setIsUploadModalOpen(false)} className="flex-1 py-3 bg-white border-2 border-rose-200 rounded-2xl text-xs font-bold text-zinc-600 hover:bg-rose-50 transition-colors cursor-pointer">Batal</button>
                   <button
                     onClick={handleUploadSubmit}
                     disabled={!uploadName.trim() || !previewSrc || isAutoDetecting}
-                    className="flex-1 py-3 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-black text-xs tracking-widest uppercase rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs tracking-wider uppercase rounded-2xl shadow-lg shadow-pink-500/25 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   >
                     Daftarkan Frame ✨
                   </button>

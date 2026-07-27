@@ -63,85 +63,7 @@ async function loadFrameAtExactSize(
   }
 }
 
-function keyOutBackgroundColor(canvas: HTMLCanvasElement, tolerance = 28): HTMLCanvasElement {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return canvas;
-  const w = canvas.width;
-  const h = canvas.height;
-  const imgData = ctx.getImageData(0, 0, w, h);
-  const data = imgData.data;
 
-  const sampleSize = Math.max(8, Math.min(40, Math.floor(w / 3), Math.floor(h / 3)));
-  const regions: { x0: number; y0: number }[] = [
-    { x0: 0, y0: 0 },
-    { x0: Math.max(0, w - sampleSize), y0: 0 },
-    { x0: 0, y0: Math.max(0, h - sampleSize) },
-    { x0: Math.max(0, w - sampleSize), y0: Math.max(0, h - sampleSize) },
-    { x0: Math.max(0, Math.floor(w / 2 - sampleSize / 2)), y0: 0 },
-    { x0: Math.max(0, Math.floor(w / 2 - sampleSize / 2)), y0: Math.max(0, h - sampleSize) },
-  ];
-
-  const colorCounts: Record<string, number> = {};
-
-  regions.forEach(({ x0, y0 }) => {
-    for (let y = y0; y < y0 + sampleSize; y++) {
-      for (let x = x0; x < x0 + sampleSize; x++) {
-        if (x < 0 || y < 0 || x >= w || y >= h) continue;
-        const idx = (y * w + x) * 4;
-        const r = data[idx];
-        const g = data[idx + 1];
-        const b = data[idx + 2];
-        const a = data[idx + 3];
-
-        if (a < 15) continue;
-
-        const qr = Math.round(r / 16) * 16;
-        const qg = Math.round(g / 16) * 16;
-        const qb = Math.round(b / 16) * 16;
-        const key = `${qr},${qg},${qb}`;
-        colorCounts[key] = (colorCounts[key] || 0) + 1;
-      }
-    }
-  });
-
-  const sortedColors = Object.entries(colorCounts).sort((a, b) => b[1] - a[1]);
-  if (sortedColors.length === 0) return canvas;
-
-  const parseRGB = (str: string) => str.split(',').map(Number);
-  const colorA = parseRGB(sortedColors[0][0]);
-
-  let colorB: number[] | null = null;
-  for (let i = 1; i < sortedColors.length; i++) {
-    const c = parseRGB(sortedColors[i][0]);
-    const dist = Math.sqrt((c[0] - colorA[0]) ** 2 + (c[1] - colorA[1]) ** 2 + (c[2] - colorA[2]) ** 2);
-    if (dist > 50) {
-      colorB = c;
-      break;
-    }
-  }
-
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    const a = data[i + 3];
-
-    if (a === 0) continue;
-
-    const distA = Math.sqrt((r - colorA[0]) ** 2 + (g - colorA[1]) ** 2 + (b - colorA[2]) ** 2);
-    let distB = 999999;
-    if (colorB) {
-      distB = Math.sqrt((r - colorB[0]) ** 2 + (g - colorB[1]) ** 2 + (b - colorB[2]) ** 2);
-    }
-
-    if (distA <= tolerance || distB <= tolerance) {
-      data[i + 3] = 0;
-    }
-  }
-
-  ctx.putImageData(imgData, 0, 0);
-  return canvas;
-}
 
 // Foto punya "zoom" per-slot yang bisa diubah user (scroll-wheel / tombol
 // +-), disimpan di photoTransforms[index].zoom. Ini cuma step besaran
@@ -270,7 +192,9 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
     setSelectedId,
     appliedFilter,
     frameColor,
-    frameStyle,
+    cardColor,
+    lineColor,
+    borderThickness,
     borderRadius,
     shadowIntensity,
     shadowBlur,
@@ -358,20 +282,41 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
         return;
       }
 
+      const effectiveCard = (cardColor && cardColor !== 'original') ? cardColor : (frameColor && frameColor !== 'original' ? frameColor : null);
+      const hasCustomCard = effectiveCard && effectiveCard !== 'transparent';
       const detected = detectTransparentSlots(frameCanvas, slotCoords.length);
-      if (frameColor !== 'original') keyOutBackgroundColor(frameCanvas, 28);
-
       let finalSlotCoords = slotCoords;
       if (detected.length === slotCoords.length) {
-        finalSlotCoords = detected.map((dSlot, idx) => {
-          const hardcoded = slotCoords[idx];
-          if (!hardcoded) return dSlot;
-          const detectedArea = dSlot.w * dSlot.h;
-          const hardcodedArea = hardcoded.w * hardcoded.h;
-          const isTooSmall = hardcodedArea > detectedArea * 1.08;
-          const isTooLarge = detectedArea > hardcodedArea * 1.15;
-          const chosen = (isTooSmall || isTooLarge) ? hardcoded : dSlot;
-          return { ...chosen, rx: hardcoded.rx };
+        const usedDetectedIndices = new Set<number>();
+        finalSlotCoords = slotCoords.map((hardcoded) => {
+          const hCenterX = hardcoded.x + hardcoded.w / 2;
+          const hCenterY = hardcoded.y + hardcoded.h / 2;
+
+          let bestDist = Infinity;
+          let bestIdx = -1;
+
+          detected.forEach((dSlot, dIdx) => {
+            if (usedDetectedIndices.has(dIdx)) return;
+            const dCenterX = dSlot.x + dSlot.w / 2;
+            const dCenterY = dSlot.y + dSlot.h / 2;
+            const dist = Math.hypot(dCenterX - hCenterX, dCenterY - hCenterY);
+            if (dist < bestDist) {
+              bestDist = dist;
+              bestIdx = dIdx;
+            }
+          });
+
+          if (bestIdx !== -1 && bestDist < Math.max(hardcoded.w, hardcoded.h) * 0.8) {
+            usedDetectedIndices.add(bestIdx);
+            const dSlot = detected[bestIdx];
+            const detectedArea = dSlot.w * dSlot.h;
+            const hardcodedArea = hardcoded.w * hardcoded.h;
+            const isTooSmall = hardcodedArea > detectedArea * 1.2;
+            const isTooLarge = detectedArea > hardcodedArea * 1.25;
+            const chosen = (isTooSmall || isTooLarge) ? hardcoded : dSlot;
+            return { ...chosen, rx: hardcoded.rx };
+          }
+          return hardcoded;
         });
       }
 
@@ -389,52 +334,48 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
       ctx.clearRect(0, 0, frameWidth, frameHeight);
       ctx.globalAlpha = frameOpacity;
 
-      if (frameColor !== 'original') {
-        let fillStyle: string | CanvasGradient | CanvasPattern = '#ffffff';
-        if (frameColor.startsWith('#')) fillStyle = frameColor;
-        else {
-          const colorOpt = frameColors.find(c => c.id === frameColor);
-          if (colorOpt) fillStyle = colorOpt.getFill(ctx, frameWidth, frameHeight);
+      // 1. WARNA LATAR BELAKANG FRAME (Frame Card & Paper Fill)
+      if (hasCustomCard) {
+        let cardFillStyle: string | CanvasGradient | CanvasPattern = effectiveCard;
+        if (!effectiveCard.startsWith('#')) {
+          const fcOpt = frameColors.find(c => c.id === effectiveCard);
+          if (fcOpt) cardFillStyle = fcOpt.getFill(ctx, frameWidth, frameHeight);
         }
-        ctx.fillStyle = fillStyle;
+
+        ctx.fillStyle = cardFillStyle;
         ctx.fillRect(0, 0, frameWidth, frameHeight);
       }
 
-      if (frameStyle === 'glassmorphism') {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.fillRect(0, 0, frameWidth, frameHeight);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(2, 2, frameWidth - 4, frameHeight - 4);
-      } else if (frameStyle === 'gradient') {
-        const grad = ctx.createLinearGradient(0, 0, 0, frameHeight);
-        grad.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-        grad.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, frameWidth, frameHeight);
-      }
-
-      if (frameColor !== 'original') {
-        ctx.filter = 'drop-shadow(0px 0px 3px rgba(255, 255, 255, 0.95))';
-        ctx.drawImage(frameCanvas, 0, 0);
-        ctx.filter = 'none';
-      }
-
+      // Gambar frame artwork/dividers di atas warna latar belakang
       ctx.drawImage(frameCanvas, 0, 0);
-      ctx.globalAlpha = 1;
 
-      let hasAlpha = false;
-      const frameImgData = ctx.getImageData(0, 0, frameWidth, frameHeight);
-      const frameData = frameImgData.data;
-      for (let i = 3; i < frameData.length; i += 40) {
-        if (frameData[i] < 220) {
-          hasAlpha = true;
-          break;
+      // 2. GARIS BORDER / PEMBATAS (Custom Line & Border Overlay)
+      const hasCustomLine = lineColor && lineColor !== 'original';
+
+      if (hasCustomLine) {
+        let lineFillStyle: string | CanvasGradient | CanvasPattern = lineColor;
+        if (!lineColor.startsWith('#')) {
+          const fcOpt = frameColors.find(c => c.id === lineColor);
+          if (fcOpt) lineFillStyle = fcOpt.getFill(ctx, frameWidth, frameHeight);
         }
+
+        const lineCanvas = document.createElement('canvas');
+        lineCanvas.width = frameWidth;
+        lineCanvas.height = frameHeight;
+        const lctx = lineCanvas.getContext('2d');
+        if (lctx) {
+          lctx.drawImage(frameCanvas, 0, 0);
+          lctx.globalCompositeOperation = 'source-in';
+          lctx.fillStyle = lineFillStyle;
+          lctx.fillRect(0, 0, frameWidth, frameHeight);
+        }
+        ctx.drawImage(lineCanvas, 0, 0);
       }
 
-      if (!hasAlpha) {
-        ctx.globalCompositeOperation = 'destination-out';
+      // Step C: STROKE BORDER (jika borderThickness > 0)
+      if (borderThickness > 0) {
+        ctx.strokeStyle = lineColor && lineColor !== 'original' && lineColor.startsWith('#') ? lineColor : '#18181b';
+        ctx.lineWidth = borderThickness;
         finalSlotCoords.forEach((slot) => {
           const rx = slot.rx || 0;
           if (rx > 0) {
@@ -449,19 +390,42 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWid
             ctx.lineTo(slot.x, slot.y + rx);
             ctx.quadraticCurveTo(slot.x, slot.y, slot.x + rx, slot.y);
             ctx.closePath();
-            ctx.fill();
+            ctx.stroke();
           } else {
-            ctx.fillRect(slot.x, slot.y, slot.w, slot.h);
+            ctx.strokeRect(slot.x, slot.y, slot.w, slot.h);
           }
         });
       }
+
+      // Step D: POTONG SLOT FOTO (destination-out)
+      ctx.globalCompositeOperation = 'destination-out';
+      finalSlotCoords.forEach((slot) => {
+        const rx = slot.rx || 0;
+        if (rx > 0) {
+          ctx.beginPath();
+          ctx.moveTo(slot.x + rx, slot.y);
+          ctx.lineTo(slot.x + slot.w - rx, slot.y);
+          ctx.quadraticCurveTo(slot.x + slot.w, slot.y, slot.x + slot.w, slot.y + rx);
+          ctx.lineTo(slot.x + slot.w, slot.y + slot.h - rx);
+          ctx.quadraticCurveTo(slot.x + slot.w, slot.y + slot.h, slot.x + slot.w - rx, slot.y + slot.h);
+          ctx.lineTo(slot.x + rx, slot.y + slot.h);
+          ctx.quadraticCurveTo(slot.x, slot.y + slot.h, slot.x, slot.y + slot.h - rx);
+          ctx.lineTo(slot.x, slot.y + rx);
+          ctx.quadraticCurveTo(slot.x, slot.y, slot.x + rx, slot.y);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.fillRect(slot.x, slot.y, slot.w, slot.h);
+        }
+      });
+      ctx.globalCompositeOperation = 'source-over';
 
       if (!cancelled) setProcessedFrameImg(outputCanvas);
     }
 
     processFrame();
     return () => { cancelled = true; };
-  }, [frameSrc, slotCoords, frameWidth, frameHeight, frameColor, frameStyle, frameOpacity]);
+  }, [frameSrc, slotCoords, frameWidth, frameHeight, frameColor, cardColor, lineColor, borderThickness, frameOpacity]);
 
   const [loadedPhotos, setLoadedPhotos] = useState<(HTMLImageElement | null)[]>([]);
 
