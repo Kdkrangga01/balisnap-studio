@@ -561,7 +561,7 @@ export const Capture: React.FC = () => {
             {/* LEFT COLUMN: WEBCAM VIEWFINDER */}
             <div className="lg:col-span-8 flex flex-col justify-center gap-2 sm:gap-2.5 h-full w-full min-h-0 overflow-hidden relative">
 
-              {/* PERBAIKAN: Washi Tape Badge posisi aman (top-1) & rapih tanpa kepotong */}
+              {/* Badge Washi Tape */}
               <div className="absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 px-3.5 h-5 sm:h-6 bg-purple-300/80 backdrop-blur-md border border-white/80 skew-x-[-12deg] z-30 shadow-sm pointer-events-none flex items-center justify-center text-[8px] sm:text-[9px] text-purple-900 font-black tracking-widest uppercase rounded-sm">
                 BALISNAP FX STUDIO
               </div>
