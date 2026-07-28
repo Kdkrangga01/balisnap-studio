@@ -38,10 +38,14 @@ function resolveColorToFill(
   return colorId;
 }
 
-// Helper function to apply color filters directly onto photo image
-function applyFilterToImage(img: HTMLImageElement, filterType: FilterType): Promise<HTMLImageElement> {
+// Helper function to apply color filters & fine-tuning directly onto photo image
+function applyFilterToImage(
+  img: HTMLImageElement,
+  filterType: FilterType,
+  fineTuning?: any
+): Promise<HTMLImageElement> {
   return new Promise((resolve) => {
-    if (!img || filterType === 'normal') return resolve(img);
+    if (!img) return resolve(img);
 
     try {
       const canvas = document.createElement('canvas');
@@ -52,53 +56,58 @@ function applyFilterToImage(img: HTMLImageElement, filterType: FilterType): Prom
       const ctx = canvas.getContext('2d');
       if (!ctx) return resolve(img);
 
-      ctx.drawImage(img, 0, 0, w, h);
-      const imgData = ctx.getImageData(0, 0, w, h);
-      const data = imgData.data;
+      // Apply Retouch Pro & Fine-Tuning filters
+      const b = fineTuning?.brightness ?? 100;
+      const c = fineTuning?.contrast ?? 100;
+      const s = fineTuning?.saturation ?? 100;
+      const sf = fineTuning?.softFocus ?? 0;
 
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
+      const filterParts = [];
+      if (b !== 100) filterParts.push(`brightness(${b}%)`);
+      if (c !== 100) filterParts.push(`contrast(${c}%)`);
+      if (s !== 100) filterParts.push(`saturate(${s}%)`);
+      if (sf > 0) filterParts.push(`blur(${sf}px)`);
 
-        if (filterType === 'grayscale') {
-          const avg = 0.299 * r + 0.587 * g + 0.114 * b;
-          data[i] = avg;
-          data[i + 1] = avg;
-          data[i + 2] = avg;
-        } else if (filterType === 'sepia') {
-          const tr = 0.393 * r + 0.769 * g + 0.189 * b;
-          const tg = 0.349 * r + 0.686 * g + 0.168 * b;
-          const tb = 0.272 * r + 0.534 * g + 0.131 * b;
-          data[i] = Math.min(255, tr);
-          data[i + 1] = Math.min(255, tg);
-          data[i + 2] = Math.min(255, tb);
-        } else if (filterType === 'vintage') {
-          const tr = r * 1.18 + 18;
-          const tg = g * 1.05 + 8;
-          const tb = b * 0.82;
-          data[i] = Math.min(255, tr);
-          data[i + 1] = Math.min(255, tg);
-          data[i + 2] = Math.min(255, tb);
-        } else if (filterType === 'cool') {
-          const tr = r * 0.82;
-          const tg = g * 0.95 + 18;
-          const tb = b * 1.28 + 28;
-          data[i] = Math.min(255, tr);
-          data[i + 1] = Math.min(255, tg);
-          data[i + 2] = Math.min(255, tb);
-        } else if (filterType === 'vivid') {
-          const factor = 1.35;
-          let nr = (r - 128) * factor + 128;
-          let ng = (g - 128) * factor + 128;
-          let nb = (b - 128) * factor + 128;
-          data[i] = Math.max(0, Math.min(255, nr));
-          data[i + 1] = Math.max(0, Math.min(255, ng));
-          data[i + 2] = Math.max(0, Math.min(255, nb));
-        }
+      if (filterParts.length > 0) {
+        ctx.filter = filterParts.join(' ');
       }
 
-      ctx.putImageData(imgData, 0, 0);
+      ctx.drawImage(img, 0, 0, w, h);
+      ctx.filter = 'none';
+
+      if (filterType !== 'normal') {
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const bVal = data[i + 2];
+
+          if (filterType === 'grayscale') {
+            const avg = 0.299 * r + 0.587 * g + 0.114 * bVal;
+            data[i] = avg; data[i + 1] = avg; data[i + 2] = avg;
+          } else if (filterType === 'sepia') {
+            data[i] = Math.min(255, 0.393 * r + 0.769 * g + 0.189 * bVal);
+            data[i + 1] = Math.min(255, 0.349 * r + 0.686 * g + 0.168 * bVal);
+            data[i + 2] = Math.min(255, 0.272 * r + 0.534 * g + 0.131 * bVal);
+          } else if (filterType === 'vintage') {
+            data[i] = Math.min(255, r * 1.18 + 18);
+            data[i + 1] = Math.min(255, g * 1.05 + 8);
+            data[i + 2] = Math.min(255, bVal * 0.82);
+          } else if (filterType === 'cool') {
+            data[i] = Math.min(255, r * 0.82);
+            data[i + 1] = Math.min(255, g * 0.95 + 18);
+            data[i + 2] = Math.min(255, bVal * 1.28 + 28);
+          } else if (filterType === 'vivid') {
+            const factor = 1.35;
+            data[i] = Math.max(0, Math.min(255, (r - 128) * factor + 128));
+            data[i + 1] = Math.max(0, Math.min(255, (g - 128) * factor + 128));
+            data[i + 2] = Math.max(0, Math.min(255, (bVal - 128) * factor + 128));
+          }
+        }
+        ctx.putImageData(imgData, 0, 0);
+      }
 
       const filteredImg = new window.Image();
       filteredImg.crossOrigin = 'Anonymous';
@@ -126,6 +135,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
     frameColor,
     lineColor,
     appliedFilter,
+    fineTuning,
     stickers,
     texts,
     packageTier,
@@ -143,7 +153,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
   const scale = containerWidth / frameWidth;
   const stageHeight = frameHeight * scale;
 
-  // Frame Recolor Engine (source-in composition dengan resolveColorToFill)
+  // Frame Recolor Engine
   useEffect(() => {
     if (!frameImage) {
       setRecoloredFrameCanvas(null);
@@ -224,7 +234,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
     Promise.all(
       loadedPhotos.map((img) => {
         if (!img) return Promise.resolve(null);
-        return applyFilterToImage(img, appliedFilter);
+        return applyFilterToImage(img, appliedFilter, fineTuning);
       })
     ).then((results) => {
       if (isMounted) setFilteredPhotos(results);
@@ -233,16 +243,15 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [loadedPhotos, appliedFilter]);
+  }, [loadedPhotos, appliedFilter, fineTuning]);
 
-  // Load Elemen Gambar Stiker secara Aman tanpa Error TypeScript
+  // Load Elemen Gambar Stiker
   useEffect(() => {
     const newLoadedImages: Record<string, HTMLImageElement> = {};
     let isMounted = true;
 
     const stickerPromises = stickers.map((st: any) => {
       return new Promise<void>((resolve) => {
-        // Ambil URL gambar dari stiker (baik st.src, st.url, st.image, atau st.stickerId)
         const imgSrc = st.src || st.url || st.image || st.stickerId;
         if (!imgSrc) return resolve();
 
@@ -310,7 +319,6 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const imgW = photoImg.naturalWidth || photoImg.width;
             const imgH = photoImg.naturalHeight || photoImg.height;
 
-            // Skala dasar agar foto pas berada di dalam slot
             const baseScale = Math.min(slot.w / imgW, slot.h / imgH);
             const finalZoom = baseScale * transform.zoom;
 
@@ -322,7 +330,6 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                 key={`slot-group-${index}`}
                 x={slot.x}
                 y={slot.y}
-                // Penguncian Clipping Area: foto tidak akan pernah meluber keluar bingkai saat di-zoom
                 clipFunc={(ctx) => {
                   ctx.beginPath();
                   if (slot.rx && slot.rx > 0) {
@@ -375,7 +382,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           })}
         </Layer>
 
-        {/* LAYER 3: OVERLAY MASK BINGKAI (DENGAN RECOLORING ENGINE) */}
+        {/* LAYER 3: OVERLAY MASK BINGKAI */}
         <Layer listening={false}>
           {recoloredFrameCanvas ? (
             <KonvaImage
@@ -396,14 +403,12 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           ) : null}
         </Layer>
 
-        {/* LAYER 4: ELEMEN DEKORASI STIKER DAN TEKS */}
+        {/* LAYER 4: ELEMEN DEKORASI STIKER DAN TEKS USER */}
         <Layer>
-          {/* Render Stiker dengan Penanganan Tipe Data yang Aman */}
           {stickers.map((st: any) => {
             const stImg = loadedStickerImages[st.id];
             if (!stImg) return null;
 
-            // Penentuan Ukuran Stiker secara Otomatis dan Fleksibel
             const baseW = stImg.naturalWidth || stImg.width || 100;
             const baseH = stImg.naturalHeight || stImg.height || 100;
             const scaleFactor = st.scale || 1;
@@ -426,11 +431,10 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             );
           })}
 
-          {/* Render Teks */}
           {texts.map((txt: any) => (
             <Text
               key={txt.id}
-              text={txt.text}
+              text={txt.text} 
               x={txt.x}
               y={txt.y}
               fontSize={txt.fontSize || 32}
@@ -444,7 +448,41 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           ))}
         </Layer>
 
-        {/* WATERMARK HANYA UNTUK PAKET FREE */}
+        {/* LAYER 5: BRAND — BaliSnap Studio — tepi bawah frame, center */}
+        <Layer listening={false}>
+          {/* Outline shadow gelap — kontras di semua warna */}
+          <Text
+            x={Math.round(frameWidth * 0.08)}
+            y={frameHeight - Math.round(frameWidth * 0.08)}
+            width={frameWidth}
+            align="center"
+            text="BaliSnap Studio"
+            fontSize={Math.max(16, Math.round(frameWidth * 0.026))}
+            fontStyle="600"
+            fontFamily="'Poppins', sans-serif"
+            fill="rgba(0, 0, 0, 0.4)"
+            letterSpacing={2}
+            shadowColor="rgba(0, 0, 0, 0.6)"
+            shadowBlur={5}
+            shadowOffsetX={0}
+            shadowOffsetY={0}
+          />
+          {/* Teks utama putih tebal */}
+          <Text
+            x={Math.round(frameWidth * 0.08)}
+            y={frameHeight - Math.round(frameWidth * 0.08)}
+            width={frameWidth}
+            align="center"
+            text="BaliSnap Studio"
+            fontSize={Math.max(16, Math.round(frameWidth * 0.026))}
+            fontStyle="600"
+            fontFamily="'Poppins', sans-serif"
+            fill="rgba(255, 255, 255, 0.85)"
+            letterSpacing={2}
+          />
+        </Layer>
+
+        {/* WATERMARK KHUSUS PAKET FREE */}
         {packageTier === 'free' && (
           <Layer listening={false}>
             <Group x={frameWidth - 290} y={frameHeight - 75}>

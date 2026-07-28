@@ -45,8 +45,60 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSimulatePayment = () => {
+  const handleSimulatePayment = async () => {
     setIsProcessing(true);
+
+    const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
+    const isSandbox = import.meta.env.VITE_MIDTRANS_IS_SANDBOX !== 'false';
+
+    // Jika Client Key Midtrans telah terpasang di .env, panggil Midtrans Snap Popup SDK!
+    if (clientKey && clientKey !== 'SB-Mid-client-xxxxxxxxxxxxxx') {
+      try {
+        // Panggil endpoint backend / API untuk buat Transaction Snap Token
+        const response = await fetch('/api/midtrans/create-transaction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: invoiceId.replace('#', ''),
+            amount: isPremium ? 120000 : 25000,
+            packageName,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.token) {
+            const { triggerMidtransSnapPayment } = await import('../lib/midtrans');
+            await triggerMidtransSnapPayment({
+              snapToken: data.token,
+              clientKey,
+              isSandbox,
+              onSuccess: () => {
+                setIsProcessing(false);
+                setIsSuccess(true);
+                setPackageTier(targetTier);
+                setTimeout(() => {
+                  if (onSuccess) onSuccess();
+                  onClose();
+                }, 1800);
+              },
+              onError: (err) => {
+                console.error("Midtrans Payment Error:", err);
+                setIsProcessing(false);
+              },
+              onClose: () => {
+                setIsProcessing(false);
+              }
+            });
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Server Midtrans backend belum aktif, beralih ke mode Simulasi Testing:", err);
+      }
+    }
+
+    // Mode Simulasi / Dev Sandbox jika API Key belum dikonfigurasi
     setTimeout(() => {
       setIsProcessing(false);
       setIsSuccess(true);

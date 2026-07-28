@@ -42,6 +42,20 @@ export type StepType = 'landing' | 'select-frame' | 'capture' | 'editor' | 'prev
 export type FilterType = 'normal' | 'grayscale' | 'vintage' | 'cool' | 'vivid' | 'sepia';
 export type PackageTier = 'free' | 'basic' | 'premium';
 
+export interface FineTuningConfig {
+  brightness: number;
+  contrast: number;
+  saturation: number;
+  softFocus: number;
+}
+
+export const DEFAULT_FINE_TUNING: FineTuningConfig = {
+  brightness: 100,
+  contrast: 100,
+  saturation: 100,
+  softFocus: 0,
+};
+
 export function getFrameRequiredTier(frame: FrameTemplate): PackageTier {
   if (frame.id.startsWith('custom-') || frame.slots > 4) return 'premium';
   if (frame.category === 'studio' && frame.slots <= 2) return 'free';
@@ -81,6 +95,9 @@ interface PhotoboothContextProps {
   setSelectedId: (id: string | null) => void;
   appliedFilter: FilterType;
   setAppliedFilter: (filter: FilterType) => void;
+  fineTuning: FineTuningConfig;
+  setFineTuning: (config: Partial<FineTuningConfig>) => void;
+  resetFineTuning: () => void;
   frameColor: string;
   setFrameColor: (color: string) => void;
   cardColor: string;
@@ -181,6 +198,15 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [texts, setTexts] = useState<CanvasText[]>(savedSession?.texts || []);
   const [selectedId, setSelectedId] = useState<string | null>(savedSession?.selectedId || null);
   const [appliedFilter, setAppliedFilter] = useState<FilterType>(savedSession?.appliedFilter || 'normal');
+  const [fineTuning, setFineTuningState] = useState<FineTuningConfig>(savedSession?.fineTuning || DEFAULT_FINE_TUNING);
+
+  const setFineTuning = (config: Partial<FineTuningConfig>) => {
+    setFineTuningState(prev => ({ ...prev, ...config }));
+  };
+
+  const resetFineTuning = () => {
+    setFineTuningState(DEFAULT_FINE_TUNING);
+  };
   const [frameColor, setFrameColor] = useState<string>(savedSession?.frameColor || 'original');
   const [cardColor, setCardColor] = useState<string>(savedSession?.cardColor || '#ffffff');
   const [lineColor, setLineColor] = useState<string>(savedSession?.lineColor || 'original');
@@ -588,7 +614,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       step, setStep, selectedFrame, selectFrame, photos, setPhotoAtSlot, clearPhotos,
       photoTransforms, updatePhotoTransform, resetPhotoTransform,
       stickers, addSticker, applyStickerPack, updateSticker, removeSticker, texts, addText, updateText, removeText,
-      selectedId, setSelectedId, appliedFilter, setAppliedFilter, frameColor, setFrameColor,
+      selectedId, setSelectedId, appliedFilter, setAppliedFilter, fineTuning, setFineTuning, resetFineTuning, frameColor, setFrameColor,
       cardColor, setCardColor, lineColor, setLineColor,
       frameStyle, setFrameStyle, borderThickness, setBorderThickness, borderRadius, setBorderRadius,
       shadowIntensity, setShadowIntensity, shadowBlur, setShadowBlur, shadowColor, setShadowColor,

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MAX_PHOTO_ZOOM, type PackageTier } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { FilterPanel } from '../components/editor/FilterPanel';
+import { RetouchPanel } from '../components/editor/RetouchPanel';
 import { FrameColorPanel } from '../components/editor/FrameColorPanel';
 import { StickerPanel } from '../components/editor/StickerPanel';
 import { TextPanel } from '../components/editor/TextPanel';
@@ -62,7 +63,7 @@ export const Editor: React.FC = () => {
   const stageRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState<number>(400);
-  const [activeTab, setActiveTab] = useState<'filter' | 'frame' | 'sticker' | 'text'>('filter');
+  const [activeTab, setActiveTab] = useState<'filter' | 'retouch' | 'frame' | 'sticker' | 'text'>('filter');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [showCopiedToast, setShowCopiedToast] = useState<boolean>(false);
 
@@ -166,7 +167,6 @@ export const Editor: React.FC = () => {
   // Fit foto agar pas seutuhnya dalam bingkai (Contain Fit)
   const handlePhotoFitToFrame = () => {
     if (selectedPhotoIndex === null) return;
-    // Set zoom ke 0.5 atau nilai optimal agar seluruh foto tampil utuh tanpa terpotong
     updatePhotoTransform(selectedPhotoIndex, { zoom: 0.5, x: 0, y: 0 });
   };
 
@@ -225,9 +225,9 @@ export const Editor: React.FC = () => {
             </button>
             <h1 className="font-serif text-3xl md:text-4xl font-black tracking-tight text-slate-800 flex items-center gap-2.5">
               <span className="bg-gradient-to-r from-rose-500 via-purple-600 to-pink-500 bg-clip-text text-transparent">
-                Studio Editor
+                BaliSnap Studio
               </span>{' '}
-              Hias
+              Editor
               <Wand2 className="w-5 h-5 text-rose-400 animate-spin" style={{ animationDuration: '10s' }} />
             </h1>
             <p className="text-slate-500 text-xs flex items-center gap-2 mt-1 font-medium">
@@ -267,13 +267,13 @@ export const Editor: React.FC = () => {
             >
               {/* Aesthetic Header Ribbon */}
               <div
-                className="absolute top-[2px] left-1/2 -translate-x-1/2 w-36 h-6 rounded-full border z-20 pointer-events-none flex items-center justify-center text-[9px] font-bold tracking-widest uppercase text-rose-600 shadow-sm"
+                className="absolute top-[2px] left-1/2 -translate-x-1/2 w-44 h-6 rounded-full border z-20 pointer-events-none flex items-center justify-center text-[9px] font-bold tracking-widest uppercase text-rose-600 shadow-sm"
                 style={{
                   background: 'linear-gradient(90deg, #FFE4E6, #F3E8FF)',
                   borderColor: '#FECDD3',
                 }}
               >
-                ✨ Canvas Editor ✨
+                ✨ BALISNAP STUDIO ✨
               </div>
 
               {/* CANVAS CONTAINER */}
@@ -332,8 +332,8 @@ export const Editor: React.FC = () => {
                         key={idx}
                         onClick={() => setSelectedId(`photo-${idx}`)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${isSelected
-                            ? 'bg-purple-600 text-white shadow-md shadow-purple-200 scale-105'
-                            : 'bg-white text-slate-600 border border-purple-100 hover:bg-purple-100/60'
+                          ? 'bg-purple-600 text-white shadow-md shadow-purple-200 scale-105'
+                          : 'bg-white text-slate-600 border border-purple-100 hover:bg-purple-100/60'
                           }`}
                       >
                         <Scan className="w-3 h-3" />
@@ -354,17 +354,27 @@ export const Editor: React.FC = () => {
               >
                 {[
                   { key: 'filter', icon: Sliders, label: 'Filter' },
+                  { key: 'retouch', icon: Wand2, label: 'Retouch', isPremium: true },
                   { key: 'frame', icon: Palette, label: 'Frame' },
                   { key: 'sticker', icon: Smile, label: 'Stiker' },
                   { key: 'text', icon: Type, label: 'Teks' },
                 ].map((tab) => {
                   const isActive = activeTab === tab.key;
-                  const isLocked = (tab.key === 'sticker' || tab.key === 'text') && packageTier === 'free';
+                  const isLockedBasic = (tab.key === 'sticker' || tab.key === 'text') && packageTier === 'free';
+                  const isLockedPremium = tab.key === 'retouch' && packageTier !== 'premium';
+                  const isLocked = isLockedBasic || isLockedPremium;
+
                   return (
                     <button
                       key={tab.key}
                       onClick={() => {
-                        if (isLocked) {
+                        if (isLockedPremium) {
+                          setUpgradeModalTier('premium');
+                          setUpgradeModalFeature('Photo Fine-Tuning & Retouch Pro');
+                          setUpgradeModalOpen(true);
+                          return;
+                        }
+                        if (isLockedBasic) {
                           setUpgradeModalTier('basic');
                           setUpgradeModalFeature(tab.key === 'sticker' ? 'Sticker Studio' : 'Text Overlay');
                           setUpgradeModalOpen(true);
@@ -523,6 +533,7 @@ export const Editor: React.FC = () => {
               {/* Active Sub-Panel Area */}
               <div className="min-h-[220px] md:min-h-[260px] relative text-slate-800">
                 {activeTab === 'filter' && <FilterPanel />}
+                {activeTab === 'retouch' && <RetouchPanel />}
                 {activeTab === 'frame' && <FrameColorPanel />}
                 {activeTab === 'sticker' && <StickerPanel />}
                 {activeTab === 'text' && <TextPanel />}

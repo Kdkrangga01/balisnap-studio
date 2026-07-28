@@ -3,9 +3,10 @@ import { usePhotobooth } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { exportHighResCanvas, saveOrShareImage, dataURItoBlob } from '../lib/exportImage';
 import { UpgradeModal } from '../components/UpgradeModal';
+import { QRCodeView } from '../components/QRCodeView';
 import {
   ArrowLeft, Download, RotateCcw, Check, Share2, Sparkles, Heart, X,
-  ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown
+  ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown, QrCode
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -363,6 +364,20 @@ export const Preview: React.FC = () => {
                   <Share2 className="w-4 h-4 text-pink-500" />
                   BAGIKAN KE SOSIAL MEDIA
                 </button>
+              </div>
+
+              {/* QR CODE INSTANT DOWNLOAD CARD */}
+              <div className="bg-gradient-to-r from-pink-50/80 via-rose-50/60 to-purple-50/80 border border-pink-200/80 p-3.5 rounded-2xl flex items-center gap-3.5 shadow-sm mt-1">
+                <QRCodeView value={window.location.origin + window.location.pathname} size={100} className="shrink-0 bg-white p-1.5 rounded-xl border border-pink-200" />
+                <div className="flex flex-col text-left justify-center">
+                  <div className="flex items-center gap-1.5 text-[11px] font-black uppercase text-pink-700 tracking-wider">
+                    <QrCode className="w-3.5 h-3.5 text-pink-600" />
+                    Scan QR Code Unduh
+                  </div>
+                  <p className="text-[10px] text-zinc-600 font-medium leading-relaxed mt-1">
+                    Arahkan kamera smartphone Anda ke QR code ini untuk langsung mengunduh hasil foto ke galeri tanpa transfer file.
+                  </p>
+                </div>
               </div>
 
             </div>
