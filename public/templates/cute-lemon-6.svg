@@ -45,7 +45,7 @@
 <polygon points="57,951 59,955 63,957 59,959 57,963 55,959 51,957 55,955" fill="#FFA726" opacity="0.5"/>
 <polygon points="1131,951 1133,955 1137,957 1133,959 1131,963 1129,959 1125,957 1129,955" fill="#FFA726" opacity="0.5"/>
   
-      <text x="600" y="1725" text-anchor="middle" font-family="'Caveat', cursive, sans-serif" font-size="36" font-weight="bold" fill="#FFA726" letter-spacing="1">BaliSnap Studio</text>
+      
       <g transform="translate(1158.9989052703595,1267.3516995435132) rotate(202.45481854533293) scale(0.6176522392943988)">
       <path d="M0,-4 C-2,-8 -8,-8 -8,-4 C-8,0 -2,4 0,8 C2,4 8,0 8,-4 C8,-8 2,-8 0,-4Z" fill="#FFA726" opacity="0.3"/>
     </g><g transform="translate(993.7884146289792,1419.3389009864432) rotate(150.02458370292985) scale(0.4261503162106036)">

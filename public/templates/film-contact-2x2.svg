@@ -18,16 +18,7 @@
     
   </g>
   
-      <text x="565" y="503" text-anchor="end" font-family="monospace" font-size="18" fill="#888" letter-spacing="1">01A</text>
-    
-      <text x="1125" y="503" text-anchor="end" font-family="monospace" font-size="18" fill="#888" letter-spacing="1">02A</text>
-    
-      <text x="565" y="973" text-anchor="end" font-family="monospace" font-size="18" fill="#888" letter-spacing="1">03A</text>
-    
-      <text x="1125" y="973" text-anchor="end" font-family="monospace" font-size="18" fill="#888" letter-spacing="1">04A</text>
-    
-  
-      <text x="600" y="1130" text-anchor="middle" font-family="monospace" font-size="28" font-weight="bold" fill="#FBBF24" letter-spacing="3">BALISNAP STUDIO</text>
+      
       <text x="600" y="1162" text-anchor="middle" font-family="monospace" font-size="14" fill="#666" letter-spacing="2">FILM 451</text>
     
 </svg>

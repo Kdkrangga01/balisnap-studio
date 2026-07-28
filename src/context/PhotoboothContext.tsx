@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
-import type { FrameColorId } from '../data/frameColors';
 import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/frameDb';
 import { stickerPacks } from '../data/stickers';
 
@@ -41,8 +40,24 @@ export interface CanvasText {
 
 export type StepType = 'landing' | 'select-frame' | 'capture' | 'editor' | 'preview';
 export type FilterType = 'normal' | 'grayscale' | 'vintage' | 'cool' | 'vivid' | 'sepia';
+export type PackageTier = 'free' | 'basic' | 'premium';
+
+export function getFrameRequiredTier(frame: FrameTemplate): PackageTier {
+  if (frame.id.startsWith('custom-') || frame.slots > 4) return 'premium';
+  if (frame.category === 'studio' && frame.slots <= 2) return 'free';
+  return 'basic';
+}
+
+export function isFrameLocked(frame: FrameTemplate, currentTier: PackageTier): boolean {
+  const req = getFrameRequiredTier(frame);
+  if (currentTier === 'premium') return false;
+  if (currentTier === 'basic') return req === 'premium';
+  return req === 'basic' || req === 'premium';
+}
 
 interface PhotoboothContextProps {
+  packageTier: PackageTier;
+  setPackageTier: (tier: PackageTier) => void;
   step: StepType;
   setStep: (step: StepType) => void;
   selectedFrame: FrameTemplate | null;
@@ -66,8 +81,8 @@ interface PhotoboothContextProps {
   setSelectedId: (id: string | null) => void;
   appliedFilter: FilterType;
   setAppliedFilter: (filter: FilterType) => void;
-  frameColor: FrameColorId;
-  setFrameColor: (color: FrameColorId) => void;
+  frameColor: string;
+  setFrameColor: (color: string) => void;
   cardColor: string;
   setCardColor: (color: string) => void;
   lineColor: string;
@@ -143,6 +158,21 @@ const getInitialSession = () => {
 export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const savedSession = getInitialSession();
 
+  const [packageTier, setPackageTierState] = useState<PackageTier>(() => {
+    try {
+      const saved = localStorage.getItem('balisnap_package_tier');
+      if (saved === 'free' || saved === 'basic' || saved === 'premium') return saved;
+    } catch {}
+    return savedSession?.packageTier || 'free';
+  });
+
+  const setPackageTier = (tier: PackageTier) => {
+    setPackageTierState(tier);
+    try {
+      localStorage.setItem('balisnap_package_tier', tier);
+    } catch {}
+  };
+
   const [step, setStep] = useState<StepType>(savedSession?.step || 'landing');
   const [selectedFrame, setSelectedFrame] = useState<FrameTemplate | null>(savedSession?.selectedFrame || null);
   const [photos, setPhotos] = useState<(string | null)[]>(savedSession?.photos || []);
@@ -151,7 +181,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [texts, setTexts] = useState<CanvasText[]>(savedSession?.texts || []);
   const [selectedId, setSelectedId] = useState<string | null>(savedSession?.selectedId || null);
   const [appliedFilter, setAppliedFilter] = useState<FilterType>(savedSession?.appliedFilter || 'normal');
-  const [frameColor, setFrameColor] = useState<FrameColorId>(savedSession?.frameColor || 'original');
+  const [frameColor, setFrameColor] = useState<string>(savedSession?.frameColor || 'original');
   const [cardColor, setCardColor] = useState<string>(savedSession?.cardColor || '#ffffff');
   const [lineColor, setLineColor] = useState<string>(savedSession?.lineColor || 'original');
   const [customFrames, setCustomFrames] = useState<FrameTemplate[]>([]);
@@ -554,6 +584,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   return (
     <PhotoboothContext.Provider value={{
+      packageTier, setPackageTier,
       step, setStep, selectedFrame, selectFrame, photos, setPhotoAtSlot, clearPhotos,
       photoTransforms, updatePhotoTransform, resetPhotoTransform,
       stickers, addSticker, applyStickerPack, updateSticker, removeSticker, texts, addText, updateText, removeText,

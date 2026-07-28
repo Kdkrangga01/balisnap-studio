@@ -68,7 +68,7 @@
   </g>
   <rect x="80" y="80" width="640" height="800" fill="none" stroke="#89B9D4" stroke-width="4" rx="12"/>
   
-      <text x="400" y="1120" text-anchor="middle" font-family="'Caveat', cursive, sans-serif" font-size="34" font-weight="bold" fill="#89B9D4" letter-spacing="1">BaliSnap Studio</text>
+      
       <line x1="340" y1="1138" x2="460" y2="1138" stroke="#6A9FBF" stroke-width="1.5"/>
     
 </svg>

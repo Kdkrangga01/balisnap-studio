@@ -197,30 +197,7 @@
 <rect x="275" y="0" width="4" height="60" fill="#4A3B32"/>
 <rect x="286" y="0" width="2" height="60" fill="#4A3B32"/>
 <rect x="297" y="0" width="6" height="60" fill="#4A3B32"/>
-        <text x="150" y="80" text-anchor="middle" font-family="monospace" font-size="12" fill="#4A3B32" letter-spacing="4">NO. 20260716</text>
-      </g>
-
-      <!-- Slot Borders -->
-      
-        <rect x="80" y="320" width="640" height="500" fill="none" stroke="#4A3B32" stroke-width="4"/>
-        <rect x="86" y="326" width="628" height="488" fill="none" stroke="#4A3B32" stroke-width="1.5" stroke-dasharray="4,2"/>
-      
-
-        <rect x="80" y="880" width="640" height="500" fill="none" stroke="#4A3B32" stroke-width="4"/>
-        <rect x="86" y="886" width="628" height="488" fill="none" stroke="#4A3B32" stroke-width="1.5" stroke-dasharray="4,2"/>
-      
-
-        <rect x="80" y="1440" width="640" height="500" fill="none" stroke="#4A3B32" stroke-width="4"/>
-        <rect x="86" y="1446" width="628" height="488" fill="none" stroke="#4A3B32" stroke-width="1.5" stroke-dasharray="4,2"/>
-      
-
-        <rect x="80" y="2000" width="640" height="500" fill="none" stroke="#4A3B32" stroke-width="4"/>
-        <rect x="86" y="2006" width="628" height="488" fill="none" stroke="#4A3B32" stroke-width="1.5" stroke-dasharray="4,2"/>
-      
-
-      <text x="400" y="230" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-weight="bold" font-size="28" fill="#4A3B32" letter-spacing="6">NOW SHOWING</text>
-      <text x="400" y="2780" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-weight="bold" font-size="32" fill="#4A3B32" letter-spacing="4">ADMIT ONE</text>
-      <text x="400" y="2830" text-anchor="middle" font-family="monospace" font-size="14" fill="#4A3B32" letter-spacing="2">BALISNAP CINEMA TICKET</text>
+        
     
   
 </svg>

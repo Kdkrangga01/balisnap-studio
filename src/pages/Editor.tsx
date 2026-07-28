@@ -1,11 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MAX_PHOTO_ZOOM } from '../context/PhotoboothContext';
+import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MAX_PHOTO_ZOOM, type PackageTier } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { FilterPanel } from '../components/editor/FilterPanel';
 import { FrameColorPanel } from '../components/editor/FrameColorPanel';
 import { StickerPanel } from '../components/editor/StickerPanel';
 import { TextPanel } from '../components/editor/TextPanel';
+import { UpgradeModal } from '../components/UpgradeModal';
 import {
   ArrowLeft,
   Sparkles,
@@ -28,7 +29,8 @@ import {
   ImageIcon,
   Wand2,
   Maximize,
-  Scan
+  Scan,
+  Lock
 } from 'lucide-react';
 
 // Batas zoom terkecil diturunkan ke 0.1 (10%) agar foto bisa diperkecil jauh lebih muat
@@ -50,7 +52,12 @@ export const Editor: React.FC = () => {
     photoTransforms,
     updatePhotoTransform,
     resetPhotoTransform,
+    packageTier,
   } = usePhotobooth();
+
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeModalTier, setUpgradeModalTier] = useState<PackageTier>('basic');
+  const [upgradeModalFeature, setUpgradeModalFeature] = useState<string | undefined>(undefined);
 
   const stageRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -352,10 +359,17 @@ export const Editor: React.FC = () => {
                   { key: 'text', icon: Type, label: 'Teks' },
                 ].map((tab) => {
                   const isActive = activeTab === tab.key;
+                  const isLocked = (tab.key === 'sticker' || tab.key === 'text') && packageTier === 'free';
                   return (
                     <button
                       key={tab.key}
                       onClick={() => {
+                        if (isLocked) {
+                          setUpgradeModalTier('basic');
+                          setUpgradeModalFeature(tab.key === 'sticker' ? 'Sticker Studio' : 'Text Overlay');
+                          setUpgradeModalOpen(true);
+                          return;
+                        }
                         setActiveTab(tab.key as typeof activeTab);
                         setSelectedId(null);
                       }}
@@ -368,6 +382,7 @@ export const Editor: React.FC = () => {
                         boxShadow: isActive ? '0 4px 12px rgba(225,29,72,0.25)' : 'none'
                       }}
                     >
+                      {isLocked && <Lock className="w-3 h-3 text-pink-500 shrink-0" />}
                       <tab.icon className="w-4 h-4" />
                       <span className="hidden xs:inline">{tab.label}</span>
                     </button>
@@ -600,6 +615,14 @@ export const Editor: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Upgrade Modal Component */}
+      <UpgradeModal
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        targetTier={upgradeModalTier}
+        featureName={upgradeModalFeature}
+      />
 
       <style>{`
         .custom-scroll::-webkit-scrollbar {

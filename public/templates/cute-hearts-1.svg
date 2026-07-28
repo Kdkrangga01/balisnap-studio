@@ -105,7 +105,7 @@
   <rect x="90" y="90" width="1020" height="1020" fill="none" stroke="#FFB6C1" stroke-width="5" rx="25"/>
        <rect x="95" y="95" width="1010" height="1010" fill="none" stroke="white" stroke-width="2" rx="25" opacity="0.6"/><polygon points="82,76 84,80 88,82 84,84 82,88 80,84 76,82 80,80" fill="#FF69B4" opacity="0.5"/>
   
-      <text x="600" y="1425" text-anchor="middle" font-family="'Caveat', cursive, sans-serif" font-size="36" font-weight="bold" fill="#FF69B4" letter-spacing="1">BaliSnap Studio</text>
+      
       <g transform="translate(178.0073847416857,198.4772434443955) rotate(185.35753950975607) scale(0.6596571333330656)">
       <path d="M0,-4 C-2,-8 -8,-8 -8,-4 C-8,0 -2,4 0,8 C2,4 8,0 8,-4 C8,-8 2,-8 0,-4Z" fill="#FF69B4" opacity="0.3"/>
     </g><g transform="translate(747.2263574108728,738.957972488327) rotate(42.718449516890985) scale(0.39523170869353386)">

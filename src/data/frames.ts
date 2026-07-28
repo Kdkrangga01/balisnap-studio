@@ -23,6 +23,29 @@ export const frames: FrameTemplate[] = [
   // STUDIO PHOTOBOOTH (simple grid, tirai-merah ready)
   // ============================================
   {
+    id: "studio-photobooth-1",
+    name: "Studio Polos 1-Slot 🎪",
+    slots: 1,
+    category: "studio",
+    src: "/templates/studio-photobooth-1.svg",
+    width: 1200, height: 1200,
+    slotCoords: [
+      { x: 50, y: 50, w: 1100, h: 1100 }
+    ]
+  },
+  {
+    id: "studio-photobooth-2",
+    name: "Studio Polos 2-Slot 🎪",
+    slots: 2,
+    category: "studio",
+    src: "/templates/studio-photobooth-2.svg",
+    width: 1200, height: 1600,
+    slotCoords: [
+      { x: 50, y: 50, w: 1100, h: 720 },
+      { x: 50, y: 830, w: 1100, h: 720 }
+    ]
+  },
+  {
     id: "studio-photobooth-8",
     name: "Studio 8-Cut 🎪",
     slots: 8,

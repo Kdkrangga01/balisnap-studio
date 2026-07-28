@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <!-- Studio Photobooth 1-Slot - Simple black border, transparent photo area -->
+  <path fill-rule="evenodd" fill="#0a0a0a" d="
+    M 0 0 H 1200 V 1200 H 0 Z
+    M 50 50 H 1150 V 1150 H 50 Z
+  "/>
+</svg>

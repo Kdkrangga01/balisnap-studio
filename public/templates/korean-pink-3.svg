@@ -72,7 +72,7 @@
 <rect x="80" y="630" width="640" height="500" fill="none" stroke="#E8B4B8" stroke-width="4" rx="10"/>
 <rect x="80" y="1180" width="640" height="500" fill="none" stroke="#E8B4B8" stroke-width="4" rx="10"/>
   
-      <text x="400" y="2320" text-anchor="middle" font-family="'Caveat', cursive, sans-serif" font-size="34" font-weight="bold" fill="#E8B4B8" letter-spacing="1">BaliSnap Studio</text>
+      
       <line x1="340" y1="2338" x2="460" y2="2338" stroke="#D4A0A7" stroke-width="1.5"/>
     
 </svg>

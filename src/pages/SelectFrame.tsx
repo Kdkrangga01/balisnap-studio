@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
-import { usePhotobooth } from '../context/PhotoboothContext';
+import { usePhotobooth, getFrameRequiredTier, isFrameLocked, type PackageTier } from '../context/PhotoboothContext';
+import { UpgradeModal } from '../components/UpgradeModal';
+import { CheckoutModal } from '../components/CheckoutModal';
 import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import {
   ArrowLeft, Palette, Sparkles, Search, X, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, Trash2, CheckCircle2, ScanSearch, Eye, Pencil, SlidersHorizontal, LayoutGrid, Grid2X2, BookmarkCheck, Zap, Sliders,
-  Camera, Check, Crown, Wand2, UploadCloud, Download, Star
+  Camera, Check, Crown, Wand2, UploadCloud, Download, Star, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate, type Variants } from 'framer-motion';
 
@@ -372,11 +374,15 @@ const FrameCard: React.FC<{
   isFavorite: boolean;
   isCustom: boolean;
   categoryStyle: any;
+  currentTier: PackageTier;
   onFavorite: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
   onEdit: (e: React.MouseEvent) => void;
   onClick: () => void;
-}> = ({ frame, idx: _idx, isTrending, isFavorite, isCustom: _isCustom, categoryStyle, onFavorite, onDelete, onEdit, onClick }) => {
+}> = ({ frame, idx: _idx, isTrending, isFavorite, isCustom: _isCustom, categoryStyle, currentTier, onFavorite, onDelete, onEdit, onClick }) => {
+  const requiredTier = getFrameRequiredTier(frame);
+  const isLocked = isFrameLocked(frame, currentTier);
+
   const cardVariants = {
     hidden: { opacity: 0, y: 30, scale: 0.94 },
     visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: [0.25, 1, 0.5, 1] as const } }
@@ -432,11 +438,26 @@ const FrameCard: React.FC<{
           <img src={frame.src} alt={frame.name} className="max-w-full max-h-full object-contain filter drop-shadow-lg group-hover:scale-105 transition-transform duration-500 ease-out" loading="lazy" />
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/40 via-zinc-950/10 to-transparent backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-10">
-          <span className="px-4 py-2 rounded-full bg-white text-zinc-900 font-extrabold text-[10px] tracking-wider uppercase shadow-xl flex items-center gap-1.5 transform translate-y-3 group-hover:translate-y-0 transition-all duration-300">
-            <Eye className="w-3.5 h-3.5 text-pink-500 animate-pulse" /> Intip Frame
-          </span>
-        </div>
+        {/* Lock Overlay Badge for Locked Frames */}
+        {isLocked ? (
+          <div className="absolute inset-0 bg-zinc-950/55 backdrop-blur-[3px] rounded-2xl flex flex-col items-center justify-center p-3 text-center z-30 transition-all">
+            <div className={`p-2.5 rounded-2xl mb-2 border shadow-lg ${requiredTier === 'premium' ? 'bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 border-yellow-400/40 text-yellow-300' : 'bg-gradient-to-r from-pink-500 to-rose-500 border-white/40 text-white'}`}>
+              {requiredTier === 'premium' ? <Crown className="w-5 h-5 animate-bounce fill-yellow-300" /> : <Lock className="w-5 h-5 text-white" />}
+            </div>
+            <span className={`text-[9.5px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md border ${requiredTier === 'premium' ? 'bg-purple-900/90 text-yellow-300 border-yellow-400/40' : 'bg-pink-600/90 text-white border-pink-300/40'}`}>
+              {requiredTier === 'premium' ? '👑 VIP PREMIUM (120k)' : '🔒 BASIC PASS (25k)'}
+            </span>
+            <span className="text-[9px] text-white/90 font-bold mt-1.5 drop-shadow-sm">
+              Klik Untuk Buka 🔓
+            </span>
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/40 via-zinc-950/10 to-transparent backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-10">
+            <span className="px-4 py-2 rounded-full bg-white text-zinc-900 font-extrabold text-[10px] tracking-wider uppercase shadow-xl flex items-center gap-1.5 transform translate-y-3 group-hover:translate-y-0 transition-all duration-300">
+              <Eye className="w-3.5 h-3.5 text-pink-500 animate-pulse" /> Intip Frame
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="w-full pt-2.5 border-t-2 border-dashed border-rose-100/90 z-10">
@@ -459,7 +480,32 @@ export const SelectFrame: React.FC = () => {
   if (!context) {
     throw new Error('SelectFrame must be used within a PhotoboothProvider');
   }
-  const { selectFrame, setStep, customFrames, addCustomFrame, deleteCustomFrame } = context;
+  const { selectFrame, setStep, customFrames, addCustomFrame, deleteCustomFrame, packageTier, setPackageTier } = context;
+
+  // Upgrade & Checkout Modal State
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeModalTier, setUpgradeModalTier] = useState<PackageTier>('basic');
+  const [upgradeModalFrame, setUpgradeModalFrame] = useState<FrameTemplate | null>(null);
+  const [upgradeModalFeature, setUpgradeModalFeature] = useState<string | undefined>(undefined);
+
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [checkoutModalTier, setCheckoutModalTier] = useState<PackageTier>('basic');
+
+  const handleOpenCheckoutModal = useCallback((tier: PackageTier) => {
+    if (tier === 'free') {
+      setPackageTier('free');
+    } else {
+      setCheckoutModalTier(tier);
+      setCheckoutModalOpen(true);
+    }
+  }, [setPackageTier]);
+
+  const handleOpenUpgradeModal = useCallback((tier: PackageTier, frame?: FrameTemplate | null, featureName?: string) => {
+    setUpgradeModalTier(tier);
+    setUpgradeModalFrame(frame || null);
+    setUpgradeModalFeature(featureName);
+    setUpgradeModalOpen(true);
+  }, []);
   const [slotFilter, setSlotFilter] = useState<number | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -926,6 +972,12 @@ export const SelectFrame: React.FC = () => {
   }, [slotFilter, categoryFilter, searchQuery, sortBy, onlyFavoritesFilter, favorites, allFrames]);
 
   const handleFrameClick = (frame: FrameTemplate) => {
+    const locked = isFrameLocked(frame, packageTier);
+    if (locked) {
+      const req = getFrameRequiredTier(frame);
+      handleOpenUpgradeModal(req, frame);
+      return;
+    }
     setPreviewFrame(frame);
     setPreviewVisible(true);
     setIsConfirmingSelection(false);
@@ -1032,13 +1084,49 @@ export const SelectFrame: React.FC = () => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-pink-300/30 to-purple-300/20 rounded-full blur-3xl pointer-events-none" />
 
             <div className="flex flex-col items-center md:items-start z-10">
-              <button
-                onClick={() => setStep('landing')}
-                className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-800 font-extrabold text-xs tracking-widest uppercase mb-3 transition-all group px-4 py-1.5 bg-rose-100/80 hover:bg-rose-200/80 rounded-full border border-rose-200 shadow-sm cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-                Kembali
-              </button>
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <button
+                  onClick={() => setStep('landing')}
+                  className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-800 font-extrabold text-xs tracking-widest uppercase transition-all group px-4 py-1.5 bg-rose-100/80 hover:bg-rose-200/80 rounded-full border border-rose-200 shadow-sm cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+                  Kembali
+                </button>
+
+                {/* Active Package Pill Badge */}
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('paket-harga');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm border transition-all cursor-pointer ${
+                    packageTier === 'premium'
+                      ? 'bg-gradient-to-r from-purple-950 via-indigo-900 to-purple-950 text-yellow-300 border-yellow-400/40 shadow-purple-950/20'
+                      : packageTier === 'basic'
+                      ? 'bg-pink-500 text-white border-pink-300 shadow-pink-500/20'
+                      : 'bg-zinc-800 text-white border-zinc-700'
+                  }`}
+                  title="Klik untuk lihat rincian paket"
+                >
+                  {packageTier === 'premium' ? (
+                    <>
+                      <Crown className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300 animate-bounce" />
+                      <span>👑 VIP Premium Pass</span>
+                    </>
+                  ) : packageTier === 'basic' ? (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-pink-200" />
+                      <span>💖 Basic Pass</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-3.5 h-3.5 text-pink-300" />
+                      <span>🆓 Free Pass</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
               <h1 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-black text-zinc-900 tracking-tight leading-tight">
                 Pilih{' '}
                 <span className="bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-transparent bg-clip-text drop-shadow-sm">
@@ -1053,9 +1141,16 @@ export const SelectFrame: React.FC = () => {
 
             <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto z-10">
               <button
-                onClick={() => setIsUploadModalOpen(true)}
+                onClick={() => {
+                  if (packageTier === 'free' || packageTier === 'basic') {
+                    handleOpenUpgradeModal('premium', null, 'Unggah Frame Kustom');
+                    return;
+                  }
+                  setIsUploadModalOpen(true);
+                }}
                 className="group relative flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/40 hover:scale-[1.03] active:scale-95 transition-all duration-300 cursor-pointer w-full sm:w-auto"
               >
+                {packageTier !== 'premium' && <Crown className="w-4 h-4 text-yellow-300 fill-yellow-300" />}
                 <Upload className="w-4 h-4 text-white animate-bounce" style={{ animationDuration: '2s' }} />
                 Upload Frame Sendiri 🎀
               </button>
@@ -1212,6 +1307,7 @@ export const SelectFrame: React.FC = () => {
                       isFavorite={isFavorite}
                       isCustom={isCustom}
                       categoryStyle={style}
+                      currentTier={packageTier}
                       onFavorite={(e) => toggleFavorite(frame.id, e)}
                       onDelete={(e) => handleOpenDeleteConfirm(frame, e)}
                       onEdit={(e) => handleOpenRename(frame, e)}
@@ -1322,10 +1418,10 @@ export const SelectFrame: React.FC = () => {
                   </div>
 
                   <button
-                    onClick={() => setStep('select-frame')}
-                    className="w-full py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-purple-950 font-black text-xs uppercase tracking-widest rounded-2xl transition-colors active:scale-95 cursor-pointer"
+                    onClick={() => handleOpenCheckoutModal('free')}
+                    className={`w-full py-3.5 px-4 font-black text-xs uppercase tracking-widest rounded-2xl transition-all active:scale-95 cursor-pointer ${packageTier === 'free' ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 hover:bg-slate-200 text-purple-950'}`}
                   >
-                    Coba Gratis Sekarang
+                    {packageTier === 'free' ? '✓ Paket Aktif (Gratis)' : 'Coba Gratis Sekarang'}
                   </button>
                 </motion.div>
 
@@ -1389,10 +1485,10 @@ export const SelectFrame: React.FC = () => {
                   </div>
 
                   <button
-                    onClick={() => setStep('select-frame')}
-                    className="w-full py-3.5 px-4 bg-pink-500 hover:bg-pink-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-md transition-transform active:scale-95 cursor-pointer"
+                    onClick={() => handleOpenCheckoutModal('basic')}
+                    className={`w-full py-3.5 px-4 font-black text-xs uppercase tracking-widest rounded-2xl shadow-md transition-all active:scale-95 cursor-pointer ${packageTier === 'basic' ? 'bg-emerald-500 text-white' : 'bg-pink-500 hover:bg-pink-600 text-white'}`}
                   >
-                    Pilih Paket Basic
+                    {packageTier === 'basic' ? '✓ Paket Aktif (Basic)' : 'Pilih Paket Basic'}
                   </button>
                 </motion.div>
 
@@ -1471,10 +1567,10 @@ export const SelectFrame: React.FC = () => {
                   </div>
 
                   <button
-                    onClick={() => setStep('select-frame')}
-                    className="w-full py-4 px-4 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 border border-white/20 cursor-pointer"
+                    onClick={() => handleOpenCheckoutModal('premium')}
+                    className={`w-full py-4 px-4 font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 border border-white/20 cursor-pointer ${packageTier === 'premium' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' : 'bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 hover:from-pink-600 hover:to-rose-600 text-white'}`}
                   >
-                    <span>Pilih Paket Premium 🔥</span>
+                    <span>{packageTier === 'premium' ? '✓ Paket Aktif (VIP Premium)' : 'Pilih Paket Premium 🔥'}</span>
                   </button>
                 </motion.div>
 
@@ -1484,6 +1580,22 @@ export const SelectFrame: React.FC = () => {
           </section>
 
         </div>
+
+        {/* Upgrade Modal Component */}
+        <UpgradeModal
+          isOpen={upgradeModalOpen}
+          onClose={() => setUpgradeModalOpen(false)}
+          targetTier={upgradeModalTier}
+          targetFrame={upgradeModalFrame}
+          featureName={upgradeModalFeature}
+        />
+
+        {/* Checkout Simulator Modal Component */}
+        <CheckoutModal
+          isOpen={checkoutModalOpen}
+          onClose={() => setCheckoutModalOpen(false)}
+          targetTier={checkoutModalTier}
+        />
       </div>
 
       {/* PREVIEW MODAL */}

@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 import type { FilterType } from '../../context/PhotoboothContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Heart } from 'lucide-react';
+import { Sparkles, Heart, Lock } from 'lucide-react';
+import { UpgradeModal } from '../UpgradeModal';
 
 export const FilterPanel: React.FC = () => {
-  const { appliedFilter, setAppliedFilter } = usePhotobooth();
+  const { appliedFilter, setAppliedFilter, packageTier } = usePhotobooth();
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   const filters: { id: FilterType; name: string; desc: string; styleClass: string }[] = [
     {
@@ -58,6 +60,7 @@ export const FilterPanel: React.FC = () => {
       <div className="grid grid-cols-2 gap-2.5">
         {filters.map((fil) => {
           const isActive = appliedFilter === fil.id;
+          const isLocked = packageTier === 'free' && fil.id !== 'normal' && fil.id !== 'grayscale';
 
           return (
             <motion.button
@@ -65,12 +68,25 @@ export const FilterPanel: React.FC = () => {
               type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setAppliedFilter(fil.id)}
-              className={`flex flex-col items-left text-left p-3 rounded-2xl border-2 transition-all duration-300 shadow-sm relative overflow-hidden group ${isActive
+              onClick={() => {
+                if (isLocked) {
+                  setUpgradeModalOpen(true);
+                  return;
+                }
+                setAppliedFilter(fil.id);
+              }}
+              className={`flex flex-col items-left text-left p-3 rounded-2xl border-2 transition-all duration-300 shadow-sm relative overflow-hidden group cursor-pointer ${isActive
                   ? 'border-pink-400 bg-gradient-to-br from-white to-rose-50/20 ring-1 ring-pink-300'
                   : 'border-rose-50 bg-white hover:border-rose-200 hover:bg-zinc-50/40'
                 }`}
             >
+              {/* Lock Badge overlay jika terkunci */}
+              {isLocked && (
+                <div className="absolute top-2 right-2 z-10 bg-pink-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
+                  <Lock className="w-2.5 h-2.5" />
+                  <span>BASIC</span>
+                </div>
+              )}
               {/* Background Glow Effect saat Active */}
               {isActive && (
                 <div className="absolute inset-0 bg-pink-400/5 pointer-events-none" />
@@ -109,6 +125,14 @@ export const FilterPanel: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        targetTier="basic"
+        featureName="Semua Filter Warna Estetik"
+      />
     </div>
   );
 };

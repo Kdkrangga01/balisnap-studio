@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { usePhotobooth } from '../context/PhotoboothContext';
+import { usePhotobooth, type PackageTier } from '../context/PhotoboothContext';
+import { CheckoutModal } from '../components/CheckoutModal';
 import {
   Camera, Sparkles, Image as ImageIcon, ArrowRight, Maximize2, Menu, X, Star, Check,
   Crown, Wand2, UploadCloud, Download, CheckCircle2, Palette
@@ -91,8 +92,20 @@ const TransparentLogo: React.FC<{ src: string; className?: string }> = ({ src, c
 };
 
 export const Landing: React.FC = () => {
-  const { setStep } = usePhotobooth();
+  const { setStep, setPackageTier } = usePhotobooth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [checkoutModalTier, setCheckoutModalTier] = useState<PackageTier>('basic');
+
+  const handleSelectPackage = (tier: PackageTier) => {
+    if (tier === 'free') {
+      setPackageTier('free');
+      setStep('select-frame');
+    } else {
+      setCheckoutModalTier(tier);
+      setCheckoutModalOpen(true);
+    }
+  };
 
   // Motion Variants Ringan Berbasis GPU Acceleration
   const cardPopUpVariants: Variants = {
@@ -492,8 +505,8 @@ export const Landing: React.FC = () => {
               </div>
 
               <button
-                onClick={() => setStep('select-frame')}
-                className="w-full py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-purple-950 font-black text-xs uppercase tracking-widest rounded-2xl transition-colors active:scale-95"
+                onClick={() => handleSelectPackage('free')}
+                className="w-full py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-purple-950 font-black text-xs uppercase tracking-widest rounded-2xl transition-colors active:scale-95 cursor-pointer"
               >
                 Coba Gratis Sekarang
               </button>
@@ -513,7 +526,7 @@ export const Landing: React.FC = () => {
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-2xl">💖</span>
                   <span className="text-[10px] font-black tracking-widest text-pink-600 uppercase bg-pink-100/80 px-3 py-1 rounded-full">
-                    DATE & BESTIE PASS
+                    DATE &amp; BESTIE PASS
                   </span>
                 </div>
                 <h3 className="font-serif font-bold text-xl text-purple-950 mb-1">Paket BASIC</h3>
@@ -545,11 +558,11 @@ export const Landing: React.FC = () => {
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>🌈 Bebas Pakai Semua Filter Warna (Vintage, Cool, Vivid, Sepia, B&W).</span>
+                    <span>🌈 Bebas Pakai Semua Filter Warna (Vintage, Cool, Vivid, Sepia, B&amp;W).</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>🎀 <strong>Sticker Studio & Text Overlay</strong> (Tambah stiker digital & tulisan nama/tanggal).</span>
+                    <span>🎀 <strong>Sticker Studio &amp; Text Overlay</strong> (Tambah stiker digital &amp; tulisan nama/tanggal).</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -559,8 +572,8 @@ export const Landing: React.FC = () => {
               </div>
 
               <button
-                onClick={() => setStep('select-frame')}
-                className="w-full py-3.5 px-4 bg-pink-500 hover:bg-pink-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-md transition-transform active:scale-95"
+                onClick={() => handleSelectPackage('basic')}
+                className="w-full py-3.5 px-4 bg-pink-500 hover:bg-pink-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-md transition-transform active:scale-95 cursor-pointer"
               >
                 Pilih Paket Basic
               </button>
@@ -641,8 +654,8 @@ export const Landing: React.FC = () => {
               </div>
 
               <button
-                onClick={() => setStep('select-frame')}
-                className="w-full py-4 px-4 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 border border-white/20"
+                onClick={() => handleSelectPackage('premium')}
+                className="w-full py-4 px-4 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 border border-white/20 cursor-pointer"
               >
                 <span>Pilih Paket Premium 🔥</span>
               </button>
@@ -652,6 +665,14 @@ export const Landing: React.FC = () => {
 
         </div>
       </section>
+
+      {/* Checkout Simulator Modal */}
+      <CheckoutModal
+        isOpen={checkoutModalOpen}
+        onClose={() => setCheckoutModalOpen(false)}
+        targetTier={checkoutModalTier}
+        onSuccess={() => setStep('select-frame')}
+      />
 
       {/* ===== FOOTER ===== */}
       <footer className="py-8 sm:py-14 px-4 sm:px-8 border-t border-white/80 bg-white/50 backdrop-blur-md text-center text-[9.5px] sm:text-[10.5px] text-purple-900/60 font-bold relative z-20">

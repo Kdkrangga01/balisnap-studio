@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600" viewBox="0 0 1200 1600">
+  <!-- Studio Photobooth 2-Slot - Simple black dividers, transparent photo areas -->
+  <path fill-rule="evenodd" fill="#0a0a0a" d="
+    M 0 0 H 1200 V 1600 H 0 Z
+    M 30 30 H 1170 V 770 H 30 Z
+    M 30 830 H 1170 V 1570 H 30 Z
+  "/>
+</svg>

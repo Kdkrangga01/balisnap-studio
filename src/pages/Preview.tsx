@@ -2,9 +2,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import { usePhotobooth } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { exportHighResCanvas, saveOrShareImage, dataURItoBlob } from '../lib/exportImage';
+import { UpgradeModal } from '../components/UpgradeModal';
 import {
   ArrowLeft, Download, RotateCcw, Check, Share2, Sparkles, Heart, X,
-  ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck
+  ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -13,7 +14,8 @@ export const Preview: React.FC = () => {
   const {
     selectedFrame,
     setStep,
-    resetAll
+    resetAll,
+    packageTier
   } = usePhotobooth();
 
   const stageRef = useRef<any>(null);
@@ -22,6 +24,7 @@ export const Preview: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
   const [downloadedImageUri, setDownloadedImageUri] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   // NEW FEATURES STATE
   const [exportQuality, setExportQuality] = useState<'1080p' | '2k' | '4k'>('2k');
@@ -308,20 +311,34 @@ export const Preview: React.FC = () => {
                   {[
                     { id: '1080p', label: '1080p HD', desc: 'Cepat & Ringan' },
                     { id: '2k', label: '2K Studio', desc: 'Rekomendasi' },
-                    { id: '4k', label: '4K Ultra', desc: 'Maksimal Cetak' },
-                  ].map((q) => (
-                    <button
-                      key={q.id}
-                      onClick={() => setExportQuality(q.id as any)}
-                      className={`p-2 rounded-xl text-center border transition-all flex flex-col items-center justify-center ${exportQuality === q.id
-                          ? 'bg-white border-pink-400 text-pink-600 shadow-sm font-extrabold ring-2 ring-pink-300'
-                          : 'bg-white/50 border-pink-100 text-zinc-500 hover:bg-white font-medium'
-                        }`}
-                    >
-                      <span className="text-[11px] font-black">{q.label}</span>
-                      <span className="text-[8px] opacity-70">{q.desc}</span>
-                    </button>
-                  ))}
+                    { id: '4k', label: '4K Ultra', desc: 'Maksimal Cetak', isPremiumOnly: true },
+                  ].map((q) => {
+                    const isLocked = q.isPremiumOnly && packageTier !== 'premium';
+                    return (
+                      <button
+                        key={q.id}
+                        onClick={() => {
+                          if (isLocked) {
+                            setUpgradeModalOpen(true);
+                            return;
+                          }
+                          setExportQuality(q.id as any);
+                        }}
+                        className={`p-2 rounded-xl text-center border transition-all flex flex-col items-center justify-center relative cursor-pointer ${exportQuality === q.id
+                            ? 'bg-white border-pink-400 text-pink-600 shadow-sm font-extrabold ring-2 ring-pink-300'
+                            : 'bg-white/50 border-pink-100 text-zinc-500 hover:bg-white font-medium'
+                          }`}
+                      >
+                        {isLocked && (
+                          <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm">
+                            <Crown className="w-2 h-2 text-yellow-200 fill-yellow-200" /> VIP
+                          </span>
+                        )}
+                        <span className="text-[11px] font-black">{q.label}</span>
+                        <span className="text-[8px] opacity-70">{q.desc}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -468,6 +485,14 @@ export const Preview: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        targetTier="premium"
+        featureName="Export Super Ultra-HD 4K Print-Ready"
+      />
     </div>
   );
 };

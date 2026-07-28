@@ -1,11 +1,114 @@
 import React, { useEffect, useState } from 'react';
 import { Stage, Layer, Image as KonvaImage, Group, Rect, Text } from 'react-konva';
-import { usePhotobooth } from '../../context/PhotoboothContext';
+import { usePhotobooth, type FilterType } from '../../context/PhotoboothContext';
+import { frameColors } from '../../data/frameColors';
 
 interface PhotoCanvasProps {
   stageRef: React.RefObject<any>;
   containerWidth: number;
   isPreviewMode?: boolean;
+}
+
+// Helper function to resolve any color ID/HEX/pattern into valid Canvas fill
+function resolveColorToFill(
+  colorId: string,
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number
+): string | CanvasGradient | CanvasPattern {
+  if (!colorId || colorId === 'original') return '#18181b';
+
+  if (colorId.startsWith('#') || colorId.startsWith('rgb') || colorId.startsWith('hsl')) {
+    return colorId;
+  }
+
+  const matched = frameColors.find((fc) => fc.id === colorId);
+  if (matched) {
+    if (typeof matched.getFill === 'function') {
+      try {
+        const fill = matched.getFill(ctx, width, height);
+        if (fill) return fill;
+      } catch {
+        return matched.previewCss || '#18181b';
+      }
+    }
+    return matched.previewCss || '#18181b';
+  }
+
+  return colorId;
+}
+
+// Helper function to apply color filters directly onto photo image
+function applyFilterToImage(img: HTMLImageElement, filterType: FilterType): Promise<HTMLImageElement> {
+  return new Promise((resolve) => {
+    if (!img || filterType === 'normal') return resolve(img);
+
+    try {
+      const canvas = document.createElement('canvas');
+      const w = img.naturalWidth || img.width || 800;
+      const h = img.naturalHeight || img.height || 800;
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve(img);
+
+      ctx.drawImage(img, 0, 0, w, h);
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const data = imgData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        if (filterType === 'grayscale') {
+          const avg = 0.299 * r + 0.587 * g + 0.114 * b;
+          data[i] = avg;
+          data[i + 1] = avg;
+          data[i + 2] = avg;
+        } else if (filterType === 'sepia') {
+          const tr = 0.393 * r + 0.769 * g + 0.189 * b;
+          const tg = 0.349 * r + 0.686 * g + 0.168 * b;
+          const tb = 0.272 * r + 0.534 * g + 0.131 * b;
+          data[i] = Math.min(255, tr);
+          data[i + 1] = Math.min(255, tg);
+          data[i + 2] = Math.min(255, tb);
+        } else if (filterType === 'vintage') {
+          const tr = r * 1.18 + 18;
+          const tg = g * 1.05 + 8;
+          const tb = b * 0.82;
+          data[i] = Math.min(255, tr);
+          data[i + 1] = Math.min(255, tg);
+          data[i + 2] = Math.min(255, tb);
+        } else if (filterType === 'cool') {
+          const tr = r * 0.82;
+          const tg = g * 0.95 + 18;
+          const tb = b * 1.28 + 28;
+          data[i] = Math.min(255, tr);
+          data[i + 1] = Math.min(255, tg);
+          data[i + 2] = Math.min(255, tb);
+        } else if (filterType === 'vivid') {
+          const factor = 1.35;
+          let nr = (r - 128) * factor + 128;
+          let ng = (g - 128) * factor + 128;
+          let nb = (b - 128) * factor + 128;
+          data[i] = Math.max(0, Math.min(255, nr));
+          data[i + 1] = Math.max(0, Math.min(255, ng));
+          data[i + 2] = Math.max(0, Math.min(255, nb));
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+
+      const filteredImg = new window.Image();
+      filteredImg.crossOrigin = 'Anonymous';
+      filteredImg.src = canvas.toDataURL('image/png');
+      filteredImg.onload = () => resolve(filteredImg);
+      filteredImg.onerror = () => resolve(img);
+    } catch {
+      resolve(img);
+    }
+  });
 }
 
 export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
@@ -21,12 +124,17 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
     selectedId,
     setSelectedId,
     frameColor,
+    lineColor,
+    appliedFilter,
     stickers,
     texts,
+    packageTier,
   } = usePhotobooth();
 
   const [frameImage, setFrameImage] = useState<HTMLImageElement | null>(null);
+  const [recoloredFrameCanvas, setRecoloredFrameCanvas] = useState<HTMLCanvasElement | null>(null);
   const [loadedPhotos, setLoadedPhotos] = useState<(HTMLImageElement | null)[]>([]);
+  const [filteredPhotos, setFilteredPhotos] = useState<(HTMLImageElement | null)[]>([]);
   const [loadedStickerImages, setLoadedStickerImages] = useState<Record<string, HTMLImageElement>>({});
 
   // Hitung skala canvas berdasarkan dimensi bingkai
@@ -34,6 +142,37 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
   const frameHeight = selectedFrame?.height || 1800;
   const scale = containerWidth / frameWidth;
   const stageHeight = frameHeight * scale;
+
+  // Frame Recolor Engine (source-in composition dengan resolveColorToFill)
+  useEffect(() => {
+    if (!frameImage) {
+      setRecoloredFrameCanvas(null);
+      return;
+    }
+    const currentColor = lineColor || frameColor;
+    if (!currentColor || currentColor === 'original') {
+      setRecoloredFrameCanvas(null);
+      return;
+    }
+
+    try {
+      const c = document.createElement('canvas');
+      c.width = frameWidth;
+      c.height = frameHeight;
+      const ctx = c.getContext('2d');
+      if (!ctx) return;
+
+      ctx.drawImage(frameImage, 0, 0, frameWidth, frameHeight);
+      ctx.globalCompositeOperation = 'source-in';
+      const fillStyle = resolveColorToFill(currentColor, ctx, frameWidth, frameHeight);
+      ctx.fillStyle = fillStyle;
+      ctx.fillRect(0, 0, frameWidth, frameHeight);
+
+      setRecoloredFrameCanvas(c);
+    } catch (err) {
+      console.error("Frame recolor error:", err);
+    }
+  }, [frameImage, lineColor, frameColor, frameWidth, frameHeight]);
 
   // Load Gambar Bingkai Utama
   useEffect(() => {
@@ -73,6 +212,28 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
       isMounted = false;
     };
   }, [photos]);
+
+  // Apply Filter Efek Warna pada Setiap Foto secara Realtime
+  useEffect(() => {
+    let isMounted = true;
+    if (!loadedPhotos.length) {
+      setFilteredPhotos([]);
+      return;
+    }
+
+    Promise.all(
+      loadedPhotos.map((img) => {
+        if (!img) return Promise.resolve(null);
+        return applyFilterToImage(img, appliedFilter);
+      })
+    ).then((results) => {
+      if (isMounted) setFilteredPhotos(results);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [loadedPhotos, appliedFilter]);
 
   // Load Elemen Gambar Stiker secara Aman tanpa Error TypeScript
   useEffect(() => {
@@ -140,7 +301,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
         {/* LAYER 2: FOTO DENGAN MASKING/CLIPPING TERKUNCI DALAM SLOT */}
         <Layer>
           {selectedFrame.slotCoords.map((slot, index) => {
-            const photoImg = loadedPhotos[index];
+            const photoImg = filteredPhotos[index] || loadedPhotos[index];
             const transform = photoTransforms[index] || { zoom: 1, x: 0, y: 0 };
             const isSelected = selectedId === `photo-${index}`;
 
@@ -214,9 +375,17 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           })}
         </Layer>
 
-        {/* LAYER 3: OVERLAY MASK BINGKAI */}
+        {/* LAYER 3: OVERLAY MASK BINGKAI (DENGAN RECOLORING ENGINE) */}
         <Layer listening={false}>
-          {frameImage && (
+          {recoloredFrameCanvas ? (
+            <KonvaImage
+              image={recoloredFrameCanvas}
+              x={0}
+              y={0}
+              width={frameWidth}
+              height={frameHeight}
+            />
+          ) : frameImage ? (
             <KonvaImage
               image={frameImage}
               x={0}
@@ -224,7 +393,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
               width={frameWidth}
               height={frameHeight}
             />
-          )}
+          ) : null}
         </Layer>
 
         {/* LAYER 4: ELEMEN DEKORASI STIKER DAN TEKS */}
@@ -274,6 +443,34 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             />
           ))}
         </Layer>
+
+        {/* WATERMARK HANYA UNTUK PAKET FREE */}
+        {packageTier === 'free' && (
+          <Layer listening={false}>
+            <Group x={frameWidth - 290} y={frameHeight - 75}>
+              <Rect
+                x={0}
+                y={0}
+                width={270}
+                height={55}
+                fill="rgba(15, 23, 42, 0.82)"
+                cornerRadius={16}
+                shadowColor="rgba(0,0,0,0.4)"
+                shadowBlur={10}
+              />
+              <Text
+                x={18}
+                y={18}
+                text="📷 BALISNAP STUDIO • FREE"
+                fontSize={14}
+                fontStyle="bold"
+                fontFamily="sans-serif"
+                fill="#ffffff"
+                letterSpacing={1.5}
+              />
+            </Group>
+          </Layer>
+        )}
       </Stage>
     </div>
   );

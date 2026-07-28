@@ -6,8 +6,10 @@ import {
     Palette,
     Sliders,
     Sparkles,
-    Heart
+    Heart,
+    Crown
 } from 'lucide-react';
+import { UpgradeModal } from '../UpgradeModal';
 
 export const FrameColorPanel: React.FC = () => {
     const {
@@ -24,12 +26,18 @@ export const FrameColorPanel: React.FC = () => {
         addRecentColor,
         setAppliedFilter,
         setFrameColor,
-        setCardColor
+        setCardColor,
+        packageTier
     } = usePhotobooth();
 
     const [subTab, setSubTab] = useState<'line' | 'detail' | 'preset'>('line');
+    const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
     const handleApplyPreset = (preset: typeof presets[0]) => {
+        if (packageTier !== 'premium') {
+            setUpgradeModalOpen(true);
+            return;
+        }
         setLineColor(preset.frameColor);
         setCardColor('original');
         setFrameColor(preset.frameColor);
@@ -50,18 +58,25 @@ export const FrameColorPanel: React.FC = () => {
             <div className="flex gap-1 border-b border-cream/20 pb-2">
                 {[
                     { id: 'line', label: 'Warna Garis Pembatas', icon: Palette },
-                    { id: 'detail', label: 'Detail', icon: Sliders },
+                    { id: 'detail', label: 'Detail Studio Pro', icon: Sliders, isPremiumOnly: true },
                     { id: 'preset', label: 'Preset', icon: Sparkles },
                 ].map(t => (
                     <button
                         key={t.id}
                         type="button"
-                        onClick={() => setSubTab(t.id as any)}
-                        className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all ${subTab === t.id
+                        onClick={() => {
+                            if (t.isPremiumOnly && packageTier !== 'premium') {
+                                setUpgradeModalOpen(true);
+                                return;
+                            }
+                            setSubTab(t.id as any);
+                        }}
+                        className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer ${subTab === t.id
                             ? 'bg-rose-600 text-white shadow-sm'
                             : 'text-charcoal/60 hover:bg-rose-50'
                             }`}
                     >
+                        {t.isPremiumOnly && packageTier !== 'premium' && <Crown className="w-2.5 h-2.5 text-amber-500" />}
                         <t.icon className="w-3 h-3" />
                         {t.label}
                     </button>
@@ -109,6 +124,7 @@ export const FrameColorPanel: React.FC = () => {
                                         onChange={(e) => {
                                             const v = e.target.value;
                                             setLineColor(v);
+                                            setFrameColor(v);
                                             if (/^#[0-9A-F]{6}$/i.test(v)) {
                                                 addRecentColor(v);
                                             }
@@ -138,9 +154,12 @@ export const FrameColorPanel: React.FC = () => {
                                 <button
                                     key={l.id}
                                     type="button"
-                                    onClick={() => setLineColor(l.id)}
+                                    onClick={() => {
+                                        setLineColor(l.id);
+                                        setFrameColor(l.id);
+                                    }}
                                     title={l.name}
-                                    className={`py-1.5 rounded-lg border flex flex-col items-center gap-1 transition-all ${
+                                    className={`py-1.5 rounded-lg border flex flex-col items-center gap-1 transition-all cursor-pointer ${
                                         activeLineColor === l.id ? 'border-zinc-800 bg-white ring-2 ring-zinc-500 shadow-sm' : 'border-zinc-200 bg-white/60 hover:border-zinc-400'
                                     }`}
                                 >
@@ -163,10 +182,11 @@ export const FrameColorPanel: React.FC = () => {
                                             type="button"
                                             onClick={() => {
                                                 setLineColor(fc.id);
+                                                setFrameColor(fc.id);
                                                 addRecentColor(fc.previewCss);
                                             }}
                                             title={fc.name}
-                                            className={`flex items-center justify-center p-0.5 rounded-full transition-all duration-200 w-8 h-8 ${
+                                            className={`flex items-center justify-center p-0.5 rounded-full transition-all duration-200 w-8 h-8 cursor-pointer ${
                                                 isSelected ? 'ring-2 ring-rose-500 ring-offset-1 scale-105 shadow-md' : 'hover:scale-105'
                                             }`}
                                         >
@@ -340,6 +360,14 @@ export const FrameColorPanel: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Upgrade Modal */}
+            <UpgradeModal
+                isOpen={upgradeModalOpen}
+                onClose={() => setUpgradeModalOpen(false)}
+                targetTier="premium"
+                featureName="Full Custom Color & Wallpaper Studio"
+            />
         </div>
     );
 };
