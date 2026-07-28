@@ -1285,5 +1285,23 @@ export const frames: FrameTemplate[] = [
       { x: 117, y: 243, w: 691, h: 496, rx: 15 },
       { x: 141, y: 902, w: 666, h: 476, rx: 14 }
     ]
+  },
+  {
+    id: "custom-1785214754882-3psv",
+    name: "Monochrome Journal",
+    slots: 8,
+    category: "korean",
+    src: "/templates/custom-1785214754882-3psv.png",
+    width: 1023, height: 1537,
+    slotCoords: [
+      { x: 61, y: 108, w: 430, h: 317, rx: 6 },
+      { x: 61, y: 453, w: 430, h: 317, rx: 6 },
+      { x: 61, y: 798, w: 430, h: 317, rx: 6 },
+      { x: 61, y: 1143, w: 430, h: 317, rx: 6 },
+      { x: 532, y: 108, w: 430, h: 317, rx: 6 },
+      { x: 532, y: 453, w: 430, h: 317, rx: 6 },
+      { x: 532, y: 798, w: 430, h: 317, rx: 6 },
+      { x: 532, y: 1143, w: 430, h: 317, rx: 6 }
+    ]
   }
 ];

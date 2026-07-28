@@ -3,7 +3,7 @@ import { usePhotobooth } from '../context/PhotoboothContext';
 import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import {
-  ArrowLeft, Palette, Sparkles, Search, X, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, Trash2, CheckCircle2, ScanSearch, Eye, Pencil, SlidersHorizontal, LayoutGrid, Grid2X2, BookmarkCheck, Zap
+  ArrowLeft, Palette, Sparkles, Search, X, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, Trash2, CheckCircle2, ScanSearch, Eye, Pencil, SlidersHorizontal, LayoutGrid, Grid2X2, BookmarkCheck, Zap, Sliders
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
 
@@ -36,10 +36,51 @@ function loadFrameNameOverrides(): Record<string, string> {
   }
 }
 
+// PUSTAKA KATA-KATA ESTETIK UNTUK KOMBINASI NAMA UNIK (TANPA ANGKA / SIMBOL)
+const FIRST_WORDS: Record<string, string[]> = {
+  cute: ['Pink', 'Honey', 'Sweet', 'Fluffy', 'Rosy', 'Peach', 'Vanilla', 'Baby', 'Cotton', 'Jelly', 'Blush', 'Daisy', 'Sugar', 'Butter', 'Pastel', 'Berry', 'Chubby', 'Cozy'],
+  korean: ['Seoul', 'Minimal', 'Satin', 'Chiffon', 'Linen', 'Pale', 'Pure', 'Soft', 'Velvet', 'Dewy', 'Silent', 'Blue', 'Ivory', 'Monochrome', 'Calm', 'Breeze', 'Urban'],
+  polaroid: ['Golden', 'Faded', 'Sunlit', 'Warm', 'Instant', 'Amber', 'Timeless', 'Vintage', 'Dusty', 'Sepia', 'Cozy', 'Retro', 'Analog', 'Solitary', 'Rustic', 'Memoir'],
+  retro: ['Groovy', 'Vinyl', 'Cassette', 'Disco', 'Analogue', 'Classic', 'Sunset', 'Oldschool', 'Radiant', 'Nostalgic', 'Neon', 'Vintage', 'Midcentury', 'Vibrant', 'Retro'],
+  filmstrip: ['Cinema', 'Silver', 'Kodak', 'Monochrome', 'Analog', 'Cine', 'Midnight', 'Ethereal', 'Shadow', 'Reel', 'Halide', 'Noir', 'Grainy', 'Darkroom', 'Strip'],
+  custom: ['Velvet', 'Ethereal', 'Aura', 'Luminous', 'Celestial', 'Opalline', 'Radiant', 'Studio', 'Aesthetic', 'Urban', 'Cosmic', 'Serene', 'Chic', 'Solace', 'Mirage']
+};
+
+const SECOND_WORDS: Record<string, string[]> = {
+  cute: ['Serenade', 'Blossom', 'Kiss', 'Haze', 'Pop', 'Cloud', 'Milkshake', 'Sunday', 'Melody', 'Cheeks', 'Bunny', 'Parfait', 'Petal', 'Charm', 'Giggle', 'Dream'],
+  korean: ['Journal', 'Whisper', 'Radiance', 'Vibe', 'Dew', 'Muse', 'Linen', 'Atmosphere', 'Echo', 'Hour', 'Solace', 'Essence', 'Poem', 'Aura', 'Canvas', 'Breeze'],
+  polaroid: ['Memory', 'Nostalgia', 'Snapshots', 'Glow', 'Journal', 'Chronicle', 'Frame', 'Memoir', 'Echo', 'Haven', 'Vista', 'Impression', 'Reminiscence', 'Archive'],
+  retro: ['Romance', 'Era', 'Scrapbook', 'Boulevard', 'Symphony', 'Velour', 'Serenade', 'Tune', 'Club', 'Melody', 'Vibe', 'Cassette', 'Jukebox', 'Groove', 'Rhythm'],
+  filmstrip: ['Halide', 'Chronicle', 'Moments', 'Echo', 'Reel', 'Frame', 'Strip', 'Cinema', 'Archive', 'Motion', 'Exposition', 'Negatives', 'Capture', 'Perspective'],
+  custom: ['Archive', 'Aura', 'Essence', 'Canvas', 'Dreams', 'Glitch', 'Edit', 'Exclusive', 'Mirage', 'Cascade', 'Elegance', 'Spectrum', 'Visage', 'Illusion']
+};
+
+// GENERATOR DENGAN SISTEM PENGECEKAN KEUNIKAN AGAR TIDAK BISA KEMBAR
+function generateUniqueAestheticName(category: string, existingNames: string[]): string {
+  const firsts = FIRST_WORDS[category] || FIRST_WORDS.custom;
+  const seconds = SECOND_WORDS[category] || SECOND_WORDS.custom;
+
+  const existingSet = new Set(existingNames.map((n) => n.toLowerCase().trim()));
+
+  for (let i = 0; i < 150; i++) {
+    const f = firsts[Math.floor(Math.random() * firsts.length)];
+    const s = seconds[Math.floor(Math.random() * seconds.length)];
+    const candidate = `${f} ${s}`;
+
+    if (!existingSet.has(candidate.toLowerCase())) {
+      return candidate;
+    }
+  }
+
+  const f = firsts[Math.floor(Math.random() * firsts.length)];
+  const s = seconds[Math.floor(Math.random() * seconds.length)];
+  return `${f} ${s} Edit`;
+}
+
 function autoDetectPhotoSlots(
   canvas: HTMLCanvasElement,
   numSlots: number,
-  tolerance: number = 42
+  tolerance: number = 60
 ): (SlotCoord | null)[] {
   const ctx = canvas.getContext('2d');
   if (!ctx) return Array(numSlots).fill(null);
@@ -142,7 +183,7 @@ function autoDetectPhotoSlots(
   }
   const candidates: Candidate[] = [];
   const minAreaFrac = 0.002;
-  const maxAreaFrac = numSlots <= 1 ? 0.90 : Math.min(0.85, 2.0 / numSlots);
+  const maxAreaFrac = numSlots <= 1 ? 0.95 : Math.min(0.88, 2.2 / numSlots);
 
   stats.forEach((s, label) => {
     if (s.touchesBorder) return;
@@ -155,7 +196,7 @@ function autoDetectPhotoSlots(
     const fillRatio = s.area / bboxArea;
     const isTransparent = s.transparentPixels > s.opaquePixels;
 
-    if (!isTransparent && fillRatio < 0.50) return;
+    if (!isTransparent && fillRatio < 0.45) return;
 
     candidates.push({
       label,
@@ -197,16 +238,6 @@ function autoDetectPhotoSlots(
     if (colA !== colB) return colA - colB;
     return a.y - b.y;
   });
-
-  for (const c of chosen) {
-    for (let yy = c.y; yy < c.y + c.h; yy++) {
-      const rowBase = yy * width;
-      for (let xx = c.x; xx < c.x + c.w; xx++) {
-        data[(rowBase + xx) * 4 + 3] = 0;
-      }
-    }
-  }
-  ctx.putImageData(imageData, 0, 0);
 
   const result: (SlotCoord | null)[] = chosen.map((c) => ({
     x: c.x, y: c.y, w: c.w, h: c.h,
@@ -373,21 +404,21 @@ const FrameCard: React.FC<{
         <div className="flex gap-1.5 z-20">
           <button
             onClick={(e) => { e.stopPropagation(); onFavorite(e); }}
-            className="w-8 h-8 rounded-2xl bg-white/90 border border-rose-100 flex items-center justify-center hover:bg-rose-50 shadow-sm transition-all active:scale-90"
+            className="w-8 h-8 rounded-2xl bg-white/90 border border-rose-100 flex items-center justify-center hover:bg-rose-50 shadow-sm transition-all active:scale-90 cursor-pointer"
             title="Favorit"
           >
             <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'fill-pink-500 text-pink-500 scale-110' : 'text-rose-300 hover:text-pink-400'}`} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(e); }}
-            className="w-8 h-8 rounded-2xl bg-white/90 border border-sky-100 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-sky-50 shadow-sm active:scale-90"
+            className="w-8 h-8 rounded-2xl bg-white/90 border border-sky-100 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-sky-50 shadow-sm active:scale-90 cursor-pointer"
             title="Ubah Nama"
           >
             <Pencil className="w-3.5 h-3.5 text-sky-400 hover:text-sky-600" />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(e); }}
-            className="w-8 h-8 rounded-2xl bg-white/90 border border-rose-100 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-50 shadow-sm active:scale-90"
+            className="w-8 h-8 rounded-2xl bg-white/90 border border-rose-100 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-50 shadow-sm active:scale-90 cursor-pointer"
             title="Hapus Frame"
           >
             <Trash2 className="w-3.5 h-3.5 text-rose-400 hover:text-rose-600" />
@@ -550,15 +581,17 @@ export const SelectFrame: React.FC = () => {
     }, 3000);
   }, [deleteTarget, customFrames, deleteCustomFrame]);
 
+  // STATE MODAL UPLOAD BINGKAI KUSTOM
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [uploadName, setUploadName] = useState('');
   const [uploadCategory, setUploadCategory] = useState<FrameTemplate['category']>('custom');
   const [uploadSlots, setUploadSlots] = useState(1);
   const [uploadImageDims, setUploadImageDims] = useState<{ w: number; h: number } | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [detectionTolerance, setDetectionTolerance] = useState<number>(60);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const workingCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const originalCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
@@ -583,9 +616,50 @@ export const SelectFrame: React.FC = () => {
     [rawAllFrames, frameNameOverrides]
   );
 
-  const AUTO_DETECT_TOLERANCE_STEPS = [42, 60, 80, 105, 135];
+  // AUTO-PERBAIKAN NAMA ANOMALI PADA SEMUA FRAME (LIBRARY BAWAAN MAUPUN KUSTOM UPLOAD)
+  // (mis. "hem", "ahhh", dsb — nama singkat/asal-asalan yang bukan hasil generator estetik)
+  // Nama tersebut otomatis diseleksi & diganti dengan nama estetik unik keren modern
+  // sesuai tema/kategori frame-nya masing-masing (cute, korean, retro, polaroid, filmstrip, custom),
+  // lalu disimpan permanen via frameNameOverrides supaya tidak diproses ulang & tidak berubah lagi
+  // di kunjungan berikutnya (sekali fix, permanen).
+  const anomalyFixRanRef = useRef(false);
 
-  const runAutoDetect = useCallback((slots: number) => {
+  useEffect(() => {
+    if (anomalyFixRanRef.current) return;
+    if (rawAllFrames.length === 0) return;
+    anomalyFixRanRef.current = true;
+
+    // Nama dianggap "estetik" jika berupa 2 kata berawalan huruf kapital (huruf saja),
+    // persis seperti pola hasil generateUniqueAestheticName. Selain itu dianggap anomali
+    // (nama pendek/gado-gado seperti "hem", "ahhh", "tes", "asdf", dsb).
+    const isAestheticName = (name: string): boolean => {
+      const parts = name.trim().split(/\s+/);
+      if (parts.length !== 2) return false;
+      return parts.every((p) => /^[A-Z][a-zA-Z]*$/.test(p));
+    };
+
+    setFrameNameOverrides((prev) => {
+      const next = { ...prev };
+      const existingNames = allFrames.map((f) => (next[f.id] ? next[f.id] : f.name));
+      let changed = false;
+
+      // Berlaku untuk SEMUA frame yang tampil — bawaan library maupun kustom upload —
+      // bukan hanya frame kustom, karena nama anomali bisa muncul di keduanya.
+      for (const fr of rawAllFrames) {
+        if (next[fr.id]) continue; // sudah punya nama override (manual/otomatis), jangan diutak-atik lagi
+        if (isAestheticName(fr.name)) continue; // nama sudah estetik, biarkan apa adanya
+
+        const newName = generateUniqueAestheticName(fr.category, existingNames);
+        next[fr.id] = newName;
+        existingNames.push(newName);
+        changed = true;
+      }
+
+      return changed ? next : prev;
+    });
+  }, [rawAllFrames, allFrames]);
+
+  const runAutoDetect = useCallback((slots: number, tolerance: number = 60) => {
     const original = originalCanvasRef.current;
     if (!original) return;
 
@@ -593,61 +667,33 @@ export const SelectFrame: React.FC = () => {
     setUploadError(null);
 
     setTimeout(() => {
-      let bestCanvas: HTMLCanvasElement | null = null;
-      let bestDetected: (SlotCoord | null)[] = [];
-      let bestFound = -1;
+      const canvas = document.createElement('canvas');
+      canvas.width = original.width;
+      canvas.height = original.height;
+      const realCtx = canvas.getContext('2d');
+      if (!realCtx) return;
+      realCtx.drawImage(original, 0, 0);
 
-      for (const tolerance of AUTO_DETECT_TOLERANCE_STEPS) {
-        const canvas = document.createElement('canvas');
-        canvas.width = original.width;
-        canvas.height = original.height;
-        const realCtx = canvas.getContext('2d');
-        if (!realCtx) continue;
-        realCtx.drawImage(original, 0, 0);
-
-        const detected = autoDetectPhotoSlots(canvas, slots, tolerance);
-        const foundCount = detected.filter((s) => s !== null).length;
-
-        if (foundCount > bestFound) {
-          bestFound = foundCount;
-          bestCanvas = canvas;
-          bestDetected = detected;
-        }
-
-        if (foundCount >= slots) break;
-      }
-
+      const detected = autoDetectPhotoSlots(canvas, slots, tolerance);
       const gridSlots = generateGridSlots(original.width, original.height, slots);
 
-      if (bestFound < slots || bestDetected.some(s => s === null)) {
-        const gridCanvas = document.createElement('canvas');
-        gridCanvas.width = original.width;
-        gridCanvas.height = original.height;
-        const gridCtx = gridCanvas.getContext('2d');
-        if (gridCtx) {
-          gridCtx.drawImage(original, 0, 0);
-          gridSlots.forEach((s) => gridCtx.clearRect(s.x, s.y, s.w, s.h));
-          bestCanvas = gridCanvas;
-        }
-      }
-
       const finalSlots: SlotCoord[] = Array.from({ length: slots }).map((_, i) => {
-        return bestDetected[i] || gridSlots[i] || { x: 0, y: 0, w: original.width, h: original.height, rx: 10 };
+        return detected[i] || gridSlots[i] || { x: 0, y: 0, w: original.width, h: original.height, rx: 10 };
       });
 
-      if (!bestCanvas) {
-        bestCanvas = document.createElement('canvas');
-        bestCanvas.width = original.width;
-        bestCanvas.height = original.height;
-        const ctx = bestCanvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(original, 0, 0);
-          gridSlots.forEach((s) => ctx.clearRect(s.x, s.y, s.w, s.h));
-        }
+      const resultCanvas = document.createElement('canvas');
+      resultCanvas.width = original.width;
+      resultCanvas.height = original.height;
+      const resCtx = resultCanvas.getContext('2d');
+      if (resCtx) {
+        resCtx.drawImage(original, 0, 0);
+        finalSlots.forEach((s) => {
+          if (s) resCtx.clearRect(s.x, s.y, s.w, s.h);
+        });
       }
 
-      workingCanvasRef.current = bestCanvas;
-      setPreviewSrc(bestCanvas.toDataURL('image/png'));
+      workingCanvasRef.current = resultCanvas;
+      setPreviewSrc(resultCanvas.toDataURL('image/png'));
       setCustomSlotCoords(finalSlots);
       setUploadError(null);
       setIsAutoDetecting(false);
@@ -684,17 +730,15 @@ export const SelectFrame: React.FC = () => {
       setUploadImageDims({ w: targetW, h: targetH });
       setPreviewSrc(canvas.toDataURL('image/png'));
       setCustomSlotCoords(Array(uploadSlots).fill(null));
-      runAutoDetect(uploadSlots);
+      runAutoDetect(uploadSlots, detectionTolerance);
     };
     img.onerror = () => {
       setUploadError('Gagal memproses file gambar. Silakan gunakan format file gambar lain.');
     };
     img.src = dataUrl;
-  }, [uploadSlots, runAutoDetect]);
+  }, [uploadSlots, runAutoDetect, detectionTolerance]);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processUploadedFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) { setUploadError('Ekstensi file tidak valid. Harap pilih gambar.'); return; }
     if (file.size > 15 * 1024 * 1024) { setUploadError('Ukuran file maksimal 15 MB.'); return; }
     setUploadError(null);
@@ -706,9 +750,34 @@ export const SelectFrame: React.FC = () => {
     reader.readAsDataURL(file);
   }, [initWorkingCanvas]);
 
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processUploadedFile(file);
+  }, [processUploadedFile]);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processUploadedFile(file);
+  };
+
   const _handleResetAll = useCallback(() => {
-    runAutoDetect(uploadSlots);
-  }, [uploadSlots, runAutoDetect]);
+    runAutoDetect(uploadSlots, detectionTolerance);
+  }, [uploadSlots, detectionTolerance, runAutoDetect]);
 
   const handleRemoveImage = useCallback(() => {
     workingCanvasRef.current = null;
@@ -723,15 +792,26 @@ export const SelectFrame: React.FC = () => {
   const handleSlotsChange = useCallback((slots: number) => {
     setUploadSlots(slots);
     if (originalCanvasRef.current) {
-      runAutoDetect(slots);
+      runAutoDetect(slots, detectionTolerance);
     } else {
       setCustomSlotCoords(Array(slots).fill(null));
     }
-  }, [runAutoDetect]);
+  }, [runAutoDetect, detectionTolerance]);
 
+  const handleToleranceChange = useCallback((tol: number) => {
+    setDetectionTolerance(tol);
+    if (originalCanvasRef.current) {
+      runAutoDetect(uploadSlots, tol);
+    }
+  }, [runAutoDetect, uploadSlots]);
+
+  // SUBMIT PENDAFTARAN FRAME (DENGAN GENERATOR NAMA SANGAT VARIASI DAN 100% UNIK)
   const handleUploadSubmit = useCallback(() => {
-    if (!uploadName.trim()) { setUploadError('Nama frame harus diisi.'); return; }
     if (!workingCanvasRef.current || !uploadImageDims) { setUploadError('Pilih file gambar frame terlebih dahulu.'); return; }
+
+    // Ambil daftar seluruh nama yang sudah ada untuk menjamin tidak ada nama kembar
+    const existingNames = allFrames.map((f) => f.name);
+    const autoGeneratedName = generateUniqueAestheticName(uploadCategory, existingNames);
 
     const validSlots = customSlotCoords.filter((s): s is NonNullable<typeof s> => s !== null);
     if (validSlots.length < uploadSlots) {
@@ -743,7 +823,7 @@ export const SelectFrame: React.FC = () => {
     const id = `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const newFrame: FrameTemplate = {
       id,
-      name: uploadName.trim(),
+      name: autoGeneratedName,
       slots: uploadSlots,
       category: uploadCategory,
       src: finalSrc,
@@ -764,7 +844,6 @@ export const SelectFrame: React.FC = () => {
     setTimeout(() => {
       setIsUploadModalOpen(false);
       setUploadSuccess(false);
-      setUploadName('');
       setUploadCategory('custom');
       setUploadSlots(1);
       workingCanvasRef.current = null;
@@ -774,7 +853,7 @@ export const SelectFrame: React.FC = () => {
       setUploadError(null);
       setCustomSlotCoords([null]);
     }, 1200);
-  }, [uploadName, uploadImageDims, uploadSlots, uploadCategory, customSlotCoords, addCustomFrame]);
+  }, [uploadImageDims, uploadSlots, uploadCategory, customSlotCoords, addCustomFrame, allFrames]);
 
   const trendingIds = ['film-classic-1', 'polaroid-single', 'korean-pink-3', 'cute-hearts-1', 'retro-vintage-1'];
 
@@ -807,7 +886,6 @@ export const SelectFrame: React.FC = () => {
     { label: 'Custom Upload', value: 'custom', emoji: '📁' },
   ], []);
 
-  // Hitung jumlah frame secara presisi per kategori
   const getCategoryCount = useCallback((category: string) => {
     if (category === 'all') return allFrames.length;
     if (category === 'custom') {
@@ -935,7 +1013,7 @@ export const SelectFrame: React.FC = () => {
 
         <div className="max-w-7xl w-full relative z-10 flex flex-col gap-6">
 
-          {/* Premium Header Banner */}
+          {/* Header Banner Utama */}
           <header className="flex flex-col md:flex-row justify-between items-center text-center md:text-left bg-white/80 backdrop-blur-2xl border-2 border-white p-6 md:p-8 rounded-[36px] shadow-[0_15px_35px_rgba(244,114,182,0.12)] gap-6 w-full relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-pink-300/30 to-purple-300/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -970,7 +1048,7 @@ export const SelectFrame: React.FC = () => {
             </div>
           </header>
 
-          {/* Master Control Deck & Filters */}
+          {/* Master Control Deck & Filter Bar */}
           <div className="w-full bg-white/80 backdrop-blur-2xl border-2 border-white p-5 md:p-6 rounded-[36px] shadow-[0_12px_30px_rgba(244,114,182,0.1)] flex flex-col gap-5 text-left">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 w-full">
               <div className="relative md:col-span-6 w-full">
@@ -1042,7 +1120,7 @@ export const SelectFrame: React.FC = () => {
               </div>
             </div>
 
-            {/* Grid Slot Filters - 100% Functioning */}
+            {/* Filter Slot Grid */}
             <div className="space-y-2">
               <div className="text-[10px] font-black uppercase tracking-widest text-pink-500 flex items-center gap-1.5">
                 <Grid3x3 className="w-3.5 h-3.5" /> <span>Jumlah Slot Foto</span>
@@ -1063,7 +1141,7 @@ export const SelectFrame: React.FC = () => {
               </div>
             </div>
 
-            {/* Category Filters - 100% Functioning with Dynamic Badge Counts */}
+            {/* Filter Kategori Tema */}
             <div className="space-y-2">
               <div className="text-[10px] font-black uppercase tracking-widest text-pink-500 flex items-center gap-1.5">
                 <Palette className="w-3.5 h-3.5" /> <span>Kategori Tema Estetika</span>
@@ -1093,7 +1171,7 @@ export const SelectFrame: React.FC = () => {
             </div>
           </div>
 
-          {/* Catalog Display Section */}
+          {/* Tampilan Katalog Bingkai */}
           <div className="w-full">
             {filteredFrames.length > 0 ? (
               <motion.div
@@ -1406,18 +1484,18 @@ export const SelectFrame: React.FC = () => {
               className="relative w-full max-w-lg bg-white/95 backdrop-blur-2xl border-2 border-white rounded-[36px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col text-left"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={() => setIsUploadModalOpen(false)} className="absolute top-5 right-5 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-pink-600 cursor-pointer">
+              <button onClick={() => setIsUploadModalOpen(false)} className="absolute top-5 right-5 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-pink-600 cursor-pointer hover:bg-rose-200 transition-colors">
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="overflow-y-auto p-6 md:p-8 flex-1">
+              <div className="overflow-y-auto p-6 md:p-8 flex-1 custom-scroll">
                 <div className="flex items-center gap-3.5 mb-6 pb-4 border-b border-rose-100">
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 flex items-center justify-center text-white shadow-md">
                     <Upload className="w-4 h-4 text-white" />
                   </div>
                   <div>
                     <h2 className="font-extrabold text-xl text-zinc-900">Unggah Frame Kustom</h2>
-                    <p className="text-[11px] text-zinc-400 font-semibold">Sistem otomatis mendeteksi transparansi lubang cetakan piksel.</p>
+                    <p className="text-[11px] text-zinc-400 font-semibold">Nama frame unik estetik otomatis dibuatkan secara eksklusif ✨</p>
                   </div>
                 </div>
 
@@ -1427,6 +1505,7 @@ export const SelectFrame: React.FC = () => {
                       <CheckCircle2 className="w-7 h-7" />
                     </div>
                     <h3 className="text-lg font-extrabold text-zinc-800">Berhasil Terdaftar!</h3>
+                    <p className="text-xs text-zinc-400 font-semibold mt-1">Nama estetik unik diterapkan ✨</p>
                   </motion.div>
                 ) : (
                   <div className="space-y-4">
@@ -1436,23 +1515,13 @@ export const SelectFrame: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">Nama Frame *</label>
-                        <input
-                          type="text"
-                          value={uploadName}
-                          onChange={(e) => setUploadName(e.target.value)}
-                          placeholder="Ex: My Frame"
-                          className="w-full px-3.5 py-2.5 bg-white border border-rose-100 rounded-2xl text-xs text-zinc-800 focus:outline-none focus:ring-2 focus:ring-pink-300 font-semibold"
-                        />
-                      </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1">Style Rupa</label>
                         <select
                           value={uploadCategory}
                           onChange={(e) => setUploadCategory(e.target.value as any)}
-                          className="w-full px-3.5 py-2.5 bg-white border border-rose-100 rounded-2xl text-xs text-zinc-700 font-black focus:outline-none cursor-pointer"
+                          className="w-full px-3.5 py-2.5 bg-white border border-rose-100 rounded-2xl text-xs text-zinc-700 font-black focus:outline-none cursor-pointer shadow-xs"
                         >
                           <option value="custom">Custom Canvas</option>
                           <option value="cute">Cute Kawaii</option>
@@ -1467,7 +1536,7 @@ export const SelectFrame: React.FC = () => {
                         <select
                           value={uploadSlots}
                           onChange={(e) => handleSlotsChange(Number(e.target.value))}
-                          className="w-full px-3.5 py-2.5 bg-white border border-rose-100 rounded-2xl text-xs text-zinc-700 font-black focus:outline-none cursor-pointer"
+                          className="w-full px-3.5 py-2.5 bg-white border border-rose-100 rounded-2xl text-xs text-zinc-700 font-black focus:outline-none cursor-pointer shadow-xs"
                         >
                           {[1, 2, 3, 4, 6, 8].map(n => <option key={n} value={n}>{n} Slot Placeholder</option>)}
                         </select>
@@ -1486,11 +1555,20 @@ export const SelectFrame: React.FC = () => {
                       />
 
                       {!previewSrc ? (
-                        <button onClick={() => fileInputRef.current?.click()} className="w-full py-8 border-2 border-dashed border-rose-200 hover:border-pink-400 rounded-2xl bg-rose-50/40 hover:bg-rose-50/70 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors">
+                        <div
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                          onClick={() => fileInputRef.current?.click()}
+                          className={`w-full py-8 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all ${isDraggingFile
+                            ? 'border-pink-500 bg-pink-100/60 scale-[1.01]'
+                            : 'border-rose-200 hover:border-pink-400 bg-rose-50/40 hover:bg-rose-50/70'
+                            }`}
+                        >
                           <Upload className="w-6 h-6 text-pink-500 animate-bounce" />
-                          <span className="text-xs font-extrabold text-zinc-700">Pilih berkas kompilasi gambar</span>
+                          <span className="text-xs font-extrabold text-zinc-700">Pilih / Drag &amp; Drop berkas gambar</span>
                           <span className="text-[10px] text-zinc-400 font-semibold">PNG, JPG, WEBP maks 15 MB</span>
-                        </button>
+                        </div>
                       ) : (
                         <div className="px-4 py-2.5 bg-rose-50/50 border border-rose-100 rounded-2xl flex justify-between items-center text-xs">
                           <span className="font-mono text-zinc-500 font-bold">{uploadImageDims && `${uploadImageDims.w} × ${uploadImageDims.h} px`}</span>
@@ -1513,12 +1591,29 @@ export const SelectFrame: React.FC = () => {
                           ) : (
                             <>
                               <CheckCircle2 className="w-3.5 h-3.5" />
-                              Semua {uploadSlots} area foto otomatis transparan &amp; pas — bingkai aslinya tetap sama. Siap didaftarkan!
+                              Semua {uploadSlots} area foto otomatis transparan &amp; pas! Siap didaftarkan.
                             </>
                           )}
                         </div>
 
-                        <span className="text-[10px] font-black uppercase text-zinc-400 block">Pratinjau Bingkai</span>
+                        {/* Control Slider Sensitivitas Pemotong */}
+                        <div className="bg-white border border-rose-100 p-2.5 rounded-xl flex items-center justify-between gap-3">
+                          <span className="text-[10px] font-extrabold text-zinc-600 uppercase flex items-center gap-1.5 flex-shrink-0">
+                            <Sliders className="w-3.5 h-3.5 text-pink-500" />
+                            Sensitivitas Pemotong:
+                          </span>
+                          <input
+                            type="range"
+                            min="10"
+                            max="150"
+                            value={detectionTolerance}
+                            onChange={(e) => handleToleranceChange(Number(e.target.value))}
+                            className="w-full accent-pink-500 cursor-pointer h-1.5 bg-rose-100 rounded-lg"
+                          />
+                          <span className="text-[10px] font-mono font-black text-pink-600 w-8 text-right">{detectionTolerance}</span>
+                        </div>
+
+                        <span className="text-[10px] font-black uppercase text-zinc-400 block">Pratinjau Bingkai Diterapkan</span>
 
                         <div
                           className="relative border border-rose-100 rounded-xl overflow-hidden mx-auto bg-white flex items-center justify-center shadow-sm"
@@ -1529,7 +1624,34 @@ export const SelectFrame: React.FC = () => {
                             backgroundSize: '12px 14px',
                           }}
                         >
-                          <img src={previewSrc} alt="Workspace" className="max-w-full max-h-full object-contain" />
+                          <img src={previewSrc} alt="Workspace" className="max-w-full max-h-full object-contain relative z-10" />
+
+                          <div className="absolute inset-0 pointer-events-none z-20">
+                            {customSlotCoords.map((s, idx) => {
+                              if (!s) return null;
+                              const leftPercent = (s.x / uploadImageDims.w) * 100;
+                              const topPercent = (s.y / uploadImageDims.h) * 100;
+                              const widthPercent = (s.w / uploadImageDims.w) * 100;
+                              const heightPercent = (s.h / uploadImageDims.h) * 100;
+
+                              return (
+                                <div
+                                  key={idx}
+                                  className="absolute border-2 border-dashed border-pink-500/80 bg-pink-500/10 rounded-sm flex items-center justify-center"
+                                  style={{
+                                    left: `${leftPercent}%`,
+                                    top: `${topPercent}%`,
+                                    width: `${widthPercent}%`,
+                                    height: `${heightPercent}%`,
+                                  }}
+                                >
+                                  <span className="text-[8px] font-black text-pink-700 bg-white/90 px-1 py-0.2 rounded shadow-xs">
+                                    #{idx + 1}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
 
                         <div className="flex justify-end items-center text-[10px] font-bold">
@@ -1548,7 +1670,7 @@ export const SelectFrame: React.FC = () => {
                   <button onClick={() => setIsUploadModalOpen(false)} className="flex-1 py-3 bg-white border-2 border-rose-200 rounded-2xl text-xs font-bold text-zinc-600 hover:bg-rose-50 transition-colors cursor-pointer">Batal</button>
                   <button
                     onClick={handleUploadSubmit}
-                    disabled={!uploadName.trim() || !previewSrc || isAutoDetecting}
+                    disabled={!previewSrc || isAutoDetecting}
                     className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs tracking-wider uppercase rounded-2xl shadow-lg shadow-pink-500/25 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   >
                     Daftarkan Frame ✨

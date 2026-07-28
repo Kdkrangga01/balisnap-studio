@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MIN_PHOTO_ZOOM, MAX_PHOTO_ZOOM } from '../context/PhotoboothContext';
+import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MAX_PHOTO_ZOOM } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { FilterPanel } from '../components/editor/FilterPanel';
 import { FrameColorPanel } from '../components/editor/FrameColorPanel';
@@ -27,7 +27,12 @@ import {
   RotateCcw,
   ImageIcon,
   Wand2,
+  Maximize,
+  Scan
 } from 'lucide-react';
+
+// Batas zoom terkecil diturunkan ke 0.1 (10%) agar foto bisa diperkecil jauh lebih muat
+const CUSTOM_MIN_PHOTO_ZOOM = 0.1;
 
 export const Editor: React.FC = () => {
   const {
@@ -141,13 +146,21 @@ export const Editor: React.FC = () => {
     : DEFAULT_PHOTO_ZOOM;
   const PHOTO_ZOOM_BUTTON_STEP = 0.15;
 
+  // Handler Zoom Perkecil / Perbesar tanpa merusak/menggeser bingkai
   const handlePhotoZoom = (direction: 1 | -1) => {
     if (selectedPhotoIndex === null) return;
     const nextZoom = Math.max(
-      MIN_PHOTO_ZOOM,
+      CUSTOM_MIN_PHOTO_ZOOM,
       Math.min(MAX_PHOTO_ZOOM, selectedPhotoZoom + direction * PHOTO_ZOOM_BUTTON_STEP)
     );
     updatePhotoTransform(selectedPhotoIndex, { zoom: nextZoom });
+  };
+
+  // Fit foto agar pas seutuhnya dalam bingkai (Contain Fit)
+  const handlePhotoFitToFrame = () => {
+    if (selectedPhotoIndex === null) return;
+    // Set zoom ke 0.5 atau nilai optimal agar seluruh foto tampil utuh tanpa terpotong
+    updatePhotoTransform(selectedPhotoIndex, { zoom: 0.5, x: 0, y: 0 });
   };
 
   const handlePhotoZoomReset = () => {
@@ -198,7 +211,7 @@ export const Editor: React.FC = () => {
           <div>
             <button
               onClick={() => setStep('capture')}
-              className="flex items-center gap-2 font-semibold text-xs tracking-wider uppercase mb-2 text-rose-500 hover:text-rose-700 transition-all group"
+              className="flex items-center gap-2 font-semibold text-xs tracking-wider uppercase mb-2 text-rose-500 hover:text-rose-700 transition-all group cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               Kembali ke Kamera
@@ -220,7 +233,7 @@ export const Editor: React.FC = () => {
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setStep('preview')}
-              className="relative px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-rose-200 hover:shadow-xl hover:shadow-rose-300 transition-all flex items-center gap-2 overflow-hidden group border border-white/50"
+              className="relative px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-rose-200 hover:shadow-xl hover:shadow-rose-300 transition-all flex items-center gap-2 overflow-hidden group border border-white/50 cursor-pointer"
               style={{
                 background: 'linear-gradient(135deg, #FB7185 0%, #E11D48 100%)',
               }}
@@ -266,7 +279,7 @@ export const Editor: React.FC = () => {
             <div className="flex flex-wrap justify-center gap-3 md:gap-5 mt-4 text-[10px] text-slate-500 font-semibold tracking-wider">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-rose-400" />
-                Klik elemen
+                Klik foto/elemen
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-400" />
@@ -295,6 +308,35 @@ export const Editor: React.FC = () => {
               }}
             >
 
+              {/* Quick Select Slot Foto Bar */}
+              <div className="bg-purple-50/80 border border-purple-100 p-2.5 rounded-2xl flex flex-col gap-2">
+                <div className="flex items-center justify-between text-[10px] font-black uppercase text-purple-700 tracking-wider">
+                  <span className="flex items-center gap-1">
+                    <ImageIcon className="w-3.5 h-3.5 text-purple-500" />
+                    Pilih Foto Untuk Disesuaikan:
+                  </span>
+                  <span className="text-slate-400 font-bold">{totalSlots} Slot</span>
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto custom-scroll pb-1">
+                  {Array.from({ length: totalSlots }).map((_, idx) => {
+                    const isSelected = selectedPhotoIndex === idx;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedId(`photo-${idx}`)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${isSelected
+                            ? 'bg-purple-600 text-white shadow-md shadow-purple-200 scale-105'
+                            : 'bg-white text-slate-600 border border-purple-100 hover:bg-purple-100/60'
+                          }`}
+                      >
+                        <Scan className="w-3 h-3" />
+                        <span>Foto #{idx + 1}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Tool Tabs */}
               <div
                 className="grid grid-cols-4 gap-1.5 p-1.5 rounded-2xl border"
@@ -317,7 +359,7 @@ export const Editor: React.FC = () => {
                         setActiveTab(tab.key as typeof activeTab);
                         setSelectedId(null);
                       }}
-                      className="relative py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5"
+                      className="relative py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                       style={{
                         background: isActive
                           ? 'linear-gradient(135deg, #FB7185 0%, #E11D48 100%)'
@@ -368,14 +410,14 @@ export const Editor: React.FC = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={handleDuplicate}
-                          className="p-2 bg-white hover:bg-rose-50 rounded-xl text-slate-700 border border-slate-200 transition-all shadow-sm"
+                          className="p-2 bg-white hover:bg-rose-50 rounded-xl text-slate-700 border border-slate-200 transition-all shadow-sm cursor-pointer"
                           title="Duplikat (Ctrl+D)"
                         >
                           <Copy className="w-4 h-4" />
                         </button>
                         <button
                           onClick={handleDeleteSelected}
-                          className="p-2 bg-red-50 hover:bg-red-100 rounded-xl text-red-500 border border-red-200 transition-all"
+                          className="p-2 bg-red-50 hover:bg-red-100 rounded-xl text-red-500 border border-red-200 transition-all cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -391,7 +433,7 @@ export const Editor: React.FC = () => {
                     className="overflow-hidden"
                   >
                     <div
-                      className="flex items-center justify-between p-3 rounded-2xl border transition-all"
+                      className="flex items-center justify-between p-3.5 rounded-2xl border transition-all shadow-sm"
                       style={{
                         background: '#F3E8FF',
                         borderColor: '#E9D5FF'
@@ -403,36 +445,46 @@ export const Editor: React.FC = () => {
                         </div>
                         <div className="text-left">
                           <span className="text-xs font-bold text-slate-800">
-                            Foto {selectedPhotoIndex + 1}
+                            Foto #{selectedPhotoIndex + 1}
                           </span>
-                          <p className="text-[10px] text-slate-500">
-                            Geser • Zoom {Math.round(selectedPhotoZoom * 100)}%
+                          <p className="text-[10px] text-purple-700 font-semibold">
+                            Zoom {Math.round(selectedPhotoZoom * 100)}% • Geser Foto
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+
+                      {/* Tombol Kontrol Zoom Perkecil, Perbesar, Fit Frame & Reset */}
+                      <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => handlePhotoZoom(-1)}
-                          disabled={selectedPhotoZoom <= MIN_PHOTO_ZOOM}
-                          className="p-2 bg-white hover:bg-purple-50 rounded-xl text-slate-700 border border-slate-200 transition-all disabled:opacity-40 shadow-sm"
-                          title="Perkecil foto"
+                          disabled={selectedPhotoZoom <= CUSTOM_MIN_PHOTO_ZOOM}
+                          className="p-2 bg-white hover:bg-purple-100/80 rounded-xl text-slate-700 border border-purple-200 transition-all disabled:opacity-30 shadow-sm cursor-pointer"
+                          title="Perkecil foto (Zoom Out) agar latar belakang tidak terpotong"
                         >
-                          <ZoomOut className="w-4 h-4" />
+                          <ZoomOut className="w-4 h-4 text-purple-700" />
                         </button>
                         <button
                           onClick={() => handlePhotoZoom(1)}
                           disabled={selectedPhotoZoom >= MAX_PHOTO_ZOOM}
-                          className="p-2 bg-white hover:bg-purple-50 rounded-xl text-slate-700 border border-slate-200 transition-all disabled:opacity-40 shadow-sm"
-                          title="Perbesar foto"
+                          className="p-2 bg-white hover:bg-purple-100/80 rounded-xl text-slate-700 border border-purple-200 transition-all disabled:opacity-30 shadow-sm cursor-pointer"
+                          title="Perbesar foto (Zoom In)"
                         >
-                          <ZoomIn className="w-4 h-4" />
+                          <ZoomIn className="w-4 h-4 text-purple-700" />
+                        </button>
+                        <button
+                          onClick={handlePhotoFitToFrame}
+                          className="px-2.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm flex items-center gap-1 cursor-pointer"
+                          title="Sesuaikan Foto Otomatis Ke Bingkai"
+                        >
+                          <Maximize className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Pas Bingkai</span>
                         </button>
                         <button
                           onClick={handlePhotoZoomReset}
-                          className="p-2 bg-white hover:bg-purple-50 rounded-xl text-slate-700 border border-slate-200 transition-all shadow-sm"
+                          className="p-2 bg-white hover:bg-purple-100/80 rounded-xl text-slate-700 border border-purple-200 transition-all shadow-sm cursor-pointer"
                           title="Reset posisi & zoom"
                         >
-                          <RotateCcw className="w-4 h-4" />
+                          <RotateCcw className="w-4 h-4 text-slate-600" />
                         </button>
                       </div>
                     </div>
@@ -447,7 +499,7 @@ export const Editor: React.FC = () => {
                   >
                     <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50/60 border border-amber-200/60 rounded-xl text-xs text-amber-800 text-left">
                       <AlertCircle className="w-4 h-4 text-amber-500" />
-                      Pilih elemen di canvas untuk opsi cepat
+                      Klik foto pada bingkai di atas untuk mengaktifkan zoom perkecil
                     </div>
                   </motion.div>
                 )}
@@ -514,13 +566,13 @@ export const Editor: React.FC = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider transition-all"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                   Hapus
@@ -542,7 +594,7 @@ export const Editor: React.FC = () => {
           >
             <Copy className="w-4 h-4 text-pink-300" />
             <span className="text-xs font-bold">Elemen berhasil diduplikasi!</span>
-            <button onClick={() => setShowCopiedToast(false)} className="text-slate-400 hover:text-white transition-colors">
+            <button onClick={() => setShowCopiedToast(false)} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
               <X className="w-4 h-4" />
             </button>
           </motion.div>
@@ -552,6 +604,7 @@ export const Editor: React.FC = () => {
       <style>{`
         .custom-scroll::-webkit-scrollbar {
           width: 4px;
+          height: 4px;
         }
         .custom-scroll::-webkit-scrollbar-track {
           background: transparent;

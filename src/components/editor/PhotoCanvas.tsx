@@ -1,176 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Stage, Layer, Image as KonvaImage, Text as KonvaText, Transformer, Rect, Group } from 'react-konva';
-import Konva from 'konva';
-import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MIN_PHOTO_ZOOM, MAX_PHOTO_ZOOM } from '../../context/PhotoboothContext';
-import type { CanvasSticker, CanvasText } from '../../context/PhotoboothContext';
-import { applyFilterToImage, detectTransparentSlots } from '../../lib/utils';
-import { frameColors } from '../../data/frameColors';
-import { wallpapers } from '../../data/wallpapers';
-
-async function loadFrameAtExactSize(
-  src: string,
-  targetWidth: number,
-  targetHeight: number
-): Promise<HTMLCanvasElement | null> {
-  try {
-    const isSvg = src.endsWith('.svg') || src.includes('.svg');
-    let imgSrc = src;
-
-    if (isSvg) {
-      const response = await fetch(src);
-      if (!response.ok) throw new Error(`Failed to fetch SVG: ${response.status}`);
-      let svgText = await response.text();
-
-      svgText = svgText.replace(
-        /<svg([^>]*)>/,
-        (_match, attrs) => {
-          let cleanAttrs = attrs
-            .replace(/\bwidth\s*=\s*"[^"]*"/g, '')
-            .replace(/\bheight\s*=\s*"[^"]*"/g, '')
-            .trim();
-          return `<svg width="${targetWidth}" height="${targetHeight}" ${cleanAttrs}>`;
-        }
-      );
-
-      const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
-      imgSrc = URL.createObjectURL(blob);
-    }
-
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const image = new window.Image();
-      image.crossOrigin = 'Anonymous';
-      image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error('Image load failed'));
-      image.src = imgSrc;
-    });
-
-    const canvas = document.createElement('canvas');
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
-
-    ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-
-    if (isSvg && imgSrc !== src) {
-      URL.revokeObjectURL(imgSrc);
-    }
-
-    return canvas;
-  } catch (err) {
-    console.error('Failed to load frame:', err);
-    return null;
-  }
-}
-
-
-
-// Foto punya "zoom" per-slot yang bisa diubah user (scroll-wheel / tombol
-// +-), disimpan di photoTransforms[index].zoom. Ini cuma step besaran
-// perubahan tiap 1x scroll wheel di kanvas.
-const PHOTO_ZOOM_WHEEL_STEP = 0.08;
-
-export function useLoadedImage(src: string | null) {
-  const [image, setImage] = useState<HTMLImageElement | null>(null);
-
-  useEffect(() => {
-    if (!src) {
-      setImage(null);
-      return;
-    }
-    const img = new Image();
-    img.src = src;
-    img.crossOrigin = 'Anonymous';
-    img.onload = () => setImage(img);
-    img.onerror = () => console.error("Failed to load image:", src);
-  }, [src]);
-
-  return image;
-}
-
-// Ukuran target render stiker di canvas (dalam koordinat frame).
-// Stiker akan di-pre-downscale ke resolusi ini menggunakan bicubic
-// interpolation di offscreen canvas SEBELUM diberikan ke Konva,
-// supaya tidak ada pixelation dari downscaling Konva/Canvas2D yang
-// kualitasnya rendah.
-const STICKER_RENDER_SIZE = 240;
-
-export function useLoadedStickerImage(src: string | null): { image: HTMLCanvasElement | HTMLImageElement | null; displaySize: number } {
-  const [result, setResult] = useState<{ image: HTMLCanvasElement | HTMLImageElement | null; displaySize: number }>({ image: null, displaySize: STICKER_RENDER_SIZE });
-
-  useEffect(() => {
-    if (!src) {
-      setResult({ image: null, displaySize: STICKER_RENDER_SIZE });
-      return;
-    }
-
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.onload = () => {
-      const srcW = img.width;
-      const srcH = img.height;
-      const maxDim = Math.max(srcW, srcH) || 1;
-
-      // Jika gambar sudah kecil (SVG / inline data URI yang kecil), pakai langsung
-      // tanpa downscale karena sudah sesuai ukuran dan biasanya vektor.
-      if (maxDim <= STICKER_RENDER_SIZE * 1.5) {
-        setResult({ image: img, displaySize: maxDim });
-        return;
-      }
-
-      // Pre-downscale menggunakan offscreen canvas dengan bicubic interpolation.
-      // Ini JAUH lebih halus daripada membiarkan Konva/Canvas2D downscale
-      // gambar 900px+ langsung ke ~120px dengan interpolasi biasa.
-      const scale = STICKER_RENDER_SIZE / maxDim;
-      const targetW = Math.round(srcW * scale);
-      const targetH = Math.round(srcH * scale);
-
-      // Multi-step downscale: turunkan ukuran bertahap (max 2x per step)
-      // untuk kualitas interpolasi terbaik — ini teknik yang sama dipakai
-      // oleh Photoshop dan editor gambar profesional.
-      let currentCanvas = document.createElement('canvas');
-      currentCanvas.width = srcW;
-      currentCanvas.height = srcH;
-      let ctx = currentCanvas.getContext('2d')!;
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, 0, 0);
-
-      let curW = srcW;
-      let curH = srcH;
-
-      while (curW > targetW * 2 || curH > targetH * 2) {
-        const nextW = Math.max(targetW, Math.round(curW / 2));
-        const nextH = Math.max(targetH, Math.round(curH / 2));
-        const stepCanvas = document.createElement('canvas');
-        stepCanvas.width = nextW;
-        stepCanvas.height = nextH;
-        const stepCtx = stepCanvas.getContext('2d')!;
-        stepCtx.imageSmoothingEnabled = true;
-        stepCtx.imageSmoothingQuality = 'high';
-        stepCtx.drawImage(currentCanvas, 0, 0, curW, curH, 0, 0, nextW, nextH);
-        currentCanvas = stepCanvas;
-        curW = nextW;
-        curH = nextH;
-      }
-
-      // Final step ke ukuran target
-      const finalCanvas = document.createElement('canvas');
-      finalCanvas.width = targetW;
-      finalCanvas.height = targetH;
-      const finalCtx = finalCanvas.getContext('2d')!;
-      finalCtx.imageSmoothingEnabled = true;
-      finalCtx.imageSmoothingQuality = 'high';
-      finalCtx.drawImage(currentCanvas, 0, 0, curW, curH, 0, 0, targetW, targetH);
-
-      setResult({ image: finalCanvas, displaySize: STICKER_RENDER_SIZE });
-    };
-    img.onerror = () => console.error("Failed to load sticker image:", src);
-    img.src = src;
-  }, [src]);
-
-  return result;
-}
+import React, { useEffect, useState } from 'react';
+import { Stage, Layer, Image as KonvaImage, Group, Rect, Text } from 'react-konva';
+import { usePhotobooth } from '../../context/PhotoboothContext';
 
 interface PhotoCanvasProps {
   stageRef: React.RefObject<any>;
@@ -178,743 +8,273 @@ interface PhotoCanvasProps {
   isPreviewMode?: boolean;
 }
 
-export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({ stageRef, containerWidth, isPreviewMode = false }) => {
+export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
+  stageRef,
+  containerWidth,
+  isPreviewMode = false,
+}) => {
   const {
     selectedFrame,
     photos,
     photoTransforms,
     updatePhotoTransform,
-    stickers,
-    updateSticker,
-    texts,
-    updateText,
     selectedId,
     setSelectedId,
-    appliedFilter,
     frameColor,
-    cardColor,
-    lineColor,
-    borderThickness,
-    borderRadius,
-    shadowIntensity,
-    shadowBlur,
-    shadowColor,
-    frameOpacity,
-    framePadding,
-    wallpaperId,
-    wallpaperUpload,
-    wallpaperBlur,
-    wallpaperOpacity,
-    wallpaperScaleMode
+    stickers,
+    texts,
   } = usePhotobooth();
 
-  const trRef = useRef<any>(null);
-  const wallpaperRef = useRef<any>(null);
+  const [frameImage, setFrameImage] = useState<HTMLImageElement | null>(null);
+  const [loadedPhotos, setLoadedPhotos] = useState<(HTMLImageElement | null)[]>([]);
+  const [loadedStickerImages, setLoadedStickerImages] = useState<Record<string, HTMLImageElement>>({});
+
+  // Hitung skala canvas berdasarkan dimensi bingkai
+  const frameWidth = selectedFrame?.width || 1200;
+  const frameHeight = selectedFrame?.height || 1800;
+  const scale = containerWidth / frameWidth;
+  const stageHeight = frameHeight * scale;
+
+  // Load Gambar Bingkai Utama
+  useEffect(() => {
+    if (!selectedFrame?.src) return;
+    const img = new window.Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = selectedFrame.src;
+    img.onload = () => setFrameImage(img);
+  }, [selectedFrame]);
+
+  // Load Foto untuk Setiap Slot
+  useEffect(() => {
+    const photoElements = photos.map((src) => {
+      if (!src) return null;
+      const img = new window.Image();
+      img.crossOrigin = 'Anonymous';
+      img.src = src;
+      return img;
+    });
+
+    let isMounted = true;
+    Promise.all(
+      photoElements.map(
+        (img) =>
+          new Promise<HTMLImageElement | null>((resolve) => {
+            if (!img) return resolve(null);
+            if (img.complete) return resolve(img);
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(null);
+          })
+      )
+    ).then((results) => {
+      if (isMounted) setLoadedPhotos(results);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [photos]);
+
+  // Load Elemen Gambar Stiker secara Aman tanpa Error TypeScript
+  useEffect(() => {
+    const newLoadedImages: Record<string, HTMLImageElement> = {};
+    let isMounted = true;
+
+    const stickerPromises = stickers.map((st: any) => {
+      return new Promise<void>((resolve) => {
+        // Ambil URL gambar dari stiker (baik st.src, st.url, st.image, atau st.stickerId)
+        const imgSrc = st.src || st.url || st.image || st.stickerId;
+        if (!imgSrc) return resolve();
+
+        const img = new window.Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = imgSrc;
+        img.onload = () => {
+          newLoadedImages[st.id] = img;
+          resolve();
+        };
+        img.onerror = () => resolve();
+      });
+    });
+
+    Promise.all(stickerPromises).then(() => {
+      if (isMounted) {
+        setLoadedStickerImages(newLoadedImages);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [stickers]);
 
   if (!selectedFrame) return null;
 
-  const { width: frameWidth, height: frameHeight, slotCoords, src: frameSrc } = selectedFrame;
-  const scale = containerWidth / frameWidth;
-  const stageWidth = containerWidth;
-  const stageHeight = frameHeight * scale;
-
-  const [wallpaperCanvas, setWallpaperCanvas] = useState<HTMLCanvasElement | null>(null);
-  const uploadedWallpaperImg = useLoadedImage(wallpaperUpload || null);
-
-  useEffect(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = frameWidth;
-    canvas.height = frameHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    if (wallpaperId) {
-      const activeWallpaper = wallpapers.find(w => w.id === wallpaperId);
-      if (activeWallpaper) {
-        ctx.fillStyle = activeWallpaper.getFill(ctx, frameWidth, frameHeight);
-        ctx.fillRect(0, 0, frameWidth, frameHeight);
-        setWallpaperCanvas(canvas);
-      } else setWallpaperCanvas(null);
-    } else if (uploadedWallpaperImg) {
-      const imgW = uploadedWallpaperImg.width;
-      const imgH = uploadedWallpaperImg.height;
-      if (wallpaperScaleMode === 'stretch') {
-        ctx.drawImage(uploadedWallpaperImg, 0, 0, frameWidth, frameHeight);
-      } else if (wallpaperScaleMode === 'fit') {
-        const ratio = Math.min(frameWidth / imgW, frameHeight / imgH);
-        const w = imgW * ratio;
-        const h = imgH * ratio;
-        ctx.fillStyle = '#f3f4f6';
-        ctx.fillRect(0, 0, frameWidth, frameHeight);
-        ctx.drawImage(uploadedWallpaperImg, (frameWidth - w) / 2, (frameHeight - h) / 2, w, h);
-      } else {
-        const ratio = Math.max(frameWidth / imgW, frameHeight / imgH);
-        const w = imgW * ratio;
-        const h = imgH * ratio;
-        ctx.drawImage(uploadedWallpaperImg, (frameWidth - w) / 2, (frameHeight - h) / 2, w, h);
-      }
-      setWallpaperCanvas(canvas);
-    } else {
-      setWallpaperCanvas(null);
-    }
-  }, [wallpaperId, uploadedWallpaperImg, wallpaperScaleMode, frameWidth, frameHeight]);
-
-  useEffect(() => {
-    if (wallpaperRef.current) {
-      wallpaperRef.current.cache();
-      wallpaperRef.current.getLayer()?.batchDraw();
-    }
-  }, [wallpaperBlur, wallpaperCanvas, uploadedWallpaperImg]);
-
-  const [processedFrameImg, setProcessedFrameImg] = useState<HTMLCanvasElement | null>(null);
-  const [activeSlotCoords, setActiveSlotCoords] = useState<typeof slotCoords>(slotCoords);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function processFrame() {
-      const frameCanvas = await loadFrameAtExactSize(frameSrc, frameWidth, frameHeight);
-      if (cancelled || !frameCanvas) {
-        if (!cancelled) {
-          setProcessedFrameImg(null);
-          setActiveSlotCoords(slotCoords);
-        }
-        return;
-      }
-
-      const effectiveCard = (cardColor && cardColor !== 'original') ? cardColor : (frameColor && frameColor !== 'original' ? frameColor : null);
-      const hasCustomCard = effectiveCard && effectiveCard !== 'transparent';
-      const detected = detectTransparentSlots(frameCanvas, slotCoords.length);
-      let finalSlotCoords = slotCoords;
-      if (detected.length === slotCoords.length) {
-        const usedDetectedIndices = new Set<number>();
-        finalSlotCoords = slotCoords.map((hardcoded) => {
-          const hCenterX = hardcoded.x + hardcoded.w / 2;
-          const hCenterY = hardcoded.y + hardcoded.h / 2;
-
-          let bestDist = Infinity;
-          let bestIdx = -1;
-
-          detected.forEach((dSlot, dIdx) => {
-            if (usedDetectedIndices.has(dIdx)) return;
-            const dCenterX = dSlot.x + dSlot.w / 2;
-            const dCenterY = dSlot.y + dSlot.h / 2;
-            const dist = Math.hypot(dCenterX - hCenterX, dCenterY - hCenterY);
-            if (dist < bestDist) {
-              bestDist = dist;
-              bestIdx = dIdx;
-            }
-          });
-
-          if (bestIdx !== -1 && bestDist < Math.max(hardcoded.w, hardcoded.h) * 0.8) {
-            usedDetectedIndices.add(bestIdx);
-            const dSlot = detected[bestIdx];
-            const detectedArea = dSlot.w * dSlot.h;
-            const hardcodedArea = hardcoded.w * hardcoded.h;
-            const isTooSmall = hardcodedArea > detectedArea * 1.2;
-            const isTooLarge = detectedArea > hardcodedArea * 1.25;
-            const chosen = (isTooSmall || isTooLarge) ? hardcoded : dSlot;
-            return { ...chosen, rx: hardcoded.rx };
-          }
-          return hardcoded;
-        });
-      }
-
-      if (!cancelled) setActiveSlotCoords(finalSlotCoords);
-
-      const outputCanvas = document.createElement('canvas');
-      outputCanvas.width = frameWidth;
-      outputCanvas.height = frameHeight;
-      const ctx = outputCanvas.getContext('2d');
-      if (!ctx) {
-        setProcessedFrameImg(frameCanvas);
-        return;
-      }
-
-      ctx.clearRect(0, 0, frameWidth, frameHeight);
-      ctx.globalAlpha = frameOpacity;
-
-      // 1. WARNA LATAR BELAKANG FRAME (Frame Card & Paper Fill)
-      if (hasCustomCard) {
-        let cardFillStyle: string | CanvasGradient | CanvasPattern = effectiveCard;
-        if (!effectiveCard.startsWith('#')) {
-          const fcOpt = frameColors.find(c => c.id === effectiveCard);
-          if (fcOpt) cardFillStyle = fcOpt.getFill(ctx, frameWidth, frameHeight);
-        }
-
-        ctx.fillStyle = cardFillStyle;
-        ctx.fillRect(0, 0, frameWidth, frameHeight);
-      }
-
-      // Gambar frame artwork/dividers di atas warna latar belakang
-      ctx.drawImage(frameCanvas, 0, 0);
-
-      // 2. GARIS BORDER / PEMBATAS (Custom Line & Border Overlay)
-      const hasCustomLine = lineColor && lineColor !== 'original';
-
-      if (hasCustomLine) {
-        let lineFillStyle: string | CanvasGradient | CanvasPattern = lineColor;
-        if (!lineColor.startsWith('#')) {
-          const fcOpt = frameColors.find(c => c.id === lineColor);
-          if (fcOpt) lineFillStyle = fcOpt.getFill(ctx, frameWidth, frameHeight);
-        }
-
-        const lineCanvas = document.createElement('canvas');
-        lineCanvas.width = frameWidth;
-        lineCanvas.height = frameHeight;
-        const lctx = lineCanvas.getContext('2d');
-        if (lctx) {
-          lctx.drawImage(frameCanvas, 0, 0);
-          lctx.globalCompositeOperation = 'source-in';
-          lctx.fillStyle = lineFillStyle;
-          lctx.fillRect(0, 0, frameWidth, frameHeight);
-        }
-        ctx.drawImage(lineCanvas, 0, 0);
-      }
-
-      // Step C: STROKE BORDER (jika borderThickness > 0)
-      if (borderThickness > 0) {
-        ctx.strokeStyle = lineColor && lineColor !== 'original' && lineColor.startsWith('#') ? lineColor : '#18181b';
-        ctx.lineWidth = borderThickness;
-        finalSlotCoords.forEach((slot) => {
-          const rx = slot.rx || 0;
-          if (rx > 0) {
-            ctx.beginPath();
-            ctx.moveTo(slot.x + rx, slot.y);
-            ctx.lineTo(slot.x + slot.w - rx, slot.y);
-            ctx.quadraticCurveTo(slot.x + slot.w, slot.y, slot.x + slot.w, slot.y + rx);
-            ctx.lineTo(slot.x + slot.w, slot.y + slot.h - rx);
-            ctx.quadraticCurveTo(slot.x + slot.w, slot.y + slot.h, slot.x + slot.w - rx, slot.y + slot.h);
-            ctx.lineTo(slot.x + rx, slot.y + slot.h);
-            ctx.quadraticCurveTo(slot.x, slot.y + slot.h, slot.x, slot.y + slot.h - rx);
-            ctx.lineTo(slot.x, slot.y + rx);
-            ctx.quadraticCurveTo(slot.x, slot.y, slot.x + rx, slot.y);
-            ctx.closePath();
-            ctx.stroke();
-          } else {
-            ctx.strokeRect(slot.x, slot.y, slot.w, slot.h);
-          }
-        });
-      }
-
-      // Step D: POTONG SLOT FOTO (destination-out)
-      ctx.globalCompositeOperation = 'destination-out';
-      finalSlotCoords.forEach((slot) => {
-        const rx = slot.rx || 0;
-        if (rx > 0) {
-          ctx.beginPath();
-          ctx.moveTo(slot.x + rx, slot.y);
-          ctx.lineTo(slot.x + slot.w - rx, slot.y);
-          ctx.quadraticCurveTo(slot.x + slot.w, slot.y, slot.x + slot.w, slot.y + rx);
-          ctx.lineTo(slot.x + slot.w, slot.y + slot.h - rx);
-          ctx.quadraticCurveTo(slot.x + slot.w, slot.y + slot.h, slot.x + slot.w - rx, slot.y + slot.h);
-          ctx.lineTo(slot.x + rx, slot.y + slot.h);
-          ctx.quadraticCurveTo(slot.x, slot.y + slot.h, slot.x, slot.y + slot.h - rx);
-          ctx.lineTo(slot.x, slot.y + rx);
-          ctx.quadraticCurveTo(slot.x, slot.y, slot.x + rx, slot.y);
-          ctx.closePath();
-          ctx.fill();
-        } else {
-          ctx.fillRect(slot.x, slot.y, slot.w, slot.h);
-        }
-      });
-      ctx.globalCompositeOperation = 'source-over';
-
-      if (!cancelled) setProcessedFrameImg(outputCanvas);
-    }
-
-    processFrame();
-    return () => { cancelled = true; };
-  }, [frameSrc, slotCoords, frameWidth, frameHeight, frameColor, cardColor, lineColor, borderThickness, frameOpacity]);
-
-  const [loadedPhotos, setLoadedPhotos] = useState<(HTMLImageElement | null)[]>([]);
-
-  useEffect(() => {
-    const loadAllPhotos = async () => {
-      const promises = photos.map(async (photo) => {
-        if (!photo) return null;
-        try {
-          const filteredUrl = await applyFilterToImage(photo, appliedFilter);
-          return new Promise<HTMLImageElement | null>((resolve) => {
-            const img = new Image();
-            img.src = filteredUrl;
-            img.onload = () => resolve(img);
-            img.onerror = () => resolve(null);
-          });
-        } catch (err) {
-          return null;
-        }
-      });
-      const resolved = await Promise.all(promises);
-      setLoadedPhotos(resolved);
-    };
-    loadAllPhotos();
-  }, [photos, appliedFilter]);
-
-  useEffect(() => {
-    if (trRef.current) {
-      // Foto (id "photo-N") cuma bisa digeser, bukan di-resize/rotate,
-      // jadi Transformer kotak-kotak resize tidak dipasang untuk foto.
-      if (selectedId && !selectedId.startsWith('photo-')) {
-        const stage = stageRef.current;
-        const selectedNode = stage.findOne(`#${selectedId}`);
-        if (selectedNode) {
-          trRef.current.nodes([selectedNode]);
-          trRef.current.getLayer().batchDraw();
-          return;
-        }
-      }
-      trRef.current.nodes([]);
-      trRef.current.getLayer().batchDraw();
-    }
-  }, [selectedId, stickers, texts, stageRef]);
-
-  const handleStageMouseDown = (e: any) => {
-    const clickedOnEmpty = e.target === e.target.getStage() || e.target.name() === 'frame-overlay';
-    if (clickedOnEmpty) setSelectedId(null);
-  };
-
   return (
-    <div className="relative border-4 border-white shadow-2xl rounded-lg overflow-hidden bg-white max-w-full">
+    <div
+      className="relative flex justify-center items-center select-none"
+      style={{ width: containerWidth, height: stageHeight }}
+    >
       <Stage
         ref={stageRef}
-        width={stageWidth}
+        width={containerWidth}
         height={stageHeight}
         scaleX={scale}
         scaleY={scale}
-        pixelRatio={Math.max(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2.5)}
-        onMouseDown={handleStageMouseDown}
-        onTouchStart={handleStageMouseDown}
+        onMouseDown={(e) => {
+          if (e.target === e.target.getStage()) {
+            setSelectedId(null);
+          }
+        }}
       >
+        {/* LAYER 1: WARNA DASAR / BACKGROUND BINGKAI */}
         <Layer>
-          {/* Layer Wallpaper */}
-          {(wallpaperCanvas || uploadedWallpaperImg) && (
-            <KonvaImage
-              ref={wallpaperRef}
-              image={wallpaperCanvas || uploadedWallpaperImg || undefined}
-              x={0}
-              y={0}
-              width={frameWidth}
-              height={frameHeight}
-              opacity={wallpaperOpacity}
-              filters={wallpaperBlur > 0 ? [Konva.Filters.Blur] : []}
-              blurRadius={wallpaperBlur}
-              listening={false}
-            />
-          )}
+          <Rect
+            x={0}
+            y={0}
+            width={frameWidth}
+            height={frameHeight}
+            fill={frameColor || '#FFFFFF'}
+          />
+        </Layer>
 
-          {/* Layer Foto */}
-          {activeSlotCoords.map((slot, index) => {
+        {/* LAYER 2: FOTO DENGAN MASKING/CLIPPING TERKUNCI DALAM SLOT */}
+        <Layer>
+          {selectedFrame.slotCoords.map((slot, index) => {
             const photoImg = loadedPhotos[index];
-            const pX = slot.x + framePadding;
-            const pY = slot.y + framePadding;
-            const pW = slot.w - 2 * framePadding;
-            const pH = slot.h - 2 * framePadding;
-            const bleed = Math.max(8, Math.min(24, Math.round(Math.min(pW, pH) * 0.04)));
-            const hasShadow = shadowIntensity > 0;
+            const transform = photoTransforms[index] || { zoom: 1, x: 0, y: 0 };
+            const isSelected = selectedId === `photo-${index}`;
 
-            const clipFunc = (ctx: any) => {
-              const x = pX - bleed;
-              const y = pY - bleed;
-              const w = pW + bleed * 2;
-              const h = pH + bleed * 2;
-              const cr = borderRadius > 0 ? borderRadius + bleed : 0;
+            if (!photoImg) return null;
 
-              if (cr > 0) {
-                ctx.beginPath();
-                ctx.moveTo(x + cr, y);
-                ctx.lineTo(x + w - cr, y);
-                ctx.quadraticCurveTo(x + w, y, x + w, y + cr);
-                ctx.lineTo(x + w, y + h - cr);
-                ctx.quadraticCurveTo(x + w, y + h, x + w - cr, y + h);
-                ctx.lineTo(x + cr, y + h);
-                ctx.quadraticCurveTo(x, y + h, x, y + h - cr);
-                ctx.lineTo(x, y + cr);
-                ctx.quadraticCurveTo(x, y, x + cr, y);
-                ctx.closePath();
-              } else {
-                ctx.rect(x, y, w, h);
-              }
-            };
+            const imgW = photoImg.naturalWidth || photoImg.width;
+            const imgH = photoImg.naturalHeight || photoImg.height;
 
-            if (!photoImg) {
-              return (
-                <Group key={`placeholder-${index}`}>
-                  {hasShadow && (
-                    <Rect
-                      x={pX}
-                      y={pY}
-                      width={pW}
-                      height={pH}
-                      cornerRadius={borderRadius}
-                      fill="#EAE0D5"
-                      shadowColor={shadowColor}
-                      shadowBlur={shadowBlur}
-                      shadowOffset={{ x: shadowIntensity, y: shadowIntensity }}
-                      shadowOpacity={0.4}
-                    />
-                  )}
-                  <Group clipFunc={clipFunc}>
-                    <Rect x={pX - bleed} y={pY - bleed} width={pW + bleed * 2} height={pH + bleed * 2} fill="#EAE0D5" />
-                  </Group>
-                </Group>
-              );
-            }
+            // Skala dasar agar foto pas berada di dalam slot
+            const baseScale = Math.min(slot.w / imgW, slot.h / imgH);
+            const finalZoom = baseScale * transform.zoom;
 
-            const drawX = pX - bleed;
-            const drawY = pY - bleed;
-            const drawW = pW + bleed * 2;
-            const drawH = pH + bleed * 2;
-            const imgW = photoImg.width;
-            const imgH = photoImg.height;
-            const imageRatio = imgW / imgH;
-            const drawRatio = drawW / drawH;
-
-            // COVER-FIT PRESISI SATU KALI, dengan BIAS KE ATAS untuk crop
-            // vertikal: kalau bagian atas/bawah foto yang perlu dipotong
-            // (kasus foto potret/selfie dimasukkan ke kotak yang lebih
-            // landscape/pendek), potongan TIDAK dibagi rata 50/50 seperti
-            // crop-tengah biasa -- karena itu yang bikin wajah (biasanya ada
-            // di 1/3-1/2 bagian atas foto) ikut kepotong. Sebagai gantinya,
-            // titik "jangkar" crop digeser ke ~25% dari atas, jadi bagian
-            // yang paling banyak dipotong adalah BAWAH foto (badan/kaki),
-            // bukan atas (kepala). Ini heuristik (bukan deteksi wajah AI),
-            // tapi cukup efektif untuk mayoritas foto potret/selfie.
-            let cropWidth = imgW;
-            let cropHeight = imgH;
-            let cropX = 0;
-            let cropY = 0;
-
-            if (imageRatio > drawRatio) {
-              // Sisi kiri-kanan yang kepotong -> subjek biasanya di tengah
-              // secara horizontal, jadi tetap center-crop.
-              cropWidth = imgH * drawRatio;
-              cropX = (imgW - cropWidth) / 2;
-            } else {
-              // Sisi atas-bawah yang kepotong -> anchor ke atas (25%),
-              // bukan ke tengah (50%), supaya wajah tetap ikut.
-              cropHeight = imgW / drawRatio;
-              const verticalAnchor = 0.25;
-              cropY = Math.max(0, Math.min(imgH - cropHeight, (imgH - cropHeight) * verticalAnchor));
-            }
-
-            // ==== FITUR: GESER (PAN) & ZOOM POSISI FOTO DI DALAM BINGKAI ====
-            // Setiap foto punya level "zoom" sendiri (default DEFAULT_PHOTO_ZOOM,
-            // bisa diperbesar/diperkecil user). Foto dirender pada ukuran
-            // drawW/drawH dikali zoom tsb, lalu digeser (offset) dan
-            // di-clamp supaya:
-            //  - kalau zoom >= 1 (foto lebih besar dari slot): tidak pernah
-            //    ada celah kosong, foto selalu menutupi penuh slotnya.
-            //  - kalau zoom < 1 (foto di-"perkecil"): fotonya tetap
-            //    dibatasi supaya tidak keluar dari area slotnya sendiri,
-            //    sementara wallpaper/background di lapisan bawah TIDAK
-            //    ikut berubah/bergerak sama sekali (fotonya independen).
-            // Posisi geser + zoom disimpan per-slot di context
-            // (photoTransforms) dan cuma direset kalau fotonya diganti/
-            // dihapus atau pilih bingkai baru.
-            const photoElId = `photo-${index}`;
-            const isPhotoSelected = selectedId === photoElId;
-            const transform = photoTransforms[index] || { x: 0, y: 0, zoom: DEFAULT_PHOTO_ZOOM };
-            const zoom = transform.zoom ?? DEFAULT_PHOTO_ZOOM;
-            const renderW = drawW * zoom;
-            const renderH = drawH * zoom;
-            const baseX = drawX - (renderW - drawW) / 2;
-            const baseY = drawY - (renderH - drawH) / 2;
-            const maxOffsetX = Math.abs(renderW - drawW) / 2;
-            const maxOffsetY = Math.abs(renderH - drawH) / 2;
-            const clampedOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, transform.x));
-            const clampedOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, transform.y));
-            const imageX = baseX + clampedOffsetX;
-            const imageY = baseY + clampedOffsetY;
-
-            const selectPhoto = () => {
-              if (!isPreviewMode) setSelectedId(photoElId);
-            };
+            const centeredX = (slot.w - imgW * finalZoom) / 2 + transform.x;
+            const centeredY = (slot.h - imgH * finalZoom) / 2 + transform.y;
 
             return (
-              <Group key={`photo-${index}`}>
-                {hasShadow && (
-                  <Rect
-                    x={pX}
-                    y={pY}
-                    width={pW}
-                    height={pH}
-                    cornerRadius={borderRadius}
-                    fill="transparent"
-                    shadowColor={shadowColor}
-                    shadowBlur={shadowBlur}
-                    shadowOffset={{ x: shadowIntensity, y: shadowIntensity }}
-                    shadowOpacity={0.4}
-                  />
-                )}
+              <Group
+                key={`slot-group-${index}`}
+                x={slot.x}
+                y={slot.y}
+                // Penguncian Clipping Area: foto tidak akan pernah meluber keluar bingkai saat di-zoom
+                clipFunc={(ctx) => {
+                  ctx.beginPath();
+                  if (slot.rx && slot.rx > 0) {
+                    const r = slot.rx;
+                    ctx.moveTo(r, 0);
+                    ctx.lineTo(slot.w - r, 0);
+                    ctx.quadraticCurveTo(slot.w, 0, slot.w, r);
+                    ctx.lineTo(slot.w, slot.h - r);
+                    ctx.quadraticCurveTo(slot.w, slot.h, slot.w - r, slot.h);
+                    ctx.lineTo(r, slot.h);
+                    ctx.quadraticCurveTo(0, slot.h, 0, slot.h - r);
+                    ctx.lineTo(0, r);
+                    ctx.quadraticCurveTo(0, 0, r, 0);
+                  } else {
+                    ctx.rect(0, 0, slot.w, slot.h);
+                  }
+                  ctx.closePath();
+                }}
+              >
+                <KonvaImage
+                  image={photoImg}
+                  x={centeredX}
+                  y={centeredY}
+                  width={imgW * finalZoom}
+                  height={imgH * finalZoom}
+                  draggable={!isPreviewMode}
+                  onClick={() => !isPreviewMode && setSelectedId(`photo-${index}`)}
+                  onTap={() => !isPreviewMode && setSelectedId(`photo-${index}`)}
+                  onDragMove={(e) => {
+                    if (isPreviewMode) return;
+                    const newX = e.target.x() - (slot.w - imgW * finalZoom) / 2;
+                    const newY = e.target.y() - (slot.h - imgH * finalZoom) / 2;
+                    updatePhotoTransform(index, { x: newX, y: newY });
+                  }}
+                />
 
-                <Group clipFunc={clipFunc}>
-                  <KonvaImage
-                    id={photoElId}
-                    name="photo-slot"
-                    image={photoImg}
-                    x={imageX}
-                    y={imageY}
-                    width={renderW}
-                    height={renderH}
-                    crop={{ x: cropX, y: cropY, width: cropWidth, height: cropHeight }}
-                    draggable={!isPreviewMode}
-                    onClick={selectPhoto}
-                    onTap={selectPhoto}
-                    onTouchStart={selectPhoto}
-                    onMouseEnter={(e) => {
-                      if (isPreviewMode) return;
-                      const container = e.target.getStage()?.container();
-                      if (container) container.style.cursor = 'crosshair';
-                    }}
-                    onMouseLeave={(e) => {
-                      if (isPreviewMode) return;
-                      const container = e.target.getStage()?.container();
-                      if (container) container.style.cursor = 'default';
-                    }}
-                    onWheel={(e) => {
-                      if (isPreviewMode) return;
-                      // Scroll cuma ngezoom kalau fotonya lagi dipilih dulu
-                      // (biar gak ke-zoom gak sengaja pas scroll halaman).
-                      if (!isPhotoSelected) return;
-                      e.evt.preventDefault();
-                      const direction = e.evt.deltaY > 0 ? -1 : 1; // scroll ke bawah = perkecil
-                      const nextZoom = Math.max(
-                        MIN_PHOTO_ZOOM,
-                        Math.min(MAX_PHOTO_ZOOM, zoom + direction * PHOTO_ZOOM_WHEEL_STEP)
-                      );
-                      const nextRenderW = drawW * nextZoom;
-                      const nextRenderH = drawH * nextZoom;
-                      const nextMaxOffsetX = Math.abs(nextRenderW - drawW) / 2;
-                      const nextMaxOffsetY = Math.abs(nextRenderH - drawH) / 2;
-                      updatePhotoTransform(index, {
-                        zoom: nextZoom,
-                        x: Math.max(-nextMaxOffsetX, Math.min(nextMaxOffsetX, transform.x)),
-                        y: Math.max(-nextMaxOffsetY, Math.min(nextMaxOffsetY, transform.y)),
-                      });
-                    }}
-                    onDragMove={(e) => {
-                      // Kunci pergerakan supaya foto tidak pernah keluar
-                      // dari margin yang tersedia (mencegah celah kosong).
-                      const node = e.target;
-                      const offX = Math.max(-maxOffsetX, Math.min(maxOffsetX, node.x() - baseX));
-                      const offY = Math.max(-maxOffsetY, Math.min(maxOffsetY, node.y() - baseY));
-                      node.x(baseX + offX);
-                      node.y(baseY + offY);
-                    }}
-                    onDragEnd={(e) => {
-                      const node = e.target;
-                      const offX = Math.max(-maxOffsetX, Math.min(maxOffsetX, node.x() - baseX));
-                      const offY = Math.max(-maxOffsetY, Math.min(maxOffsetY, node.y() - baseY));
-                      updatePhotoTransform(index, { x: offX, y: offY });
-                      const container = e.target.getStage()?.container();
-                      if (container) container.style.cursor = 'default';
-                    }}
-                  />
-                </Group>
-
-                {/* Penanda foto sedang dipilih & bisa digeser */}
-                {isPhotoSelected && !isPreviewMode && (
+                {isSelected && !isPreviewMode && (
                   <Rect
-                    x={pX}
-                    y={pY}
-                    width={pW}
-                    height={pH}
-                    cornerRadius={borderRadius}
-                    stroke="#C9A66B"
-                    strokeWidth={2.5 / scale}
-                    dash={[6 / scale, 4 / scale]}
+                    x={0}
+                    y={0}
+                    width={slot.w}
+                    height={slot.h}
+                    stroke="#A855F7"
+                    strokeWidth={6}
                     listening={false}
                   />
                 )}
               </Group>
             );
           })}
+        </Layer>
 
-          {/* Layer Frame Overlay */}
-          {/* listening selalu false: kalau true, node ini (walau visualnya
-              berlubang transparan di area slot foto) tetap menangkap SEMUA
-              klik/drag di area foto karena Konva meng-hit-test Image
-              berdasarkan bounding box, bukan alpha -- jadi klik/geser foto
-              di bawahnya gak akan pernah sampai. Klik di area bingkai yang
-              kosong tetap otomatis dianggap "klik area kosong" oleh
-              handleStageMouseDown karena e.target jatuh ke Stage. */}
-          {processedFrameImg && (
+        {/* LAYER 3: OVERLAY MASK BINGKAI */}
+        <Layer listening={false}>
+          {frameImage && (
             <KonvaImage
-              image={processedFrameImg}
+              image={frameImage}
               x={0}
               y={0}
               width={frameWidth}
               height={frameHeight}
-              name="frame-overlay"
-              listening={false}
-            />
-          )}
-
-          {/* Layer Stiker Overlay */}
-          {stickers.map((st) => (
-            <StickerElement
-              key={st.id}
-              sticker={st}
-              isSelected={selectedId === st.id}
-              onClick={isPreviewMode ? () => { } : () => setSelectedId(st.id)}
-              onChange={(newAttrs) => updateSticker(st.id, newAttrs)}
-              isPreviewMode={isPreviewMode}
-            />
-          ))}
-
-          {/* Layer Teks */}
-          {texts.map((t) => (
-            <TextElement
-              key={t.id}
-              textData={t}
-              isSelected={selectedId === t.id}
-              onClick={isPreviewMode ? () => { } : () => setSelectedId(t.id)}
-              onChange={(newAttrs) => updateText(t.id, newAttrs)}
-              isPreviewMode={isPreviewMode}
-            />
-          ))}
-
-          {/* Transformer Interaktif */}
-          {!isPreviewMode && (
-            <Transformer
-              ref={trRef}
-              boundBoxFunc={(oldBox, newBox) => {
-                if (Math.abs(newBox.width) < 15 || Math.abs(newBox.height) < 15) return oldBox;
-                return newBox;
-              }}
-              keepRatio={true}
-              enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
-              anchorSize={14}
-              anchorCornerRadius={7}
-              anchorFill="#C9A66B"
-              anchorStroke="#6B4A3A"
-              borderStroke="#C9A66B"
-              borderDash={[4, 4]}
             />
           )}
         </Layer>
+
+        {/* LAYER 4: ELEMEN DEKORASI STIKER DAN TEKS */}
+        <Layer>
+          {/* Render Stiker dengan Penanganan Tipe Data yang Aman */}
+          {stickers.map((st: any) => {
+            const stImg = loadedStickerImages[st.id];
+            if (!stImg) return null;
+
+            // Penentuan Ukuran Stiker secara Otomatis dan Fleksibel
+            const baseW = stImg.naturalWidth || stImg.width || 100;
+            const baseH = stImg.naturalHeight || stImg.height || 100;
+            const scaleFactor = st.scale || 1;
+            const finalWidth = st.width || baseW * scaleFactor;
+            const finalHeight = st.height || baseH * scaleFactor;
+
+            return (
+              <KonvaImage
+                key={st.id}
+                image={stImg}
+                x={st.x}
+                y={st.y}
+                width={finalWidth}
+                height={finalHeight}
+                rotation={st.rotation || 0}
+                draggable={!isPreviewMode}
+                onClick={() => !isPreviewMode && setSelectedId(st.id)}
+                onTap={() => !isPreviewMode && setSelectedId(st.id)}
+              />
+            );
+          })}
+
+          {/* Render Teks */}
+          {texts.map((txt: any) => (
+            <Text
+              key={txt.id}
+              text={txt.text}
+              x={txt.x}
+              y={txt.y}
+              fontSize={txt.fontSize || 32}
+              fontFamily={txt.fontFamily || 'sans-serif'}
+              fill={txt.fill || '#000000'}
+              rotation={txt.rotation || 0}
+              draggable={!isPreviewMode}
+              onClick={() => !isPreviewMode && setSelectedId(txt.id)}
+              onTap={() => !isPreviewMode && setSelectedId(txt.id)}
+            />
+          ))}
+        </Layer>
       </Stage>
     </div>
-  );
-};
-
-interface StickerElementProps {
-  sticker: CanvasSticker;
-  isSelected: boolean;
-  onClick: () => void;
-  onChange: (attrs: Partial<CanvasSticker>) => void;
-  isPreviewMode?: boolean;
-}
-
-const StickerElement: React.FC<StickerElementProps> = ({ sticker, onClick, onChange, isPreviewMode = false }) => {
-  const { image: loadedImg } = useLoadedStickerImage(sticker.stickerId);
-  const shapeRef = useRef<any>(null);
-  const { selectedFrame } = usePhotobooth();
-
-  if (!loadedImg || !selectedFrame) return null;
-
-  // BASE SIZE 120px = UKURAN SEDANG PAS (SEKITAR 1/5 TINGGI SLOT FOTO, SANGAT ENAK DILIHAT)
-  // Karena gambar sudah di-pre-downscale ke STICKER_RENDER_SIZE (~240px),
-  // normFactor-nya sekarang ~0.5 bukan ~0.13, jadi Konva tidak perlu
-  // melakukan downscale drastis yang menyebabkan pixelation.
-  const baseStandardSize = 120;
-  const imgW = loadedImg instanceof HTMLCanvasElement ? loadedImg.width : loadedImg.width;
-  const imgH = loadedImg instanceof HTMLCanvasElement ? loadedImg.height : loadedImg.height;
-  const maxDim = Math.max(imgW, imgH) || 120;
-  const normFactor = baseStandardSize / maxDim;
-
-  const finalScaleX = sticker.scaleX * normFactor;
-  const finalScaleY = sticker.scaleY * normFactor;
-
-  return (
-    <KonvaImage
-      ref={shapeRef}
-      id={sticker.id}
-      image={loadedImg}
-      x={sticker.x}
-      y={sticker.y}
-      scaleX={finalScaleX}
-      scaleY={finalScaleY}
-      rotation={sticker.rotation}
-      draggable={!isPreviewMode}
-      perfectDrawEnabled={true}
-      imageSmoothingEnabled={true}
-      onClick={onClick}
-      onTouchStart={onClick}
-      onDragEnd={(e) => {
-        onChange({
-          x: e.target.x(),
-          y: e.target.y()
-        });
-      }}
-      onTransformEnd={() => {
-        const node = shapeRef.current;
-        if (!node) return;
-        onChange({
-          x: node.x(),
-          y: node.y(),
-          scaleX: node.scaleX() / normFactor,
-          scaleY: node.scaleY() / normFactor,
-          rotation: node.rotation()
-        });
-      }}
-      offsetX={imgW / 2}
-      offsetY={imgH / 2}
-    />
-  );
-};
-
-interface TextElementProps {
-  textData: CanvasText;
-  isSelected: boolean;
-  onClick: () => void;
-  onChange: (attrs: Partial<CanvasText>) => void;
-  isPreviewMode?: boolean;
-}
-
-const TextElement: React.FC<TextElementProps> = ({ textData, onClick, onChange, isPreviewMode = false }) => {
-  const shapeRef = useRef<any>(null);
-  const { selectedFrame } = usePhotobooth();
-
-  if (!selectedFrame) return null;
-
-  return (
-    <KonvaText
-      ref={shapeRef}
-      id={textData.id}
-      text={textData.text}
-      x={textData.x}
-      y={textData.y}
-      fontSize={textData.fontSize}
-      fontFamily={textData.fontFamily}
-      fill={textData.fill}
-      scaleX={textData.scaleX}
-      scaleY={textData.scaleY}
-      rotation={textData.rotation}
-      draggable={!isPreviewMode}
-      onClick={onClick}
-      onTouchStart={onClick}
-      align="center"
-      onDragEnd={(e) => {
-        onChange({
-          x: e.target.x(),
-          y: e.target.y()
-        });
-      }}
-      onTransformEnd={() => {
-        const node = shapeRef.current;
-        if (!node) return;
-        onChange({
-          x: node.x(),
-          y: node.y(),
-          scaleX: node.scaleX(),
-          scaleY: node.scaleY(),
-          rotation: node.rotation()
-        });
-      }}
-      offsetX={shapeRef.current ? shapeRef.current.width() / 2 : 0}
-      offsetY={shapeRef.current ? shapeRef.current.height() / 2 : 0}
-    />
   );
 };

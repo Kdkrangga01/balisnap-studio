@@ -80,12 +80,40 @@ const playShutterSound = () => {
   }
 };
 
-function fitDataUrlNoCrop(
+// Anchor vertikal sama persis kayak di PhotoCanvas.tsx (cover-fit di editor):
+// kalau bagian atas/bawah yang harus dipotong, titik jangkarnya digeser ke
+// 25% dari atas (bukan 50% / center), supaya wajah (biasanya ada di
+// 1/3-1/2 atas foto) tidak ikut kepotong. Konstanta ini SENGAJA disamakan
+// dengan PhotoCanvas.tsx (verticalAnchor) supaya crop yang dilakukan di
+// sini (saat capture) dan crop yang dilakukan di editor selalu konsisten.
+const VERTICAL_CROP_ANCHOR = 0.25;
+
+/**
+ * Crop + resize sebuah dataURL foto supaya PERSIS sesuai rasio target
+ * (mis. rasio slot bingkai yang aktif), lalu apply filter/brightness.
+ *
+ * Kenapa perlu crop di sini (bukan cuma resize)?
+ * Kamera web biasanya punya rasio landscape (mis. 16:9 / 4:3), sedangkan
+ * slot bingkai bisa portrait, square, dst. Kalau foto disimpan apa adanya
+ * (rasio kamera) lalu dipasang ke slot yang beda rasio, PhotoCanvas
+ * (editor) akan otomatis cover-fit + crop foto itu sendiri -- tapi crop
+ * itu jadi TIDAK TERDUGA buat user karena terjadi belakangan, di luar apa
+ * yang mereka lihat di viewfinder. Dengan crop-ke-rasio-slot SEJAK
+ * capture (sesuai apa yang kelihatan di viewfinder, karena kotak
+ * viewfinder-nya juga di-set ke rasio slot yang sama), hasil akhirnya
+ * WYSIWYG: foto yang tersimpan sudah pas dengan bentuk slot, dan
+ * cover-fit di editor jadi nyaris tidak melakukan crop tambahan lagi.
+ *
+ * targetAspect: w/h rasio target. Kalau null/undefined -> tidak ada crop,
+ * cuma resize (perilaku lama, dipakai sbg fallback).
+ */
+function fitDataUrlToSlotAspect(
   dataUrl: string,
   maxLongSide: number,
   filterId: string,
   brightnessLevel: number,
-  isBeautyMode: boolean
+  isBeautyMode: boolean,
+  targetAspect?: number | null
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
@@ -97,8 +125,34 @@ function fitDataUrlNoCrop(
         return;
       }
 
-      let outW = srcW;
-      let outH = srcH;
+      // Tentukan area sumber (crop) dari foto asli supaya rasionya
+      // persis sama dengan targetAspect. Pakai anchor yang sama kayak
+      // cover-fit di editor: center horizontal, 25%-dari-atas vertikal.
+      let cropX = 0;
+      let cropY = 0;
+      let cropW = srcW;
+      let cropH = srcH;
+
+      if (targetAspect && targetAspect > 0) {
+        const srcAspect = srcW / srcH;
+        if (srcAspect > targetAspect) {
+          // Foto lebih "lebar" dari slot -> potong kiri-kanan, center-crop.
+          cropW = srcH * targetAspect;
+          cropH = srcH;
+          cropX = (srcW - cropW) / 2;
+          cropY = 0;
+        } else {
+          // Foto lebih "sempit/tinggi" dari slot -> potong atas-bawah,
+          // anchor ke 25% dari atas biar wajah gak kepotong.
+          cropW = srcW;
+          cropH = srcW / targetAspect;
+          cropX = 0;
+          cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) * VERTICAL_CROP_ANCHOR));
+        }
+      }
+
+      let outW = cropW;
+      let outH = cropH;
       const longSide = Math.max(outW, outH);
       if (longSide > maxLongSide) {
         const scale = maxLongSide / longSide;
@@ -124,7 +178,7 @@ function fitDataUrlNoCrop(
 
       ctx.filter = `brightness(${brightnessLevel}%) ${filterCss === 'none' ? '' : filterCss} ${beautyCss}`.trim();
 
-      ctx.drawImage(img, 0, 0, srcW, srcH, 0, 0, outW, outH);
+      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, outW, outH);
       resolve(canvas.toDataURL('image/jpeg', 0.98));
     };
     img.onerror = () => reject(new Error('Gagal memuat gambar.'));
@@ -309,8 +363,9 @@ export const Capture: React.FC = () => {
 
     const maxLongSide = 2048;
     const capturedSlot = activeSlot;
+    const targetAspect = getSlotAspectRatio(capturedSlot);
 
-    fitDataUrlNoCrop(imageSrc, maxLongSide, activeFilter, brightness, isBeautyMode)
+    fitDataUrlToSlotAspect(imageSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect)
       .then((croppedSrc) => {
         setPhotoAtSlot(capturedSlot, croppedSrc);
 
@@ -331,16 +386,26 @@ export const Capture: React.FC = () => {
         setIsProcessingPhoto(false);
         setIsAutoShooting(false);
       });
-  }, [webcamRef, activeSlot, isAutoShooting, activeFilter, brightness, isBeautyMode, timerInterval, setPhotoAtSlot, selectNextEmptySlot, actualResolution, soundEnabled]);
+  }, [webcamRef, activeSlot, isAutoShooting, activeFilter, brightness, isBeautyMode, timerInterval, setPhotoAtSlot, selectNextEmptySlot, actualResolution, soundEnabled, getSlotAspectRatio]);
 
   if (!selectedFrame) return null;
 
   const { slots: totalSlots, name: frameName } = selectedFrame;
 
+  // Rasio slot yang sedang dibidik. Dipakai buat:
+  // 1) Kasih HINT rasio ke kamera (browser cuma "ideal", bukan garansi --
+  //    tapi kalau kameranya support, native stream jadi udah mendekati
+  //    bentuk slot, jadi crop yang perlu dilakukan makin sedikit).
+  // 2) Bentuk kotak viewfinder di layar (lihat `aspectRatio: viewfinderAspect`
+  //    di bawah), supaya WYSIWYG -- apa yang user lihat di viewfinder
+  //    SAMA PERSIS dengan area yang bakal di-crop & disimpan di capturePhoto().
+  const activeSlotAspect = getSlotAspectRatio(activeSlot);
+
   const getVideoConstraints = () => {
     return {
       facingMode: 'user',
       width: { ideal: 1280 },
+      aspectRatio: { ideal: activeSlotAspect },
     };
   };
 
@@ -349,6 +414,12 @@ export const Capture: React.FC = () => {
     actualResolution && actualResolution.width > 0 && actualResolution.height > 0
       ? actualResolution.width / actualResolution.height
       : fallbackAspect;
+
+  // Kotak viewfinder di-set ke rasio SLOT (bukan rasio native kamera).
+  // Video di dalamnya tetap `object-cover` (lihat className Webcam di bawah),
+  // jadi secara visual videonya otomatis center-crop pas ke bentuk ini --
+  // persis prinsip yang dipakai fitDataUrlToSlotAspect() saat capture.
+  const viewfinderAspect = activeSlotAspect || cameraAspect;
 
   const startSingleClickMultiShoot = () => {
     const firstEmpty = photosStateRef.current.findIndex((p) => p === null);
@@ -389,11 +460,12 @@ export const Capture: React.FC = () => {
       const rawSrc = reader.result;
       const maxLongSide = 2048;
       const targetSlot = activeSlot;
+      const targetAspect = getSlotAspectRatio(targetSlot);
 
       setIsProcessingPhoto(true);
       setCaptureError(null);
 
-      fitDataUrlNoCrop(rawSrc, maxLongSide, activeFilter, brightness, isBeautyMode)
+      fitDataUrlToSlotAspect(rawSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect)
         .then((croppedSrc) => {
           setPhotoAtSlot(targetSlot, croppedSrc);
           const updatedPhotos = [...photosStateRef.current];
@@ -403,7 +475,7 @@ export const Capture: React.FC = () => {
         })
         .catch((err) => {
           console.error("Gagal memproses foto upload, mencoba fallback...", err);
-          fitDataUrlNoCrop(rawSrc, 1024, 'none', 100, false)
+          fitDataUrlToSlotAspect(rawSrc, 1024, 'none', 100, false, targetAspect)
             .then((fallbackSrc) => {
               setPhotoAtSlot(targetSlot, fallbackSrc);
               const updatedPhotos = [...photosStateRef.current];
@@ -570,7 +642,7 @@ export const Capture: React.FC = () => {
               <div
                 className="relative bg-zinc-950 border-4 border-purple-200/80 shadow-[0_20px_50px_rgba(216,180,254,0.4)] rounded-[20px] sm:rounded-[28px] overflow-hidden mx-auto w-full max-w-4xl flex-1 min-h-0 group pt-5 sm:pt-4"
                 style={{
-                  aspectRatio: cameraAspect,
+                  aspectRatio: viewfinderAspect,
                   maxHeight: isPortraitView ? '62vh' : '78vh',
                 }}
               >
