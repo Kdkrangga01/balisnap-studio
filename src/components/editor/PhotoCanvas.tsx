@@ -136,6 +136,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
     appliedFilter,
     fineTuning,
     stickers,
+    updateSticker,
     texts,
     packageTier,
     customHeadline,
@@ -607,9 +608,17 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
 
             const baseW = stImg.naturalWidth || stImg.width || 100;
             const baseH = stImg.naturalHeight || stImg.height || 100;
-            const scaleFactor = st.scale || 1;
-            const finalWidth = st.width || baseW * scaleFactor;
-            const finalHeight = st.height || baseH * scaleFactor;
+            const aspectRatio = baseH / baseW;
+
+            // Target ukuran ideal stiker: sekitar 10.5% dari lebar bingkai (~105px - 115px)
+            // pas di pojok-pojok bingkai tanpa menutupi area utama foto
+            const defaultTargetW = Math.round(frameWidth * 0.105);
+            const targetW = st.width || (baseW > defaultTargetW ? defaultTargetW : baseW);
+            const targetH = st.height || Math.round(targetW * aspectRatio);
+
+            const scaleFactor = st.scale || st.scaleX || 1;
+            const finalWidth = Math.round(targetW * scaleFactor);
+            const finalHeight = Math.round(targetH * scaleFactor);
 
             return (
               <KonvaImage
@@ -623,6 +632,13 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                 draggable={!isPreviewMode}
                 onClick={() => !isPreviewMode && setSelectedId(st.id)}
                 onTap={() => !isPreviewMode && setSelectedId(st.id)}
+                onDragEnd={(e) => {
+                  if (isPreviewMode) return;
+                  updateSticker(st.id, {
+                    x: e.target.x(),
+                    y: e.target.y(),
+                  });
+                }}
               />
             );
           })}

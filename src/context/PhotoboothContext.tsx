@@ -490,15 +490,41 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   };
 
-  // TAMBAH 1 STIKER MANUAL (UKURAN SEDANG PAS)
+  // TAMBAH 1 STIKER MANUAL (OTOMATIS JATUH DI POJOK BINGKAI, TIDAK MENUTUPI TENGAH FOTO)
   const addSticker = (stickerId: string, overridePosition?: { x: number; y: number }) => {
     const id = `sticker-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    let posX = selectedFrame ? selectedFrame.width / 2 : 150;
-    let posY = selectedFrame ? selectedFrame.height / 2 : 150;
+    let posX = 30;
+    let posY = 30;
 
     if (overridePosition) {
       posX = overridePosition.x;
       posY = overridePosition.y;
+    } else if (selectedFrame) {
+      const FW = selectedFrame.width;
+      const FH = selectedFrame.height;
+      const stickerW = Math.round(FW * 0.095);
+
+      // Cari bounding box slot foto
+      let minSlotX = FW;
+      let maxSlotRight = 0;
+      let minSlotY = FH;
+
+      selectedFrame.slotCoords.forEach(slot => {
+        if (slot.x < minSlotX) minSlotX = slot.x;
+        if (slot.x + slot.w > maxSlotRight) maxSlotRight = slot.x + slot.w;
+        if (slot.y < minSlotY) minSlotY = slot.y;
+      });
+
+      const cornerSpots = [
+        { x: Math.max(12, Math.round(minSlotX / 2 - stickerW / 2)), y: Math.max(12, Math.round(minSlotY / 2 - stickerW / 2)) },
+        { x: Math.min(FW - stickerW - 12, Math.round(maxSlotRight + (FW - maxSlotRight) / 2 - stickerW / 2)), y: Math.max(12, Math.round(minSlotY / 2 - stickerW / 2)) },
+        { x: Math.min(FW - stickerW - 12, Math.round(maxSlotRight + (FW - maxSlotRight) / 2 - stickerW / 2)), y: Math.round(FH * 0.45) },
+        { x: Math.max(12, Math.round(minSlotX / 2 - stickerW / 2)), y: Math.round(FH * 0.45) }
+      ];
+
+      const spotIdx = stickers.length % cornerSpots.length;
+      posX = cornerSpots[spotIdx].x;
+      posY = cornerSpots[spotIdx].y;
     }
 
     const newSticker: CanvasSticker = {
@@ -508,52 +534,90 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       y: posY,
       scaleX: 1.0,
       scaleY: 1.0,
-      rotation: (Math.random() * 20) - 10
+      rotation: (stickers.length % 2 === 0 ? -3 : 3)
     };
 
     setStickers(prev => [...prev, newSticker]);
     setSelectedId(id);
   };
 
-  // AUTO-SPREAD PAKET STIKER (2 STIKER PER SLOT, BERPADU SEDANG & PAS DIPANDANG)
+  // AUTO-SPREAD PAKET STIKER (SELURUH STIKER PAKET TERPASTIKAN TERISI PENUH DI MARGIN LUAR BINGKAI TANPA MENUTUPI FOTO)
   const applyStickerPack = (packId: string) => {
     const pack = stickerPacks.find(p => p.id === packId);
     if (!pack || !selectedFrame) return;
 
-    const shuffledStickers = [...pack.stickers].sort(() => 0.5 - Math.random());
+    const availableStickers = [...pack.stickers];
     const newStickers: CanvasSticker[] = [];
 
-    selectedFrame.slotCoords.forEach((slot, slotIdx) => {
-      const offsetX = 30;
-      const offsetY = 30;
+    const FW = selectedFrame.width;
+    const FH = selectedFrame.height;
 
-      // Berselang-seling sudut kiri-atas & kanan-bawah atau kanan-atas & kiri-bawah
-      const cornerPairs = slotIdx % 2 === 0
-        ? [
-          { x: slot.x + offsetX, y: slot.y + offsetY },                     // Top Left
-          { x: slot.x + slot.w - offsetX, y: slot.y + slot.h - offsetY }   // Bottom Right
-        ]
-        : [
-          { x: slot.x + slot.w - offsetX, y: slot.y + offsetY },            // Top Right
-          { x: slot.x + offsetX, y: slot.y + slot.h - offsetY }            // Bottom Left
-        ];
+    const stickerW = Math.round(FW * 0.095);
+    const stickerH = stickerW;
 
-      cornerPairs.forEach((spot, pairIdx) => {
-        const stIndex = (slotIdx * 2 + pairIdx) % shuffledStickers.length;
-        const stickerSrc = shuffledStickers[stIndex];
-        const id = `auto-sticker-${Date.now()}-${slotIdx}-${pairIdx}`;
+    // Hitung batas terluar seluruh slot foto (bounding box area foto)
+    let minSlotX = FW;
+    let maxSlotRight = 0;
+    let minSlotY = FH;
+    let maxSlotBottom = 0;
 
-        newStickers.push({
-          id,
-          stickerId: stickerSrc,
-          x: spot.x,
-          y: spot.y,
-          scaleX: 1.0,
-          scaleY: 1.0,
-          rotation: (Math.random() * 24) - 12
-        });
-      });
+    selectedFrame.slotCoords.forEach(slot => {
+      if (slot.x < minSlotX) minSlotX = slot.x;
+      if (slot.x + slot.w > maxSlotRight) maxSlotRight = slot.x + slot.w;
+      if (slot.y < minSlotY) minSlotY = slot.y;
+      if (slot.y + slot.h > maxSlotBottom) maxSlotBottom = slot.y + slot.h;
     });
+
+    const leftOuterX = Math.max(8, Math.round(minSlotX / 2 - stickerW / 2));
+    const rightOuterX = Math.min(FW - stickerW - 8, Math.round(maxSlotRight + (FW - maxSlotRight) / 2 - stickerW / 2));
+
+    // Generasi titik-titik outer margin sepanjang kiri, kanan, atas, dan bawah bingkai
+    const outerSpots: { x: number; y: number }[] = [];
+
+    // 1. Header Outer Margin (Atas Kiri, Atas Tengah, Atas Kanan)
+    const topY = Math.max(8, Math.round(minSlotY / 2 - stickerH / 2));
+    outerSpots.push({ x: leftOuterX, y: topY });
+    outerSpots.push({ x: Math.round(FW / 2 - stickerW / 2), y: topY });
+    outerSpots.push({ x: rightOuterX, y: topY });
+
+    // 2. Outer Margins Sejajar Tiap Row Slot Foto (Kiri & Kanan)
+    const uniqueYCoords: number[] = Array.from(new Set(selectedFrame.slotCoords.map(s => s.y))).sort((a, b) => a - b);
+    uniqueYCoords.forEach((slotY) => {
+      const matchingSlots = selectedFrame.slotCoords.filter(s => Math.abs(s.y - slotY) < 20);
+      const slotH = matchingSlots[0]?.h || 200;
+      const centerY = slotY + slotH / 2 - stickerH / 2;
+
+      outerSpots.push({ x: leftOuterX, y: Math.round(centerY) });
+      outerSpots.push({ x: rightOuterX, y: Math.round(centerY) });
+    });
+
+    // 3. Footer Outer Margin (Bawah Kiri, Bawah Tengah, Bawah Kanan)
+    const bottomY = Math.min(FH - stickerH - 10, Math.round(maxSlotBottom + (FH - maxSlotBottom) / 2 - stickerH / 2));
+    outerSpots.push({ x: leftOuterX, y: bottomY });
+    outerSpots.push({ x: Math.round(FW / 2 - stickerW / 2), y: bottomY });
+    outerSpots.push({ x: rightOuterX, y: bottomY });
+
+    // Pastikan SELURUH stiker dari paket terpasang mengelilingi margin luar bingkai
+    const totalStickersToPlace = Math.max(pack.stickers.length, Math.min(12, outerSpots.length));
+
+    for (let i = 0; i < totalStickersToPlace; i++) {
+      const spot = outerSpots[i % outerSpots.length];
+      const stickerSrc = availableStickers[i % availableStickers.length];
+      const id = `auto-sticker-${Date.now()}-${i}`;
+
+      const rotations = [-4, 3, -3, 4, 0, -2, 2, -3];
+      const rot = rotations[i % rotations.length];
+
+      newStickers.push({
+        id,
+        stickerId: stickerSrc,
+        x: spot.x,
+        y: spot.y,
+        scaleX: 1.0,
+        scaleY: 1.0,
+        rotation: rot
+      });
+    }
 
     setStickers(newStickers);
   };
