@@ -1,8 +1,11 @@
+import type { PackageTier } from '../context/PhotoboothContext';
+
 export interface StickerItem {
   id: string;
   name: string;
   src: string;
   category: 'cute' | 'text' | 'emoji' | 'washi' | 'badge' | 'cat' | 'nailong' | 'aesthetic' | 'anime';
+  requiredTier?: PackageTier;
 }
 
 export interface StickerPack {
@@ -11,6 +14,21 @@ export interface StickerPack {
   category: 'cute' | 'text' | 'emoji' | 'washi' | 'badge' | 'cat' | 'nailong' | 'aesthetic' | 'anime';
   icon: string;
   stickers: string[];
+  requiredTier?: PackageTier;
+}
+
+export function isStickerLocked(sticker: StickerItem, currentTier: PackageTier): boolean {
+  const req = sticker.requiredTier || (sticker.category === 'nailong' || sticker.category === 'cat' || sticker.category === 'anime' || sticker.category === 'badge' ? 'premium' : 'basic');
+  if (currentTier === 'premium') return false;
+  if (currentTier === 'basic') return req === 'premium';
+  return req === 'basic' || req === 'premium';
+}
+
+export function isStickerPackLocked(pack: StickerPack, currentTier: PackageTier): boolean {
+  const req = pack.requiredTier || (pack.category === 'nailong' || pack.category === 'cat' || pack.category === 'anime' || pack.category === 'badge' || pack.category === 'aesthetic' ? 'premium' : 'basic');
+  if (currentTier === 'premium') return false;
+  if (currentTier === 'basic') return req === 'premium';
+  return req === 'basic' || req === 'premium';
 }
 
 // ============================================================================
@@ -452,6 +470,7 @@ export const stickerPacks: StickerPack[] = [
     name: "Aesthetic Y2K & Coquette ✨",
     category: "aesthetic",
     icon: STICKER_AESTHETIC_CHROME_STAR,
+    requiredTier: 'premium',
     stickers: [
       STICKER_AESTHETIC_CHROME_STAR,
       STICKER_AESTHETIC_CYBER_HEART,
@@ -464,6 +483,7 @@ export const stickerPacks: StickerPack[] = [
     name: "Spiderman Marvel Ultimate 🕷️",
     category: "badge",
     icon: STICKER_SPIDERMAN_HANGING,
+    requiredTier: 'premium',
     stickers: [
       STICKER_SPIDERMAN_HANGING,
       STICKER_SPIDERMAN_CAMERA,
@@ -476,6 +496,7 @@ export const stickerPacks: StickerPack[] = [
     name: "Marvel Web & Beats 🎧",
     category: "badge",
     icon: STICKER_MARVEL_LOGO,
+    requiredTier: 'premium',
     stickers: [
       STICKER_MARVEL_LOGO,
       STICKER_SPIDER_WEB_HEART,
@@ -488,6 +509,7 @@ export const stickerPacks: StickerPack[] = [
     name: "Cute Kawaii Collection 🎀",
     category: "cute",
     icon: STICKER_PINTEREST_BLACK_CAT,
+    requiredTier: 'basic',
     stickers: [
       STICKER_PINTEREST_BLACK_CAT,
       STICKER_PINTEREST_BEAR_HEART,
@@ -500,6 +522,7 @@ export const stickerPacks: StickerPack[] = [
     name: "Coquette Bow & Cherries 🌸",
     category: "cute",
     icon: STICKER_COQUETTE_BOW,
+    requiredTier: 'premium',
     stickers: [
       STICKER_COQUETTE_BOW,
       STICKER_GREY_TABBY_WINK,
@@ -512,6 +535,7 @@ export const stickerPacks: StickerPack[] = [
     name: "Kucing Cute Pack 🐾",
     category: "cute",
     icon: "/stickers/cute-cat.svg",
+    requiredTier: 'free',
     stickers: [
       "/stickers/cute-cat.svg",
       "/stickers/cute-angry-cat.png",
@@ -524,6 +548,7 @@ export const stickerPacks: StickerPack[] = [
     name: "Kawaii Friends ☁️",
     category: "cute",
     icon: "/stickers/cute-bunny.svg",
+    requiredTier: 'free',
     stickers: [
       "/stickers/cute-bunny.svg",
       "/stickers/cute-bear.svg",
@@ -536,6 +561,7 @@ export const stickerPacks: StickerPack[] = [
     name: "Sparkle Y2K Magic ✨",
     category: "emoji",
     icon: "/stickers/sparkle-gold.svg",
+    requiredTier: 'basic',
     stickers: [
       "/stickers/sparkle-gold.svg",
       "/stickers/sparkle-pink.svg",
@@ -548,6 +574,7 @@ export const stickerPacks: StickerPack[] = [
     name: "Scrapbook Washi Tape 🎀",
     category: "washi",
     icon: "/stickers/tape-pink.svg",
+    requiredTier: 'basic',
     stickers: [
       "/stickers/tape-pink.svg",
       "/stickers/tape-mint.svg",
@@ -560,6 +587,7 @@ export const stickerPacks: StickerPack[] = [
     name: "Cute Speech Bubbles 💬",
     category: "text",
     icon: "/stickers/bubble-love.svg",
+    requiredTier: 'basic',
     stickers: [
       "/stickers/bubble-love.svg",
       "/stickers/bubble-bestie.svg",

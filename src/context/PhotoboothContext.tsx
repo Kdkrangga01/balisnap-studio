@@ -5,9 +5,12 @@ import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/fra
 import { stickerPacks } from '../data/stickers';
 
 // Konstanta zoom foto, dipakai bareng oleh context & kanvas biar konsisten.
-export const DEFAULT_PHOTO_ZOOM = 1.0; // level zoom awal (cover-fit presisi otomatis pas di slot bingkai)
+export const DEFAULT_PHOTO_ZOOM = 1.0; // level zoom awal (contain-fit otomatis: seluruh foto kelihatan pas di slot bingkai, kiri-kanan-atas-bawah tidak terpotong)
 export const MIN_PHOTO_ZOOM = 0.5;     // paling kecil, foto jadi 50% dari slot
 export const MAX_PHOTO_ZOOM = 2.5;     // paling besar, foto di-zoom in 250%
+// Batas zoom terkecil "custom" (dipakai bareng oleh tombol Zoom Out & scroll-zoom
+// di kanvas) supaya foto bisa diperkecil jauh lebih muat, sampai 10% dari slot.
+export const CUSTOM_MIN_PHOTO_ZOOM = 0.1;
 
 export interface PhotoTransform {
   x: number;
@@ -55,6 +58,10 @@ export const DEFAULT_FINE_TUNING: FineTuningConfig = {
   saturation: 100,
   softFocus: 0,
 };
+
+// Jumlah baris tetap pada kotak "LOCATION" di bingkai koran/retro
+// (mis. DENPASAR / SANUR / KUTA / CANGGU / SEMINYAK-LEGIAN-UBUD).
+export const CUSTOM_LOCATION_ROWS = 5;
 
 export function getFrameRequiredTier(frame: FrameTemplate): PackageTier {
   if (frame.id.startsWith('custom-') || frame.slots > 4) return 'premium';
@@ -153,6 +160,18 @@ interface PhotoboothContextProps {
   customFrames: FrameTemplate[];
   addCustomFrame: (frame: FrameTemplate) => void;
   deleteCustomFrame: (id: string) => void;
+  // Custom nama daerah/kota — khusus dipakai oleh bingkai bertema koran/retro
+  // (mis. "DENPASAR") supaya user bisa ganti dengan nama daerah masing-masing,
+  // tetap pakai font headline koran yang sama.
+  customHeadline: string;
+  setCustomHeadline: (text: string) => void;
+  // Custom daftar nama lokasi (5 baris tetap, sesuai desain kotak "LOCATION"
+  // pada bingkai koran/retro: DENPASAR / SANUR / KUTA / CANGGU /
+  // SEMINYAK-LEGIAN-UBUD). Kosong = pakai teks bawaan pada baris tersebut,
+  // tetap memakai gaya font koran yang sama seperti versi bawaan.
+  customLocations: string[];
+  setCustomLocationLine: (index: number, value: string) => void;
+  resetCustomLocations: () => void;
 }
 
 const PhotoboothContext = createContext<PhotoboothContextProps | undefined>(undefined); const SESSION_KEY = 'balisnap_active_session_v1';
@@ -179,7 +198,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     try {
       const saved = localStorage.getItem('balisnap_package_tier');
       if (saved === 'free' || saved === 'basic' || saved === 'premium') return saved;
-    } catch {}
+    } catch { }
     return savedSession?.packageTier || 'free';
   });
 
@@ -187,11 +206,21 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setPackageTierState(tier);
     try {
       localStorage.setItem('balisnap_package_tier', tier);
-    } catch {}
+    } catch { }
   };
 
   const [step, setStep] = useState<StepType>(savedSession?.step || 'landing');
   const [selectedFrame, setSelectedFrame] = useState<FrameTemplate | null>(savedSession?.selectedFrame || null);
+  // Custom nama daerah/kota untuk bingkai bertema koran (mis. ganti "DENPASAR"
+  // jadi nama kota user sendiri). Disimpan per-sesi supaya tidak hilang saat reload.
+  const [customHeadline, setCustomHeadline] = useState<string>(savedSession?.customHeadline || '');
+  // Custom daftar nama lokasi (5 baris) untuk kotak "LOCATION" pada bingkai
+  // koran/retro. Disimpan per-sesi juga, sama seperti customHeadline.
+  const [customLocations, setCustomLocations] = useState<string[]>(
+    Array.isArray(savedSession?.customLocations) && savedSession.customLocations.length === 5
+      ? savedSession.customLocations
+      : Array(5).fill('')
+  );
   const [photos, setPhotos] = useState<(string | null)[]>(savedSession?.photos || []);
   const [photoTransforms, setPhotoTransforms] = useState<PhotoTransform[]>(savedSession?.photoTransforms || []);
   const [stickers, setStickers] = useState<CanvasSticker[]>(savedSession?.stickers || []);
@@ -263,6 +292,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           wallpaperScaleMode,
           photoBlendMode,
           photoOpacity,
+          customHeadline,
+          customLocations,
         };
         sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
       }
@@ -273,7 +304,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     step, selectedFrame, photos, photoTransforms, stickers, texts, selectedId, appliedFilter,
     frameColor, frameStyle, borderThickness, borderRadius, shadowIntensity, shadowBlur,
     shadowColor, frameOpacity, framePadding, innerMargin, outerMargin, wallpaperId,
-    wallpaperUpload, wallpaperBlur, wallpaperOpacity, wallpaperScaleMode, photoBlendMode, photoOpacity
+    wallpaperUpload, wallpaperBlur, wallpaperOpacity, wallpaperScaleMode, photoBlendMode, photoOpacity,
+    customHeadline, customLocations
   ]);
 
   const [favoriteColors, setFavoriteColors] = useState<string[]>(() => {
@@ -395,6 +427,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setTexts([]);
     setSelectedId(null);
     setAppliedFilter('normal');
+    setCustomHeadline('');
+    setCustomLocations(Array(5).fill(''));
     setFrameColor('original');
     setFrameStyle('solid');
     setBorderThickness(0);
@@ -578,6 +612,22 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     removeCustomFrame(id).catch(err => console.error("Error deleting frame DB:", err));
   };
 
+  // Ubah 1 baris tertentu (index 0-4) pada daftar custom lokasi.
+  // Otomatis diseragamkan jadi huruf besar (kapital), sama seperti customHeadline,
+  // supaya tetap konsisten dengan gaya font koran/retro yang sudah ada.
+  const setCustomLocationLine = (index: number, value: string) => {
+    setCustomLocations(prev => {
+      const next = [...prev];
+      while (next.length < CUSTOM_LOCATION_ROWS) next.push('');
+      next[index] = value.toUpperCase();
+      return next;
+    });
+  };
+
+  const resetCustomLocations = () => {
+    setCustomLocations(Array(5).fill(''));
+  };
+
   const resetAll = () => {
     try {
       sessionStorage.removeItem(SESSION_KEY);
@@ -590,6 +640,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setTexts([]);
     setSelectedId(null);
     setAppliedFilter('normal');
+    setCustomHeadline('');
+    setCustomLocations(Array(5).fill(''));
     setFrameColor('original');
     setFrameStyle('solid');
     setBorderThickness(0);
@@ -624,7 +676,9 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       photoBlendMode, setPhotoBlendMode, photoOpacity, setPhotoOpacity,
       favoriteColors, toggleFavoriteColor, recentColors, addRecentColor, favoriteWallpapers, toggleFavoriteWallpaper,
       recentWallpapers, addRecentWallpaper, favoriteStickers, toggleFavoriteSticker, resetAll, customFrames,
-      addCustomFrame, deleteCustomFrame
+      addCustomFrame, deleteCustomFrame,
+      customHeadline, setCustomHeadline,
+      customLocations, setCustomLocationLine, resetCustomLocations
     }}>
       {children}
     </PhotoboothContext.Provider>

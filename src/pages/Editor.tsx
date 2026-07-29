@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MAX_PHOTO_ZOOM, type PackageTier } from '../context/PhotoboothContext';
+import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MAX_PHOTO_ZOOM, CUSTOM_MIN_PHOTO_ZOOM, type PackageTier } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { FilterPanel } from '../components/editor/FilterPanel';
 import { RetouchPanel } from '../components/editor/RetouchPanel';
@@ -31,11 +31,10 @@ import {
   Wand2,
   Maximize,
   Scan,
-  Lock
+  Lock,
+  MapPin,
+  Edit3
 } from 'lucide-react';
-
-// Batas zoom terkecil diturunkan ke 0.1 (10%) agar foto bisa diperkecil jauh lebih muat
-const CUSTOM_MIN_PHOTO_ZOOM = 0.1;
 
 export const Editor: React.FC = () => {
   const {
@@ -54,6 +53,10 @@ export const Editor: React.FC = () => {
     updatePhotoTransform,
     resetPhotoTransform,
     packageTier,
+    customHeadline,
+    setCustomHeadline,
+    customLocations,
+    setCustomLocationLine,
   } = usePhotobooth();
 
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
@@ -130,7 +133,7 @@ export const Editor: React.FC = () => {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (document.activeElement?.tagName === 'INPUT') return;
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
       if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
         handleDeleteSelected();
@@ -164,16 +167,22 @@ export const Editor: React.FC = () => {
     updatePhotoTransform(selectedPhotoIndex, { zoom: nextZoom });
   };
 
-  // Fit foto agar pas seutuhnya dalam bingkai (Contain Fit)
+  // Fit foto agar PAS SEUTUHNYA dalam bingkai
   const handlePhotoFitToFrame = () => {
     if (selectedPhotoIndex === null) return;
-    updatePhotoTransform(selectedPhotoIndex, { zoom: 0.5, x: 0, y: 0 });
+    updatePhotoTransform(selectedPhotoIndex, { zoom: DEFAULT_PHOTO_ZOOM, x: 0, y: 0 });
   };
 
   const handlePhotoZoomReset = () => {
     if (selectedPhotoIndex === null) return;
     resetPhotoTransform(selectedPhotoIndex);
   };
+
+  // Cek apakah bingkai saat ini berjenis Newspaper / Frame Special
+  const isNewspaperFrame = selectedFrame.id.includes('newspaper') ||
+    selectedFrame.name.toLowerCase().includes('special') ||
+    selectedFrame.name.toLowerCase().includes('retro') ||
+    selectedFrame.name.toLowerCase().includes('newspaper');
 
   return (
     <div
@@ -182,6 +191,12 @@ export const Editor: React.FC = () => {
         background: 'linear-gradient(135deg, #FAF7F2 0%, #F3EBE1 50%, #FAF0E6 100%)'
       }}
     >
+      {/* Google Font Import untuk Condensed Headline Koran */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap"
+        rel="stylesheet"
+      />
+
       {/* 1. SOFT BRIGHT AMBIENT BLURS */}
       <div
         className="absolute top-[-80px] left-[-80px] w-[500px] h-[500px] rounded-full pointer-events-none z-0 blur-[100px] opacity-60"
@@ -314,6 +329,65 @@ export const Editor: React.FC = () => {
                 borderColor: 'rgba(255, 255, 255, 0.9)',
               }}
             >
+
+              {/* ===== FITUR CUSTOM NAMA DAERAH (DIPAKAI JIKA isNewspaperFrame AKTIF) ===== */}
+              {(selectedFrame && isNewspaperFrame) && (
+                <div className="bg-gradient-to-r from-stone-900 via-zinc-900 to-black p-4 rounded-2xl border border-amber-500/30 text-white shadow-lg relative overflow-hidden">
+                  <div className="absolute top-0 right-0 translate-x-4 -translate-y-4 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
+
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-amber-500 text-stone-950 flex items-center justify-center font-black text-xs shadow-sm">
+                        <MapPin className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-wider text-amber-400">
+                        Custom Nama Daerah / Kota
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      Font Bawaan Koran
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-zinc-300 mb-3">
+                    Ketik nama daerah kamu untuk mengganti teks utama pada header bingkai koran ini. Kosongkan untuk memakai teks bawaan "DENPASAR".
+                  </p>
+
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      value={customHeadline}
+                      onChange={(e) => {
+                        const val = e.target.value.toUpperCase();
+                        if (setCustomHeadline) {
+                          setCustomHeadline(val);
+                        }
+                      }}
+                      placeholder="DENPASAR"
+                      maxLength={18}
+                      className="w-full bg-zinc-800/90 border border-amber-500/40 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30 rounded-xl px-3.5 py-2.5 text-amber-200 font-extrabold uppercase tracking-widest text-base shadow-inner transition-all outline-none placeholder:text-zinc-500 placeholder:font-extrabold"
+                      style={{
+                        fontFamily: "'Oswald', 'Impact', 'Bebas Neue', sans-serif",
+                        letterSpacing: '0.08em',
+                      }}
+                    />
+                    <Edit3 className="w-4 h-4 text-amber-400 absolute right-3 pointer-events-none opacity-80" />
+                  </div>
+
+                  {/* Font Style Preview Badge */}
+                  <div className="mt-2.5 flex items-center justify-between text-[10px] text-zinc-400 font-medium">
+                    <span>Preview Font Style:</span>
+                    <span
+                      className="text-amber-300 font-black tracking-widest uppercase bg-zinc-800 px-2.5 py-0.5 rounded border border-zinc-700"
+                      style={{ fontFamily: "'Oswald', 'Impact', sans-serif" }}
+                    >
+                      {customHeadline || 'DENPASAR'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+
 
               {/* Quick Select Slot Foto Bar */}
               <div className="bg-purple-50/80 border border-purple-100 p-2.5 rounded-2xl flex flex-col gap-2">
@@ -499,7 +573,7 @@ export const Editor: React.FC = () => {
                         <button
                           onClick={handlePhotoFitToFrame}
                           className="px-2.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm flex items-center gap-1 cursor-pointer"
-                          title="Sesuaikan Foto Otomatis Ke Bingkai"
+                          title="Tampilkan foto secara utuh & otomatis pas di bingkai"
                         >
                           <Maximize className="w-3.5 h-3.5" />
                           <span className="hidden sm:inline">Pas Bingkai</span>

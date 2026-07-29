@@ -6,6 +6,31 @@ export interface SlotCoord {
   rx?: number;
 }
 
+export interface HeadlineConfig {
+  x: number;
+  y: number;
+  width: number;
+  coverRect: { x: number; y: number; w: number; h: number; fill: string };
+  fontSize: number;
+  fontFamily: string;
+  fill: string;
+  letterSpacing?: number;
+  defaultText: string;
+}
+
+export interface LocationConfig {
+  coverRect: { x: number; y: number; w: number; h: number };
+  headerHeight?: number;
+  fontFamily?: string;
+  titleFontSize?: number;
+  rowFontSize?: number;
+  smallFontSize?: number;
+  headerBg?: string;
+  headerTextColor?: string;
+  rowTextColor?: string;
+  borderColor?: string;
+}
+
 export interface FrameTemplate {
   id: string;
   name: string;
@@ -15,6 +40,9 @@ export interface FrameTemplate {
   width: number;
   height: number;
   slotCoords: SlotCoord[];
+  hasBrandName?: boolean;
+  headlineConfig?: HeadlineConfig;
+  locationConfig?: LocationConfig;
 }
 
 export const frames: FrameTemplate[] = [
@@ -898,40 +926,6 @@ export const frames: FrameTemplate[] = [
     ]
   },
   {
-    id: "custom-1784436488484-wz1f",
-    name: "Frame Special",
-    slots: 6,
-    category: "retro",
-    src: "/templates/custom-1784436488484-wz1f.png",
-    width: 1023, height: 1537,
-    slotCoords: [
-      { x: 53, y: 468, w: 259, h: 303, rx: 8 },
-      { x: 708, y: 468, w: 264, h: 303, rx: 8 },
-      { x: 329, y: 527, w: 358, h: 240, rx: 7 },
-      { x: 330, y: 785, w: 358, h: 425, rx: 11 },
-      { x: 52, y: 1229, w: 260, h: 221, rx: 7 },
-      { x: 706, y: 1228, w: 265, h: 222, rx: 7 }
-    ]
-  },
-  {
-    id: "custom-1784531563394-m5uc",
-    name: "Frame Vintage",
-    slots: 8,
-    category: "retro",
-    src: "/templates/custom-1784531563394-m5uc.png",
-    width: 1028, height: 1530,
-    slotCoords: [
-      { x: 52, y: 113, w: 456, h: 441, rx: 13 },
-      { x: 525, y: 128, w: 456, h: 441, rx: 13 },
-      { x: 525, y: 128, w: 456, h: 441, rx: 13 },
-      { x: 525, y: 128, w: 456, h: 441, rx: 13 },
-      { x: 42, y: 570, w: 457, h: 441, rx: 13 },
-      { x: 515, y: 586, w: 456, h: 441, rx: 13 },
-      { x: 49, y: 1028, w: 457, h: 447, rx: 13 },
-      { x: 522, y: 1045, w: 456, h: 441, rx: 13 }
-    ]
-  },
-  {
     id: "custom-1784531653783-vt9t",
     name: "Bali Clasic Frame",
     slots: 6,
@@ -1283,7 +1277,7 @@ export const frames: FrameTemplate[] = [
   },
   {
     id: "custom-1785062752844-1473",
-    name: "Vintage scrapbook photo",
+    name: "Vintage Newspaper 6-Cut",
     slots: 6,
     category: "retro",
     src: "/templates/custom-1785062752844-1473.png",
@@ -1295,7 +1289,31 @@ export const frames: FrameTemplate[] = [
       { x: 529, y: 594, w: 324, h: 284, rx: 9 },
       { x: 165, y: 890, w: 325, h: 383, rx: 10 },
       { x: 530, y: 891, w: 323, h: 381, rx: 10 }
-    ]
+    ],
+    hasBrandName: true,
+    headlineConfig: {
+      x: 30,
+      y: 180,
+      width: 963,
+      coverRect: { x: 30, y: 160, w: 963, h: 135, fill: '#F5F0E6' },
+      fontSize: 96,
+      fontFamily: '"Oswald", "Impact", "Anton", "Bebas Neue", "Arial Black", sans-serif',
+      fill: '#141414',
+      letterSpacing: 3,
+      defaultText: 'DENPASAR'
+    },
+    locationConfig: {
+      coverRect: { x: 15, y: 225, w: 147, h: 635 },
+      headerHeight: 45,
+      fontFamily: "'Playfair Display', Georgia, 'Times New Roman', serif",
+      titleFontSize: 13,
+      rowFontSize: 12,
+      smallFontSize: 9,
+      headerBg: '#111827',
+      headerTextColor: '#F4ECE1',
+      rowTextColor: '#111827',
+      borderColor: '#111827'
+    }
   },
   {
     id: "custom-1785149660622-3gj7",
@@ -1325,6 +1343,108 @@ export const frames: FrameTemplate[] = [
       { x: 532, y: 453, w: 430, h: 317, rx: 6 },
       { x: 532, y: 798, w: 430, h: 317, rx: 6 },
       { x: 532, y: 1143, w: 430, h: 317, rx: 6 }
+    ]
+  },
+  {
+    id: "custom-1785288677563-lhy0",
+    name: "Berry Serenade",
+    slots: 3,
+    category: "cute",
+    src: "/templates/custom-1785288677563-lhy0.png",
+    width: 941, height: 1672,
+    slotCoords: [
+      { x: 231, y: 169, w: 577, h: 408, rx: 12 },
+      { x: 118, y: 656, w: 582, h: 414, rx: 12 },
+      { x: 202, y: 1146, w: 546, h: 374, rx: 11 }
+    ]
+  },
+  {
+    id: "custom-1785288869414-6tek",
+    name: "Serene Dreams",
+    slots: 3,
+    category: "custom",
+    src: "/templates/custom-1785288869414-6tek.png",
+    width: 941, height: 1672,
+    slotCoords: [
+      { x: 177, y: 154, w: 603, h: 522, rx: 16 },
+      { x: 177, y: 678, w: 603, h: 394, rx: 12 },
+      { x: 180, y: 1075, w: 598, h: 371, rx: 11 }
+    ]
+  },
+  {
+    id: "custom-1785289631467-kk8e",
+    name: "Classic Serenade",
+    slots: 4,
+    category: "retro",
+    src: "/templates/custom-1785289631467-kk8e.png",
+    width: 941, height: 1672,
+    slotCoords: [
+      { x: 172, y: 241, w: 279, h: 463, rx: 8 },
+      { x: 173, y: 824, w: 277, h: 464, rx: 8 },
+      { x: 516, y: 241, w: 279, h: 464, rx: 8 },
+      { x: 516, y: 825, w: 278, h: 463, rx: 8 }
+    ]
+  },
+  {
+    id: "custom-1785290175109-95du",
+    name: "Midcentury Velour",
+    slots: 4,
+    category: "retro",
+    src: "/templates/custom-1785290175109-95du.png",
+    width: 941, height: 1672,
+    slotCoords: [
+      { x: 159, y: 358, w: 293, h: 450, rx: 9 },
+      { x: 163, y: 882, w: 288, h: 424, rx: 9 },
+      { x: 514, y: 357, w: 282, h: 452, rx: 8 },
+      { x: 514, y: 882, w: 281, h: 423, rx: 8 }
+    ]
+  },
+  {
+    id: "custom-1785297470579-gjza",
+    name: "Cassette Vibe",
+    slots: 6,
+    category: "retro",
+    src: "/templates/custom-1785297470579-gjza.png",
+    width: 1028, height: 1530,
+    slotCoords: [
+      { x: 58, y: 117, w: 451, h: 439, rx: 13 },
+      { x: 48, y: 573, w: 451, h: 439, rx: 13 },
+      { x: 56, y: 1033, w: 451, h: 425, rx: 13 },
+      { x: 527, y: 133, w: 444, h: 435, rx: 13 },
+      { x: 519, y: 586, w: 444, h: 437, rx: 13 },
+      { x: 523, y: 1044, w: 449, h: 411, rx: 12 }
+    ]
+  },
+  {
+    id: "custom-1785297899980-x415",
+    name: "Disco Groove",
+    slots: 6,
+    category: "retro",
+    src: "/templates/custom-1785297899980-x415.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 144, y: 181, w: 355, h: 395, rx: 11 },
+      { x: 143, y: 608, w: 355, h: 373, rx: 11 },
+      { x: 144, y: 1013, w: 353, h: 363, rx: 11 },
+      { x: 533, y: 181, w: 361, h: 395, rx: 11 },
+      { x: 532, y: 608, w: 360, h: 373, rx: 11 },
+      { x: 531, y: 1012, w: 363, h: 363, rx: 11 }
+    ]
+  },
+  {
+    id: "custom-1785298333527-85wi",
+    name: "Nostalgic Scrapbook",
+    slots: 6,
+    category: "retro",
+    src: "/templates/custom-1785298333527-85wi.png",
+    width: 851, height: 1280,
+    slotCoords: [
+      { x: 41, y: 109, w: 335, h: 301, rx: 9 },
+      { x: 41, y: 447, w: 335, h: 304, rx: 9 },
+      { x: 41, y: 787, w: 335, h: 285, rx: 9 },
+      { x: 465, y: 109, w: 336, h: 301, rx: 9 },
+      { x: 467, y: 447, w: 334, h: 304, rx: 9 },
+      { x: 465, y: 790, w: 337, h: 282, rx: 8 }
     ]
   }
 ];

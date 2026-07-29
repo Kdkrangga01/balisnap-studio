@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Stage, Layer, Image as KonvaImage, Group, Rect, Text } from 'react-konva';
-import { usePhotobooth, type FilterType } from '../../context/PhotoboothContext';
+import { usePhotobooth, type FilterType, DEFAULT_PHOTO_ZOOM, CUSTOM_MIN_PHOTO_ZOOM, MAX_PHOTO_ZOOM } from '../../context/PhotoboothContext';
 import { frameColors } from '../../data/frameColors';
 
 interface PhotoCanvasProps {
@@ -9,7 +9,6 @@ interface PhotoCanvasProps {
   isPreviewMode?: boolean;
 }
 
-// Helper function to resolve any color ID/HEX/pattern into valid Canvas fill
 function resolveColorToFill(
   colorId: string,
   ctx: CanvasRenderingContext2D,
@@ -38,7 +37,8 @@ function resolveColorToFill(
   return colorId;
 }
 
-// Helper function to apply color filters & fine-tuning directly onto photo image
+
+
 function applyFilterToImage(
   img: HTMLImageElement,
   filterType: FilterType,
@@ -56,7 +56,6 @@ function applyFilterToImage(
       const ctx = canvas.getContext('2d');
       if (!ctx) return resolve(img);
 
-      // Apply Retouch Pro & Fine-Tuning filters
       const b = fineTuning?.brightness ?? 100;
       const c = fineTuning?.contrast ?? 100;
       const s = fineTuning?.saturation ?? 100;
@@ -139,6 +138,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
     stickers,
     texts,
     packageTier,
+    customHeadline,
   } = usePhotobooth();
 
   const [frameImage, setFrameImage] = useState<HTMLImageElement | null>(null);
@@ -146,12 +146,141 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
   const [loadedPhotos, setLoadedPhotos] = useState<(HTMLImageElement | null)[]>([]);
   const [filteredPhotos, setFilteredPhotos] = useState<(HTMLImageElement | null)[]>([]);
   const [loadedStickerImages, setLoadedStickerImages] = useState<Record<string, HTMLImageElement>>({});
+  const [hoveredPhotoIndex, setHoveredPhotoIndex] = useState<number | null>(null);
 
-  // Hitung skala canvas berdasarkan dimensi bingkai
   const frameWidth = selectedFrame?.width || 1200;
   const frameHeight = selectedFrame?.height || 1800;
   const scale = containerWidth / frameWidth;
   const stageHeight = frameHeight * scale;
+
+  const [headlineFrameCanvas, setHeadlineFrameCanvas] = useState<HTMLCanvasElement | null>(null);
+
+  // Load Gambar Bingkai Utama
+  useEffect(() => {
+    if (!selectedFrame?.src) return;
+    const img = new window.Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = selectedFrame.src;
+    img.onload = () => setFrameImage(img);
+  }, [selectedFrame]);
+
+  // === HEADLINE + LOCATION CANVAS ENGINE ===
+  // Menggambar ulang 2 area teks kustom pada bingkai koran/retro:
+  // 1) Judul besar (mis. "DENPASAR" -> diganti nama daerah user)
+  // 2) Kotak daftar "LOCATION" (5 baris nama tempat, bisa diganti user)
+  useEffect(() => {
+    if (!frameImage || !selectedFrame) {
+      setHeadlineFrameCanvas(null);
+      return;
+    }
+
+    const isNewspaper = selectedFrame.id.includes('newspaper') ||
+      selectedFrame.id.includes('special') ||
+      selectedFrame.name?.toLowerCase().includes('special') ||
+      selectedFrame.name?.toLowerCase().includes('retro') ||
+      selectedFrame.name?.toLowerCase().includes('newspaper');
+
+    // KOORDINAT PENUTUP COVERRECT SANGAT PRESISI:
+    // y: 195 (Mulai dari bawah pita BREKING NEWS)
+    // h: 205 (Mencakup seluruh bodi huruf DENPASAR sampai garis bawah)
+    const cfg = selectedFrame.headlineConfig || (isNewspaper ? {
+      coverRect: { x: 30, y: 195, w: 1140, h: 205 },
+      fontSize: 165,
+      fontFamily: "'Oswald', 'Impact', 'Bebas Neue', sans-serif",
+      defaultText: 'DENPASAR',
+      fill: '#111827',
+      letterSpacing: 4
+    } : null);
+
+    if (!cfg) {
+      setHeadlineFrameCanvas(null);
+      return;
+    }
+
+    try {
+      const c = document.createElement('canvas');
+      c.width = frameWidth;
+      c.height = frameHeight;
+      const ctx = c.getContext('2d');
+      if (!ctx) return;
+
+      // 1) Gambar bingkai asli
+      ctx.drawImage(frameImage, 0, 0, frameWidth, frameHeight);
+
+      // 2) Ambil sampel warna kertas krem di area atas pita hitam (x: 50, y: 185)
+      const sampleX = 50;
+      const sampleY = 185;
+      const sampleData = ctx.getImageData(sampleX, sampleY, 1, 1).data;
+
+      const isSampleValid = sampleData[0] > 120 && sampleData[1] > 120;
+      const bgColor = isSampleValid
+        ? `rgb(${sampleData[0]}, ${sampleData[1]}, ${sampleData[2]})`
+        : '#F4ECE1';
+
+      if (isNewspaper) {
+        // HAPUS TOTAL KOTAK LOCATION: Lapisi seluruh area kotak LOCATION (header + 5 baris kota) dengan warna kertas krem
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 220, 340, 670);
+      }
+
+      if (cfg) {
+        // 3) HAPUS TOTAL: Lapisi seluruh area DENPASAR dengan warna kertas krem
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(cfg.coverRect.x, cfg.coverRect.y, cfg.coverRect.w, cfg.coverRect.h);
+
+        // 4) Tuliskan Nama Daerah Baru (misal "PALEMBANG") tepat di posisi yang sudah dibersihkan.
+        // Font di-cek lebarnya dulu (measureText) lalu diperkecil bertahap sampai
+        // benar-benar MUAT dalam coverRect -> teks selalu presisi CENTER dan
+        // tidak lagi terpotong/keluar di kiri-kanan bingkai seperti sebelumnya.
+        const rawText = customHeadline && customHeadline.trim() ? customHeadline : cfg.defaultText;
+        const textToDraw = rawText.toUpperCase();
+
+        const baseFontSize = cfg.fontSize || 165;
+        const horizontalPadding = 40; // jarak aman kiri-kanan supaya tidak mepet garis bingkai
+        const maxTextWidth = cfg.coverRect.w - horizontalPadding * 2;
+        const letterSpacingPx = cfg.letterSpacing ?? 4;
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        if ('letterSpacing' in ctx) {
+          (ctx as any).letterSpacing = `${letterSpacingPx}px`;
+        }
+
+        let dynamicFontSize = baseFontSize;
+        ctx.font = `bold ${dynamicFontSize}px ${cfg.fontFamily || "'Oswald', 'Impact', sans-serif"}`;
+        let measuredWidth = ctx.measureText(textToDraw).width + letterSpacingPx * Math.max(0, textToDraw.length - 1);
+
+        // Perkecil font sedikit demi sedikit sampai lebar teks pas di dalam kotak.
+        const MIN_FONT_SIZE = 36;
+        while (measuredWidth > maxTextWidth && dynamicFontSize > MIN_FONT_SIZE) {
+          dynamicFontSize -= 2;
+          ctx.font = `bold ${dynamicFontSize}px ${cfg.fontFamily || "'Oswald', 'Impact', sans-serif"}`;
+          measuredWidth = ctx.measureText(textToDraw).width + letterSpacingPx * Math.max(0, textToDraw.length - 1);
+        }
+
+        ctx.fillStyle = cfg.fill || '#111827';
+
+        const textX = cfg.coverRect.x + cfg.coverRect.w / 2;
+        const textY = cfg.coverRect.y + cfg.coverRect.h / 2;
+        ctx.fillText(textToDraw, textX, textY);
+
+        // Reset letterSpacing supaya tidak "bocor" ke elemen lain yang digambar sesudahnya
+        if ('letterSpacing' in ctx) {
+          (ctx as any).letterSpacing = '0px';
+        }
+
+        // 5) Rapikan kembali 2 garis batas hitam tipis koran di bagian paling bawah
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(cfg.coverRect.x, cfg.coverRect.y + cfg.coverRect.h - 6, cfg.coverRect.w, 3);
+        ctx.fillRect(cfg.coverRect.x, cfg.coverRect.y + cfg.coverRect.h - 1, cfg.coverRect.w, 2);
+      }
+
+      setHeadlineFrameCanvas(c);
+    } catch (err) {
+      console.error("Headline canvas error:", err);
+      setHeadlineFrameCanvas(null);
+    }
+  }, [frameImage, selectedFrame, customHeadline, frameWidth, frameHeight]);
 
   // Frame Recolor Engine
   useEffect(() => {
@@ -172,7 +301,8 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
       const ctx = c.getContext('2d');
       if (!ctx) return;
 
-      ctx.drawImage(frameImage, 0, 0, frameWidth, frameHeight);
+      const sourceImage = headlineFrameCanvas || frameImage;
+      ctx.drawImage(sourceImage, 0, 0, frameWidth, frameHeight);
       ctx.globalCompositeOperation = 'source-in';
       const fillStyle = resolveColorToFill(currentColor, ctx, frameWidth, frameHeight);
       ctx.fillStyle = fillStyle;
@@ -182,16 +312,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
     } catch (err) {
       console.error("Frame recolor error:", err);
     }
-  }, [frameImage, lineColor, frameColor, frameWidth, frameHeight]);
-
-  // Load Gambar Bingkai Utama
-  useEffect(() => {
-    if (!selectedFrame?.src) return;
-    const img = new window.Image();
-    img.crossOrigin = 'Anonymous';
-    img.src = selectedFrame.src;
-    img.onload = () => setFrameImage(img);
-  }, [selectedFrame]);
+  }, [frameImage, headlineFrameCanvas, lineColor, frameColor, frameWidth, frameHeight]);
 
   // Load Foto untuk Setiap Slot
   useEffect(() => {
@@ -311,8 +432,9 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
         <Layer>
           {selectedFrame.slotCoords.map((slot, index) => {
             const photoImg = filteredPhotos[index] || loadedPhotos[index];
-            const transform = photoTransforms[index] || { zoom: 1, x: 0, y: 0 };
+            const transform = photoTransforms[index] || { zoom: DEFAULT_PHOTO_ZOOM, x: 0, y: 0 };
             const isSelected = selectedId === `photo-${index}`;
+            const isHovered = hoveredPhotoIndex === index;
 
             if (!photoImg) return null;
 
@@ -322,8 +444,23 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const baseScale = Math.min(slot.w / imgW, slot.h / imgH);
             const finalZoom = baseScale * transform.zoom;
 
-            const centeredX = (slot.w - imgW * finalZoom) / 2 + transform.x;
-            const centeredY = (slot.h - imgH * finalZoom) / 2 + transform.y;
+            const scaledW = imgW * finalZoom;
+            const scaledH = imgH * finalZoom;
+
+            const offsetX = (slot.w - scaledW) / 2;
+            const offsetY = (slot.h - scaledH) / 2;
+
+            const centeredX = offsetX + transform.x;
+            const centeredY = offsetY + transform.y;
+
+            const maxPanX = Math.max(scaledW, slot.w) / 2 + slot.w * 0.15;
+            const maxPanY = Math.max(scaledH, slot.h) / 2 + slot.h * 0.15;
+
+            const setStageCursor = (target: any, cursor: string) => {
+              const stage = target?.getStage?.();
+              const container = stage?.container?.();
+              if (container) container.style.cursor = cursor;
+            };
 
             return (
               <Group
@@ -353,16 +490,54 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                   image={photoImg}
                   x={centeredX}
                   y={centeredY}
-                  width={imgW * finalZoom}
-                  height={imgH * finalZoom}
+                  width={scaledW}
+                  height={scaledH}
                   draggable={!isPreviewMode}
                   onClick={() => !isPreviewMode && setSelectedId(`photo-${index}`)}
                   onTap={() => !isPreviewMode && setSelectedId(`photo-${index}`)}
-                  onDragMove={(e) => {
+                  onMouseEnter={(e) => {
                     if (isPreviewMode) return;
-                    const newX = e.target.x() - (slot.w - imgW * finalZoom) / 2;
-                    const newY = e.target.y() - (slot.h - imgH * finalZoom) / 2;
-                    updatePhotoTransform(index, { x: newX, y: newY });
+                    setHoveredPhotoIndex(index);
+                    setStageCursor(e.target, 'grab');
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isPreviewMode) return;
+                    setHoveredPhotoIndex((prev) => (prev === index ? null : prev));
+                    setStageCursor(e.target, 'default');
+                  }}
+                  onDragStart={(e) => {
+                    if (isPreviewMode) return;
+                    setSelectedId(`photo-${index}`);
+                    setStageCursor(e.target, 'grabbing');
+                  }}
+                  dragBoundFunc={(pos) => {
+                    const localX = pos.x / scale - slot.x;
+                    const localY = pos.y / scale - slot.y;
+                    const clampedLocalX = Math.max(offsetX - maxPanX, Math.min(offsetX + maxPanX, localX));
+                    const clampedLocalY = Math.max(offsetY - maxPanY, Math.min(offsetY + maxPanY, localY));
+                    return {
+                      x: (slot.x + clampedLocalX) * scale,
+                      y: (slot.y + clampedLocalY) * scale,
+                    };
+                  }}
+                  onDragEnd={(e) => {
+                    if (isPreviewMode) return;
+                    setStageCursor(e.target, 'grab');
+                    const finalX = e.target.x() - offsetX;
+                    const finalY = e.target.y() - offsetY;
+                    updatePhotoTransform(index, { x: finalX, y: finalY });
+                  }}
+                  onWheel={(e) => {
+                    if (isPreviewMode) return;
+                    e.evt.preventDefault();
+                    if (selectedId !== `photo-${index}`) setSelectedId(`photo-${index}`);
+                    const ZOOM_WHEEL_STEP = 0.08;
+                    const direction = e.evt.deltaY > 0 ? -1 : 1;
+                    const nextZoom = Math.max(
+                      CUSTOM_MIN_PHOTO_ZOOM,
+                      Math.min(MAX_PHOTO_ZOOM, transform.zoom + direction * ZOOM_WHEEL_STEP)
+                    );
+                    updatePhotoTransform(index, { zoom: nextZoom });
                   }}
                 />
 
@@ -377,6 +552,19 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                     listening={false}
                   />
                 )}
+
+                {isHovered && !isSelected && !isPreviewMode && (
+                  <Rect
+                    x={0}
+                    y={0}
+                    width={slot.w}
+                    height={slot.h}
+                    stroke="#C4B5FD"
+                    strokeWidth={3}
+                    dash={[10, 6]}
+                    listening={false}
+                  />
+                )}
               </Group>
             );
           })}
@@ -387,6 +575,14 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           {recoloredFrameCanvas ? (
             <KonvaImage
               image={recoloredFrameCanvas}
+              x={0}
+              y={0}
+              width={frameWidth}
+              height={frameHeight}
+            />
+          ) : headlineFrameCanvas ? (
+            <KonvaImage
+              image={headlineFrameCanvas}
               x={0}
               y={0}
               width={frameWidth}
@@ -434,7 +630,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           {texts.map((txt: any) => (
             <Text
               key={txt.id}
-              text={txt.text} 
+              text={txt.text}
               x={txt.x}
               y={txt.y}
               fontSize={txt.fontSize || 32}
@@ -448,39 +644,48 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           ))}
         </Layer>
 
-        {/* LAYER 5: BRAND — BaliSnap Studio — tepi bawah frame, center */}
-        <Layer listening={false}>
-          {/* Outline shadow gelap — kontras di semua warna */}
-          <Text
-            x={Math.round(frameWidth * 0.08)}
-            y={frameHeight - Math.round(frameWidth * 0.08)}
-            width={frameWidth}
-            align="center"
-            text="BaliSnap Studio"
-            fontSize={Math.max(16, Math.round(frameWidth * 0.026))}
-            fontStyle="600"
-            fontFamily="'Poppins', sans-serif"
-            fill="rgba(0, 0, 0, 0.4)"
-            letterSpacing={2}
-            shadowColor="rgba(0, 0, 0, 0.6)"
-            shadowBlur={5}
-            shadowOffsetX={0}
-            shadowOffsetY={0}
-          />
-          {/* Teks utama putih tebal */}
-          <Text
-            x={Math.round(frameWidth * 0.08)}
-            y={frameHeight - Math.round(frameWidth * 0.08)}
-            width={frameWidth}
-            align="center"
-            text="BaliSnap Studio"
-            fontSize={Math.max(16, Math.round(frameWidth * 0.026))}
-            fontStyle="600"
-            fontFamily="'Poppins', sans-serif"
-            fill="rgba(255, 255, 255, 0.85)"
-            letterSpacing={2}
-          />
-        </Layer>
+        {/* LAYER 5: BRAND — BaliSnap Studio */}
+        {(() => {
+          const isCustom = selectedFrame.category === 'custom' || selectedFrame.id.startsWith('custom-');
+          const hasExistingBrand = selectedFrame.hasBrandName === true || selectedFrame.category !== 'studio';
+
+          if (isCustom || hasExistingBrand) {
+            return null;
+          }
+
+          return (
+            <Layer listening={false}>
+              <Text
+                x={0}
+                y={frameHeight - Math.round(frameWidth * 0.08)}
+                width={frameWidth}
+                align="center"
+                text="BaliSnap Studio"
+                fontSize={Math.max(16, Math.round(frameWidth * 0.026))}
+                fontStyle="600"
+                fontFamily="'Poppins', sans-serif"
+                fill="rgba(0, 0, 0, 0.4)"
+                letterSpacing={2}
+                shadowColor="rgba(0, 0, 0, 0.6)"
+                shadowBlur={5}
+                shadowOffsetX={0}
+                shadowOffsetY={0}
+              />
+              <Text
+                x={0}
+                y={frameHeight - Math.round(frameWidth * 0.08)}
+                width={frameWidth}
+                align="center"
+                text="BaliSnap Studio"
+                fontSize={Math.max(16, Math.round(frameWidth * 0.026))}
+                fontStyle="600"
+                fontFamily="'Poppins', sans-serif"
+                fill="rgba(255, 255, 255, 0.85)"
+                letterSpacing={2}
+              />
+            </Layer>
+          );
+        })()}
 
         {/* WATERMARK KHUSUS PAKET FREE */}
         {packageTier === 'free' && (

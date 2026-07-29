@@ -1,3 +1,5 @@
+import type { PackageTier } from '../context/PhotoboothContext';
+
 export type FrameColorId =
     | 'original'
     | 'strawberryMilk' | 'matchaLatte' | 'softLilac' | 'butterCream' | 'babyPeach' | 'cloudBlue' | 'mintyFresh'
@@ -24,6 +26,7 @@ export interface FrameColorOption {
     previewCss: string;
     /** Menghasilkan fillStyle asli untuk Canvas 2D (dipakai di PhotoCanvas.tsx) */
     getFill: (ctx: CanvasRenderingContext2D, width: number, height: number) => string | CanvasGradient | CanvasPattern;
+    requiredTier?: PackageTier;
 }
 
 const solid = (hex: string) => () => hex;
@@ -80,38 +83,39 @@ export const frameColors: FrameColorOption[] = [
         name: 'Original',
         previewCss: 'repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%) 0 0/10px 10px',
         getFill: () => 'transparent',
+        requiredTier: 'free',
     },
 
     // ---- 🌸 Aesthetic Cute & Kawaii ----
-    { id: 'strawberryMilk', name: 'Strawberry Milk 🍓', previewCss: '#ffd8e4', getFill: solid('#ffd8e4') },
-    { id: 'matchaLatte', name: 'Matcha Latte 🍵', previewCss: '#dbe6c4', getFill: solid('#dbe6c4') },
-    { id: 'softLilac', name: 'Soft Lilac 🔮', previewCss: '#e2d5f8', getFill: solid('#e2d5f8') },
-    { id: 'butterCream', name: 'Butter Cream 🧈', previewCss: '#fff3cc', getFill: solid('#fff3cc') },
-    { id: 'babyPeach', name: 'Baby Peach 🍑', previewCss: '#ffe4d6', getFill: solid('#ffe4d6') },
-    { id: 'cloudBlue', name: 'Cloud Blue ☁️', previewCss: '#d4e9ff', getFill: solid('#d4e9ff') },
-    { id: 'mintyFresh', name: 'Minty Fresh 🌿', previewCss: '#cff2e5', getFill: solid('#cff2e5') },
+    { id: 'strawberryMilk', name: 'Strawberry Milk 🍓', previewCss: '#ffd8e4', getFill: solid('#ffd8e4'), requiredTier: 'basic' },
+    { id: 'matchaLatte', name: 'Matcha Latte 🍵', previewCss: '#dbe6c4', getFill: solid('#dbe6c4'), requiredTier: 'basic' },
+    { id: 'softLilac', name: 'Soft Lilac 🔮', previewCss: '#e2d5f8', getFill: solid('#e2d5f8'), requiredTier: 'basic' },
+    { id: 'butterCream', name: 'Butter Cream 🧈', previewCss: '#fff3cc', getFill: solid('#fff3cc'), requiredTier: 'basic' },
+    { id: 'babyPeach', name: 'Baby Peach 🍑', previewCss: '#ffe4d6', getFill: solid('#ffe4d6'), requiredTier: 'basic' },
+    { id: 'cloudBlue', name: 'Cloud Blue ☁️', previewCss: '#d4e9ff', getFill: solid('#d4e9ff'), requiredTier: 'basic' },
+    { id: 'mintyFresh', name: 'Minty Fresh 🌿', previewCss: '#cff2e5', getFill: solid('#cff2e5'), requiredTier: 'basic' },
 
     // ---- 🎞️ Aesthetic Vintage & Retro ----
-    { id: 'warmVintageCream', name: 'Vintage Cream 📜', previewCss: '#f5efe6', getFill: solid('#f5efe6') },
-    { id: 'antiqueOlive', name: 'Antique Olive 🫒', previewCss: '#6b705c', getFill: solid('#6b705c') },
-    { id: 'terracotta', name: 'Terracotta Warm 🏺', previewCss: '#b56576', getFill: solid('#b56576') },
-    { id: 'vintageSepia', name: 'Vintage Sepia ☕', previewCss: '#d4a373', getFill: solid('#d4a373') },
-    { id: 'deepWine', name: 'Deep Wine Burgundy 🍷', previewCss: '#4a1525', getFill: solid('#4a1525') },
+    { id: 'warmVintageCream', name: 'Vintage Cream 📜', previewCss: '#f5efe6', getFill: solid('#f5efe6'), requiredTier: 'basic' },
+    { id: 'antiqueOlive', name: 'Antique Olive 🫒', previewCss: '#6b705c', getFill: solid('#6b705c'), requiredTier: 'basic' },
+    { id: 'terracotta', name: 'Terracotta Warm 🏺', previewCss: '#b56576', getFill: solid('#b56576'), requiredTier: 'basic' },
+    { id: 'vintageSepia', name: 'Vintage Sepia ☕', previewCss: '#d4a373', getFill: solid('#d4a373'), requiredTier: 'basic' },
+    { id: 'deepWine', name: 'Deep Wine Burgundy 🍷', previewCss: '#4a1525', getFill: solid('#4a1525'), requiredTier: 'basic' },
 
     // ---- 🖤 Modern & Minimalist ----
-    { id: 'slateBlue', name: 'Slate Blue 🏙️', previewCss: '#475569', getFill: solid('#475569') },
-    { id: 'charcoalMinimal', name: 'Charcoal Black 🖤', previewCss: '#18181b', getFill: solid('#18181b') },
+    { id: 'slateBlue', name: 'Slate Blue 🏙️', previewCss: '#475569', getFill: solid('#475569'), requiredTier: 'basic' },
+    { id: 'charcoalMinimal', name: 'Charcoal Black 🖤', previewCss: '#18181b', getFill: solid('#18181b'), requiredTier: 'basic' },
 
     // ---- Pastel solids ----
-    { id: 'pastelPink', name: 'Pastel Pink', previewCss: '#f7c9dd', getFill: solid('#f7c9dd') },
-    { id: 'pastelBlue', name: 'Pastel Blue', previewCss: '#c2e4f2', getFill: solid('#c2e4f2') },
-    { id: 'pastelYellow', name: 'Pastel Yellow', previewCss: '#f6efb0', getFill: solid('#f6efb0') },
-    { id: 'pastelGreen', name: 'Pastel Green', previewCss: '#a9c98f', getFill: solid('#a9c98f') },
-    { id: 'pastelLavender', name: 'Pastel Lavender', previewCss: '#cbb6e8', getFill: solid('#cbb6e8') },
-    { id: 'pastelTan', name: 'Pastel Tan', previewCss: '#dcbe9c', getFill: solid('#dcbe9c') },
-    { id: 'maroon', name: 'Maroon', previewCss: '#5c1414', getFill: solid('#5c1414') },
-    { id: 'white', name: 'Pure White', previewCss: '#ffffff', getFill: solid('#ffffff') },
-    { id: 'black', name: 'Classic Black', previewCss: '#161616', getFill: solid('#161616') },
+    { id: 'pastelPink', name: 'Pastel Pink', previewCss: '#f7c9dd', getFill: solid('#f7c9dd'), requiredTier: 'basic' },
+    { id: 'pastelBlue', name: 'Pastel Blue', previewCss: '#c2e4f2', getFill: solid('#c2e4f2'), requiredTier: 'basic' },
+    { id: 'pastelYellow', name: 'Pastel Yellow', previewCss: '#f6efb0', getFill: solid('#f6efb0'), requiredTier: 'basic' },
+    { id: 'pastelGreen', name: 'Pastel Green', previewCss: '#a9c98f', getFill: solid('#a9c98f'), requiredTier: 'basic' },
+    { id: 'pastelLavender', name: 'Pastel Lavender', previewCss: '#cbb6e8', getFill: solid('#cbb6e8'), requiredTier: 'basic' },
+    { id: 'pastelTan', name: 'Pastel Tan', previewCss: '#dcbe9c', getFill: solid('#dcbe9c'), requiredTier: 'basic' },
+    { id: 'maroon', name: 'Maroon', previewCss: '#5c1414', getFill: solid('#5c1414'), requiredTier: 'basic' },
+    { id: 'white', name: 'Pure White', previewCss: '#ffffff', getFill: solid('#ffffff'), requiredTier: 'free' },
+    { id: 'black', name: 'Classic Black', previewCss: '#161616', getFill: solid('#161616'), requiredTier: 'free' },
 
     // ---- Glitter / plaid / grid / quilted ----
     {
@@ -852,3 +856,10 @@ export const frameColors: FrameColorOption[] = [
         }, 36),
     },
 ];
+
+export function isColorOptionLocked(fc: FrameColorOption, currentTier: PackageTier): boolean {
+    const req = fc.requiredTier || 'premium';
+    if (currentTier === 'premium') return false;
+    if (currentTier === 'basic') return req === 'premium';
+    return req === 'basic' || req === 'premium';
+}

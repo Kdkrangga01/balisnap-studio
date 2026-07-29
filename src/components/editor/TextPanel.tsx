@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 
 export const TextPanel: React.FC = () => {
-  const { addText, selectedId, texts, updateText, removeText } = usePhotobooth();
+  const { addText, selectedId, texts, updateText, removeText, selectedFrame, customHeadline, setCustomHeadline } = usePhotobooth();
   
   const [inputValue, setInputValue] = useState<string>('');
   const [selectedFont, setSelectedFont] = useState<string>('"Playfair Display", serif');
@@ -59,7 +59,52 @@ export const TextPanel: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleAddOrUpdate} className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
+      {/* CARD CUSTOM NAMA DAERAH (HEADLINE NEWSPAPER) */}
+      {selectedFrame?.headlineConfig && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-2 border-amber-400/50 p-4 rounded-2xl text-left shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-black uppercase tracking-wider text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+              📰 Custom Nama Daerah / Headline
+            </span>
+            <span className="text-[9px] bg-amber-400 text-amber-950 font-extrabold px-2 py-0.5 rounded-full uppercase">
+              Newspaper Frame
+            </span>
+          </div>
+          <p className="text-[11px] text-amber-800/80 dark:text-amber-200/80 font-medium mb-3">
+            Ubah nama daerah pada bingkai koran sesuai daerah Anda (font otomatis menyesuaikan).
+          </p>
+
+          <div className="flex gap-2 mb-2.5">
+            <input
+              type="text"
+              value={customHeadline}
+              onChange={(e) => setCustomHeadline(e.target.value)}
+              placeholder="cth: DENPASAR, BALI, JAKARTA..."
+              className="flex-1 px-3.5 py-2.5 bg-white dark:bg-zinc-900 border-2 border-amber-300 dark:border-amber-700/60 rounded-xl text-xs font-black text-zinc-900 dark:text-white uppercase focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-inner"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {['DENPASAR', 'BALI', 'JAKARTA', 'SURABAYA', 'BANDUNG', 'JOGJA', 'SANUR', 'UBUD', 'KUTA', 'CANGGU', 'SEMINYAK'].map(city => (
+              <button
+                key={city}
+                type="button"
+                onClick={() => setCustomHeadline(city)}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer ${
+                  (customHeadline || 'DENPASAR').toUpperCase() === city
+                    ? 'bg-amber-700 text-white shadow-md scale-105'
+                    : 'bg-white/80 dark:bg-zinc-800 text-amber-900 dark:text-amber-200 border border-amber-300/60 hover:bg-amber-100 dark:hover:bg-zinc-700'
+                }`}
+              >
+                {city}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleAddOrUpdate} className="flex flex-col gap-4">
       {/* Input */}
       <div>
         <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal/60 mb-2">
@@ -156,5 +201,6 @@ export const TextPanel: React.FC = () => {
         )}
       </div>
     </form>
-  );
+  </div>
+);
 };

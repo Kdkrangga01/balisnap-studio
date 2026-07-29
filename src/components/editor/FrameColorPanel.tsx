@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
-import { frameColors } from '../../data/frameColors';
+import { frameColors, isColorOptionLocked } from '../../data/frameColors';
 import { presets } from '../../data/presets';
 import {
     Palette,
     Sliders,
     Sparkles,
     Heart,
-    Crown
+    Crown,
+    Lock
 } from 'lucide-react';
 import { UpgradeModal } from '../UpgradeModal';
 
@@ -32,9 +33,13 @@ export const FrameColorPanel: React.FC = () => {
 
     const [subTab, setSubTab] = useState<'line' | 'detail' | 'preset'>('line');
     const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+    const [upgradeModalTier, setUpgradeModalTier] = useState<'basic' | 'premium'>('premium');
+    const [upgradeFeatureName, setUpgradeFeatureName] = useState('Frame Color Studio');
 
     const handleApplyPreset = (preset: typeof presets[0]) => {
         if (packageTier !== 'premium') {
+            setUpgradeModalTier('premium');
+            setUpgradeFeatureName('Preset Studio Pro');
             setUpgradeModalOpen(true);
             return;
         }
@@ -52,6 +57,12 @@ export const FrameColorPanel: React.FC = () => {
 
     const activeLineColor = lineColor || 'original';
 
+    const triggerLockModal = (tier: 'basic' | 'premium', name: string) => {
+        setUpgradeModalTier(tier);
+        setUpgradeFeatureName(name);
+        setUpgradeModalOpen(true);
+    };
+
     return (
         <div className="flex flex-col gap-4 text-charcoal">
             {/* Sub tabs */}
@@ -66,7 +77,7 @@ export const FrameColorPanel: React.FC = () => {
                         type="button"
                         onClick={() => {
                             if (t.isPremiumOnly && packageTier !== 'premium') {
-                                setUpgradeModalOpen(true);
+                                triggerLockModal('premium', 'Detail Studio Pro (Slider & Custom Controls)');
                                 return;
                             }
                             setSubTab(t.id as any);
@@ -105,7 +116,17 @@ export const FrameColorPanel: React.FC = () => {
                                     <input
                                         type="color"
                                         value={activeLineColor.startsWith('#') ? activeLineColor : '#18181b'}
+                                        onClick={(e) => {
+                                            if (packageTier !== 'premium') {
+                                                e.preventDefault();
+                                                triggerLockModal('premium', 'Custom HEX Color Picker Studio');
+                                            }
+                                        }}
                                         onChange={(e) => {
+                                            if (packageTier !== 'premium') {
+                                                triggerLockModal('premium', 'Custom HEX Color Picker Studio');
+                                                return;
+                                            }
                                             const val = e.target.value;
                                             setLineColor(val);
                                             addRecentColor(val);
@@ -121,7 +142,16 @@ export const FrameColorPanel: React.FC = () => {
                                     <input
                                         type="text"
                                         value={displayName}
+                                        onClick={() => {
+                                            if (packageTier !== 'premium') {
+                                                triggerLockModal('premium', 'Custom HEX Input');
+                                            }
+                                        }}
                                         onChange={(e) => {
+                                            if (packageTier !== 'premium') {
+                                                triggerLockModal('premium', 'Custom HEX Input');
+                                                return;
+                                            }
                                             const v = e.target.value;
                                             setLineColor(v);
                                             setFrameColor(v);
@@ -142,31 +172,43 @@ export const FrameColorPanel: React.FC = () => {
                         <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/60 mb-1.5">Warna Garis Populer</span>
                         <div className="grid grid-cols-4 gap-1.5">
                             {[
-                                { id: 'original', name: 'Asli (Default)', css: 'repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%) 0 0/10px 10px' },
-                                { id: '#18181b', name: 'Hitam Klasik', css: '#18181b' },
-                                { id: '#ffffff', name: 'Putih Bersih', css: '#ffffff' },
-                                { id: '#3d261d', name: 'Deep Coffee', css: '#3d261d' },
-                                { id: '#d4a373', name: 'Rose Gold', css: '#d4a373' },
-                                { id: '#475569', name: 'Slate Blue', css: '#475569' },
-                                { id: '#5c1414', name: 'Maroon Wine', css: '#5c1414' },
-                                { id: '#ffd8e4', name: 'Pastel Pink', css: '#ffd8e4' },
-                            ].map(l => (
-                                <button
-                                    key={l.id}
-                                    type="button"
-                                    onClick={() => {
-                                        setLineColor(l.id);
-                                        setFrameColor(l.id);
-                                    }}
-                                    title={l.name}
-                                    className={`py-1.5 rounded-lg border flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                                        activeLineColor === l.id ? 'border-zinc-800 bg-white ring-2 ring-zinc-500 shadow-sm' : 'border-zinc-200 bg-white/60 hover:border-zinc-400'
-                                    }`}
-                                >
-                                    <span className="w-5 h-5 rounded-full border border-black/10 shadow-inner block" style={{ background: l.css }} />
-                                    <span className="text-[8px] font-bold text-zinc-600 truncate w-full text-center px-1">{l.name}</span>
-                                </button>
-                            ))}
+                                { id: 'original', name: 'Asli (Default)', css: 'repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%) 0 0/10px 10px', reqTier: 'free' },
+                                { id: '#18181b', name: 'Hitam Klasik', css: '#18181b', reqTier: 'free' },
+                                { id: '#ffffff', name: 'Putih Bersih', css: '#ffffff', reqTier: 'free' },
+                                { id: '#3d261d', name: 'Deep Coffee', css: '#3d261d', reqTier: 'basic' },
+                                { id: '#d4a373', name: 'Rose Gold', css: '#d4a373', reqTier: 'basic' },
+                                { id: '#475569', name: 'Slate Blue', css: '#475569', reqTier: 'basic' },
+                                { id: '#5c1414', name: 'Maroon Wine', css: '#5c1414', reqTier: 'basic' },
+                                { id: '#ffd8e4', name: 'Pastel Pink', css: '#ffd8e4', reqTier: 'basic' },
+                            ].map(l => {
+                                const isBtnLocked = packageTier === 'free' && l.reqTier !== 'free';
+                                return (
+                                    <button
+                                        key={l.id}
+                                        type="button"
+                                        onClick={() => {
+                                            if (isBtnLocked) {
+                                                triggerLockModal('basic', `Warna ${l.name}`);
+                                                return;
+                                            }
+                                            setLineColor(l.id);
+                                            setFrameColor(l.id);
+                                        }}
+                                        title={l.name}
+                                        className={`py-1.5 rounded-lg border flex flex-col items-center gap-1 transition-all relative cursor-pointer ${
+                                            activeLineColor === l.id ? 'border-zinc-800 bg-white ring-2 ring-zinc-500 shadow-sm' : 'border-zinc-200 bg-white/60 hover:border-zinc-400'
+                                        }`}
+                                    >
+                                        {isBtnLocked && (
+                                            <span className="absolute top-0.5 right-0.5 bg-rose-600 text-white rounded-full p-0.5 z-10">
+                                                <Lock className="w-2 h-2" />
+                                            </span>
+                                        )}
+                                        <span className="w-5 h-5 rounded-full border border-black/10 shadow-inner block" style={{ background: l.css }} />
+                                        <span className="text-[8px] font-bold text-zinc-600 truncate w-full text-center px-1">{l.name}</span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -176,28 +218,40 @@ export const FrameColorPanel: React.FC = () => {
                         <div className="grid grid-cols-6 gap-2 max-h-[180px] overflow-y-auto custom-scroll pr-1">
                             {frameColors.map((fc) => {
                                 const isSelected = activeLineColor === fc.id || activeLineColor === fc.previewCss;
+                                const isLocked = isColorOptionLocked(fc, packageTier);
+                                const reqTier = fc.requiredTier || 'premium';
+
                                 return (
                                     <div key={fc.id} className="relative group">
                                         <button
                                             type="button"
                                             onClick={() => {
+                                                if (isLocked) {
+                                                    triggerLockModal(reqTier === 'premium' ? 'premium' : 'basic', `Warna ${fc.name}`);
+                                                    return;
+                                                }
                                                 setLineColor(fc.id);
                                                 setFrameColor(fc.id);
                                                 addRecentColor(fc.previewCss);
                                             }}
                                             title={fc.name}
-                                            className={`flex items-center justify-center p-0.5 rounded-full transition-all duration-200 w-8 h-8 cursor-pointer ${
+                                            className={`flex items-center justify-center p-0.5 rounded-full transition-all duration-200 w-8 h-8 relative cursor-pointer ${
                                                 isSelected ? 'ring-2 ring-rose-500 ring-offset-1 scale-105 shadow-md' : 'hover:scale-105'
                                             }`}
                                         >
                                             <span
-                                                className="w-full h-full rounded-full shadow-inner border border-black/10 block"
+                                                className="w-full h-full rounded-full shadow-inner border border-black/10 block overflow-hidden"
                                                 style={{ background: fc.previewCss }}
                                             />
+                                            {isLocked && (
+                                                <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white shadow-inner">
+                                                    <Lock className="w-3 h-3 drop-shadow-sm text-white" />
+                                                </div>
+                                            )}
                                         </button>
                                         <button
                                             onClick={() => toggleFavoriteColor(fc.id)}
-                                            className="absolute -top-1 -right-1 p-0.5 rounded-full bg-white shadow-md border border-cream/30 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="absolute -top-1 -right-1 p-0.5 rounded-full bg-white shadow-md border border-cream/30 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                         >
                                             <Heart
                                                 className={`w-2.5 h-2.5 ${favoriteColors.includes(fc.id) ? 'fill-red-500 text-red-500' : 'text-charcoal/30'}`}
@@ -365,8 +419,8 @@ export const FrameColorPanel: React.FC = () => {
             <UpgradeModal
                 isOpen={upgradeModalOpen}
                 onClose={() => setUpgradeModalOpen(false)}
-                targetTier="premium"
-                featureName="Full Custom Color & Wallpaper Studio"
+                targetTier={upgradeModalTier}
+                featureName={upgradeFeatureName}
             />
         </div>
     );
