@@ -55,8 +55,6 @@ export const Editor: React.FC = () => {
     packageTier,
     customHeadline,
     setCustomHeadline,
-    customLocations,
-    setCustomLocationLine,
   } = usePhotobooth();
 
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
