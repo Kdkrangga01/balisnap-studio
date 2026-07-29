@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Mic, Square, Play, Pause, Send, X, Download } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+import { getBestAudioMimeType, getAudioExtension, createMobileAudioElement } from '../lib/mobileAudio';
+
 interface DigitalEnvelopeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -22,6 +24,7 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioBase64, setAudioBase64] = useState<string | null>(null);
+  const [recordedMimeType, setRecordedMimeType] = useState<string>('');
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
@@ -31,7 +34,7 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<any>(null);
 
-  // Merekam Suara (Voice Note 10s)
+  // Merekam Suara (Voice Note 10s) - MOBIL / CROSS-PLATFORM SUPPORT
   const startRecording = async () => {
     try {
       if (audioElementRef.current) {
@@ -43,7 +46,11 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
       setAudioBase64(null);
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      const mimeType = getBestAudioMimeType();
+      setRecordedMimeType(mimeType);
+
+      const recorderOptions: MediaRecorderOptions = mimeType ? { mimeType } : {};
+      const recorder = new MediaRecorder(stream, recorderOptions);
       mediaRecorderRef.current = recorder;
       audioChunksRef.current = [];
 
@@ -52,7 +59,8 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
       };
 
       recorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const actualType = recorder.mimeType || mimeType || 'audio/mp4';
+        const audioBlob = new Blob(audioChunksRef.current, { type: actualType });
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
 
@@ -96,27 +104,40 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
   };
 
   const togglePlayAudio = () => {
-    if (!audioUrl) return;
+    const targetSrc = audioUrl || audioBase64;
+    if (!targetSrc) return;
 
-    if (!audioElementRef.current || audioElementRef.current.src !== audioUrl) {
-      audioElementRef.current = new Audio(audioUrl);
-      audioElementRef.current.onended = () => setIsPlayingAudio(false);
+    if (!audioElementRef.current || audioElementRef.current.src !== targetSrc) {
+      if (audioElementRef.current) {
+        audioElementRef.current.pause();
+      }
+      const audio = createMobileAudioElement(targetSrc);
+      audio.onended = () => setIsPlayingAudio(false);
+      audioElementRef.current = audio;
     }
 
     if (isPlayingAudio) {
       audioElementRef.current.pause();
       setIsPlayingAudio(false);
     } else {
-      audioElementRef.current.play().catch(() => {});
-      setIsPlayingAudio(true);
+      audioElementRef.current.load();
+      audioElementRef.current
+        .play()
+        .then(() => setIsPlayingAudio(true))
+        .catch((err) => {
+          console.warn('Gagal memutar audio di HP:', err);
+          setIsPlayingAudio(false);
+        });
     }
   };
 
   const handleDownloadAudio = () => {
-    if (!audioUrl) return;
+    const targetSrc = audioUrl || audioBase64;
+    if (!targetSrc) return;
+    const ext = getAudioExtension(recordedMimeType);
     const link = document.createElement('a');
-    link.href = audioUrl;
-    link.download = `voice-note-${(senderName || 'balisnap').toLowerCase().replace(/\s+/g, '-')}.webm`;
+    link.href = targetSrc;
+    link.download = `voice-note-${(senderName || 'balisnap').toLowerCase().replace(/\s+/g, '-')}.${ext}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

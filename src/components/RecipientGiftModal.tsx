@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Play, Pause, X, Volume2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { createMobileAudioElement } from '../lib/mobileAudio';
 
 export interface GiftPayload {
   from: string;
@@ -78,11 +79,15 @@ export const RecipientGiftModal: React.FC = () => {
         if (audioElementRef.current) {
           audioElementRef.current.pause();
         }
-        audioElementRef.current = new Audio(giftData.audio);
-        audioElementRef.current.onended = () => setIsPlayingAudio(false);
-        audioElementRef.current.play().then(() => {
+        const audio = createMobileAudioElement(giftData.audio);
+        audio.onended = () => setIsPlayingAudio(false);
+        audioElementRef.current = audio;
+        audio.load();
+        audio.play().then(() => {
           setIsPlayingAudio(true);
-        }).catch(() => {});
+        }).catch((err) => {
+          console.warn('Playback error di HP:', err);
+        });
       } catch (err) {
         console.error('Gagal memutar audio otomatis:', err);
       }
@@ -104,16 +109,27 @@ export const RecipientGiftModal: React.FC = () => {
   const togglePlayAudio = () => {
     if (!giftData?.audio) return;
 
-    if (!audioElementRef.current) {
-      audioElementRef.current = new Audio(giftData.audio);
-      audioElementRef.current.onended = () => setIsPlayingAudio(false);
+    if (!audioElementRef.current || audioElementRef.current.src !== giftData.audio) {
+      if (audioElementRef.current) {
+        audioElementRef.current.pause();
+      }
+      const audio = createMobileAudioElement(giftData.audio);
+      audio.onended = () => setIsPlayingAudio(false);
+      audioElementRef.current = audio;
     }
 
     if (isPlayingAudio) {
       audioElementRef.current.pause();
       setIsPlayingAudio(false);
     } else {
-      audioElementRef.current.play().then(() => setIsPlayingAudio(true)).catch(() => {});
+      audioElementRef.current.load();
+      audioElementRef.current
+        .play()
+        .then(() => setIsPlayingAudio(true))
+        .catch((err) => {
+          console.warn('Gagal memutar audio di HP:', err);
+          setIsPlayingAudio(false);
+        });
     }
   };
 
