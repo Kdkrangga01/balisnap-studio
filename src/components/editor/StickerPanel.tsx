@@ -4,6 +4,7 @@ import type { StickerItem, StickerPack } from '../../data/stickers';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 import { Heart, Sparkles, Lock } from 'lucide-react';
 import { UpgradeModal } from '../UpgradeModal';
+import { ParticleSelector } from './ParticleSelector';
 
 const StickerThumbnail: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
   return <img src={src} alt={alt} className={className} />;
@@ -24,6 +25,7 @@ export const StickerPanel: React.FC = () => {
 
   const categories = [
     { id: 'packs', name: '✨ Paket Auto-Spread' },
+    { id: 'particles', name: '🌟 Partikel & Sparkle' },
     { id: 'cat', name: '🐱 Kucing' },
     { id: 'nailong', name: '🐲 Nailong' },
     { id: 'anime', name: '🏴‍☠️ One Piece' },
@@ -58,8 +60,10 @@ export const StickerPanel: React.FC = () => {
         ))}
       </div>
 
-      {/* Grid Paket Auto-Spread */}
-      {activeCategory === 'packs' ? (
+      {/* Efek Partikel & Sparkle */}
+      {activeCategory === 'particles' ? (
+        <ParticleSelector />
+      ) : activeCategory === 'packs' ? (
         <div className="grid grid-cols-2 gap-3 overflow-y-auto max-h-[220px] md:max-h-[260px] pr-2 custom-scroll">
           {stickerPacks.map((pack: StickerPack) => {
             const isLocked = isStickerPackLocked(pack, packageTier);

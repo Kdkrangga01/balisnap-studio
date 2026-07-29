@@ -144,6 +144,14 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                     <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                     <span>🎨 <strong>Full Custom Color Picker HEX, Border, Shadow, &amp; Wallpaper</strong>.</span>
                   </li>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>💌 <strong>Kirim Kado Amplop Digital 3D &amp; Voice Note WhatsApp</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>🌟 <strong>Dynamic Sparkles, Glitter, Sakura &amp; Love Overlays</strong>.</span>
+                  </li>
                 </>
               ) : (
                 <>

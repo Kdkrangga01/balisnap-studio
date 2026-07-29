@@ -5,6 +5,7 @@ import { SelectFrame } from './pages/SelectFrame';
 import { Capture } from './pages/Capture';
 import { Editor } from './pages/Editor';
 import { Preview } from './pages/Preview';
+import { RecipientGiftModal } from './components/RecipientGiftModal';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const PhotoboothWizard: React.FC = () => {
@@ -18,23 +19,28 @@ const PhotoboothWizard: React.FC = () => {
   };
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={step}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        variants={pageVariants}
-        transition={{ duration: 0.25, ease: "easeOut" }}
-        className="w-full min-h-screen"
-      >
-        {step === 'landing' && <Landing />}
-        {step === 'select-frame' && <SelectFrame />}
-        {step === 'capture' && <Capture />}
-        {step === 'editor' && <Editor />}
-        {step === 'preview' && <Preview />}
-      </motion.div>
-    </AnimatePresence>
+    <>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          variants={pageVariants}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="w-full min-h-screen"
+        >
+          {step === 'landing' && <Landing />}
+          {step === 'select-frame' && <SelectFrame />}
+          {step === 'capture' && <Capture />}
+          {step === 'editor' && <Editor />}
+          {step === 'preview' && <Preview />}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* AUTOMATIC RECIPIENT GIFT ENVELOPE MODAL */}
+      <RecipientGiftModal />
+    </>
   );
 };
 

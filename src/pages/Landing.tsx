@@ -3,7 +3,7 @@ import { usePhotobooth, type PackageTier } from '../context/PhotoboothContext';
 import { CheckoutModal } from '../components/CheckoutModal';
 import {
   Camera, Sparkles, Image as ImageIcon, ArrowRight, Maximize2, Menu, X, Star, Check,
-  Crown, Wand2, UploadCloud, Download, CheckCircle2, Palette
+  Crown, Wand2, UploadCloud, Download, CheckCircle2, Palette, Film
 } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
@@ -566,7 +566,7 @@ export const Landing: React.FC = () => {
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>📱 Hasil Foto HD Jernih + Unduh Instant via Scan QR Code.</span>
+                    <span>📱 Hasil Foto HD Jernih + Unduh Instant Ke HP.</span>
                   </li>
                 </ul>
               </div>
@@ -644,6 +644,21 @@ export const Landing: React.FC = () => {
                   <li className="flex items-start gap-2.5">
                     <Wand2 className="w-4 h-4 text-pink-300 shrink-0 mt-0.5" />
                     <span>🪄 <strong>Photo Fine-Tuning &amp; Retouch Pro</strong> — Kontrol presisi Brightness, Contrast, Saturation &amp; Soft Focus.</span>
+                  </li>
+
+                  <li className="flex items-start gap-2.5 bg-indigo-500/20 p-2.5 rounded-xl border border-indigo-400/30">
+                    <Film className="w-4 h-4 text-purple-300 shrink-0 mt-0.5" />
+                    <span>🎬 <strong>Unduh Animasi GIF (Boomerang Photobooth)</strong> — Ekspor foto bergerak beresolusi tinggi dengan pilihan kecepatan animasi.</span>
+                  </li>
+
+                  <li className="flex items-start gap-2.5 bg-pink-500/20 p-2.5 rounded-xl border border-pink-400/30">
+                    <Sparkles className="w-4 h-4 text-pink-300 shrink-0 mt-0.5" />
+                    <span>💌 <strong>Kirim Kado Amplop Digital 3D &amp; Voice Note</strong> — Kirim foto strip ucapan &amp; rekaman suara otomatis via WhatsApp.</span>
+                  </li>
+
+                  <li className="flex items-start gap-2.5 bg-amber-500/20 p-2.5 rounded-xl border border-amber-400/30">
+                    <Sparkles className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
+                    <span>🌟 <strong>Dynamic Sparkle &amp; Partikel Overlays</strong> — Efek glitter, sakura, love, &amp; partikel kilau estetik pada foto.</span>
                   </li>
 
                   <li className="flex items-start gap-2.5">

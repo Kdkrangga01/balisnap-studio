@@ -2,11 +2,13 @@ import React, { useRef, useState, useEffect } from 'react';
 import { usePhotobooth } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { exportHighResCanvas, saveOrShareImage, dataURItoBlob } from '../lib/exportImage';
+import { generateBoomerangGif } from '../lib/gifExport';
+import { DigitalEnvelopeModal } from '../components/DigitalEnvelopeModal';
 import { UpgradeModal } from '../components/UpgradeModal';
-import { QRCodeView } from '../components/QRCodeView';
 import {
   ArrowLeft, Download, RotateCcw, Check, Share2, Sparkles, Heart, X,
-  ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown, QrCode
+  ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown,
+  Film, Loader2, Mail
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -16,7 +18,9 @@ export const Preview: React.FC = () => {
     selectedFrame,
     setStep,
     resetAll,
-    packageTier
+    packageTier,
+    photos,
+    setPhotos
   } = usePhotobooth();
 
   const stageRef = useRef<any>(null);
@@ -29,6 +33,16 @@ export const Preview: React.FC = () => {
 
   // NEW FEATURES STATE
   const [exportQuality, setExportQuality] = useState<'1080p' | '2k' | '4k'>('2k');
+
+  // BOOMERANG GIF STATE
+  const [showGifModal, setShowGifModal] = useState<boolean>(false);
+  const [isGeneratingGif, setIsGeneratingGif] = useState<boolean>(false);
+  const [gifProgress, setGifProgress] = useState<number>(0);
+  const [gifResult, setGifResult] = useState<{ dataUrl: string; blob: Blob } | null>(null);
+  const [gifInterval, setGifInterval] = useState<number>(0.35);
+
+  // DIGITAL ENVELOPE GIFT STATE
+  const [showEnvelopeModal, setShowEnvelopeModal] = useState<boolean>(false);
   const [activePresetFilter, setActivePresetFilter] = useState<'none' | 'vintage' | 'vivid' | 'bw'>('none');
 
   // Measure container for responsive stage sizing
@@ -128,6 +142,116 @@ export const Preview: React.FC = () => {
       const timestamp = new Date().toISOString().slice(0, 10);
       const filename = `balisnap-studio-${timestamp}.png`;
       await saveOrShareImage(dataUrl, filename);
+    }
+  };
+
+  // GIF Boomerang Generator Handler - FULL PHOTO FRAME STRIP SNAPSHOTS
+  const handleOpenGifModal = async (customInterval?: number) => {
+    setShowGifModal(true);
+    setIsGeneratingGif(true);
+    setGifProgress(10);
+
+    const targetInterval = customInterval !== undefined ? customInterval : gifInterval;
+    setGifInterval(targetInterval);
+
+    // Simpan susunan foto asli pengguna
+    const originalPhotos = [...photos];
+    const validPhotos = photos.filter((p): p is string => Boolean(p));
+
+    try {
+      const fullStripSnapshots: string[] = [];
+      const totalSlots = selectedFrame ? selectedFrame.slots : (validPhotos.length || 1);
+
+      if (validPhotos.length === 0) {
+        // Fallback jika tidak ada foto
+        const snap = stageRef.current ? exportHighResCanvas(stageRef.current, 600) : null;
+        if (snap) fullStripSnapshots.push(snap);
+      } else {
+        // Urutan animasi Boomerang bergeser (1 -> 2 -> 3 -> 4 -> 3 -> 2)
+        const sequenceIndexes: number[] = [];
+        const n = validPhotos.length;
+        for (let i = 0; i < n; i++) sequenceIndexes.push(i);
+        for (let i = n - 2; i > 0; i--) sequenceIndexes.push(i);
+        if (sequenceIndexes.length === 1) sequenceIndexes.push(0);
+
+        const totalSteps = sequenceIndexes.length;
+
+        for (let s = 0; s < totalSteps; s++) {
+          const shiftOffset = sequenceIndexes[s];
+
+          // Geser foto di setiap slot bingkai untuk membentuk efek animasi bergerak
+          const shiftedPhotos = Array.from({ length: Math.max(totalSlots, n) }).map((_, slotIdx) => {
+            const photoIdx = (slotIdx + shiftOffset) % n;
+            return validPhotos[photoIdx];
+          });
+
+          // Terapkan ke Stage Konva
+          setPhotos(shiftedPhotos);
+
+          // Tunggu sebentar (45ms) agar Konva menggambar ulang seluruh bingkai foto strip
+          await new Promise((resolve) => setTimeout(resolve, 45));
+
+          // Tangkap snapshot SELURUH BINGKAI FOTO STRIP (HD 600px)
+          if (stageRef.current) {
+            const stripSnap = exportHighResCanvas(stageRef.current, 600);
+            if (stripSnap) {
+              fullStripSnapshots.push(stripSnap);
+            }
+          }
+
+          setGifProgress(Math.round(((s + 1) / totalSteps) * 45));
+        }
+      }
+
+      // Kembalikan susunan foto asli di Konva Stage
+      setPhotos(originalPhotos);
+      await new Promise((resolve) => setTimeout(resolve, 30));
+
+      if (fullStripSnapshots.length === 0) {
+        throw new Error('Gagal mengambil snapshot bingkai foto.');
+      }
+
+      // Tentukan ukuran GIF ber-aspek-rasio SAMA PERSIS dengan bingkai foto asli
+      const frameW = selectedFrame ? selectedFrame.width : 450;
+      const frameH = selectedFrame ? selectedFrame.height : 675;
+      const targetGifW = 450;
+      const targetGifH = Math.round(targetGifW * (frameH / frameW));
+
+      // Hasilkan file GIF Animasi dari kumpulan snapshot Full Frame Strip
+      const res = await generateBoomerangGif({
+        photos: fullStripSnapshots,
+        interval: targetInterval,
+        gifWidth: targetGifW,
+        gifHeight: targetGifH,
+        progressCallback: (pct) => setGifProgress(45 + Math.round((pct / 100) * 55)),
+      });
+
+      setGifResult(res);
+    } catch (err) {
+      console.error('Gagal membuat GIF Full Frame:', err);
+      setPhotos(originalPhotos);
+    } finally {
+      setIsGeneratingGif(false);
+    }
+  };
+
+  const handleDownloadGif = () => {
+    if (!gifResult) return;
+    const link = document.createElement('a');
+    link.href = gifResult.dataUrl;
+    link.download = `balisnap-boomerang-${new Date().toISOString().slice(0, 10)}.gif`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    try {
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -348,7 +472,7 @@ export const Preview: React.FC = () => {
                 {/* PRIMARY GLOW SHIMMER DOWNLOAD BUTTON */}
                 <button
                   onClick={handleDownload}
-                  className="w-full py-4 bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 active:scale-[0.99] text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-lg shadow-pink-300/60 flex items-center justify-center gap-2.5 group relative overflow-hidden"
+                  className="w-full py-4 bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 active:scale-[0.99] text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-lg shadow-pink-300/60 flex items-center justify-center gap-2.5 group relative overflow-hidden cursor-pointer"
                 >
                   {/* SHIMMER LIGHT EFFECT */}
                   <span className="absolute inset-0 w-1/2 h-full bg-white/25 skew-x-[-20deg] translate-x-[-150%] group-hover:translate-x-[250%] transition-transform duration-1000 ease-out" />
@@ -356,35 +480,36 @@ export const Preview: React.FC = () => {
                   UNDUH FOTO PNG ({exportQuality.toUpperCase()})
                 </button>
 
+                {/* BOOMERANG ANIMATED GIF BUTTON */}
+                <button
+                  onClick={() => handleOpenGifModal()}
+                  className="w-full py-3.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 active:scale-[0.99] text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md shadow-indigo-200 flex items-center justify-center gap-2.5 cursor-pointer relative overflow-hidden group"
+                >
+                  <Film className="w-4 h-4 text-purple-200 group-hover:scale-110 transition-transform" />
+                  UNDUH ANIMASI GIF (BOOMERANG)
+                </button>
+
+                {/* DIGITAL ENVELOPE GIFT BUTTON */}
+                <button
+                  onClick={() => setShowEnvelopeModal(true)}
+                  className="w-full py-3.5 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 active:scale-[0.99] text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md shadow-pink-200 flex items-center justify-center gap-2.5 cursor-pointer relative overflow-hidden group"
+                >
+                  <Mail className="w-4 h-4 text-pink-200 group-hover:scale-110 transition-transform" />
+                  KIRIM SEBAGAI GIFT / AMPLOP DIGITAL
+                </button>
+
                 {/* SECONDARY SHARE BUTTON */}
                 <button
                   onClick={handleShare}
-                  className="w-full py-3.5 bg-white hover:bg-pink-50 text-pink-600 border-2 border-pink-200 font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2.5"
+                  className="w-full py-3.5 bg-white hover:bg-pink-50 text-pink-600 border-2 border-pink-200 font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2.5 cursor-pointer"
                 >
                   <Share2 className="w-4 h-4 text-pink-500" />
                   BAGIKAN KE SOSIAL MEDIA
                 </button>
               </div>
-
-              {/* QR CODE INSTANT DOWNLOAD CARD */}
-              <div className="bg-gradient-to-r from-pink-50/80 via-rose-50/60 to-purple-50/80 border border-pink-200/80 p-3.5 rounded-2xl flex items-center gap-3.5 shadow-sm mt-1">
-                <QRCodeView value={window.location.origin + window.location.pathname} size={100} className="shrink-0 bg-white p-1.5 rounded-xl border border-pink-200" />
-                <div className="flex flex-col text-left justify-center">
-                  <div className="flex items-center gap-1.5 text-[11px] font-black uppercase text-pink-700 tracking-wider">
-                    <QrCode className="w-3.5 h-3.5 text-pink-600" />
-                    Scan QR Code Unduh
-                  </div>
-                  <p className="text-[10px] text-zinc-600 font-medium leading-relaxed mt-1">
-                    Arahkan kamera smartphone Anda ke QR code ini untuk langsung mengunduh hasil foto ke galeri tanpa transfer file.
-                  </p>
-                </div>
-              </div>
-
             </div>
           </div>
-
         </div>
-
       </div>
 
       {/* ===== POP-UP MODAL UNDUH BERHASIL ===== */}
@@ -500,6 +625,133 @@ export const Preview: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ===== POP-UP MODAL UNDUH ANIMASI GIF BOOMERANG ===== */}
+      <AnimatePresence>
+        {showGifModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md"
+            onClick={() => !isGeneratingGif && setShowGifModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+              className="bg-white border-2 border-purple-200 rounded-[36px] max-w-sm sm:max-w-md w-full p-6 shadow-[0_25px_60px_-15px_rgba(168,85,247,0.4)] relative overflow-hidden text-center flex flex-col items-center gap-4 z-50 select-none max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* CUTE TAPE DECORATION */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-5 bg-purple-200/80 border border-white/80 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center text-[8px] text-purple-700 font-black tracking-widest uppercase">
+                🎬 BOOMERANG GIF STUDIO 🎬
+              </div>
+
+              {/* CLOSE BUTTON */}
+              {!isGeneratingGif && (
+                <button
+                  onClick={() => setShowGifModal(false)}
+                  className="absolute top-4 right-4 w-9 h-9 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-full flex items-center justify-center transition-all shadow-sm cursor-pointer"
+                  aria-label="Tutup"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+
+              <div className="flex flex-col items-center gap-1 mt-3">
+                <h3 className="text-lg font-black tracking-tight text-zinc-900 flex items-center gap-2">
+                  <Film className="w-5 h-5 text-purple-600 animate-pulse" />
+                  Pratinjau Animasi GIF
+                </h3>
+                <p className="text-xs text-zinc-500 font-medium">
+                  Foto Boomerang bergerak hasil momen Photobooth Anda!
+                </p>
+              </div>
+
+              {/* GIF PREVIEW CONTAINER / LOADING STATE WITH DYNAMIC ASPECT FIT */}
+              <div
+                className="w-full bg-purple-950/10 rounded-2xl border-2 border-purple-200/70 overflow-hidden flex items-center justify-center relative shadow-inner p-2.5 my-1"
+                style={{ minHeight: '260px', maxHeight: '55vh' }}
+              >
+                {isGeneratingGif ? (
+                  <div className="flex flex-col items-center gap-3 p-6 text-center">
+                    <Loader2 className="w-10 h-10 text-purple-600 animate-spin" />
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-black uppercase text-purple-700 tracking-wider">
+                        Memproses Animasi GIF Full Frame...
+                      </span>
+                      <span className="text-[11px] text-purple-600 font-extrabold">{gifProgress}%</span>
+                    </div>
+                    {/* PROGRESS BAR */}
+                    <div className="w-48 h-2.5 bg-purple-100 rounded-full overflow-hidden border border-purple-200 shadow-inner">
+                      <div
+                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 rounded-full"
+                        style={{ width: `${gifProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                ) : gifResult ? (
+                  <img
+                    src={gifResult.dataUrl}
+                    alt="Animasi GIF Boomerang Full Frame Strip"
+                    className="max-h-[50vh] max-w-full w-auto h-auto object-contain drop-shadow-md rounded-lg"
+                  />
+                ) : (
+                  <div className="text-xs text-zinc-400 font-medium">Gagal memuat pratinjau</div>
+                )}
+              </div>
+
+              {/* SPEED CONTROLS */}
+              {!isGeneratingGif && (
+                <div className="w-full flex flex-col gap-1.5">
+                  <span className="text-[10px] font-black uppercase text-purple-700 tracking-wider text-left">
+                    ⚡ Kecepatan Animasi Boomerang:
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: '🏃 Cepat', value: 0.2 },
+                      { label: '✨ Normal', value: 0.35 },
+                      { label: '🐢 Santai', value: 0.5 },
+                    ].map((s) => (
+                      <button
+                        key={s.value}
+                        onClick={() => handleOpenGifModal(s.value)}
+                        className={`py-2 px-1 text-[11px] font-black rounded-xl border transition-all cursor-pointer ${
+                          gifInterval === s.value
+                            ? 'bg-purple-600 text-white border-purple-600 shadow-sm ring-2 ring-purple-300'
+                            : 'bg-white text-purple-700 border-purple-200 hover:bg-purple-50'
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* DOWNLOAD GIF BUTTON */}
+              {!isGeneratingGif && gifResult && (
+                <button
+                  onClick={handleDownloadGif}
+                  className="w-full py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 hover:from-purple-700 hover:to-rose-600 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-lg shadow-purple-300/50 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+                >
+                  <Download className="w-4 h-4" />
+                  UNDUH FILE ANIMASI .GIF
+                </button>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* DIGITAL ENVELOPE GIFT MODAL */}
+      <DigitalEnvelopeModal
+        isOpen={showEnvelopeModal}
+        onClose={() => setShowEnvelopeModal(false)}
+        photoStripUri={downloadedImageUri || (stageRef.current ? exportHighResCanvas(stageRef.current, 600) : null)}
+      />
 
       {/* Upgrade Modal */}
       <UpgradeModal

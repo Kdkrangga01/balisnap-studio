@@ -43,6 +43,7 @@ export interface CanvasText {
 
 export type StepType = 'landing' | 'select-frame' | 'capture' | 'editor' | 'preview';
 export type FilterType = 'normal' | 'grayscale' | 'vintage' | 'cool' | 'vivid' | 'sepia';
+export type ParticleEffectType = 'none' | 'sparkles' | 'butterflies' | 'sakura' | 'hearts' | 'gold_glitter';
 export type PackageTier = 'free' | 'basic' | 'premium';
 
 export interface FineTuningConfig {
@@ -84,6 +85,7 @@ interface PhotoboothContextProps {
   selectedFrame: FrameTemplate | null;
   selectFrame: (frame: FrameTemplate) => void;
   photos: (string | null)[];
+  setPhotos: (photos: (string | null)[]) => void;
   setPhotoAtSlot: (index: number, dataUrl: string | null) => void;
   clearPhotos: () => void;
   photoTransforms: PhotoTransform[];
@@ -102,6 +104,8 @@ interface PhotoboothContextProps {
   setSelectedId: (id: string | null) => void;
   appliedFilter: FilterType;
   setAppliedFilter: (filter: FilterType) => void;
+  particleEffect: ParticleEffectType;
+  setParticleEffect: (effect: ParticleEffectType) => void;
   fineTuning: FineTuningConfig;
   setFineTuning: (config: Partial<FineTuningConfig>) => void;
   resetFineTuning: () => void;
@@ -261,6 +265,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [texts, setTexts] = useState<CanvasText[]>(savedSession?.texts || []);
   const [selectedId, setSelectedId] = useState<string | null>(savedSession?.selectedId || null);
   const [appliedFilter, setAppliedFilter] = useState<FilterType>(savedSession?.appliedFilter || 'normal');
+  const [particleEffect, setParticleEffect] = useState<ParticleEffectType>(savedSession?.particleEffect || 'none');
   const [fineTuning, setFineTuningState] = useState<FineTuningConfig>(savedSession?.fineTuning || DEFAULT_FINE_TUNING);
 
   const setFineTuning = (config: Partial<FineTuningConfig>) => {
@@ -725,10 +730,10 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   return (
     <PhotoboothContext.Provider value={{
       packageTier, setPackageTier,
-      step, setStep, selectedFrame, selectFrame, photos, setPhotoAtSlot, clearPhotos,
+      step, setStep, selectedFrame, selectFrame, photos, setPhotos, setPhotoAtSlot, clearPhotos,
       photoTransforms, updatePhotoTransform, resetPhotoTransform,
       stickers, addSticker, applyStickerPack, updateSticker, removeSticker, texts, addText, updateText, removeText,
-      selectedId, setSelectedId, appliedFilter, setAppliedFilter, fineTuning, setFineTuning, resetFineTuning, frameColor, setFrameColor,
+      selectedId, setSelectedId, appliedFilter, setAppliedFilter, particleEffect, setParticleEffect, fineTuning, setFineTuning, resetFineTuning, frameColor, setFrameColor,
       cardColor, setCardColor, lineColor, setLineColor,
       frameStyle, setFrameStyle, borderThickness, setBorderThickness, borderRadius, setBorderRadius,
       shadowIntensity, setShadowIntensity, shadowBlur, setShadowBlur, shadowColor, setShadowColor,

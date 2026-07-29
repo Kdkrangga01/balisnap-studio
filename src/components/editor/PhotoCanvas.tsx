@@ -140,6 +140,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
     texts,
     packageTier,
     customHeadline,
+    particleEffect,
   } = usePhotobooth();
 
   const [frameImage, setFrameImage] = useState<HTMLImageElement | null>(null);
@@ -672,6 +673,39 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             />
           ))}
         </Layer>
+
+        {/* LAYER 4.5: EFEK PARTIKEL & GLITTER OVERLAY */}
+        {particleEffect && particleEffect !== 'none' && (() => {
+          const count = 22;
+          const items = [];
+          const symbols: Record<string, string> = {
+            sparkles: '✨',
+            gold_glitter: '🌟',
+            butterflies: '🦋',
+            sakura: '🌸',
+            hearts: '💖',
+          };
+          const char = symbols[particleEffect] || '✨';
+
+          for (let i = 0; i < count; i++) {
+            const x = Math.round(((i * 73 + 17) % 100) / 100 * frameWidth);
+            const y = Math.round(((i * 91 + 43) % 100) / 100 * frameHeight);
+            const size = Math.round(20 + (i % 5) * 8);
+
+            items.push(
+              <Text
+                key={`part-${i}`}
+                x={x}
+                y={y}
+                text={char}
+                fontSize={size}
+                opacity={0.88}
+                listening={false}
+              />
+            );
+          }
+          return <Layer listening={false}>{items}</Layer>;
+        })()}
 
         {/* LAYER 5: BRAND — BaliSnap Studio */}
         {(() => {
