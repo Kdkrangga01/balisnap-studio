@@ -1446,5 +1446,29 @@ export const frames: FrameTemplate[] = [
       { x: 467, y: 447, w: 334, h: 304, rx: 9 },
       { x: 465, y: 790, w: 337, h: 282, rx: 8 }
     ]
+  },
+  {
+    id: "custom-1785312911070-nz1i",
+    name: "Dewy Echo",
+    slots: 3,
+    category: "korean",
+    src: "/templates/custom-1785312911070-nz1i.png",
+    width: 941, height: 1672,
+    slotCoords: [
+      { x: 161, y: 132, w: 596, h: 492, rx: 15 },
+      { x: 142, y: 673, w: 639, h: 441, rx: 13 },
+      { x: 215, y: 1136, w: 553, h: 431, rx: 13 }
+    ]
+  },
+  {
+    id: "custom-1785313365548-juzv",
+    name: "Cotton Charm",
+    slots: 1,
+    category: "cute",
+    src: "/templates/custom-1785313365548-juzv.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 160, y: 302, w: 716, h: 934, rx: 21 }
+    ]
   }
 ];

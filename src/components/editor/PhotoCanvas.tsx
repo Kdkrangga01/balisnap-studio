@@ -412,6 +412,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
         height={stageHeight}
         scaleX={scale}
         scaleY={scale}
+        pixelRatio={typeof window !== 'undefined' ? Math.max(2.5, window.devicePixelRatio || 2.5) : 2.5}
         onMouseDown={(e) => {
           if (e.target === e.target.getStage()) {
             setSelectedId(null);
@@ -600,8 +601,19 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           ) : null}
         </Layer>
 
-        {/* LAYER 4: ELEMEN DEKORASI STIKER DAN TEKS USER */}
-        <Layer>
+        {/* LAYER 4: ELEMEN DEKORASI STIKER DAN TEKS USER (HD SMOOTHING) */}
+        <Layer
+          ref={(node) => {
+            if (node) {
+              const canvasEl = node.getCanvas()?._canvas;
+              const ctx = canvasEl?.getContext('2d');
+              if (ctx) {
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+              }
+            }
+          }}
+        >
           {stickers.map((st: any) => {
             const stImg = loadedStickerImages[st.id];
             if (!stImg) return null;
@@ -630,6 +642,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                 height={finalHeight}
                 rotation={st.rotation || 0}
                 draggable={!isPreviewMode}
+                perfectDrawEnabled={true}
                 onClick={() => !isPreviewMode && setSelectedId(st.id)}
                 onTap={() => !isPreviewMode && setSelectedId(st.id)}
                 onDragEnd={(e) => {

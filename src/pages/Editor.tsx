@@ -271,6 +271,7 @@ export const Editor: React.FC = () => {
     setSelectedId(null);
   };
 
+  // Menyimpan jumlah stiker sebelumnya, untuk mendeteksi kapan ada stiker BARU ditambahkan
   return (
     <div
       className="min-h-screen py-5 px-3 md:py-8 md:px-6 relative overflow-hidden text-slate-800 selection:bg-pink-200"
