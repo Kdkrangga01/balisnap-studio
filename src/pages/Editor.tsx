@@ -33,7 +33,13 @@ import {
   Scan,
   Lock,
   MapPin,
-  Edit3
+  Edit3,
+  MoveUpLeft,
+  MoveUpRight,
+  MoveDownLeft,
+  MoveDownRight,
+  LayoutGrid,
+  Sparkle
 } from 'lucide-react';
 
 export const Editor: React.FC = () => {
@@ -181,6 +187,89 @@ export const Editor: React.FC = () => {
     selectedFrame.name.toLowerCase().includes('special') ||
     selectedFrame.name.toLowerCase().includes('retro') ||
     selectedFrame.name.toLowerCase().includes('newspaper');
+
+  // ===== RUMUS LOKASI SUDUT PRESISI PER SLOT FOTO =====
+  // Menghitung posisi otomatis sudut-sudut slot foto pada bingkai
+  const getSlotCornerCoordinates = (slotIndex: number, corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
+    const frameW = canvasWidth || 400;
+    const frameH = (selectedFrame.height / selectedFrame.width) * frameW || 600;
+
+    // Kalkulasi estimasi grid slot foto berdasarkan layout bingkai
+    const isTwoColumns = totalSlots >= 4;
+    const cols = isTwoColumns ? 2 : 1;
+    const rows = Math.ceil(totalSlots / cols);
+
+    const colIdx = slotIndex % cols;
+    const rowIdx = Math.floor(slotIndex / cols);
+
+    const paddingX = frameW * 0.08;
+    const paddingY = frameH * 0.1;
+    const availableW = frameW - paddingX * 2;
+    const availableH = frameH - paddingY * 2;
+
+    const slotW = availableW / cols;
+    const slotH = availableH / rows;
+
+    const slotX = paddingX + colIdx * slotW;
+    const slotY = paddingY + rowIdx * slotH;
+
+    const offset = 18; // Offset penempelan stiker di pinggir/sudut slot
+
+    switch (corner) {
+      case 'top-left':
+        return { x: slotX - offset, y: slotY - offset };
+      case 'top-right':
+        return { x: slotX + slotW - 35 + offset, y: slotY - offset };
+      case 'bottom-left':
+        return { x: slotX - offset, y: slotY + slotH - 35 + offset };
+      case 'bottom-right':
+        return { x: slotX + slotW - 35 + offset, y: slotY + slotH - 35 + offset };
+      default:
+        return { x: slotX, y: slotY };
+    }
+  };
+
+  // Pindahkan stiker terpilih ke sudut slot foto terdekat/pilihan
+  const moveStickerToSlotCorner = (corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
+    if (!selectedId || !selectedId.startsWith('sticker-')) return;
+    const targetSticker = canvasStickers.find((s) => s.id === selectedId);
+    if (!targetSticker) return;
+
+    // Pakai slot foto yang sedang aktif atau default slot #0
+    const targetSlot = selectedPhotoIndex !== null ? selectedPhotoIndex : 0;
+    const newPos = getSlotCornerCoordinates(targetSlot, corner);
+
+    targetSticker.x = newPos.x;
+    targetSticker.y = newPos.y;
+
+    // Refresh penanda elemen
+    setSelectedId(null);
+    setTimeout(() => setSelectedId(selectedId), 30);
+  };
+
+  // PAKET AUTO SPREAD: Menyebarkan SELURUH stiker yang ada secara seragam ke tiap sudut slot foto
+  const autoSpreadStickersEqually = () => {
+    if (canvasStickers.length === 0) return;
+
+    const corners: Array<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'> = [
+      'top-left',
+      'top-right',
+      'bottom-right',
+      'bottom-left'
+    ];
+
+    canvasStickers.forEach((stk, index) => {
+      const targetSlot = index % totalSlots;
+      const cornerIndex = Math.floor(index / totalSlots) % corners.length;
+      const corner = corners[cornerIndex];
+
+      const pos = getSlotCornerCoordinates(targetSlot, corner);
+      stk.x = pos.x;
+      stk.y = pos.y;
+    });
+
+    setSelectedId(null);
+  };
 
   return (
     <div
@@ -385,8 +474,6 @@ export const Editor: React.FC = () => {
                 </div>
               )}
 
-
-
               {/* Quick Select Slot Foto Bar */}
               <div className="bg-purple-50/80 border border-purple-100 p-2.5 rounded-2xl flex flex-col gap-2">
                 <div className="flex items-center justify-between text-[10px] font-black uppercase text-purple-700 tracking-wider">
@@ -418,7 +505,7 @@ export const Editor: React.FC = () => {
 
               {/* Tool Tabs */}
               <div
-                className="grid grid-cols-4 gap-1.5 p-1.5 rounded-2xl border"
+                className="grid grid-cols-5 gap-1 p-1.5 rounded-2xl border"
                 style={{
                   background: '#F8F1E7',
                   borderColor: '#EFE5D8'
@@ -455,7 +542,7 @@ export const Editor: React.FC = () => {
                         setActiveTab(tab.key as typeof activeTab);
                         setSelectedId(null);
                       }}
-                      className="relative py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="relative py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer"
                       style={{
                         background: isActive
                           ? 'linear-gradient(135deg, #FB7185 0%, #E11D48 100%)'
@@ -465,14 +552,33 @@ export const Editor: React.FC = () => {
                       }}
                     >
                       {isLocked && <Lock className="w-3 h-3 text-pink-500 shrink-0" />}
-                      <tab.icon className="w-4 h-4" />
-                      <span className="hidden xs:inline">{tab.label}</span>
+                      <tab.icon className="w-4 h-4 shrink-0" />
+                      <span className="hidden sm:inline">{tab.label}</span>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Selected Element Quick Actions */}
+              {/* BAR TOMBOL AUTO SPREAD / OTOMATIS PAS SUDUT BINGKAI */}
+              {canvasStickers.length > 0 && (
+                <div className="bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-purple-500/10 border border-amber-300/60 p-2.5 rounded-2xl flex items-center justify-between gap-2 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Sparkle className="w-4 h-4 text-amber-500 fill-amber-400" />
+                    <span className="text-[11px] font-black uppercase tracking-wider text-amber-900">
+                      Ratakan Otomatis
+                    </span>
+                  </div>
+                  <button
+                    onClick={autoSpreadStickersEqually}
+                    className="px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black text-[10px] uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    ✨ Pas Ke Sudut Bingkai
+                  </button>
+                </div>
+              )}
+
+              {/* Selected Element Quick Actions & Auto-Corner Positioner */}
               <AnimatePresence mode="wait">
                 {hasSelectedElement ? (
                   <motion.div
@@ -480,7 +586,7 @@ export const Editor: React.FC = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden"
+                    className="overflow-hidden flex flex-col gap-2"
                   >
                     <div
                       className="flex items-center justify-between p-3 rounded-2xl border transition-all"
@@ -520,6 +626,49 @@ export const Editor: React.FC = () => {
                         </button>
                       </div>
                     </div>
+
+                    {/* BAR OTOMATIS PENEMPATAN STIKER DI POJOK SLOT FOTO */}
+                    {selectedId?.startsWith('sticker-') && (
+                      <div className="bg-rose-50/80 border border-rose-200/80 p-2.5 rounded-2xl flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between text-[10px] font-black uppercase text-rose-700">
+                          <span>Tempel Otomatis Ke Sudut Foto #{selectedPhotoIndex !== null ? selectedPhotoIndex + 1 : 1}:</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1.5 mt-0.5">
+                          <button
+                            onClick={() => moveStickerToSlotCorner('top-left')}
+                            className="p-2 bg-white hover:bg-rose-100 text-rose-800 rounded-xl border border-rose-200 text-[10px] font-bold flex flex-col items-center gap-1 shadow-sm transition-all cursor-pointer"
+                            title="Tempel di Kiri Atas Bingkai Foto"
+                          >
+                            <MoveUpLeft className="w-4 h-4 text-rose-500" />
+                            <span>Kiri Atas</span>
+                          </button>
+                          <button
+                            onClick={() => moveStickerToSlotCorner('top-right')}
+                            className="p-2 bg-white hover:bg-rose-100 text-rose-800 rounded-xl border border-rose-200 text-[10px] font-bold flex flex-col items-center gap-1 shadow-sm transition-all cursor-pointer"
+                            title="Tempel di Kanan Atas Bingkai Foto"
+                          >
+                            <MoveUpRight className="w-4 h-4 text-rose-500" />
+                            <span>Kanan Atas</span>
+                          </button>
+                          <button
+                            onClick={() => moveStickerToSlotCorner('bottom-left')}
+                            className="p-2 bg-white hover:bg-rose-100 text-rose-800 rounded-xl border border-rose-200 text-[10px] font-bold flex flex-col items-center gap-1 shadow-sm transition-all cursor-pointer"
+                            title="Tempel di Kiri Bawah Bingkai Foto"
+                          >
+                            <MoveDownLeft className="w-4 h-4 text-rose-500" />
+                            <span>Kiri Bawah</span>
+                          </button>
+                          <button
+                            onClick={() => moveStickerToSlotCorner('bottom-right')}
+                            className="p-2 bg-white hover:bg-rose-100 text-rose-800 rounded-xl border border-rose-200 text-[10px] font-bold flex flex-col items-center gap-1 shadow-sm transition-all cursor-pointer"
+                            title="Tempel di Kanan Bawah Bingkai Foto"
+                          >
+                            <MoveDownRight className="w-4 h-4 text-rose-500" />
+                            <span>Kanan Bawah</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 ) : selectedPhotoIndex !== null ? (
                   <motion.div
@@ -592,11 +741,11 @@ export const Editor: React.FC = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden"
+                    className="overflow-hidden flex flex-col gap-2"
                   >
                     <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50/60 border border-amber-200/60 rounded-xl text-xs text-amber-800 text-left">
-                      <AlertCircle className="w-4 h-4 text-amber-500" />
-                      Klik foto pada bingkai di atas untuk mengaktifkan zoom perkecil
+                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                      Klik stiker atau foto pada bingkai untuk mengaktifkan pengaturan cepat
                     </div>
                   </motion.div>
                 )}
