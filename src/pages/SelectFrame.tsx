@@ -445,7 +445,7 @@ const FrameCard: React.FC<{
               {requiredTier === 'premium' ? <Crown className="w-5 h-5 animate-bounce fill-yellow-300" /> : <Lock className="w-5 h-5 text-white" />}
             </div>
             <span className={`text-[9.5px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md border ${requiredTier === 'premium' ? 'bg-purple-900/90 text-yellow-300 border-yellow-400/40' : 'bg-pink-600/90 text-white border-pink-300/40'}`}>
-              {requiredTier === 'premium' ? '👑 VIP PREMIUM (120k)' : '🔒 BASIC PASS (25k)'}
+              {requiredTier === 'premium' ? '👑 VIP PREMIUM (135k)' : '🔒 BASIC PASS (25k)'}
             </span>
             <span className="text-[9px] text-white/90 font-bold mt-1.5 drop-shadow-sm">
               Klik Untuk Buka 🔓
@@ -1522,7 +1522,7 @@ export const SelectFrame: React.FC = () => {
 
                     <div className="mb-6 pb-6 border-b border-white/10">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-3xl sm:text-4xl font-black text-white">Rp 120.000</span>
+                        <span className="text-3xl sm:text-4xl font-black text-white">Rp 135.000</span>
                       </div>
                       <span className="text-[10px] font-black uppercase text-pink-300 bg-white/10 px-2.5 py-1 rounded-md inline-block mt-2 border border-pink-400/30">
                         ⏱️ Masa Aktif: Pass 60 Hari (2 Bulan Bebas Foto)

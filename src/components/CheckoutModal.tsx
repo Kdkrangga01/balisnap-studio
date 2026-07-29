@@ -30,7 +30,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   const isPremium = targetTier === 'premium';
-  const priceFormatted = isPremium ? 'Rp 120.000' : 'Rp 25.000';
+  const priceFormatted = isPremium ? 'Rp 135.000' : 'Rp 25.000';
   const packageName = isPremium ? 'Paket PREMIUM VIP Pass (60 Hari)' : 'Paket BASIC Pass (24 Jam)';
 
   // Dummy Invoice
@@ -61,7 +61,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             orderId: invoiceId.replace('#', ''),
-            amount: isPremium ? 120000 : 25000,
+            amount: isPremium ? 135000 : 25000,
             packageName,
           }),
         });

@@ -25,7 +25,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   if (!isOpen && !isCheckoutOpen) return null;
 
   const isPremium = targetTier === 'premium';
-  const priceText = isPremium ? 'Rp 120.000' : 'Rp 25.000';
+  const priceText = isPremium ? 'Rp 135.000' : 'Rp 25.000';
   const durationText = isPremium ? 'Pass 60 Hari (2 Bulan Bebas Foto)' : 'Pass 24 Jam (Foto Sepuasnya)';
   const packageTitle = isPremium ? 'Paket PREMIUM VIP' : 'Paket BASIC';
 
