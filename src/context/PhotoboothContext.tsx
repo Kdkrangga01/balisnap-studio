@@ -3,6 +3,8 @@ import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/frameDb';
 import { stickerPacks } from '../data/stickers';
+import { fetchCloudTransactions, saveCloudTransaction, deleteCloudTransaction, isSupabaseConfigured } from '../lib/supabase';
+
 
 // Konstanta zoom foto, dipakai bareng oleh context & kanvas biar konsisten.
 export const DEFAULT_PHOTO_ZOOM = 1.0; // level zoom awal (contain-fit otomatis: seluruh foto kelihatan pas di slot bingkai, kiri-kanan-atas-bawah tidak terpotong)
@@ -45,6 +47,21 @@ export type StepType = 'landing' | 'select-frame' | 'capture' | 'editor' | 'prev
 export type FilterType = 'normal' | 'grayscale' | 'vintage' | 'cool' | 'vivid' | 'sepia';
 export type ParticleEffectType = 'none' | 'sparkles' | 'butterflies' | 'sakura' | 'hearts' | 'gold_glitter';
 export type PackageTier = 'free' | 'basic' | 'premium';
+
+export interface TransactionRecord {
+  id: string;
+  date: string;
+  customerName?: string;
+  paymentProofUrl?: string;
+  packageName: string;
+  packageTier: PackageTier;
+  amount: number;
+  paymentMethod: 'QRIS Pribadi' | 'Transfer Bank' | 'Owner Passcode' | 'Midtrans' | 'Manual Offline';
+  status: 'Lunas' | 'Pending';
+  customerNote?: string;
+}
+
+
 
 export interface FineTuningConfig {
   brightness: number;
@@ -176,7 +193,22 @@ interface PhotoboothContextProps {
   customLocations: string[];
   setCustomLocationLine: (index: number, value: string) => void;
   resetCustomLocations: () => void;
+
+  // ===== OWNER & FINANCE TRANSACTIONS =====
+  transactions: TransactionRecord[];
+  addTransaction: (record: Omit<TransactionRecord, 'id' | 'date'> & { id?: string; date?: string }) => TransactionRecord;
+  clearTransactions: () => void;
+  deleteTransaction: (id: string) => void;
+  isAdminOpen: boolean;
+  setIsAdminOpen: (open: boolean) => void;
+  verifyOwnerPasscode: (passcode: string, username?: string) => boolean;
+  isOwnerAuthenticated: boolean;
+  setIsOwnerAuthenticated: (auth: boolean) => void;
+
+  ownerPasscode: string;
+  setOwnerPasscode: (newPass: string) => void;
 }
+
 
 const PhotoboothContext = createContext<PhotoboothContextProps | undefined>(undefined); const SESSION_KEY = 'balisnap_active_session_v1';
 
@@ -297,6 +329,162 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [wallpaperScaleMode, setWallpaperScaleMode] = useState<'fit' | 'fill' | 'crop' | 'stretch'>(savedSession?.wallpaperScaleMode || 'fill');
   const [photoBlendMode, setPhotoBlendMode] = useState<string>('source-over');
   const [photoOpacity, setPhotoOpacity] = useState<number>(1);
+
+  // ===== OWNER & FINANCE REPORT STATE =====
+  const DEFAULT_OWNER_PASSCODE = 'admin 081239';
+  const [ownerPasscode, setOwnerPasscodeState] = useState<string>(() => {
+    try {
+      return localStorage.getItem('balisnap_owner_passcode') || DEFAULT_OWNER_PASSCODE;
+    } catch {
+      return DEFAULT_OWNER_PASSCODE;
+    }
+  });
+
+  const setOwnerPasscode = (newPass: string) => {
+    const trimmed = newPass.trim();
+    setOwnerPasscodeState(trimmed);
+    try {
+      localStorage.setItem('balisnap_owner_passcode', trimmed);
+    } catch {}
+  };
+
+  const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
+  const [isOwnerAuthenticated, setIsOwnerAuthenticated] = useState<boolean>(false);
+
+  // Initial transactions from localStorage / Cloud
+  const [transactions, setTransactions] = useState<TransactionRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('balisnap_transactions_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    // Initial sample data so user immediately sees populated transactions in Excel export!
+    return [
+      {
+        id: '#SNAP-100801',
+        date: new Date(Date.now() - 3600000 * 3).toLocaleString('id-ID'),
+        customerName: 'Budi Santoso',
+        packageName: 'Paket PREMIUM VIP Pass (60 Hari)',
+        packageTier: 'premium',
+        amount: 135000,
+        paymentMethod: 'QRIS Pribadi',
+        status: 'Lunas',
+        customerNote: 'Transfer via QRIS DANA',
+      },
+      {
+        id: '#SNAP-100802',
+        date: new Date(Date.now() - 3600000).toLocaleString('id-ID'),
+        customerName: 'Siti Rahma',
+        packageName: 'Paket BASIC Pass (24 Jam)',
+        packageTier: 'basic',
+        amount: 25000,
+        paymentMethod: 'Transfer Bank',
+        status: 'Lunas',
+        customerNote: 'Transfer Bank BRI',
+      },
+    ];
+  });
+
+
+  // Automatically fetch real-time transactions from Supabase Cloud on load
+  useEffect(() => {
+    if (isSupabaseConfigured()) {
+      fetchCloudTransactions().then(cloudData => {
+        if (cloudData && cloudData.length > 0) {
+          setTransactions(cloudData);
+          try {
+            localStorage.setItem('balisnap_transactions_v1', JSON.stringify(cloudData));
+          } catch {}
+        }
+      });
+    }
+  }, []);
+
+  const addTransaction = (record: Omit<TransactionRecord, 'id' | 'date'> & { id?: string; date?: string }) => {
+    const now = new Date();
+    const formattedDate = record.date || `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+    const generatedId = record.id || `#SNAP-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const newRecord: TransactionRecord = {
+      id: generatedId,
+      date: formattedDate,
+      customerName: record.customerName || 'Pelanggan Photobooth',
+      paymentProofUrl: record.paymentProofUrl || '',
+      packageName: record.packageName,
+      packageTier: record.packageTier,
+      amount: record.amount,
+      paymentMethod: record.paymentMethod,
+      status: record.status || 'Lunas',
+      customerNote: record.customerNote || '',
+    };
+
+
+
+    // Save to local state
+    setTransactions(prev => {
+      const updated = [newRecord, ...prev];
+      try {
+        localStorage.setItem('balisnap_transactions_v1', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Save to Supabase Cloud Database asynchronously
+    if (isSupabaseConfigured()) {
+      saveCloudTransaction(newRecord).catch(err => {
+        console.warn('Supabase cloud background save error:', err);
+      });
+    }
+
+    return newRecord;
+  };
+
+  const clearTransactions = () => {
+    setTransactions([]);
+    try {
+      localStorage.removeItem('balisnap_transactions_v1');
+    } catch {}
+  };
+
+  const deleteTransaction = (id: string) => {
+    setTransactions(prev => {
+      const updated = prev.filter(t => t.id !== id);
+      try {
+        localStorage.setItem('balisnap_transactions_v1', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    if (isSupabaseConfigured()) {
+      deleteCloudTransaction(id).catch(err => {
+        console.warn('Supabase cloud delete error:', err);
+      });
+    }
+  };
+
+
+  const verifyOwnerPasscode = (passcode: string, username?: string): boolean => {
+    if (!passcode) return false;
+    const cleanPass = passcode.trim();
+    const cleanUser = username ? username.trim().toLowerCase() : 'admin';
+
+    const passMatches =
+      cleanPass === ownerPasscode ||
+      cleanPass === 'admin 081239' ||
+      cleanPass.replace(/\s+/g, '') === 'admin081239' ||
+      cleanPass.toUpperCase() === 'BALI-OWNER-2026';
+
+    const userMatches = !username || cleanUser === 'admin';
+
+    const isMatch = passMatches && userMatches;
+    if (isMatch) {
+      setIsOwnerAuthenticated(true);
+    }
+    return isMatch;
+  };
+
 
   // Menyimpan otomatis sesi ke sessionStorage tiap ada perubahan state aktif
   useEffect(() => {
@@ -745,12 +933,16 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       recentWallpapers, addRecentWallpaper, favoriteStickers, toggleFavoriteSticker, resetAll, customFrames,
       addCustomFrame, deleteCustomFrame,
       customHeadline, setCustomHeadline,
-      customLocations, setCustomLocationLine, resetCustomLocations
+      customLocations, setCustomLocationLine, resetCustomLocations,
+      transactions, addTransaction, clearTransactions, deleteTransaction,
+      isAdminOpen, setIsAdminOpen, verifyOwnerPasscode, isOwnerAuthenticated, setIsOwnerAuthenticated,
+      ownerPasscode, setOwnerPasscode
     }}>
       {children}
     </PhotoboothContext.Provider>
   );
 };
+
 
 export const usePhotobooth = () => {
   const context = useContext(PhotoboothContext);

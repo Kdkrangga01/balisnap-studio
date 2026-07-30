@@ -94,6 +94,8 @@ const TransparentLogo: React.FC<{ src: string; className?: string }> = ({ src, c
 export const Landing: React.FC = () => {
   const { setStep, setPackageTier } = usePhotobooth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutModalTier, setCheckoutModalTier] = useState<PackageTier>('basic');
 
@@ -199,6 +201,7 @@ export const Landing: React.FC = () => {
             whileTap={{ scale: 0.95 }}
             className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.18em] bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white shadow-lg shadow-purple-950/20 flex items-center gap-2 whitespace-nowrap z-10 border border-white/20 relative overflow-hidden group cursor-pointer"
           >
+
             {/* Button Shimmer Light Pass */}
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full"
@@ -214,6 +217,7 @@ export const Landing: React.FC = () => {
               <Camera className="w-3.5 h-3.5 text-pink-300 shrink-0" />
             </motion.div>
           </motion.button>
+
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -700,6 +704,8 @@ export const Landing: React.FC = () => {
           </p>
         </div>
       </footer>
+
+
 
     </div>
   );
