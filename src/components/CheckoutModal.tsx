@@ -26,7 +26,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     name: import.meta.env.VITE_PERSONAL_BANK_NAME || 'BRI',
     accountNo: import.meta.env.VITE_PERSONAL_BANK_NO || '0368 0108 7136 505',
     accountHolder: import.meta.env.VITE_PERSONAL_BANK_HOLDER || 'BaliSnap Studio / Rangga',
-    qrisUrl: import.meta.env.VITE_PERSONAL_QRIS_URL || '',
+    qrisUrl: import.meta.env.VITE_PERSONAL_QRIS_URL || '/qris_pribadi.png',
   };
 
   const isPremium = targetTier === 'premium';
