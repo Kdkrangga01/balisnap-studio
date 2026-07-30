@@ -329,7 +329,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         type="text"
                         value={customerNameInput}
                         onChange={(e) => setCustomerNameInput(e.target.value)}
-                        placeholder="Misal: Menik"
+                        placeholder="Misal: Budi"
                         className="w-full px-3.5 py-2 bg-purple-50/50 border border-purple-200/80 rounded-xl text-xs font-bold text-purple-950 placeholder:text-zinc-400 focus:outline-none focus:border-purple-600 transition-colors"
                       />
                     </div>
