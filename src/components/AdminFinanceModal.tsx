@@ -11,7 +11,9 @@ import {
   DollarSign,
   Lock,
   HelpCircle,
-  ImageIcon
+  ImageIcon,
+  Eye,
+  ExternalLink
 } from 'lucide-react';
 
 import { usePhotobooth, type PackageTier } from '../context/PhotoboothContext';
@@ -414,13 +416,32 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                                 </td>
                                 <td className="px-4 py-3">
                                   {t.paymentProofUrl ? (
-                                    <button
+                                    <div
                                       onClick={() => setSelectedProofImage(t.paymentProofUrl || null)}
-                                      className="px-2.5 py-1 bg-purple-900/60 hover:bg-purple-800 border border-purple-600/50 text-purple-200 text-[10px] font-black rounded-lg flex items-center gap-1.5 cursor-pointer transition-colors"
+                                      className="flex items-center gap-2 cursor-pointer group"
+                                      title="Klik foto untuk melihat bukti transfer ukuran besar & jernih"
                                     >
-                                      <ImageIcon className="w-3.5 h-3.5 text-purple-400" />
-                                      <span>Lihat Resi</span>
-                                    </button>
+                                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-purple-500/60 group-hover:border-pink-500 shadow-md shrink-0 bg-zinc-950 transition-all">
+                                        <img
+                                          src={t.paymentProofUrl}
+                                          alt="Thumbnail Resi"
+                                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                                        />
+                                        <div className="absolute inset-0 bg-purple-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                          <Eye className="w-4 h-4 text-white" />
+                                        </div>
+                                      </div>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedProofImage(t.paymentProofUrl || null);
+                                        }}
+                                        className="px-2.5 py-1.5 bg-purple-900/80 hover:bg-purple-800 border border-purple-500/50 text-purple-200 hover:text-white text-[10.5px] font-black rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+                                      >
+                                        <ImageIcon className="w-3.5 h-3.5 text-pink-400" />
+                                        <span>Perbesar Resi 🔍</span>
+                                      </button>
+                                    </div>
                                   ) : (
                                     <span className="text-[10px] text-zinc-600 font-mono">-</span>
                                   )}
@@ -629,34 +650,44 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-lg w-full bg-zinc-900 border border-zinc-700 rounded-3xl p-4 shadow-2xl flex flex-col items-center"
+              className="relative max-w-2xl sm:max-w-3xl w-full bg-zinc-900 border-2 border-purple-500/40 rounded-3xl p-5 shadow-2xl flex flex-col items-center max-h-[90vh]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-full flex items-center justify-between border-b border-zinc-800 pb-3 mb-3">
-                <h4 className="font-extrabold text-sm text-white flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-purple-400" />
-                  Foto Bukti Pembayaran / Resi Transfer
+              <div className="w-full flex items-center justify-between border-b border-zinc-800 pb-3 mb-3 shrink-0">
+                <h4 className="font-extrabold text-sm sm:text-base text-white flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-pink-400" />
+                  Foto Bukti Pembayaran / Resi Transfer (Resolusi Asli HD 🔍)
                 </h4>
                 <button
                   onClick={() => setSelectedProofImage(null)}
-                  className="w-7 h-7 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center cursor-pointer transition-colors"
+                  className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center cursor-pointer transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="w-full max-h-[70vh] overflow-auto rounded-2xl border border-zinc-800 bg-zinc-950 p-2 flex items-center justify-center">
+              <div className="w-full flex-1 overflow-auto rounded-2xl border border-zinc-800 bg-zinc-950/90 p-3 flex items-center justify-center min-h-[300px] max-h-[75vh]">
                 <img
                   src={selectedProofImage}
                   alt="Resi Pembayaran Pelanggan"
-                  className="max-w-full max-h-[65vh] object-contain rounded-xl shadow-lg"
+                  className="max-w-full max-h-[70vh] object-contain rounded-xl shadow-2xl"
                 />
               </div>
 
-              <div className="mt-4 w-full flex justify-end">
+              <div className="mt-4 w-full flex items-center justify-between shrink-0 border-t border-zinc-800/80 pt-3">
+                <a
+                  href={selectedProofImage}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-purple-300 hover:text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>Buka di Tab Baru / Tab Penuh 🔗</span>
+                </a>
+
                 <button
                   onClick={() => setSelectedProofImage(null)}
-                  className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs rounded-xl cursor-pointer transition-colors"
+                  className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-all"
                 >
                   Tutup Preview
                 </button>
