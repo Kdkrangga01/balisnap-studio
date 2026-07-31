@@ -4,6 +4,7 @@ import type { FrameTemplate } from '../data/frames';
 import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/frameDb';
 import { stickerPacks } from '../data/stickers';
 import { fetchCloudTransactions, saveCloudTransaction, deleteCloudTransaction, isSupabaseConfigured } from '../lib/supabase';
+import { getStickerCornerPosition } from '../lib/stickerPlacement';
 
 
 // Konstanta zoom foto, dipakai bareng oleh context & kanvas biar konsisten.
@@ -211,40 +212,6 @@ interface PhotoboothContextProps {
 
 
 const PhotoboothContext = createContext<PhotoboothContextProps | undefined>(undefined); const SESSION_KEY = 'balisnap_active_session_v1';
-
-// ===== HELPER: 4 TITIK POJOK ASLI BINGKAI (BUKAN POJOK TIAP SLOT FOTO) =====
-// Dipakai bareng oleh addSticker (stiker satuan) & applyStickerPack (banyak stiker sekaligus)
-// supaya KONSISTEN: stiker selalu menempel di 4 sudut LUAR bingkai secara keseluruhan,
-// dihitung dari bounding box seluruh slot foto pada bingkai yang sedang aktif.
-const getFrameCornerSpots = (frame: FrameTemplate, stickerSize: number) => {
-  const FW = frame.width;
-  const FH = frame.height;
-
-  let minSlotX = FW;
-  let maxSlotRight = 0;
-  let minSlotY = FH;
-  let maxSlotBottom = 0;
-
-  frame.slotCoords.forEach(slot => {
-    if (slot.x < minSlotX) minSlotX = slot.x;
-    if (slot.x + slot.w > maxSlotRight) maxSlotRight = slot.x + slot.w;
-    if (slot.y < minSlotY) minSlotY = slot.y;
-    if (slot.y + slot.h > maxSlotBottom) maxSlotBottom = slot.y + slot.h;
-  });
-
-  const leftX = Math.max(8, Math.round(minSlotX / 2 - stickerSize / 2));
-  const rightX = Math.min(FW - stickerSize - 8, Math.round(maxSlotRight + (FW - maxSlotRight) / 2 - stickerSize / 2));
-  const topY = Math.max(8, Math.round(minSlotY / 2 - stickerSize / 2));
-  const bottomY = Math.min(FH - stickerSize - 8, Math.round(maxSlotBottom + (FH - maxSlotBottom) / 2 - stickerSize / 2));
-
-  // Urutan searah jarum jam: kiri-atas → kanan-atas → kanan-bawah → kiri-bawah
-  return [
-    { x: leftX, y: topY },
-    { x: rightX, y: topY },
-    { x: rightX, y: bottomY },
-    { x: leftX, y: bottomY },
-  ];
-};
 
 const getInitialSession = () => {
   try {
@@ -717,7 +684,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   };
 
-  // TAMBAH 1 STIKER MANUAL (OTOMATIS JATUH DI POJOK BINGKAI, TIDAK MENUTUPI TENGAH FOTO)
+  // TAMBAH 1 STIKER MANUAL (OTOMATIS JATUH DI ANCHOR PRESISI BINGKAI, GARANSI TIDAK MENUTUPI FOTO)
   const addSticker = (stickerId: string, overridePosition?: { x: number; y: number }) => {
     const id = `sticker-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     let posX = 30;
@@ -727,14 +694,10 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       posX = overridePosition.x;
       posY = overridePosition.y;
     } else if (selectedFrame) {
-      const stickerW = Math.round(selectedFrame.width * 0.095);
-      const cornerSpots = getFrameCornerSpots(selectedFrame, stickerW);
-
-      // Stiker ke-1 → pojok kiri-atas, ke-2 → kanan-atas, ke-3 → kanan-bawah, ke-4 → kiri-bawah,
-      // ke-5 dst → ulang ke pojok yang sama (tetap di area pojok, bukan acak di pinggir/tengah)
-      const spotIdx = stickers.length % cornerSpots.length;
-      posX = cornerSpots[spotIdx].x;
-      posY = cornerSpots[spotIdx].y;
+      const renderCanvasW = 400; // standard display canvas width
+      const nextPos = getStickerCornerPosition(selectedFrame, renderCanvasW, stickers.length, 44, 44);
+      posX = nextPos.x;
+      posY = nextPos.y;
     }
 
     const newSticker: CanvasSticker = {
@@ -751,59 +714,31 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setSelectedId(id);
   };
 
-  // AUTO-SPREAD PAKET STIKER (SELURUH STIKER PAKET DIPASANG DI 4 POJOK ASLI BINGKAI, TANPA MENUTUPI FOTO)
+  // AUTO-SPREAD PAKET STIKER (MENYESUAIKAN JUMLAH SLOT BINGKAI, SERAGAM DI LUAR SETIAP SLOT FOTO)
   const applyStickerPack = (packId: string) => {
     const pack = stickerPacks.find(p => p.id === packId);
     if (!pack || !selectedFrame) return;
 
     const availableStickers = [...pack.stickers];
     const newStickers: CanvasSticker[] = [];
+    const renderCanvasW = 400;
 
-    const stickerW = Math.round(selectedFrame.width * 0.095);
-
-    // 4 titik pojok asli bingkai: kiri-atas, kanan-atas, kanan-bawah, kiri-bawah
-    const cornerSpots = getFrameCornerSpots(selectedFrame, stickerW);
-
-    // Kalau stiker dalam paket > 4, pojok yang sama dipakai lagi (putaran ke-2, dst).
-    // RING_STAGGER menggeser stiker "putaran lanjutan" itu menjorok LEBIH KE DALAM pojok yang
-    // sama — dibuat cukup lebar (>separuh ukuran stiker) supaya tetap kebaca sebagai kumpulan
-    // beberapa stiker yang rapi menumpuk sedikit (gaya scrapbook), BUKAN numpuk jadi 1 gumpalan.
-    const RING_STAGGER = Math.round(stickerW * 0.62);
-
-    // JUMLAH STIKER YANG DIPASANG: minimal 8 (2 per pojok) supaya paket tetap terasa "penuh & rame"
-    // seperti sebelumnya — jenis stikernya di-CYCLE (diulang bergantian) lewat modulo di bawah,
-    // jadi walau paket cuma punya sedikit jenis gambar unik, tetap tampil variatif & tidak "hilang".
-    const totalStickersToPlace = Math.min(Math.max(pack.stickers.length, 8), 12);
+    // Jumlah stiker otomatis menyesuaikan jumlah slot foto bingkai!
+    const slotCount = selectedFrame.slots || selectedFrame.slotCoords.length || 4;
+    const totalStickersToPlace = slotCount <= 3 ? slotCount * 2 : slotCount;
 
     for (let i = 0; i < totalStickersToPlace; i++) {
-      const cornerIdx = i % cornerSpots.length;
-      const ringIdx = Math.floor(i / cornerSpots.length);
-      const baseSpot = cornerSpots[cornerIdx];
-
-      let spotX = baseSpot.x;
-      let spotY = baseSpot.y;
-      if (ringIdx > 0) {
-        // Arah "menjorok ke dalam" berbeda tiap pojok, supaya stiker tambahan tetap
-        // berada di area pojok yang sama (bukan malah keluar bingkai / ke tengah foto)
-        const dirX = (cornerIdx === 0 || cornerIdx === 3) ? 1 : -1; // pojok kiri → geser ke kanan sedikit
-        const dirY = (cornerIdx === 0 || cornerIdx === 1) ? 1 : -1; // pojok atas → geser ke bawah sedikit
-        spotX = baseSpot.x + dirX * RING_STAGGER * ringIdx;
-        spotY = baseSpot.y + dirY * RING_STAGGER * ringIdx;
-      }
-
-      // Jenis stiker di-cycle bergantian (modulo) — kalau paket punya banyak jenis gambar,
-      // semuanya kepakai bergiliran; kalau cuma sedikit jenis, diulang biar tetap kelihatan penuh
+      const pos = getStickerCornerPosition(selectedFrame, renderCanvasW, i, 44, 44);
       const stickerSrc = availableStickers[i % availableStickers.length];
       const id = `auto-sticker-${Date.now()}-${i}`;
-
       const rotations = [-4, 3, -3, 4, 0, -2, 2, -3];
       const rot = rotations[i % rotations.length];
 
       newStickers.push({
         id,
         stickerId: stickerSrc,
-        x: spotX,
-        y: spotY,
+        x: pos.x,
+        y: pos.y,
         scaleX: 1.0,
         scaleY: 1.0,
         rotation: rot

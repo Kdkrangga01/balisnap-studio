@@ -8,6 +8,7 @@ import { FrameColorPanel } from '../components/editor/FrameColorPanel';
 import { StickerPanel } from '../components/editor/StickerPanel';
 import { TextPanel } from '../components/editor/TextPanel';
 import { UpgradeModal } from '../components/UpgradeModal';
+import { getFrame4Corners, getStickerCornerPosition } from '../lib/stickerPlacement';
 import {
   ArrowLeft,
   Sparkles,
@@ -188,82 +189,34 @@ export const Editor: React.FC = () => {
     selectedFrame.name.toLowerCase().includes('retro') ||
     selectedFrame.name.toLowerCase().includes('newspaper');
 
-  // ===== RUMUS LOKASI SUDUT PRESISI PER SLOT FOTO =====
-  // Menghitung posisi otomatis sudut-sudut slot foto pada bingkai
-  const getSlotCornerCoordinates = (slotIndex: number, corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
-    const frameW = canvasWidth || 400;
-    const frameH = (selectedFrame.height / selectedFrame.width) * frameW || 600;
 
-    // Kalkulasi estimasi grid slot foto berdasarkan layout bingkai
-    const isTwoColumns = totalSlots >= 4;
-    const cols = isTwoColumns ? 2 : 1;
-    const rows = Math.ceil(totalSlots / cols);
 
-    const colIdx = slotIndex % cols;
-    const rowIdx = Math.floor(slotIndex / cols);
-
-    const paddingX = frameW * 0.08;
-    const paddingY = frameH * 0.1;
-    const availableW = frameW - paddingX * 2;
-    const availableH = frameH - paddingY * 2;
-
-    const slotW = availableW / cols;
-    const slotH = availableH / rows;
-
-    const slotX = paddingX + colIdx * slotW;
-    const slotY = paddingY + rowIdx * slotH;
-
-    const offset = 18; // Offset penempelan stiker di pinggir/sudut slot
-
-    switch (corner) {
-      case 'top-left':
-        return { x: slotX - offset, y: slotY - offset };
-      case 'top-right':
-        return { x: slotX + slotW - 35 + offset, y: slotY - offset };
-      case 'bottom-left':
-        return { x: slotX - offset, y: slotY + slotH - 35 + offset };
-      case 'bottom-right':
-        return { x: slotX + slotW - 35 + offset, y: slotY + slotH - 35 + offset };
-      default:
-        return { x: slotX, y: slotY };
-    }
-  };
-
-  // Pindahkan stiker terpilih ke sudut slot foto terdekat/pilihan
+  // Pindahkan stiker terpilih ke sudut bingkai (Pojok Kiri-Atas, Kanan-Atas, Kanan-Bawah, Kiri-Bawah)
   const moveStickerToSlotCorner = (corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
-    if (!selectedId || !selectedId.startsWith('sticker-')) return;
+    if (!selectedId || !selectedId.startsWith('sticker-') || !selectedFrame) return;
     const targetSticker = canvasStickers.find((s) => s.id === selectedId);
     if (!targetSticker) return;
 
-    // Pakai slot foto yang sedang aktif atau default slot #0
-    const targetSlot = selectedPhotoIndex !== null ? selectedPhotoIndex : 0;
-    const newPos = getSlotCornerCoordinates(targetSlot, corner);
+    const renderW = canvasWidth || 400;
+    const corners = getFrame4Corners(selectedFrame, renderW, 44, 44);
+    const targetCorner = corners.find((c) => c.cornerName === corner) || corners[0];
 
-    targetSticker.x = newPos.x;
-    targetSticker.y = newPos.y;
+    targetSticker.x = targetCorner.x;
+    targetSticker.y = targetCorner.y;
 
     // Refresh penanda elemen
     setSelectedId(null);
     setTimeout(() => setSelectedId(selectedId), 30);
   };
 
-  // PAKET AUTO SPREAD: Menyebarkan SELURUH stiker yang ada secara seragam ke tiap sudut slot foto
+  // PAKET AUTO SPREAD: Menyebarkan SELURUH stiker yang ada secara seragam khusus di 4 POJOK LUAR BINGKAI
   const autoSpreadStickersEqually = () => {
-    if (canvasStickers.length === 0) return;
+    if (canvasStickers.length === 0 || !selectedFrame) return;
 
-    const corners: Array<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'> = [
-      'top-left',
-      'top-right',
-      'bottom-right',
-      'bottom-left'
-    ];
+    const renderW = canvasWidth || 400;
 
     canvasStickers.forEach((stk, index) => {
-      const targetSlot = index % totalSlots;
-      const cornerIndex = Math.floor(index / totalSlots) % corners.length;
-      const corner = corners[cornerIndex];
-
-      const pos = getSlotCornerCoordinates(targetSlot, corner);
+      const pos = getStickerCornerPosition(selectedFrame, renderW, index, 44, 44);
       stk.x = pos.x;
       stk.y = pos.y;
     });

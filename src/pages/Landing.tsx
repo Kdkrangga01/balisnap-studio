@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { usePhotobooth, type PackageTier } from '../context/PhotoboothContext';
 import { CheckoutModal } from '../components/CheckoutModal';
+import { TestimonialSection } from '../components/TestimonialSection';
+import { FeedbackModal } from '../components/FeedbackModal';
 import {
   Camera, Sparkles, Image as ImageIcon, ArrowRight, Maximize2, Menu, X, Star, Check,
   Crown, Wand2, UploadCloud, Download, CheckCircle2, Palette, Film
@@ -98,6 +100,7 @@ export const Landing: React.FC = () => {
 
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutModalTier, setCheckoutModalTier] = useState<PackageTier>('basic');
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
 
   const handleSelectPackage = (tier: PackageTier) => {
     if (tier === 'free') {
@@ -118,9 +121,9 @@ export const Landing: React.FC = () => {
       transition: {
         duration: 0.45,
         delay: i * 0.1,
-        ease: [0.25, 1, 0.5, 1] as [number, number, number, number],
-      },
-    }),
+        ease: 'easeOut'
+      }
+    })
   };
 
   return (
@@ -192,6 +195,16 @@ export const Landing: React.FC = () => {
             </motion.span>
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-600 group-hover:w-full transition-all duration-300 rounded-full" />
           </motion.a>
+
+          <motion.button
+            onClick={() => setFeedbackModalOpen(true)}
+            whileHover={{ y: -2, scale: 1.05, color: '#db2777' }}
+            whileTap={{ scale: 0.95 }}
+            className="transition-colors py-1 flex items-center gap-1 relative group select-none"
+          >
+            <span>Ulasan & Saran</span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-600 group-hover:w-full transition-all duration-300 rounded-full" />
+          </motion.button>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
@@ -685,12 +698,21 @@ export const Landing: React.FC = () => {
         </div>
       </section>
 
+      {/* Testimonials, Reviews & Suggestions Section */}
+      <TestimonialSection onOpenFeedbackModal={() => setFeedbackModalOpen(true)} />
+
       {/* Checkout Simulator Modal */}
       <CheckoutModal
         isOpen={checkoutModalOpen}
         onClose={() => setCheckoutModalOpen(false)}
         targetTier={checkoutModalTier}
         onSuccess={() => setStep('select-frame')}
+      />
+
+      {/* Feedback & Review Modal */}
+      <FeedbackModal
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
       />
 
       {/* ===== FOOTER ===== */}

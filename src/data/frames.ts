@@ -1483,5 +1483,17 @@ export const frames: FrameTemplate[] = [
       { x: 303, y: 868, w: 498, h: 280, rx: 8 },
       { x: 302, y: 1160, w: 503, h: 364, rx: 11 }
     ]
+  },
+  {
+    id: "custom-1785478349137-0nw0",
+    name: "Nostalgic Serenade",
+    slots: 2,
+    category: "retro",
+    src: "/templates/custom-1785478349137-0nw0.png",
+    width: 1086, height: 1448,
+    slotCoords: [
+      { x: 66, y: 518, w: 459, h: 378, rx: 11 },
+      { x: 567, y: 518, w: 458, h: 378, rx: 11 }
+    ]
   }
 ];

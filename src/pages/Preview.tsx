@@ -5,10 +5,11 @@ import { exportHighResCanvas, saveOrShareImage, dataURItoBlob } from '../lib/exp
 import { generateBoomerangGif } from '../lib/gifExport';
 import { DigitalEnvelopeModal } from '../components/DigitalEnvelopeModal';
 import { UpgradeModal } from '../components/UpgradeModal';
+import { FeedbackModal } from '../components/FeedbackModal';
 import {
   ArrowLeft, Download, RotateCcw, Check, Share2, Sparkles, Heart, X,
   ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown,
-  Film, Loader2, Mail
+  Film, Loader2, Mail, MessageSquarePlus, Star
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -44,6 +45,9 @@ export const Preview: React.FC = () => {
   // DIGITAL ENVELOPE GIFT STATE
   const [showEnvelopeModal, setShowEnvelopeModal] = useState<boolean>(false);
   const [activePresetFilter, setActivePresetFilter] = useState<'none' | 'vintage' | 'vivid' | 'bw'>('none');
+
+  // FEEDBACK MODAL STATE
+  const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(false);
 
   // Measure container for responsive stage sizing
   useEffect(() => {
@@ -506,6 +510,28 @@ export const Preview: React.FC = () => {
                   <Share2 className="w-4 h-4 text-pink-500" />
                   BAGIKAN KE SOSIAL MEDIA
                 </button>
+
+                {/* FEEDBACK & RATING PROMPT CARD */}
+                <div className="w-full mt-3 p-4 bg-gradient-to-r from-pink-50 via-rose-50 to-amber-50 border-2 border-pink-200/80 rounded-2xl shadow-sm text-center flex flex-col items-center gap-2 select-none">
+                  <div className="flex items-center gap-1 text-amber-400">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} className="w-4 h-4 fill-amber-400" />
+                    ))}
+                  </div>
+                  <h4 className="text-xs font-black text-gray-800 uppercase tracking-wider">
+                    Puas dengan hasil fotomu?
+                  </h4>
+                  <p className="text-[11px] text-gray-600 font-medium leading-tight">
+                    Bantu kami berkembang dengan memberikan ulasan, kritik & saran!
+                  </p>
+                  <button
+                    onClick={() => setShowFeedbackModal(true)}
+                    className="mt-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs rounded-xl shadow-md shadow-pink-500/20 hover:scale-105 transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <MessageSquarePlus className="w-4 h-4" />
+                    <span>Beri Ulasan & Saran</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -759,6 +785,12 @@ export const Preview: React.FC = () => {
         onClose={() => setUpgradeModalOpen(false)}
         targetTier="premium"
         featureName="Export Super Ultra-HD 4K Print-Ready"
+      />
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
       />
     </div>
   );
