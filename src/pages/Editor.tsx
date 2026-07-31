@@ -172,10 +172,37 @@ export const Editor: React.FC = () => {
     updatePhotoTransform(selectedPhotoIndex, { zoom: nextZoom });
   };
 
-  // Fit foto agar PAS SEUTUHNYA dalam bingkai
+  // Fit foto agar PAS 100% PENUH dalam slot bingkai (tanpa celah)
   const handlePhotoFitToFrame = () => {
-    if (selectedPhotoIndex === null) return;
-    updatePhotoTransform(selectedPhotoIndex, { zoom: DEFAULT_PHOTO_ZOOM, x: 0, y: 0 });
+    if (selectedPhotoIndex === null || !selectedFrame) return;
+
+    const slot = selectedFrame.slotCoords[selectedPhotoIndex % selectedFrame.slotCoords.length];
+    if (!slot) return;
+
+    const photoSrc = photos[selectedPhotoIndex];
+    if (!photoSrc) {
+      updatePhotoTransform(selectedPhotoIndex, { zoom: DEFAULT_PHOTO_ZOOM, x: 0, y: 0 });
+      return;
+    }
+
+    const img = new window.Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = photoSrc;
+    img.onload = () => {
+      const imgW = img.naturalWidth || img.width || 800;
+      const imgH = img.naturalHeight || img.height || 800;
+
+      const containScale = Math.min(slot.w / imgW, slot.h / imgH);
+      const coverScale = Math.max(slot.w / imgW, slot.h / imgH);
+      const idealCoverZoom = Math.max(1.0, Number((coverScale / containScale).toFixed(2)));
+
+      updatePhotoTransform(selectedPhotoIndex, { zoom: idealCoverZoom, x: 0, y: 0 });
+    };
+
+    const containScale = Math.min(slot.w / 800, slot.h / 800);
+    const coverScale = Math.max(slot.w / 800, slot.h / 800);
+    const fallbackZoom = Math.max(1.0, Number((coverScale / containScale).toFixed(2)));
+    updatePhotoTransform(selectedPhotoIndex, { zoom: fallbackZoom, x: 0, y: 0 });
   };
 
   const handlePhotoZoomReset = () => {
@@ -673,11 +700,11 @@ export const Editor: React.FC = () => {
                         </button>
                         <button
                           onClick={handlePhotoFitToFrame}
-                          className="px-2.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm flex items-center gap-1 cursor-pointer"
-                          title="Tampilkan foto secara utuh & otomatis pas di bingkai"
+                          className="px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 active:scale-95 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
+                          title="Otomatis paskan foto 100% penuh dalam bingkai (tanpa celah)"
                         >
-                          <Maximize className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">Pas Bingkai</span>
+                          <Maximize className="w-3.5 h-3.5 shrink-0" />
+                          <span className="whitespace-nowrap">Pas Bingkai</span>
                         </button>
                         <button
                           onClick={handlePhotoZoomReset}
