@@ -1470,5 +1470,18 @@ export const frames: FrameTemplate[] = [
     slotCoords: [
       { x: 160, y: 302, w: 716, h: 934, rx: 21 }
     ]
+  },
+  {
+    id: "custom-1785477129139-6a94",
+    name: "Vintage Vibe",
+    slots: 3,
+    category: "retro",
+    src: "/templates/custom-1785477129139-6a94.png",
+    width: 941, height: 1672,
+    slotCoords: [
+      { x: 303, y: 543, w: 499, h: 311, rx: 9 },
+      { x: 303, y: 868, w: 498, h: 280, rx: 8 },
+      { x: 302, y: 1160, w: 503, h: 364, rx: 11 }
+    ]
   }
 ];
