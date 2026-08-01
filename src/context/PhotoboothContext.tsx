@@ -398,41 +398,13 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   });
 
 
-  // Real-time Cloud Synchronization & Local Unsynced Data Upload
+  // Real-time Cloud Synchronization from Supabase Cloud Database (Single Source of Truth)
   const syncCloudTransactions = useCallback(async () => {
     if (!isSupabaseConfigured()) return;
 
     try {
       const cloudData = await fetchCloudTransactions();
       if (cloudData !== null) {
-        // Read local storage transactions
-        let localData: TransactionRecord[] = [];
-        try {
-          const saved = localStorage.getItem('balisnap_transactions_v1');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed)) localData = parsed;
-          }
-        } catch {}
-
-        // Find local transactions missing from cloud
-        const cloudIds = new Set(cloudData.map(t => t.id));
-        const unsynced = localData.filter(t => t.id && !cloudIds.has(t.id));
-
-        if (unsynced.length > 0) {
-          for (const record of unsynced) {
-            await saveCloudTransaction(record);
-          }
-          const updatedCloud = await fetchCloudTransactions();
-          if (updatedCloud) {
-            setTransactions(updatedCloud);
-            try {
-              localStorage.setItem('balisnap_transactions_v1', JSON.stringify(updatedCloud));
-            } catch {}
-            return;
-          }
-        }
-
         setTransactions(cloudData);
         try {
           localStorage.setItem('balisnap_transactions_v1', JSON.stringify(cloudData));
