@@ -95,8 +95,38 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           return;
         }
 
-        // Validated clean!
-        setProofImage(resultUrl);
+        // Validated clean! Compress and resize proof image (max 800px & 75% quality JPEG)
+        // so that Supabase REST API payload stays lightweight (~40KB) and saves instantly!
+        try {
+          const canvas = document.createElement('canvas');
+          let cWidth = width;
+          let cHeight = height;
+          const maxDim = 800;
+
+          if (cWidth > maxDim || cHeight > maxDim) {
+            if (cWidth > cHeight) {
+              cHeight = Math.round((cHeight * maxDim) / cWidth);
+              cWidth = maxDim;
+            } else {
+              cWidth = Math.round((cWidth * maxDim) / cHeight);
+              cHeight = maxDim;
+            }
+          }
+
+          canvas.width = cWidth;
+          canvas.height = cHeight;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, cWidth, cHeight);
+            const compressedUrl = canvas.toDataURL('image/jpeg', 0.75);
+            setProofImage(compressedUrl);
+          } else {
+            setProofImage(resultUrl);
+          }
+        } catch {
+          setProofImage(resultUrl);
+        }
+
         setProofError('');
         setIsValidatingProof(false);
       };

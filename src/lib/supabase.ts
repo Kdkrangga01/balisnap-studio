@@ -64,38 +64,42 @@ export async function fetchCloudTransactions(): Promise<TransactionRecord[] | nu
 export async function saveCloudTransaction(record: TransactionRecord): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
 
-  try {
-    const payload = {
-      id: record.id,
-      date: record.date,
-      customer_name: record.customerName || 'Pelanggan Photobooth',
-      payment_proof_url: record.paymentProofUrl || '',
-      package_name: record.packageName,
-      package_tier: record.packageTier,
-      amount: record.amount,
-      payment_method: record.paymentMethod,
-      status: record.status,
-      customer_note: record.customerNote || '',
-    };
+  const payload = {
+    id: record.id,
+    date: record.date,
+    customer_name: record.customerName || 'Pelanggan Photobooth',
+    payment_proof_url: record.paymentProofUrl || '',
+    package_name: record.packageName,
+    package_tier: record.packageTier,
+    amount: record.amount,
+    payment_method: record.paymentMethod,
+    status: record.status,
+    customer_note: record.customerNote || '',
+  };
 
+  // Attempt save with up to 3 retries for high reliability on mobile networks
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(payload),
+      });
 
+      if (response.ok) {
+        return true;
+      }
 
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      console.warn('Gagal menyimpan transaksi ke Supabase Cloud:', await response.text());
-      return false;
+      const errText = await response.text();
+      console.warn(`Supabase save attempt ${attempt} failed:`, errText);
+    } catch (error) {
+      console.error(`Supabase save attempt ${attempt} error:`, error);
     }
-
-    return true;
-  } catch (error) {
-    console.error('Supabase save error:', error);
-    return false;
+    // Wait 500ms before retry
+    await new Promise(r => setTimeout(r, 500));
   }
+
+  return false;
 }
 
 /**
