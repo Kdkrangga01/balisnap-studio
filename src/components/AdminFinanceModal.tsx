@@ -700,15 +700,19 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
               </div>
 
               <div className="mt-4 w-full flex items-center justify-between shrink-0 border-t border-zinc-800/80 pt-3">
-                <a
-                  href={selectedProofImage}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-purple-300 hover:text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-colors"
+                <button
+                  onClick={() => {
+                    if (!selectedProofImage) return;
+                    const win = window.open();
+                    if (win) {
+                      win.document.write(`<html><head><title>Bukti Pembayaran</title></head><body style="margin:0;background:#09090b;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${selectedProofImage}" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:12px;" /></body></html>`);
+                    }
+                  }}
+                  className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-purple-300 hover:text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
                 >
                   <ExternalLink className="w-4 h-4" />
                   <span>Buka di Tab Baru / Tab Penuh 🔗</span>
-                </a>
+                </button>
 
                 <button
                   onClick={() => setSelectedProofImage(null)}
