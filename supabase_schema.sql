@@ -29,6 +29,7 @@ ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 -- 4. Hapus policy lama jika ada (agar tidak error saat di-run ulang)
 DROP POLICY IF EXISTS "Allow public read access" ON public.transactions;
 DROP POLICY IF EXISTS "Allow public insert access" ON public.transactions;
+DROP POLICY IF EXISTS "Allow public update access" ON public.transactions;
 DROP POLICY IF EXISTS "Allow public delete access" ON public.transactions;
 
 -- 5. Izinkan Akses Baca (SELECT) untuk Publik/Anonim
@@ -43,7 +44,13 @@ ON public.transactions
 FOR INSERT
 WITH CHECK (true);
 
--- 7. Izinkan Akses Hapus (DELETE) untuk Admin/Anonim
+-- 7. Izinkan Akses Update (UPDATE) untuk Publik/Anonim
+CREATE POLICY "Allow public update access"
+ON public.transactions
+FOR UPDATE
+USING (true);
+
+-- 8. Izinkan Akses Hapus (DELETE) untuk Admin/Anonim
 CREATE POLICY "Allow public delete access"
 ON public.transactions
 FOR DELETE
