@@ -234,6 +234,16 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [packageTier, setPackageTierState] = useState<PackageTier>(() => {
     try {
       const saved = localStorage.getItem('balisnap_package_tier');
+      const expiry = localStorage.getItem('balisnap_package_expiry');
+      if (expiry) {
+        const expiryTime = parseInt(expiry, 10);
+        if (!isNaN(expiryTime) && Date.now() > expiryTime) {
+          // Expiry time passed, fallback to free
+          localStorage.removeItem('balisnap_package_tier');
+          localStorage.removeItem('balisnap_package_expiry');
+          return 'free';
+        }
+      }
       if (saved === 'free' || saved === 'basic' || saved === 'premium') return saved;
     } catch { }
     return savedSession?.packageTier || 'free';
@@ -243,6 +253,17 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setPackageTierState(tier);
     try {
       localStorage.setItem('balisnap_package_tier', tier);
+      if (tier === 'basic') {
+        // 24 Hours Pass (24 * 3600 * 1000 ms)
+        const expiry = Date.now() + (24 * 60 * 60 * 1000);
+        localStorage.setItem('balisnap_package_expiry', expiry.toString());
+      } else if (tier === 'premium') {
+        // 60 Days Pass (60 * 24 * 3600 * 1000 ms)
+        const expiry = Date.now() + (60 * 24 * 60 * 60 * 1000);
+        localStorage.setItem('balisnap_package_expiry', expiry.toString());
+      } else {
+        localStorage.removeItem('balisnap_package_expiry');
+      }
     } catch { }
   };
 
