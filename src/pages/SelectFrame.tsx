@@ -1411,9 +1411,6 @@ export const SelectFrame: React.FC = () => {
                         <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                         <span>📱 Hasil foto pratinjau standar.</span>
                       </li>
-                      <li className="flex items-start gap-2.5 text-amber-700 bg-amber-50/80 p-2.5 rounded-xl border border-amber-100 text-[11px]">
-                        <span>⚠️ Terdapat watermark logo kecil di sudut foto.</span>
-                      </li>
                     </ul>
                   </div>
 
