@@ -267,6 +267,28 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch { }
   };
 
+  // Real-time package expiration check & auto-lock
+  useEffect(() => {
+    const checkPackageExpiry = () => {
+      try {
+        const expiry = localStorage.getItem('balisnap_package_expiry');
+        if (expiry) {
+          const expiryTime = parseInt(expiry, 10);
+          if (!isNaN(expiryTime) && Date.now() > expiryTime) {
+            // Expiry time reached! Automatically lock back to free tier
+            localStorage.removeItem('balisnap_package_tier');
+            localStorage.removeItem('balisnap_package_expiry');
+            setPackageTierState('free');
+          }
+        }
+      } catch { }
+    };
+
+    checkPackageExpiry();
+    const interval = setInterval(checkPackageExpiry, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   const [step, setStep] = useState<StepType>(savedSession?.step || 'landing');
   const [selectedFrame, setSelectedFrame] = useState<FrameTemplate | null>(savedSession?.selectedFrame || null);
   // Custom nama daerah/kota untuk bingkai bertema koran (mis. ganti "DENPASAR"
