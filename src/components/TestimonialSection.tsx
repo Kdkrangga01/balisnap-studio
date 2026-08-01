@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Star, MessageSquarePlus, Heart, Sparkles } from 'lucide-react';
+import { Star, MessageSquarePlus, Heart, Sparkles, Loader2 } from 'lucide-react';
 import {
   getFeedbacks,
-  fetchFeedbacks,
   getFeedbackStats,
-  STORAGE_KEY,
-  FEEDBACK_UPDATED_EVENT,
+  subscribeToFeedbacks,
   type FeedbackItem
 } from '../lib/feedbackDb';
 
@@ -18,58 +16,35 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [stats, setStats] = useState({ average: 5.0, total: 0 });
   const [activeTab, setActiveTab] = useState<'semua' | 'ulasan' | 'saran' | 'kritik'>('semua');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<boolean>(false);
 
   const loadData = async () => {
-    // 1. Render immediately from local cache
-    const cached = getFeedbacks();
-    setFeedbacks(cached);
-    setStats(getFeedbackStats(cached));
-
-    // 2. Fetch latest data from Supabase Cloud DB
-    const latest = await fetchFeedbacks();
-    setFeedbacks(latest);
-    setStats(getFeedbackStats(latest));
+    try {
+      const [items, statsData] = await Promise.all([getFeedbacks(), getFeedbackStats()]);
+      setFeedbacks(items);
+      setStats(statsData);
+      setLoadError(false);
+    } catch (error) {
+      console.error('Gagal memuat testimoni:', error);
+      setLoadError(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     loadData();
 
-    // Same-tab updates (fires right after saveFeedback() runs in this window)
-    const handleSameTabUpdate = () => loadData();
-    window.addEventListener(FEEDBACK_UPDATED_EVENT, handleSameTabUpdate);
+    // Dengerin perubahan realtime dari Supabase — kalau ADA SIAPA SAJA,
+    // di device manapun, kirim testimoni baru, semua pengunjung lain
+    // (termasuk kamu) otomatis lihat update-nya tanpa refresh.
+    const unsubscribe = subscribeToFeedbacks(() => {
+      loadData();
+    });
 
-    // Cross-tab updates
-    const handleStorageUpdate = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) {
-        loadData();
-      }
-    };
-    window.addEventListener('storage', handleStorageUpdate);
-
-    // Periodic poll every 15 seconds so new testimonials from other devices automatically appear
-    const pollInterval = setInterval(() => {
-      fetchFeedbacks().then((latest) => {
-        setFeedbacks(latest);
-        setStats(getFeedbackStats(latest));
-      });
-    }, 15000);
-
-    // Refresh when tab gains focus
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        loadData();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-
-    return () => {
-      window.removeEventListener(FEEDBACK_UPDATED_EVENT, handleSameTabUpdate);
-      window.removeEventListener('storage', handleStorageUpdate);
-      clearInterval(pollInterval);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
+    return () => unsubscribe();
   }, []);
-
 
   const filteredFeedbacks = feedbacks.filter((item) => {
     if (activeTab === 'semua') return true;
@@ -166,74 +141,96 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
           </div>
         </div>
 
+        {/* Loading / Error / Empty states */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+            <Loader2 className="w-8 h-8 animate-spin mb-3" />
+            <p className="text-sm font-medium">Memuat testimoni...</p>
+          </div>
+        )}
+
+        {!isLoading && loadError && (
+          <div className="text-center py-16 text-rose-500 text-sm font-medium bg-rose-50 rounded-2xl border border-rose-100 max-w-md mx-auto">
+            Gagal memuat testimoni. Cek koneksi internet kamu, lalu muat ulang halaman.
+          </div>
+        )}
+
+        {!isLoading && !loadError && filteredFeedbacks.length === 0 && (
+          <div className="text-center py-16 text-gray-400 text-sm font-medium">
+            Belum ada masukan untuk kategori ini.
+          </div>
+        )}
+
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredFeedbacks.map((item, idx) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.35, delay: idx * 0.08 }}
-              className="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-gray-100 shadow-xl shadow-gray-100/50 hover:shadow-2xl hover:border-pink-200 transition-all flex flex-col justify-between relative group"
-            >
-              <div className="space-y-4">
-                {/* Header: User Info & Category Badge */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${item.avatarColor || 'from-pink-500 to-rose-400'
-                        } text-white font-bold flex items-center justify-center shadow-md shadow-pink-500/10 text-sm`}
-                    >
-                      {item.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-900 text-sm">{item.name}</h4>
-                      <div className="flex text-amber-400 mt-0.5">
-                        {[...Array(item.rating)].map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
-                        ))}
+        {!isLoading && !loadError && filteredFeedbacks.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredFeedbacks.map((item, idx) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: idx * 0.08 }}
+                className="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-gray-100 shadow-xl shadow-gray-100/50 hover:shadow-2xl hover:border-pink-200 transition-all flex flex-col justify-between relative group"
+              >
+                <div className="space-y-4">
+                  {/* Header: User Info & Category Badge */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${item.avatarColor || 'from-pink-500 to-rose-400'
+                          } text-white font-bold flex items-center justify-center shadow-md shadow-pink-500/10 text-sm`}
+                      >
+                        {item.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-sm">{item.name}</h4>
+                        <div className="flex text-amber-400 mt-0.5">
+                          {[...Array(item.rating)].map((_, i) => (
+                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
+                          ))}
+                        </div>
                       </div>
                     </div>
+
+                    {/* Category Badge */}
+                    <span
+                      className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${item.category === 'ulasan'
+                          ? 'bg-pink-50 text-pink-600 border border-pink-100'
+                          : item.category === 'saran'
+                            ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                            : 'bg-purple-50 text-purple-600 border border-purple-100'
+                        }`}
+                    >
+                      {item.category === 'ulasan' && '🌟 Ulasan'}
+                      {item.category === 'saran' && '💡 Saran'}
+                      {item.category === 'kritik' && '🛠️ Kritik'}
+                    </span>
                   </div>
 
-                  {/* Category Badge */}
-                  <span
-                    className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${item.category === 'ulasan'
-                        ? 'bg-pink-50 text-pink-600 border border-pink-100'
-                        : item.category === 'saran'
-                          ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                          : 'bg-purple-50 text-purple-600 border border-purple-100'
-                      }`}
-                  >
-                    {item.category === 'ulasan' && '🌟 Ulasan'}
-                    {item.category === 'saran' && '💡 Saran'}
-                    {item.category === 'kritik' && '🛠️ Kritik'}
-                  </span>
+                  {/* Comment Text */}
+                  <p className="text-xs md:text-sm text-gray-700 leading-relaxed font-normal italic">
+                    "{item.comment}"
+                  </p>
                 </div>
 
-                {/* Comment Text */}
-                <p className="text-xs md:text-sm text-gray-700 leading-relaxed font-normal italic">
-                  "{item.comment}"
-                </p>
-              </div>
-
-              {/* Footer info: Date */}
-              <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400 font-medium">
-                <span>
-                  {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                  })}
-                </span>
-                <span className="flex items-center text-pink-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Heart className="w-3 h-3 fill-pink-500 mr-1" /> Verified User
-                </span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                {/* Footer info: Date */}
+                <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400 font-medium">
+                  <span>
+                    {new Date(item.createdAt).toLocaleDateString('id-ID', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    })}
+                  </span>
+                  <span className="flex items-center text-pink-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Heart className="w-3 h-3 fill-pink-500 mr-1" /> Verified User
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

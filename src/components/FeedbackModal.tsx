@@ -37,6 +37,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
     try {
       setIsSaving(true);
+      setErrorMsg('');
+
       await saveFeedback({
         name: senderName,
         rating,
@@ -44,9 +46,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         comment: comment.trim()
       });
 
-      // Only show the success screen if the save actually succeeded
+      // Hanya tampilkan layar sukses kalau beneran kesimpen di database
       setIsSubmitted(true);
-      setErrorMsg('');
 
       // Trigger celebratory confetti
       confetti({
@@ -57,12 +58,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       });
     } catch (error) {
       console.error('Gagal menyimpan feedback:', error);
-      setErrorMsg('Gagal menyimpan masukan Anda. Coba lagi, atau muat ulang halaman.');
+      setErrorMsg('Gagal mengirim masukan Anda. Cek koneksi internet, lalu coba lagi.');
     } finally {
       setIsSaving(false);
     }
   };
-
 
   const handleReset = () => {
     setIsSubmitted(false);
