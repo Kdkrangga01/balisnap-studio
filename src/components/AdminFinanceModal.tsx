@@ -13,7 +13,8 @@ import {
   HelpCircle,
   ImageIcon,
   Eye,
-  ExternalLink
+  ExternalLink,
+  RefreshCw
 } from 'lucide-react';
 
 import { usePhotobooth, type PackageTier } from '../context/PhotoboothContext';
@@ -32,6 +33,7 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
     addTransaction,
     deleteTransaction,
     clearTransactions,
+    refreshTransactions,
     ownerPasscode,
     setOwnerPasscode,
     verifyOwnerPasscode,
@@ -40,11 +42,18 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
     setPackageTier,
   } = usePhotobooth();
 
-
   const [inputUser, setInputUser] = useState('admin');
   const [inputPasscode, setInputPasscode] = useState('');
   const [passError, setPassError] = useState('');
   const [activeTab, setActiveTab] = useState<'overview' | 'addManual' | 'settings'>('overview');
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  React.useEffect(() => {
+    if (isOpen && refreshTransactions) {
+      setIsSyncing(true);
+      refreshTransactions().finally(() => setIsSyncing(false));
+    }
+  }, [isOpen, refreshTransactions]);
 
 
   // State for Modal Preview Bukti Bayar
@@ -260,23 +269,39 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                   </button>
                 </div>
 
-                {packageTier === 'premium' ? (
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
-                    onClick={handleUnlockMyOwnerVIP}
-                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white text-xs font-black rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all border border-emerald-400/30"
+                    onClick={async () => {
+                      setIsSyncing(true);
+                      await refreshTransactions();
+                      setIsSyncing(false);
+                    }}
+                    disabled={isSyncing}
+                    className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all border border-zinc-700/50 disabled:opacity-50"
+                    title="Sinkronkan data transaksi dengan Supabase Cloud Database"
                   >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                    <span>Status VIP Owner: AKTIF ✅</span>
+                    <RefreshCw className={`w-3.5 h-3.5 text-purple-400 ${isSyncing ? 'animate-spin' : ''}`} />
+                    <span>{isSyncing ? 'Singkron...' : 'Sync Cloud'}</span>
                   </button>
-                ) : (
-                  <button
-                    onClick={handleUnlockMyOwnerVIP}
-                    className="px-4 py-2 bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600 text-white text-xs font-black rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
-                  >
-                    <Crown className="w-4 h-4 text-amber-200" />
-                    <span>Buka Akses Premium Saya Sekarang 👑</span>
-                  </button>
-                )}
+
+                  {packageTier === 'premium' ? (
+                    <button
+                      onClick={handleUnlockMyOwnerVIP}
+                      className="px-4 py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white text-xs font-black rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all border border-emerald-400/30"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                      <span>Status VIP Owner: AKTIF ✅</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleUnlockMyOwnerVIP}
+                      className="px-4 py-2 bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600 text-white text-xs font-black rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                    >
+                      <Crown className="w-4 h-4 text-amber-200" />
+                      <span>Buka Akses Premium Saya Sekarang 👑</span>
+                    </button>
+                  )}
+                </div>
 
               </div>
 

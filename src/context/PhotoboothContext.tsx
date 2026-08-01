@@ -1,11 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/frameDb';
 import { stickerPacks } from '../data/stickers';
 import { fetchCloudTransactions, saveCloudTransaction, deleteCloudTransaction, isSupabaseConfigured } from '../lib/supabase';
 import { getStickerCornerPosition } from '../lib/stickerPlacement';
-
 
 // Konstanta zoom foto, dipakai bareng oleh context & kanvas biar konsisten.
 export const DEFAULT_PHOTO_ZOOM = 1.0; // level zoom awal (contain-fit otomatis: seluruh foto kelihatan pas di slot bingkai, kiri-kanan-atas-bawah tidak terpotong)
@@ -200,6 +199,7 @@ interface PhotoboothContextProps {
   addTransaction: (record: Omit<TransactionRecord, 'id' | 'date'> & { id?: string; date?: string }) => TransactionRecord;
   clearTransactions: () => void;
   deleteTransaction: (id: string) => void;
+  refreshTransactions: () => Promise<void>;
   isAdminOpen: boolean;
   setIsAdminOpen: (open: boolean) => void;
   verifyOwnerPasscode: (passcode: string, username?: string) => boolean;
@@ -355,19 +355,63 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   });
 
 
-  // Automatically fetch real-time transactions from Supabase Cloud on load
-  useEffect(() => {
-    if (isSupabaseConfigured()) {
-      fetchCloudTransactions().then(cloudData => {
-        if (cloudData && cloudData.length > 0) {
-          setTransactions(cloudData);
-          try {
-            localStorage.setItem('balisnap_transactions_v1', JSON.stringify(cloudData));
-          } catch {}
+  // Real-time Cloud Synchronization & Local Unsynced Data Upload
+  const syncCloudTransactions = useCallback(async () => {
+    if (!isSupabaseConfigured()) return;
+
+    try {
+      const cloudData = await fetchCloudTransactions();
+      if (cloudData !== null) {
+        // Read local storage transactions
+        let localData: TransactionRecord[] = [];
+        try {
+          const saved = localStorage.getItem('balisnap_transactions_v1');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) localData = parsed;
+          }
+        } catch {}
+
+        // Find local transactions missing from cloud
+        const cloudIds = new Set(cloudData.map(t => t.id));
+        const unsynced = localData.filter(t => t.id && !cloudIds.has(t.id));
+
+        if (unsynced.length > 0) {
+          for (const record of unsynced) {
+            await saveCloudTransaction(record);
+          }
+          const updatedCloud = await fetchCloudTransactions();
+          if (updatedCloud) {
+            setTransactions(updatedCloud);
+            try {
+              localStorage.setItem('balisnap_transactions_v1', JSON.stringify(updatedCloud));
+            } catch {}
+            return;
+          }
         }
-      });
+
+        setTransactions(cloudData);
+        try {
+          localStorage.setItem('balisnap_transactions_v1', JSON.stringify(cloudData));
+        } catch {}
+      }
+    } catch (error) {
+      console.warn('Sync cloud transactions error:', error);
     }
   }, []);
+
+  useEffect(() => {
+    syncCloudTransactions();
+    // Poll every 8 seconds for new transactions across devices
+    const interval = setInterval(() => {
+      syncCloudTransactions();
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [syncCloudTransactions]);
+
+  const refreshTransactions = useCallback(async () => {
+    await syncCloudTransactions();
+  }, [syncCloudTransactions]);
 
   const addTransaction = (record: Omit<TransactionRecord, 'id' | 'date'> & { id?: string; date?: string }) => {
     const now = new Date();
@@ -387,8 +431,6 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       customerNote: record.customerNote || '',
     };
 
-
-
     // Save to local state
     setTransactions(prev => {
       const updated = [newRecord, ...prev];
@@ -400,7 +442,9 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     // Save to Supabase Cloud Database asynchronously
     if (isSupabaseConfigured()) {
-      saveCloudTransaction(newRecord).catch(err => {
+      saveCloudTransaction(newRecord).then(() => {
+        syncCloudTransactions();
+      }).catch(err => {
         console.warn('Supabase cloud background save error:', err);
       });
     }
@@ -869,7 +913,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       addCustomFrame, deleteCustomFrame,
       customHeadline, setCustomHeadline,
       customLocations, setCustomLocationLine, resetCustomLocations,
-      transactions, addTransaction, clearTransactions, deleteTransaction,
+      transactions, addTransaction, clearTransactions, deleteTransaction, refreshTransactions,
       isAdminOpen, setIsAdminOpen, verifyOwnerPasscode, isOwnerAuthenticated, setIsOwnerAuthenticated,
       ownerPasscode, setOwnerPasscode
     }}>
