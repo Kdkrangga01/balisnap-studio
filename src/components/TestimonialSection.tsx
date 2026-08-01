@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Star, MessageSquarePlus, Heart, Sparkles } from 'lucide-react';
-import { getFeedbacks, getFeedbackStats, type FeedbackItem } from '../lib/feedbackDb';
+import {
+  getFeedbacks,
+  getFeedbackStats,
+  STORAGE_KEY,
+  FEEDBACK_UPDATED_EVENT,
+  type FeedbackItem
+} from '../lib/feedbackDb';
 
 interface TestimonialSectionProps {
   onOpenFeedbackModal: () => void;
@@ -10,7 +16,7 @@ interface TestimonialSectionProps {
 export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFeedbackModal }) => {
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [stats, setStats] = useState({ average: 5.0, total: 0 });
-  const [activeTab, setActiveTab] = useState<'semua' | 'ulasan' | 'saran'>('semua');
+  const [activeTab, setActiveTab] = useState<'semua' | 'ulasan' | 'saran' | 'kritik'>('semua');
 
   const loadData = () => {
     setFeedbacks(getFeedbacks());
@@ -19,9 +25,25 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
 
   useEffect(() => {
     loadData();
-    const handleUpdate = () => loadData();
-    window.addEventListener('balisnap_feedback_updated', handleUpdate);
-    return () => window.removeEventListener('balisnap_feedback_updated', handleUpdate);
+
+    // Same-tab updates (fires right after saveFeedback() runs in this window)
+    const handleSameTabUpdate = () => loadData();
+    window.addEventListener(FEEDBACK_UPDATED_EVENT, handleSameTabUpdate);
+
+    // Cross-tab updates: the native "storage" event only fires in OTHER
+    // tabs/windows when localStorage changes — this is what makes a new
+    // review show up even if it was submitted from a different tab.
+    const handleStorageUpdate = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        loadData();
+      }
+    };
+    window.addEventListener('storage', handleStorageUpdate);
+
+    return () => {
+      window.removeEventListener(FEEDBACK_UPDATED_EVENT, handleSameTabUpdate);
+      window.removeEventListener('storage', handleStorageUpdate);
+    };
   }, []);
 
   const filteredFeedbacks = feedbacks.filter((item) => {
@@ -79,36 +101,42 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
 
         {/* Filter Tabs */}
         <div className="flex justify-center mb-10">
-          <div className="inline-flex p-1.5 bg-gray-100/80 backdrop-blur-sm rounded-2xl space-x-1 border border-gray-200/60">
+          <div className="inline-flex flex-wrap justify-center p-1.5 bg-gray-100/80 backdrop-blur-sm rounded-2xl gap-1 border border-gray-200/60">
             <button
               onClick={() => setActiveTab('semua')}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'semua'
+              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${activeTab === 'semua'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
-              }`}
+                }`}
             >
               Semua ({feedbacks.length})
             </button>
             <button
               onClick={() => setActiveTab('ulasan')}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${
-                activeTab === 'ulasan'
+              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${activeTab === 'ulasan'
                   ? 'bg-white text-pink-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
-              }`}
+                }`}
             >
               <span>🌟 Ulasan</span>
             </button>
             <button
               onClick={() => setActiveTab('saran')}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${
-                activeTab === 'saran'
+              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${activeTab === 'saran'
                   ? 'bg-white text-amber-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
-              }`}
+                }`}
             >
               <span>💡 Saran</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('kritik')}
+              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${activeTab === 'kritik'
+                  ? 'bg-white text-purple-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+                }`}
+            >
+              <span>🛠️ Kritik</span>
             </button>
           </div>
         </div>
@@ -129,9 +157,8 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
                     <div
-                      className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${
-                        item.avatarColor || 'from-pink-500 to-rose-400'
-                      } text-white font-bold flex items-center justify-center shadow-md shadow-pink-500/10 text-sm`}
+                      className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${item.avatarColor || 'from-pink-500 to-rose-400'
+                        } text-white font-bold flex items-center justify-center shadow-md shadow-pink-500/10 text-sm`}
                     >
                       {item.name.charAt(0).toUpperCase()}
                     </div>
@@ -147,13 +174,12 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
 
                   {/* Category Badge */}
                   <span
-                    className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
-                      item.category === 'ulasan'
+                    className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${item.category === 'ulasan'
                         ? 'bg-pink-50 text-pink-600 border border-pink-100'
                         : item.category === 'saran'
-                        ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                        : 'bg-purple-50 text-purple-600 border border-purple-100'
-                    }`}
+                          ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                          : 'bg-purple-50 text-purple-600 border border-purple-100'
+                      }`}
                   >
                     {item.category === 'ulasan' && '🌟 Ulasan'}
                     {item.category === 'saran' && '💡 Saran'}

@@ -60,6 +60,16 @@ export async function fetchCloudTransactions(): Promise<TransactionRecord[] | nu
 
 /**
  * Menyimpan transaksi baru ke tabel `transactions` di Supabase Cloud secara real-time.
+ *
+ * FIX: Sekarang pakai UPSERT (on_conflict=id + Prefer: resolution=merge-duplicates)
+ * alih-alih INSERT biasa. Ini penting untuk mekanisme retry otomatis di
+ * PhotoboothContext: kalau percobaan simpan sebelumnya sempat berhasil sebagian
+ * di server tapi response-nya putus di tengah jalan (koneksi HP/WiFi goyang),
+ * retry berikutnya TIDAK akan gagal karena "duplicate key" — data tetap
+ * konsisten dan otomatis ter-update, bukan ditolak.
+ *
+ * CATATAN: kolom `id` di tabel `transactions` pada Supabase harus berstatus
+ * PRIMARY KEY / UNIQUE constraint supaya on_conflict=id ini berfungsi.
  */
 export async function saveCloudTransaction(record: TransactionRecord): Promise<boolean> {
   if (!isSupabaseConfigured()) return false;
@@ -77,12 +87,17 @@ export async function saveCloudTransaction(record: TransactionRecord): Promise<b
     customer_note: record.customerNote || '',
   };
 
+  const upsertHeaders = {
+    ...getHeaders(),
+    'Prefer': 'resolution=merge-duplicates,return=representation',
+  };
+
   // Attempt save with up to 3 retries for high reliability on mobile networks
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/transactions?on_conflict=id`, {
         method: 'POST',
-        headers: getHeaders(),
+        headers: upsertHeaders,
         body: JSON.stringify(payload),
       });
 
@@ -95,8 +110,8 @@ export async function saveCloudTransaction(record: TransactionRecord): Promise<b
     } catch (error) {
       console.error(`Supabase save attempt ${attempt} error:`, error);
     }
-    // Wait 500ms before retry
-    await new Promise(r => setTimeout(r, 500));
+    // Wait before retry (naik bertahap: 500ms, 1000ms, 1500ms)
+    await new Promise(r => setTimeout(r, 500 * attempt));
   }
 
   return false;

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/frameDb';
@@ -355,7 +355,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setOwnerPasscodeState(trimmed);
     try {
       localStorage.setItem('balisnap_owner_passcode', trimmed);
-    } catch {}
+    } catch { }
   };
 
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
@@ -369,7 +369,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
       }
-    } catch {}
+    } catch { }
     // Initial sample data so user immediately sees populated transactions in Excel export!
     return [
       {
@@ -397,6 +397,18 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     ];
   });
 
+  // ===== FIX: Antrian transaksi "PENDING" (belum terkonfirmasi tersimpan di cloud) =====
+  // Sebelumnya, transaksi baru yang baru ditambahkan (addTransaction) bisa
+  // hilang / tertimpa saat polling sync ke Supabase (tiap 4 detik) kebetulan
+  // jalan SEBELUM proses simpan ke cloud selesai — karena sync lama langsung
+  // mengganti seluruh state `transactions` dengan data cloud apa adanya.
+  //
+  // pendingSyncRef menyimpan transaksi yang sudah tampil di layar tapi belum
+  // pasti sudah ada di cloud. Saat sync jalan, transaksi pending ini akan
+  // tetap dipertahankan (tidak ditimpa) dan otomatis dicoba disimpan ulang
+  // kalau ternyata percobaan sebelumnya gagal (mis. koneksi HP putus-putus).
+  const pendingSyncRef = useRef<Map<string, TransactionRecord>>(new Map());
+
 
   // Real-time Cloud Synchronization from Supabase Cloud Database (Single Source of Truth)
   const syncCloudTransactions = useCallback(async () => {
@@ -405,10 +417,35 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     try {
       const cloudData = await fetchCloudTransactions();
       if (cloudData !== null) {
-        setTransactions(cloudData);
+        const cloudIds = new Set(cloudData.map(t => t.id));
+
+        // Transaksi yang masih berstatus pending (belum kekonfirmasi ada di
+        // cloud) TETAP dipertahankan di atas hasil cloud, supaya tidak
+        // hilang / tertimpa walau polling sync ini kebetulan jalan duluan
+        // sebelum proses simpannya selesai.
+        const stillPending = Array.from(pendingSyncRef.current.values()).filter(
+          (t) => !cloudIds.has(t.id)
+        );
+
+        const merged = stillPending.length > 0 ? [...stillPending, ...cloudData] : cloudData;
+
+        setTransactions(merged);
         try {
-          localStorage.setItem('balisnap_transactions_v1', JSON.stringify(cloudData));
-        } catch {}
+          localStorage.setItem('balisnap_transactions_v1', JSON.stringify(merged));
+        } catch { }
+
+        // Auto-retry: coba simpan ulang di background transaksi yang masih
+        // pending (misal percobaan sebelumnya gagal karena jaringan jelek).
+        // Begitu berhasil, akan otomatis lolos dari daftar pending di sync berikutnya.
+        stillPending.forEach((record) => {
+          saveCloudTransaction(record)
+            .then((ok) => {
+              if (ok) {
+                pendingSyncRef.current.delete(record.id);
+              }
+            })
+            .catch(() => { });
+        });
       }
     } catch (error) {
       console.warn('Sync cloud transactions error:', error);
@@ -446,22 +483,36 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       customerNote: record.customerNote || '',
     };
 
-    // Save to local state
+    // FIX: tandai sebagai "pending" SEBELUM disimpan ke cloud. Ini memastikan
+    // walau polling sync (tiap 4 detik) kebetulan jalan bersamaan, transaksi
+    // baru ini tidak akan pernah tertimpa / hilang dari layar admin.
+    pendingSyncRef.current.set(newRecord.id, newRecord);
+
+    // Save to local state (optimistic update — langsung kelihatan di layar)
     setTransactions(prev => {
       const updated = [newRecord, ...prev];
       try {
         localStorage.setItem('balisnap_transactions_v1', JSON.stringify(updated));
-      } catch {}
+      } catch { }
       return updated;
     });
 
-    // Save to Supabase Cloud Database asynchronously
+    // Save to Supabase Cloud Database secara otomatis di background
     if (isSupabaseConfigured()) {
-      saveCloudTransaction(newRecord).then(() => {
-        syncCloudTransactions();
-      }).catch(err => {
-        console.warn('Supabase cloud background save error:', err);
-      });
+      saveCloudTransaction(newRecord)
+        .then((ok) => {
+          if (ok) {
+            pendingSyncRef.current.delete(newRecord.id);
+          }
+          // Sync ulang supaya dashboard admin di device lain (HP/laptop lain)
+          // langsung dapat data transaksi terbaru ini juga.
+          syncCloudTransactions();
+        })
+        .catch(err => {
+          console.warn('Supabase cloud background save error:', err);
+          // Tetap dibiarkan berstatus pending — akan otomatis dicoba lagi
+          // pada siklus polling sync berikutnya (lihat syncCloudTransactions).
+        });
     }
 
     return newRecord;
@@ -469,17 +520,19 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const clearTransactions = () => {
     setTransactions([]);
+    pendingSyncRef.current.clear();
     try {
       localStorage.removeItem('balisnap_transactions_v1');
-    } catch {}
+    } catch { }
   };
 
   const deleteTransaction = (id: string) => {
+    pendingSyncRef.current.delete(id);
     setTransactions(prev => {
       const updated = prev.filter(t => t.id !== id);
       try {
         localStorage.setItem('balisnap_transactions_v1', JSON.stringify(updated));
-      } catch {}
+      } catch { }
       return updated;
     });
 

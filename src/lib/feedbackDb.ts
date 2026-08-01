@@ -8,7 +8,8 @@ export interface FeedbackItem {
   avatarColor?: string;
 }
 
-const STORAGE_KEY = 'balisnap_user_feedbacks_v1';
+export const STORAGE_KEY = 'balisnap_user_feedbacks_v1';
+export const FEEDBACK_UPDATED_EVENT = 'balisnap_feedback_updated';
 
 // Initial high quality sample reviews
 const INITIAL_FEEDBACKS: FeedbackItem[] = [
@@ -65,6 +66,13 @@ export function getFeedbacks(): FeedbackItem[] {
   }
 }
 
+/**
+ * Saves a new feedback entry.
+ * IMPORTANT: throws an Error if persisting to localStorage fails
+ * (quota exceeded, private browsing, storage disabled, etc.)
+ * so the caller (FeedbackModal) can show a real error instead of
+ * a false "success" message.
+ */
 export function saveFeedback(item: Omit<FeedbackItem, 'id' | 'createdAt'>): FeedbackItem {
   const existing = getFeedbacks();
   const colors = [
@@ -84,12 +92,18 @@ export function saveFeedback(item: Omit<FeedbackItem, 'id' | 'createdAt'>): Feed
   };
 
   const updated = [newItem, ...existing];
+
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    window.dispatchEvent(new Event('balisnap_feedback_updated'));
   } catch (error) {
     console.error('Failed to save feedback to localStorage:', error);
+    // Re-throw so the UI knows the save actually failed
+    throw new Error('STORAGE_SAVE_FAILED');
   }
+
+  // Notify listeners in the SAME tab (storage event doesn't fire in the
+  // tab that made the change, only in OTHER tabs).
+  window.dispatchEvent(new Event(FEEDBACK_UPDATED_EVENT));
 
   return newItem;
 }

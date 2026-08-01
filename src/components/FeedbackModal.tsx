@@ -21,6 +21,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   const [name, setName] = useState<string>('');
   const [comment, setComment] = useState<string>('');
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
   if (!isOpen) return null;
@@ -34,23 +35,32 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
     const senderName = name.trim() || 'Pengunjung Studio';
 
-    saveFeedback({
-      name: senderName,
-      rating,
-      category,
-      comment: comment.trim()
-    });
+    try {
+      setIsSaving(true);
+      saveFeedback({
+        name: senderName,
+        rating,
+        category,
+        comment: comment.trim()
+      });
 
-    setIsSubmitted(true);
-    setErrorMsg('');
+      // Only show the success screen if the save actually succeeded
+      setIsSubmitted(true);
+      setErrorMsg('');
 
-    // Trigger celebratory confetti
-    confetti({
-      particleCount: 50,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#FF2A85', '#FF73B3', '#FBBF24', '#10B981']
-    });
+      // Trigger celebratory confetti
+      confetti({
+        particleCount: 50,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#FF2A85', '#FF73B3', '#FBBF24', '#10B981']
+      });
+    } catch (error) {
+      console.error('Gagal menyimpan feedback:', error);
+      setErrorMsg('Gagal menyimpan masukan Anda. Coba lagi, atau muat ulang halaman.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleReset = () => {
@@ -58,6 +68,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
     setName('');
     setComment('');
     setRating(5);
+    setCategory(defaultCategory);
+    setErrorMsg('');
     onClose();
   };
 
@@ -124,33 +136,30 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setCategory('ulasan')}
-                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1 ${
-                        category === 'ulasan'
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1 ${category === 'ulasan'
                           ? 'bg-white text-pink-600 shadow-sm font-bold'
                           : 'text-gray-600 hover:text-gray-900'
-                      }`}
+                        }`}
                     >
                       <span>🌟 Ulasan</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setCategory('saran')}
-                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1 ${
-                        category === 'saran'
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1 ${category === 'saran'
                           ? 'bg-white text-amber-600 shadow-sm font-bold'
                           : 'text-gray-600 hover:text-gray-900'
-                      }`}
+                        }`}
                     >
                       <span>💡 Saran</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setCategory('kritik')}
-                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1 ${
-                        category === 'kritik'
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1 ${category === 'kritik'
                           ? 'bg-white text-purple-600 shadow-sm font-bold'
                           : 'text-gray-600 hover:text-gray-900'
-                      }`}
+                        }`}
                     >
                       <span>🛠️ Kritik</span>
                     </button>
@@ -175,11 +184,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                           className="p-1 transition-transform hover:scale-125 focus:outline-none"
                         >
                           <Star
-                            className={`w-8 h-8 ${
-                              isActive
+                            className={`w-8 h-8 ${isActive
                                 ? 'text-amber-400 fill-amber-400 drop-shadow-sm'
                                 : 'text-gray-300'
-                            }`}
+                              }`}
                           />
                         </button>
                       );
@@ -219,8 +227,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                       category === 'ulasan'
                         ? 'Tuliskan kesan & pengalaman serumu berfoto di BaliSnap Studio...'
                         : category === 'saran'
-                        ? 'Ide atau fitur apa yang ingin Anda tambahkan di BaliSnap Studio?'
-                        : 'Apa kendala atau kekurangan yang perlu kami perbaiki?'
+                          ? 'Ide atau fitur apa yang ingin Anda tambahkan di BaliSnap Studio?'
+                          : 'Apa kendala atau kekurangan yang perlu kami perbaiki?'
                     }
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
@@ -245,9 +253,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white text-xs font-bold rounded-xl shadow-md shadow-pink-500/20 hover:shadow-pink-500/35 hover:scale-[1.02] transition-all flex items-center space-x-2"
+                    disabled={isSaving}
+                    className="px-6 py-2.5 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white text-xs font-bold rounded-xl shadow-md shadow-pink-500/20 hover:shadow-pink-500/35 hover:scale-[1.02] transition-all flex items-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
-                    <span>Kirim Masukan</span>
+                    <span>{isSaving ? 'Mengirim...' : 'Kirim Masukan'}</span>
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
