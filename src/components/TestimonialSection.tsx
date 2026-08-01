@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Star, MessageSquarePlus, Heart, Sparkles } from 'lucide-react';
 import {
   getFeedbacks,
+  fetchFeedbacks,
   getFeedbackStats,
   STORAGE_KEY,
   FEEDBACK_UPDATED_EVENT,
@@ -18,9 +19,16 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
   const [stats, setStats] = useState({ average: 5.0, total: 0 });
   const [activeTab, setActiveTab] = useState<'semua' | 'ulasan' | 'saran' | 'kritik'>('semua');
 
-  const loadData = () => {
-    setFeedbacks(getFeedbacks());
-    setStats(getFeedbackStats());
+  const loadData = async () => {
+    // 1. Render immediately from local cache
+    const cached = getFeedbacks();
+    setFeedbacks(cached);
+    setStats(getFeedbackStats(cached));
+
+    // 2. Fetch latest data from Supabase Cloud DB
+    const latest = await fetchFeedbacks();
+    setFeedbacks(latest);
+    setStats(getFeedbackStats(latest));
   };
 
   useEffect(() => {
@@ -30,9 +38,7 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
     const handleSameTabUpdate = () => loadData();
     window.addEventListener(FEEDBACK_UPDATED_EVENT, handleSameTabUpdate);
 
-    // Cross-tab updates: the native "storage" event only fires in OTHER
-    // tabs/windows when localStorage changes — this is what makes a new
-    // review show up even if it was submitted from a different tab.
+    // Cross-tab updates
     const handleStorageUpdate = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY) {
         loadData();
@@ -40,11 +46,30 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
     };
     window.addEventListener('storage', handleStorageUpdate);
 
+    // Periodic poll every 15 seconds so new testimonials from other devices automatically appear
+    const pollInterval = setInterval(() => {
+      fetchFeedbacks().then((latest) => {
+        setFeedbacks(latest);
+        setStats(getFeedbackStats(latest));
+      });
+    }, 15000);
+
+    // Refresh when tab gains focus
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
       window.removeEventListener(FEEDBACK_UPDATED_EVENT, handleSameTabUpdate);
       window.removeEventListener('storage', handleStorageUpdate);
+      clearInterval(pollInterval);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
+
 
   const filteredFeedbacks = feedbacks.filter((item) => {
     if (activeTab === 'semua') return true;

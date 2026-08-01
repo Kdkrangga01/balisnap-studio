@@ -58,3 +58,40 @@ USING (true);
 
 -- 8. Indeks untuk mempercepat pencarian data berdasarkan tanggal
 CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON public.transactions(created_at DESC);
+
+-- ===============================================================
+-- 9. Buat Tabel `feedbacks` (Ulasan, Kritik & Saran)
+-- ===============================================================
+CREATE TABLE IF NOT EXISTS public.feedbacks (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL DEFAULT 'Pengunjung Studio',
+    rating INT NOT NULL DEFAULT 5,
+    category TEXT NOT NULL DEFAULT 'ulasan',
+    comment TEXT NOT NULL,
+    avatar_color TEXT DEFAULT 'from-pink-500 to-rose-400',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Aktifkan Row Level Security (RLS) pada tabel feedbacks
+ALTER TABLE public.feedbacks ENABLE ROW LEVEL SECURITY;
+
+-- Hapus policy lama jika ada
+DROP POLICY IF EXISTS "Allow public read access on feedbacks" ON public.feedbacks;
+DROP POLICY IF EXISTS "Allow public insert access on feedbacks" ON public.feedbacks;
+DROP POLICY IF EXISTS "Allow public delete access on feedbacks" ON public.feedbacks;
+
+-- Izinkan Akses Baca (SELECT) untuk Publik/Anonim
+CREATE POLICY "Allow public read access on feedbacks"
+ON public.feedbacks FOR SELECT USING (true);
+
+-- Izinkan Akses Tambah (INSERT) untuk Publik/Anonim
+CREATE POLICY "Allow public insert access on feedbacks"
+ON public.feedbacks FOR INSERT WITH CHECK (true);
+
+-- Izinkan Akses Hapus (DELETE) untuk Admin/Anonim
+CREATE POLICY "Allow public delete access on feedbacks"
+ON public.feedbacks FOR DELETE USING (true);
+
+-- Indeks untuk mempercepat pengurutan ulasan berdasarkan tanggal
+CREATE INDEX IF NOT EXISTS idx_feedbacks_created_at ON public.feedbacks(created_at DESC);
+

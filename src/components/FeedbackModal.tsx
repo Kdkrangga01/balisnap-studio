@@ -26,7 +26,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!comment.trim()) {
       setErrorMsg('Mohon tuliskan ulasan, kritik, atau saran Anda.');
@@ -37,7 +37,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
     try {
       setIsSaving(true);
-      saveFeedback({
+      await saveFeedback({
         name: senderName,
         rating,
         category,
@@ -62,6 +62,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       setIsSaving(false);
     }
   };
+
 
   const handleReset = () => {
     setIsSubmitted(false);

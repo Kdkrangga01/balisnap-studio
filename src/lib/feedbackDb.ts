@@ -1,3 +1,5 @@
+import { fetchCloudFeedbacks, saveCloudFeedback } from './supabase';
+
 export interface FeedbackItem {
   id: string;
   name: string;
@@ -51,6 +53,9 @@ const INITIAL_FEEDBACKS: FeedbackItem[] = [
   }
 ];
 
+/**
+ * Returns currently cached feedbacks from LocalStorage synchronously.
+ */
 export function getFeedbacks(): FeedbackItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -67,13 +72,48 @@ export function getFeedbacks(): FeedbackItem[] {
 }
 
 /**
- * Saves a new feedback entry.
- * IMPORTANT: throws an Error if persisting to localStorage fails
- * (quota exceeded, private browsing, storage disabled, etc.)
- * so the caller (FeedbackModal) can show a real error instead of
- * a false "success" message.
+ * Fetches latest feedbacks from Supabase Cloud (if configured),
+ * merges them with local cache & sample initial feedbacks, and returns updated list.
  */
-export function saveFeedback(item: Omit<FeedbackItem, 'id' | 'createdAt'>): FeedbackItem {
+export async function fetchFeedbacks(): Promise<FeedbackItem[]> {
+  const localList = getFeedbacks();
+
+  try {
+    const cloudList = await fetchCloudFeedbacks();
+    if (cloudList && Array.isArray(cloudList)) {
+      // Merge cloud list with local list, avoiding duplicates by ID
+      const existingIds = new Set(cloudList.map((item) => item.id));
+
+      // Retain initial sample feedbacks or local-only pending items if not yet in cloud
+      const extraLocalItems = localList.filter((item) => !existingIds.has(item.id));
+
+      const merged = [...cloudList, ...extraLocalItems];
+
+      // Sort by creation date descending
+      merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      // Update local storage cache
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      } catch (e) {
+        console.warn('Failed to update local cache:', e);
+      }
+
+      return merged;
+    }
+  } catch (error) {
+    console.error('Failed to fetch cloud feedbacks:', error);
+  }
+
+  return localList;
+}
+
+/**
+ * Saves a new feedback entry.
+ * Saves to LocalStorage first, dispatches local update event,
+ * and asynchronously persists to Supabase Cloud DB.
+ */
+export async function saveFeedback(item: Omit<FeedbackItem, 'id' | 'createdAt'>): Promise<FeedbackItem> {
   const existing = getFeedbacks();
   const colors = [
     'from-pink-500 to-rose-400',
@@ -97,19 +137,24 @@ export function saveFeedback(item: Omit<FeedbackItem, 'id' | 'createdAt'>): Feed
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (error) {
     console.error('Failed to save feedback to localStorage:', error);
-    // Re-throw so the UI knows the save actually failed
     throw new Error('STORAGE_SAVE_FAILED');
   }
 
-  // Notify listeners in the SAME tab (storage event doesn't fire in the
-  // tab that made the change, only in OTHER tabs).
+  // Notify listeners in the SAME tab
   window.dispatchEvent(new Event(FEEDBACK_UPDATED_EVENT));
+
+  // Save to Supabase Cloud Database asynchronously
+  try {
+    await saveCloudFeedback(newItem);
+  } catch (cloudErr) {
+    console.warn('Failed to persist feedback to Supabase cloud:', cloudErr);
+  }
 
   return newItem;
 }
 
-export function getFeedbackStats() {
-  const feedbacks = getFeedbacks();
+export function getFeedbackStats(customFeedbacks?: FeedbackItem[]) {
+  const feedbacks = customFeedbacks || getFeedbacks();
   if (feedbacks.length === 0) {
     return { average: 5.0, total: 0 };
   }

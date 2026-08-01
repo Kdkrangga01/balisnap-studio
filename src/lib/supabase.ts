@@ -135,3 +135,97 @@ export async function deleteCloudTransaction(id: string): Promise<boolean> {
     return false;
   }
 }
+
+export interface CloudFeedbackItem {
+  id: string;
+  name: string;
+  rating: number;
+  category: 'ulasan' | 'saran' | 'kritik';
+  comment: string;
+  createdAt: string;
+  avatarColor?: string;
+}
+
+/**
+ * Mengambil daftar testimoni/ulasan dari tabel `feedbacks` di Supabase Cloud.
+ */
+export async function fetchCloudFeedbacks(): Promise<CloudFeedbackItem[] | null> {
+  if (!isSupabaseConfigured()) return null;
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/feedbacks?select=*&order=created_at.desc`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      if (errText.includes('PGRST205')) {
+        console.warn('⚠️ Tabel "feedbacks" belum dibuat di Supabase SQL Editor! Silakan jalankan script SQL di supabase_schema.sql.');
+      } else {
+        console.warn('Gagal mengambil feedback dari Supabase:', errText);
+      }
+      return null;
+    }
+
+    const data = await response.json();
+
+    return data.map((item: any) => ({
+      id: item.id,
+      name: item.name || 'Pengunjung Studio',
+      rating: Number(item.rating) || 5,
+      category: item.category || 'ulasan',
+      comment: item.comment || '',
+      createdAt: item.created_at || new Date().toISOString(),
+      avatarColor: item.avatar_color || 'from-pink-500 to-rose-400',
+    }));
+  } catch (error) {
+    console.error('Supabase fetch feedbacks error:', error);
+    return null;
+  }
+}
+
+
+/**
+ * Menyimpan ulasan baru ke tabel `feedbacks` di Supabase Cloud.
+ */
+export async function saveCloudFeedback(item: CloudFeedbackItem): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  const payload = {
+    id: item.id,
+    name: item.name,
+    rating: item.rating,
+    category: item.category,
+    comment: item.comment,
+    avatar_color: item.avatarColor || 'from-pink-500 to-rose-400',
+    created_at: item.createdAt,
+  };
+
+  const upsertHeaders = {
+    ...getHeaders(),
+    'Prefer': 'resolution=merge-duplicates,return=representation',
+  };
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/feedbacks?on_conflict=id`, {
+        method: 'POST',
+        headers: upsertHeaders,
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        return true;
+      }
+
+      const errText = await response.text();
+      console.warn(`Supabase save feedback attempt ${attempt} failed:`, errText);
+    } catch (error) {
+      console.error(`Supabase save feedback attempt ${attempt} error:`, error);
+    }
+    await new Promise((r) => setTimeout(r, 500 * attempt));
+  }
+
+  return false;
+}
