@@ -417,10 +417,10 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   useEffect(() => {
     syncCloudTransactions();
-    // Poll every 8 seconds for new transactions across devices
+    // Poll every 4 seconds for instant real-time transaction updates across devices
     const interval = setInterval(() => {
       syncCloudTransactions();
-    }, 8000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [syncCloudTransactions]);
 
@@ -484,7 +484,9 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
 
     if (isSupabaseConfigured()) {
-      deleteCloudTransaction(id).catch(err => {
+      deleteCloudTransaction(id).then(() => {
+        syncCloudTransactions();
+      }).catch(err => {
         console.warn('Supabase cloud delete error:', err);
       });
     }
