@@ -158,6 +158,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   if (!isOpen) return null;
 
   const handleSimulatePayment = async () => {
+    if (!customerNameInput.trim()) {
+      setProofError('⚠️ Harap ketik Nama Lengkap / Pemesan kamu terlebih dahulu!');
+      return;
+    }
+
     // Penolakan Otomatis jika belum meng-upload bukti pembayaran
     if (!proofImage) {
       setProofError('⚠️ Harap upload foto bukti transfer / resi m-Banking / QRIS terlebih dahulu!');
@@ -353,7 +358,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     {/* Customer Name Input */}
                     <div>
                       <label className="block text-[10.5px] font-black uppercase text-purple-900/70 tracking-wider mb-1">
-                        Nama Lengkap / Pemesan (Opsional)
+                        Nama Lengkap / Pemesan <span className="text-rose-500 font-bold">* (Wajib Diisi)</span>
                       </label>
                       <input
                         type="text"
