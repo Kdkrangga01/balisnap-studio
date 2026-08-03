@@ -981,7 +981,7 @@ export const Landing: React.FC = () => {
               {/* Footer Modal CTA */}
               <div className="p-5 border-t border-zinc-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
                 <span className="text-xs text-purple-900/70 font-bold">
-                  Sudah paham? Yuk buat foto strip pertamamu! ✨
+                  Sudah paham? Yuk buat foto strip pertamamu!
                 </span>
                 <button
                   onClick={() => {
@@ -990,7 +990,7 @@ export const Landing: React.FC = () => {
                   }}
                   className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all"
                 >
-                  <span>Mulai Photobooth Sekarang 🔥</span>
+                  <span>Mulai Photobooth Sekarang</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
