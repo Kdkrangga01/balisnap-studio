@@ -214,8 +214,7 @@ const createCombinedGiftCardCanvas = async (
   photoUri: string,
   fromName: string,
   toName: string,
-  message: string,
-  giftLink: string
+  message: string
 ): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -325,7 +324,7 @@ const createCombinedGiftCardCanvas = async (
         currentY += 135;
         ctx.fillStyle = '#94a3b8';
         ctx.font = 'bold 13px sans-serif';
-        ctx.fillText(`📸 BaliSnap Studio | Digital Gift Card - ${giftLink}`, photoX, currentY);
+        ctx.fillText('📸 BaliSnap Studio | Digital Gift Card', photoX, currentY);
 
         resolve(canvas.toDataURL('image/png'));
       } catch (err) {
@@ -339,12 +338,10 @@ const createCombinedGiftCardCanvas = async (
 };
 
   const handleShareDirectFiles = async () => {
-    const giftLink = buildGiftLink();
     let shareCaption = `💌 HADIAH FOTO KADO DIGITAL BALISNAP STUDIO 💌\n\n`;
     shareCaption += `Untuk: ${receiverName || 'Sahabatku'}\n`;
     shareCaption += `Dari: ${senderName || 'Seseorang'}\n\n`;
-    shareCaption += `"${giftMessage || 'Semoga hari kamu menyenangkan! ✨'}"\n\n`;
-    shareCaption += `✨ Buka kado foto & pesan suara kamu di link ini:\n${giftLink}`;
+    shareCaption += `"${giftMessage || 'Semoga hari kamu menyenangkan! ✨'}"`;
 
     try {
       const filesToShare: File[] = [];
@@ -354,8 +351,7 @@ const createCombinedGiftCardCanvas = async (
           activePhoto,
           senderName,
           receiverName,
-          giftMessage,
-          giftLink
+          giftMessage
         );
         const photoBlob = dataURItoBlob(combinedPhotoUri);
         filesToShare.push(
@@ -391,16 +387,13 @@ const createCombinedGiftCardCanvas = async (
   };
 
   const handleDownloadPackage = async () => {
-    const giftLink = buildGiftLink();
-
     // 1) Unduh Foto Kado & Kartu Ucapan PNG Menyatu (1 Gambar)
     if (activePhoto) {
       const combinedPhotoUri = await createCombinedGiftCardCanvas(
         activePhoto,
         senderName,
         receiverName,
-        giftMessage,
-        giftLink
+        giftMessage
       );
       const pLink = document.createElement('a');
       pLink.href = combinedPhotoUri;
@@ -422,12 +415,11 @@ const createCombinedGiftCardCanvas = async (
       }, 300);
     }
 
-    // 3) Buka WhatsApp dengan Teks Ucapan + Link Kado Otomatis
+    // 3) Buka WhatsApp dengan Teks Ucapan Ringkas
     let text = `💌 HADIAH FOTO KADO DIGITAL BALISNAP STUDIO 💌\n\n`;
     text += `Untuk: ${receiverName || 'Sahabatku'}\n`;
     text += `Dari: ${senderName || 'Seseorang'}\n\n`;
-    text += `"${giftMessage || 'Semoga hari kamu menyenangkan! ✨'}"\n\n`;
-    text += `✨ Buka kado foto & pesan suara kamu di link ini:\n${giftLink}`;
+    text += `"${giftMessage || 'Semoga hari kamu menyenangkan! ✨'}"`;
 
     const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     window.open(waUrl, '_blank');
