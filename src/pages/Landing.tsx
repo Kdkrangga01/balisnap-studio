@@ -155,16 +155,17 @@ export const Landing: React.FC = () => {
     {
       id: 4,
       badge: 'Langkah 04',
-      title: 'Download HD & Kado Amplop 3D',
+      title: 'Download HD, GIF Boomerang & Kado 3D',
       icon: Download,
       color: 'from-emerald-500 to-teal-600',
-      shortDesc: 'Simpan foto strip resolusi tinggi langsung di HP/PC atau bungkus jadi kado kejutan 3D.',
+      shortDesc: 'Simpan foto strip HD, unduh animasi GIF Boomerang bergerak, atau bungkus jadi kado kejutan 3D.',
       details: [
         'Download HD Jernih: Unduh file foto PNG resolusi tinggi tanpa terkompresi.',
+        'Unduh Animasi GIF (Boomerang): Ekspor foto strip menjadi animasi GIF bergerak yang hidup dengan pilihan kecepatan (Cepat, Normal, Santai).',
         'Kado Amplop Digital 3D (VIP): Kirimkan foto strip sebagai kado ucapan 3D romantis berpesan suara via WhatsApp!'
       ],
       previewImg: '/cat1.png',
-      previewTag: '📲 Instant Save & Share'
+      previewTag: '🎬 HD PNG & Boomerang GIF'
     }
   ];
 
