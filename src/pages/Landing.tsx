@@ -561,9 +561,6 @@ export const Landing: React.FC = () => {
                         : 'bg-white/70 border-2 border-white/90 hover:bg-white/90'
                     }`}
                   >
-                    {isActive && (
-                      <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-purple-900 rounded-r-full" />
-                    )}
 
                     <div className={`p-3 rounded-2xl shrink-0 text-white bg-gradient-to-br ${step.color} shadow-md`}>
                       <IconComponent className="w-5 h-5" />
