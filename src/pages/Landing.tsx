@@ -339,13 +339,6 @@ export const Landing: React.FC = () => {
               transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut', repeatDelay: 1 }}
             />
 
-            <motion.div
-              animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
-              transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-pink-500 shrink-0" />
-            </motion.div>
-
             <span>THE HIGH-END DIGITAL PHOTOBOOTH</span>
 
             <motion.span
@@ -353,7 +346,7 @@ export const Landing: React.FC = () => {
               transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
               className="ml-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-100 via-rose-100 to-purple-100 text-pink-600 text-[8px] border border-pink-200/60 shadow-xs flex items-center gap-1 font-black"
             >
-              SOFT STUDIO ✨
+              SOFT STUDIO
             </motion.span>
           </motion.div>
 
@@ -409,8 +402,7 @@ export const Landing: React.FC = () => {
               whileTap={{ scale: 0.95 }}
               className="px-6 py-4 rounded-2xl bg-white/90 border-2 border-pink-200/80 text-purple-950 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-md hover:bg-pink-50 transition-colors cursor-pointer select-none"
             >
-              <Sparkles className="w-4 h-4 text-pink-500" />
-              <span>✨ Cara Pakai</span>
+              <span>Cara Pakai</span>
             </motion.button>
           </div>
         </div>
@@ -504,7 +496,6 @@ export const Landing: React.FC = () => {
           {/* Header */}
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-100/90 border border-pink-200 text-pink-700 text-[9px] sm:text-[10px] font-black tracking-widest uppercase mb-4 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-pink-500" />
               <span>PANDUAN LENGKAP CARA PAKAI</span>
             </div>
             <h2 className="font-serif font-bold text-3xl sm:text-5xl text-purple-950 tracking-tight leading-tight mb-4">
