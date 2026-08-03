@@ -239,28 +239,26 @@ export const Landing: React.FC = () => {
             href="#cara-kerja"
             whileHover={{ y: -2, scale: 1.05, color: '#db2777' }}
             whileTap={{ scale: 0.95 }}
-            className="transition-colors py-1 relative group select-none"
+            className="transition-colors py-1 relative select-none"
           >
             <span>Cara Kerja</span>
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-600 group-hover:w-full transition-all duration-300 rounded-full" />
           </motion.a>
 
           <motion.button
             onClick={() => setGuideModalOpen(true)}
             whileHover={{ y: -2, scale: 1.05, color: '#db2777' }}
             whileTap={{ scale: 0.95 }}
-            className="transition-colors py-1 flex items-center gap-1.5 relative group select-none cursor-pointer"
+            className="transition-colors py-1 flex items-center gap-1.5 relative select-none cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-pink-500" />
             <span>Cara Pakai</span>
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-600 group-hover:w-full transition-all duration-300 rounded-full" />
           </motion.button>
 
           <motion.a
             href="#paket-harga"
             whileHover={{ y: -2, scale: 1.05, color: '#db2777' }}
             whileTap={{ scale: 0.95 }}
-            className="transition-colors py-1 flex items-center gap-1.5 relative group select-none"
+            className="transition-colors py-1 flex items-center gap-1.5 relative select-none"
           >
             <span>Paket Harga</span>
             <motion.span
@@ -270,17 +268,15 @@ export const Landing: React.FC = () => {
             >
               promo ✨
             </motion.span>
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-600 group-hover:w-full transition-all duration-300 rounded-full" />
           </motion.a>
 
           <motion.button
             onClick={() => setFeedbackModalOpen(true)}
             whileHover={{ y: -2, scale: 1.05, color: '#db2777' }}
             whileTap={{ scale: 0.95 }}
-            className="transition-colors py-1 flex items-center gap-1 relative group select-none cursor-pointer"
+            className="transition-colors py-1 flex items-center gap-1 relative select-none cursor-pointer"
           >
             <span>Ulasan & Saran</span>
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-600 group-hover:w-full transition-all duration-300 rounded-full" />
           </motion.button>
         </nav>
 
