@@ -5,7 +5,9 @@ import type { TransactionRecord } from '../context/PhotoboothContext';
  * Mengunduh daftar transaksi sebagai file Excel (.xlsx) ASLI — bukan CSV yang
  * disamarkan — lengkap dengan:
  *  - Header berwarna & bold, lebar kolom otomatis pas
- *  - Foto bukti bayar ter-EMBED langsung di dalam cell (bukan cuma link)
+ *  - Foto bukti bayar ter-EMBED langsung di dalam cell, ukuran proporsional
+ *    (aspect ratio asli dijaga, tidak gepeng) dan otomatis di-center di
+ *    tengah cell dengan background putih bersih supaya jelas kebaca
  *  - Format rupiah rapi (Rp 135.000)
  *  - Baris ringkasan (total omset & jumlah transaksi per paket) di bagian bawah,
  *    dikemas dalam kotak terpisah biar jelas dan rapi
@@ -13,7 +15,9 @@ import type { TransactionRecord } from '../context/PhotoboothContext';
  *
  * Catatan: fungsi ini ASYNC karena proses generate file + embed gambar makan
  * waktu sedikit lebih lama dibanding CSV biasa, terutama kalau transaksinya
- * banyak / bukti bayarnya beresolusi besar.
+ * banyak / bukti bayarnya beresolusi besar. Dimensi asli tiap foto juga
+ * dibaca dulu (via elemen Image) sebelum di-embed supaya rasio aspeknya
+ * tetap proporsional dan posisinya center rapi di dalam cell.
  */
 export async function exportTransactionsToExcel(
   transactions: TransactionRecord[],
@@ -34,6 +38,19 @@ export async function exportTransactionsToExcel(
 
   const TOTAL_COLUMNS = 11;
 
+  // ===== KONFIGURASI KHUSUS KOLOM & BARIS FOTO BUKTI BAYAR =====
+  // Angka-angka ini dipakai buat menghitung ukuran & posisi center foto
+  // secara akurat (bukan asal tebak seperti sebelumnya).
+  const PROOF_COL_WIDTH_CHARS = 20; // lebar kolom "Bukti Bayar" (satuan karakter Excel)
+  const PROOF_ROW_HEIGHT_PT = 92; // tinggi baris data (satuan point)
+  const CHAR_TO_PX = 7; // perkiraan lebar 1 karakter Excel (font default) dalam px
+  const PT_TO_PX = 4 / 3; // konversi point -> pixel (96dpi)
+  const PROOF_CELL_PX_WIDTH = Math.round(PROOF_COL_WIDTH_CHARS * CHAR_TO_PX + 5);
+  const PROOF_CELL_PX_HEIGHT = Math.round(PROOF_ROW_HEIGHT_PT * PT_TO_PX);
+  const IMG_PADDING = 8; // jarak aman dari tepi cell biar nggak mepet border
+  const MAX_IMG_WIDTH = PROOF_CELL_PX_WIDTH - IMG_PADDING * 2;
+  const MAX_IMG_HEIGHT = PROOF_CELL_PX_HEIGHT - IMG_PADDING * 2;
+
   // ===== DEFINISI KOLOM =====
   sheet.columns = [
     { header: 'No', key: 'no', width: 5 },
@@ -42,7 +59,7 @@ export async function exportTransactionsToExcel(
     { header: 'Nama User / Pemesan', key: 'customer', width: 24 },
     { header: 'Nama Paket', key: 'packageName', width: 32 },
     { header: 'Kategori', key: 'tier', width: 13 },
-    { header: 'Bukti Bayar', key: 'proof', width: 18 },
+    { header: 'Bukti Bayar', key: 'proof', width: PROOF_COL_WIDTH_CHARS },
     { header: 'Nominal', key: 'amount', width: 16 },
     { header: 'Metode Pembayaran', key: 'method', width: 20 },
     { header: 'Status', key: 'status', width: 13 },
@@ -64,6 +81,25 @@ export async function exportTransactionsToExcel(
     };
   });
 
+  // ===== HELPER: baca dimensi asli gambar (supaya aspect ratio tidak gepeng) =====
+  function getImageNaturalSize(dataUrl: string): Promise<{ width: number; height: number }> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve({ width: img.naturalWidth || 1, height: img.naturalHeight || 1 });
+      img.onerror = () => reject(new Error('Gagal membaca dimensi gambar'));
+      img.src = dataUrl;
+    });
+  }
+
+  // ===== HELPER: hitung ukuran "contain" (proporsional, tidak gepeng) =====
+  function fitContain(natW: number, natH: number, maxW: number, maxH: number) {
+    const ratio = Math.min(maxW / natW, maxH / natH, 4); // cap 4x biar foto kecil tidak jadi pecah/blur
+    return {
+      width: Math.max(1, Math.round(natW * ratio)),
+      height: Math.max(1, Math.round(natH * ratio)),
+    };
+  }
+
   // ===== ISI BARIS DATA + EMBED FOTO BUKTI BAYAR =====
   const PROOF_COL_INDEX = sheet.getColumn('proof').number - 1; // 0-based, untuk posisi gambar
   // ExcelJS cuma bisa embed format raster: jpeg, png, gif — SVG atau format
@@ -74,7 +110,9 @@ export async function exportTransactionsToExcel(
   let premiumCount = 0;
   let basicCount = 0;
 
-  transactions.forEach((t, idx) => {
+  // Pakai for...of (bukan forEach) supaya bisa "await" proses baca dimensi gambar per baris
+  for (let idx = 0; idx < transactions.length; idx++) {
+    const t = transactions[idx];
     const rowIndex = idx + 2; // baris 1 = header
     const row = sheet.getRow(rowIndex);
 
@@ -90,7 +128,7 @@ export async function exportTransactionsToExcel(
     row.getCell('status').value = t.status;
     row.getCell('note').value = t.customerNote || '-';
 
-    row.height = 74; // beri ruang cukup supaya thumbnail foto kelihatan jelas
+    row.height = PROOF_ROW_HEIGHT_PT; // beri ruang cukup supaya thumbnail foto kelihatan jelas & proporsional
     row.eachCell((cell) => {
       cell.font = { name: 'Arial', size: 10 };
       cell.alignment = { vertical: 'middle', wrapText: true };
@@ -127,6 +165,9 @@ export async function exportTransactionsToExcel(
     // ===== EMBED FOTO BUKTI BAYAR LANGSUNG KE DALAM CELL =====
     const proofCell = row.getCell('proof');
     proofCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    // Background putih bersih khusus kolom foto, supaya foto tetap kontras &
+    // jelas kebaca walau barisnya kena warna selang-seling ungu muda.
+    proofCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
 
     if (t.paymentProofUrl && t.paymentProofUrl.startsWith('data:image/')) {
       const match = t.paymentProofUrl.match(/^data:image\/([a-zA-Z0-9+.-]+);base64,/);
@@ -135,10 +176,24 @@ export async function exportTransactionsToExcel(
       if (SUPPORTED_EXT.has(rawExt)) {
         try {
           const ext: 'jpeg' | 'png' | 'gif' = rawExt === 'jpg' ? 'jpeg' : (rawExt as 'jpeg' | 'png' | 'gif');
+
+          // Baca dimensi asli foto dulu biar rasio aspeknya tetap proporsional
+          const natural = await getImageNaturalSize(t.paymentProofUrl);
+          const { width: imgW, height: imgH } = fitContain(
+            natural.width,
+            natural.height,
+            MAX_IMG_WIDTH,
+            MAX_IMG_HEIGHT
+          );
+
+          // Hitung offset supaya foto selalu center di tengah cell (bukan nempel pojok)
+          const colOffsetFrac = (PROOF_CELL_PX_WIDTH - imgW) / 2 / PROOF_CELL_PX_WIDTH;
+          const rowOffsetFrac = (PROOF_CELL_PX_HEIGHT - imgH) / 2 / PROOF_CELL_PX_HEIGHT;
+
           const imageId = workbook.addImage({ base64: t.paymentProofUrl, extension: ext });
           sheet.addImage(imageId, {
-            tl: { col: PROOF_COL_INDEX + 0.08, row: rowIndex - 1 + 0.08 },
-            ext: { width: 95, height: 62 },
+            tl: { col: PROOF_COL_INDEX + colOffsetFrac, row: rowIndex - 1 + rowOffsetFrac },
+            ext: { width: imgW, height: imgH },
             editAs: 'oneCell',
           });
         } catch (err) {
@@ -155,7 +210,7 @@ export async function exportTransactionsToExcel(
     } else {
       proofCell.value = '-';
     }
-  });
+  }
 
   // ===== BARIS RINGKASAN / SUMMARY DI BAGIAN BAWAH (dikemas dalam kotak) =====
   const totalCount = transactions.length;
