@@ -155,13 +155,12 @@ export const Landing: React.FC = () => {
     {
       id: 4,
       badge: 'Langkah 04',
-      title: 'Download HD, Scan QR & Kado Amplop 3D',
+      title: 'Download HD & Kado Amplop 3D',
       icon: Download,
       color: 'from-emerald-500 to-teal-600',
-      shortDesc: 'Simpan foto strip resolusi tinggi langsung di HP atau bungkus jadi kado kejutan 3D.',
+      shortDesc: 'Simpan foto strip resolusi tinggi langsung di HP/PC atau bungkus jadi kado kejutan 3D.',
       details: [
         'Download HD Jernih: Unduh file foto PNG resolusi tinggi tanpa terkompresi.',
-        'Instant QR Code Scan: Tinggal scan QR Code di layar menggunakan HP untuk menyimpan foto di galeri secara otomatis.',
         'Kado Amplop Digital 3D (VIP): Kirimkan foto strip sebagai kado ucapan 3D romantis berpesan suara via WhatsApp!'
       ],
       previewImg: '/cat1.png',

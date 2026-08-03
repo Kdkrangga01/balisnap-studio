@@ -6,11 +6,10 @@ import { generateBoomerangGif } from '../lib/gifExport';
 import { DigitalEnvelopeModal } from '../components/DigitalEnvelopeModal';
 import { UpgradeModal } from '../components/UpgradeModal';
 import { FeedbackModal } from '../components/FeedbackModal';
-import { QRCodeView } from '../components/QRCodeView';
 import {
   ArrowLeft, Download, RotateCcw, Check, Share2, Sparkles, Heart, X,
   ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown,
-  Film, Loader2, Mail, MessageSquarePlus, Star, QrCode, Smartphone
+  Film, Loader2, Mail, MessageSquarePlus, Star
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -50,51 +49,7 @@ export const Preview: React.FC = () => {
   // FEEDBACK MODAL STATE
   const [showFeedbackModal, setShowFeedbackModal] = useState<boolean>(false);
 
-  // QR CODE DOWNLOAD MODAL STATE
-  const [showQrModal, setShowQrModal] = useState<boolean>(false);
-  const [lanIp] = useState<string>(() => localStorage.getItem('balisnap_dev_ip') || '');
 
-  const getQrTargetUrl = () => {
-    const envUrl = (import.meta.env.VITE_APP_URL || import.meta.env.VITE_PUBLIC_URL || '').trim();
-    if (envUrl && !envUrl.includes('localhost')) {
-      return envUrl;
-    }
-
-    let currentUrl = window.location.href;
-
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      if (lanIp) {
-        currentUrl = currentUrl.replace(/localhost|127\.0\.0\.1/g, lanIp);
-      }
-    }
-
-    return currentUrl;
-  };
-
-  const handleOpenQrModal = () => {
-    if (!downloadedImageUri && stageRef.current) {
-      const exportPixelWidth = getQualityPixelSize();
-      const dataUrl = exportHighResCanvas(stageRef.current, exportPixelWidth);
-      if (dataUrl) setDownloadedImageUri(dataUrl);
-    }
-    setShowQrModal(true);
-  };
-
-  const handleDownloadQrImage = () => {
-    const qrCanvas = document.querySelector('canvas') as HTMLCanvasElement;
-    if (qrCanvas) {
-      try {
-        const link = document.createElement('a');
-        link.download = `balisnap-qrcode-${new Date().toISOString().slice(0, 10)}.png`;
-        link.href = qrCanvas.toDataURL('image/png');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (e) {
-        console.error('Download QR Code error:', e);
-      }
-    }
-  };
 
   // Measure container for responsive stage sizing
   useEffect(() => {
@@ -531,15 +486,6 @@ export const Preview: React.FC = () => {
                   UNDUH FOTO PNG ({exportQuality.toUpperCase()})
                 </button>
 
-                {/* INSTANT QR CODE SCAN / DOWNLOAD BUTTON */}
-                <button
-                  onClick={handleOpenQrModal}
-                  className="w-full py-3.5 bg-gradient-to-r from-amber-500 via-rose-500 to-pink-500 hover:from-amber-600 hover:to-pink-600 active:scale-[0.99] text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md shadow-amber-200 flex items-center justify-center gap-2.5 cursor-pointer relative overflow-hidden group"
-                >
-                  <QrCode className="w-4 h-4 text-amber-100 group-hover:rotate-12 transition-transform" />
-                  <span>📱 SCAN QR CODE UNTUK SIMPAN DI HP</span>
-                </button>
-
                 {/* BOOMERANG ANIMATED GIF BUTTON */}
                 <button
                   onClick={() => handleOpenGifModal()}
@@ -665,25 +611,7 @@ export const Preview: React.FC = () => {
                 </div>
               )}
 
-              {/* QR CODE SCAN INSIDE SUCCESS MODAL */}
-              <div className="w-full p-3 bg-gradient-to-r from-pink-50 to-amber-50 border border-pink-200/80 rounded-2xl flex items-center justify-between gap-3 text-left">
-                <div className="flex-1">
-                  <span className="text-[10px] font-black uppercase text-pink-700 tracking-wider flex items-center gap-1">
-                    <QrCode className="w-3.5 h-3.5 text-pink-500" />
-                    Scan QR Code via HP
-                  </span>
-                  <p className="text-[10.5px] text-zinc-600 font-medium leading-tight mt-0.5">
-                    Arahkan kamera HP ke QR Code untuk langsung menyimpan foto ini di galeri.
-                  </p>
-                </div>
-                <div className="shrink-0 bg-white p-1 rounded-xl border border-pink-200 shadow-xs">
-                  <QRCodeView
-                    value={downloadedImageUri || window.location.href}
-                    size={72}
-                    className="p-0 border-0 bg-transparent shadow-none"
-                  />
-                </div>
-              </div>
+
 
               {/* ACTION BUTTONS */}
               <div className="flex flex-col gap-2 w-full mt-1">
@@ -728,106 +656,7 @@ export const Preview: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* ===== POP-UP MODAL QR CODE DOWNLOAD & SCAN ===== */}
-      <AnimatePresence>
-        {showQrModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md"
-            onClick={() => setShowQrModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.85, opacity: 0, y: 20 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-              className="bg-white border-2 border-pink-200 rounded-[36px] max-w-sm sm:max-w-md w-full p-6 md:p-8 shadow-[0_25px_60px_-15px_rgba(244,114,182,0.4)] relative overflow-hidden text-center flex flex-col items-center gap-4 z-50 select-none max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* CUTE TAPE DECORATION */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-5 bg-pink-200/80 border border-white/80 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center text-[8px] text-pink-700 font-black tracking-widest uppercase">
-                📱 INSTANT QR SCANNER 📱
-              </div>
 
-              {/* CLOSE BUTTON */}
-              <button
-                onClick={() => setShowQrModal(false)}
-                className="absolute top-4 right-4 w-9 h-9 bg-pink-50 hover:bg-pink-100 text-pink-600 rounded-full flex items-center justify-center transition-all shadow-sm cursor-pointer"
-                aria-label="Tutup"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <div className="flex flex-col items-center gap-1 mt-2">
-                <div className="p-3 bg-pink-100/70 rounded-full text-pink-600 mb-1">
-                  <QrCode className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-black tracking-tight text-zinc-900">
-                  Scan QR Code di Smartphone! 📸
-                </h3>
-                <p className="text-xs text-zinc-500 font-medium max-w-xs">
-                  Buka kamera HP Anda, lalu arahkan ke QR Code di bawah untuk menyimpan foto strip ini langsung di galeri ponsel.
-                </p>
-              </div>
-
-
-
-              {/* QR CODE DISPLAY BOX */}
-              <div className="p-4 bg-gradient-to-b from-pink-50 via-rose-50 to-purple-50 border-2 border-pink-200 rounded-3xl shadow-inner flex flex-col items-center gap-3 w-full my-1">
-                <QRCodeView
-                  value={getQrTargetUrl()}
-                  lanIp={lanIp}
-                  size={195}
-                  className="shadow-md border-pink-200"
-                />
-
-                <div className="flex items-center gap-1.5 text-[11px] font-bold text-pink-700 bg-white/80 px-3 py-1 rounded-full border border-pink-100">
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>Kamera HP ➔ Pindai QR ➔ Terbuka di HP</span>
-                </div>
-              </div>
-
-              {/* ACTION BUTTONS */}
-              <div className="flex flex-col gap-2.5 w-full mt-1">
-                <button
-                  onClick={handleDownloadQrImage}
-                  className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Download className="w-4 h-4" />
-                  Unduh Gambar QR Code (PNG)
-                </button>
-
-                <div className="grid grid-cols-2 gap-2 w-full">
-                  <button
-                    onClick={handleCopyLink}
-                    className="py-2.5 bg-white hover:bg-pink-50 text-zinc-700 border border-pink-200 font-extrabold tracking-wider uppercase text-[10px] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    {copiedLink ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-pink-500" />}
-                    {copiedLink ? 'Tersalin!' : 'Salin Tautan'}
-                  </button>
-
-                  <button
-                    onClick={handleOpenImageTab}
-                    className="py-2.5 bg-white hover:bg-pink-50 text-zinc-700 border border-pink-200 font-extrabold tracking-wider uppercase text-[10px] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5 text-pink-500" />
-                    Buka Foto Full
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => setShowQrModal(false)}
-                  className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 font-bold tracking-widest uppercase text-[10px] rounded-xl transition-colors cursor-pointer mt-0.5"
-                >
-                  Selesai &amp; Tutup
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ===== POP-UP MODAL UNDUH ANIMASI GIF BOOMERANG ===== */}
       <AnimatePresence>
