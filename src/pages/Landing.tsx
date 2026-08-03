@@ -878,7 +878,7 @@ export const Landing: React.FC = () => {
                 onClick={() => handleSelectPackage('premium')}
                 className="w-full py-4 px-4 bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 hover:from-pink-600 hover:to-rose-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 border border-white/20 cursor-pointer"
               >
-                <span>Pilih Paket Premium 🔥</span>
+                <span>Pilih Paket Premium</span>
               </button>
             </motion.div>
 

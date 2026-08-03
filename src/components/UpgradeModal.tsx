@@ -182,7 +182,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                 onClick={handleUpgrade}
                 className={`flex-1 py-3.5 ${isPremium ? 'bg-gradient-to-r from-purple-950 via-indigo-900 to-purple-900 hover:from-purple-900 hover:to-indigo-950 text-white border border-white/20 shadow-xl' : 'bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg shadow-pink-500/30'} font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all`}
               >
-                <span>Aktifkan Sekarang 🔥</span>
+                <span>Aktifkan Sekarang</span>
                 <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
             </div>

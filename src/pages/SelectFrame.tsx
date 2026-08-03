@@ -403,7 +403,7 @@ const FrameCard: React.FC<{
           <span className="text-3xl filter drop-shadow-md group-hover:scale-125 transition-transform duration-300">{categoryStyle.icon}</span>
           {isTrending && (
             <span className="flex items-center gap-1 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-500 text-white text-[9px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-full shadow-md shadow-pink-500/30">
-              <Sparkles className="w-2.5 h-2.5 animate-spin" style={{ animationDuration: '3s' }} /> Hot 🔥
+              <Sparkles className="w-2.5 h-2.5 animate-spin" style={{ animationDuration: '3s' }} /> Hot
             </span>
           )}
         </div>
@@ -1582,7 +1582,7 @@ export const SelectFrame: React.FC = () => {
                     onClick={() => handleOpenCheckoutModal('premium')}
                     className={`w-full py-4 px-4 font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 border border-white/20 cursor-pointer ${packageTier === 'premium' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' : 'bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 hover:from-pink-600 hover:to-rose-600 text-white'}`}
                   >
-                    <span>{packageTier === 'premium' ? '✓ Paket Aktif (VIP Premium)' : 'Pilih Paket Premium 🔥'}</span>
+                    <span>{packageTier === 'premium' ? '✓ Paket Aktif (VIP Premium)' : 'Pilih Paket Premium'}</span>
                   </button>
                 </motion.div>
 
