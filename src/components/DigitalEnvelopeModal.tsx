@@ -210,6 +210,134 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
+const createCombinedGiftCardCanvas = async (
+  photoUri: string,
+  fromName: string,
+  toName: string,
+  message: string,
+  giftLink: string
+): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(photoUri);
+
+        const fromStr = fromName || 'Seseorang';
+        const toStr = toName || 'Sahabatku';
+        const msgStr = message || 'Semoga hari kamu menyenangkan! ✨';
+
+        const padding = 36;
+        const cardWidth = Math.max(800, img.width);
+        const textBlockHeight = 310;
+        const cardHeight = img.height + textBlockHeight + padding * 2;
+
+        canvas.width = cardWidth;
+        canvas.height = cardHeight;
+
+        // Background Gradient
+        const bgGrad = ctx.createLinearGradient(0, 0, 0, cardHeight);
+        bgGrad.addColorStop(0, '#fff5f7');
+        bgGrad.addColorStop(0.5, '#fce7f3');
+        bgGrad.addColorStop(1, '#fbcfe8');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, cardWidth, cardHeight);
+
+        // Main Card Container Background
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = 'rgba(244, 114, 182, 0.3)';
+        ctx.shadowBlur = 30;
+        ctx.shadowOffsetY = 10;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(padding, padding, cardWidth - padding * 2, cardHeight - padding * 2, 28);
+        } else {
+          ctx.rect(padding, padding, cardWidth - padding * 2, cardHeight - padding * 2);
+        }
+        ctx.fill();
+        ctx.shadowColor = 'transparent';
+
+        // Draw Photo at top
+        const photoX = padding + 20;
+        const photoY = padding + 20;
+        const photoW = cardWidth - padding * 2 - 40;
+        const photoH = img.height;
+        ctx.drawImage(img, photoX, photoY, photoW, photoH);
+
+        // Divider
+        const cardDividerY = photoY + photoH + 28;
+        ctx.strokeStyle = '#fbcfe8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(photoX, cardDividerY);
+        ctx.lineTo(photoX + photoW, cardDividerY);
+        ctx.stroke();
+
+        let currentY = cardDividerY + 34;
+
+        // Header: UNTUK & DARI
+        ctx.fillStyle = '#be185d';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(`💌 UNTUK: ${toStr.toUpperCase()}`, photoX, currentY);
+
+        ctx.fillStyle = '#9d174d';
+        ctx.font = 'bold 17px sans-serif';
+        ctx.fillText(`Dari: ${fromStr}`, photoX, currentY + 28);
+
+        currentY += 68;
+
+        // Message Box
+        ctx.fillStyle = '#fdf2f8';
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(photoX, currentY, photoW, 110, 16);
+        } else {
+          ctx.rect(photoX, currentY, photoW, 110);
+        }
+        ctx.fill();
+
+        ctx.fillStyle = '#831843';
+        ctx.font = 'italic 18px sans-serif';
+
+        const words = msgStr.split(' ');
+        let line = '';
+        let lineY = currentY + 36;
+        const maxTextW = photoW - 40;
+
+        for (let n = 0; n < words.length; n++) {
+          const testLine = line + words[n] + ' ';
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxTextW && n > 0) {
+            ctx.fillText(`"${line.trim()}"`, photoX + 20, lineY);
+            line = words[n] + ' ';
+            lineY += 28;
+          } else {
+            line = testLine;
+          }
+        }
+        ctx.fillText(`"${line.trim()}"`, photoX + 20, lineY);
+
+        // Footer Branding
+        currentY += 135;
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(`📸 BaliSnap Studio | Digital Gift Card - ${giftLink}`, photoX, currentY);
+
+        resolve(canvas.toDataURL('image/png'));
+      } catch (err) {
+        console.error('Error generating combined gift card canvas:', err);
+        resolve(photoUri);
+      }
+    };
+    img.onerror = () => resolve(photoUri);
+    img.src = photoUri;
+  });
+};
+
   const handleShareDirectFiles = async () => {
     const giftLink = buildGiftLink();
     let shareCaption = `💌 HADIAH FOTO KADO DIGITAL BALISNAP STUDIO 💌\n\n`;
@@ -222,9 +350,16 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
       const filesToShare: File[] = [];
 
       if (activePhoto) {
-        const photoBlob = dataURItoBlob(activePhoto);
+        const combinedPhotoUri = await createCombinedGiftCardCanvas(
+          activePhoto,
+          senderName,
+          receiverName,
+          giftMessage,
+          giftLink
+        );
+        const photoBlob = dataURItoBlob(combinedPhotoUri);
         filesToShare.push(
-          new File([photoBlob], `kado-foto-${(receiverName || 'sahabat').toLowerCase().replace(/\s+/g, '-')}.png`, {
+          new File([photoBlob], `kado-foto-dan-ucapan-${(receiverName || 'sahabat').toLowerCase().replace(/\s+/g, '-')}.png`, {
             type: 'image/png',
           })
         );
@@ -255,14 +390,21 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
     handleDownloadPackage();
   };
 
-  const handleDownloadPackage = () => {
+  const handleDownloadPackage = async () => {
     const giftLink = buildGiftLink();
 
-    // 1) Unduh Foto Kado PNG
+    // 1) Unduh Foto Kado & Kartu Ucapan PNG Menyatu (1 Gambar)
     if (activePhoto) {
+      const combinedPhotoUri = await createCombinedGiftCardCanvas(
+        activePhoto,
+        senderName,
+        receiverName,
+        giftMessage,
+        giftLink
+      );
       const pLink = document.createElement('a');
-      pLink.href = activePhoto;
-      pLink.download = `kado-foto-${(receiverName || 'sahabat').toLowerCase().replace(/\s+/g, '-')}.png`;
+      pLink.href = combinedPhotoUri;
+      pLink.download = `kado-foto-dan-ucapan-${(receiverName || 'sahabat').toLowerCase().replace(/\s+/g, '-')}.png`;
       document.body.appendChild(pLink);
       pLink.click();
       document.body.removeChild(pLink);
