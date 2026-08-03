@@ -1495,5 +1495,23 @@ export const frames: FrameTemplate[] = [
       { x: 66, y: 518, w: 459, h: 378, rx: 11 },
       { x: 567, y: 518, w: 458, h: 378, rx: 11 }
     ]
+  },
+  {
+    id: "custom-1785753155665-e13k",
+    name: "Pure Atmosphere",
+    slots: 8,
+    category: "korean",
+    src: "/templates/custom-1785753155665-e13k.png",
+    width: 941, height: 1672,
+    slotCoords: [
+      { x: 57, y: 46, w: 389, h: 345, rx: 10 },
+      { x: 23, y: 415, w: 424, h: 345, rx: 10 },
+      { x: 23, y: 783, w: 423, h: 343, rx: 10 },
+      { x: 23, y: 1149, w: 422, h: 342, rx: 10 },
+      { x: 495, y: 46, w: 424, h: 345, rx: 10 },
+      { x: 497, y: 415, w: 421, h: 344, rx: 10 },
+      { x: 494, y: 783, w: 424, h: 343, rx: 10 },
+      { x: 493, y: 1149, w: 426, h: 342, rx: 10 }
+    ]
   }
 ];
