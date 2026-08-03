@@ -200,8 +200,7 @@ export const Landing: React.FC = () => {
       <div className="absolute top-[-8%] left-[-8%] w-[70vw] sm:w-[50vw] h-[70vw] sm:h-[50vw] bg-pink-200/40 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
       <div className="absolute top-[22%] right-[-10%] w-[65vw] sm:w-[45vw] h-[65vw] sm:h-[45vw] bg-purple-200/40 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
 
-      {/* Subtle Polka Grid Overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1.2px,transparent_1.2px)] [background-size:28px_28px] opacity-[0.35] pointer-events-none" />
+
 
       {/* ===== HEADER / NAVBAR ===== */}
       <header className="px-4 sm:px-8 lg:px-16 py-3.5 border-b border-white/80 flex justify-between items-center bg-white/70 backdrop-blur-md sticky top-0 z-50 shadow-sm">
