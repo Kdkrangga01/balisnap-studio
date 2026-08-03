@@ -217,7 +217,18 @@ export const RecipientGiftModal: React.FC = () => {
                   </p>
                 </div>
 
-                {/* OTOMATIS VOL VOICE NOTE AUDIO PLAYER */}
+                {/* FOTO KADO SPESIAL */}
+                {giftData.photo && (
+                  <div className="w-full relative overflow-hidden rounded-2xl border-2 border-rose-200 shadow-md bg-white p-1 max-h-56 flex justify-center">
+                    <img
+                      src={giftData.photo}
+                      alt="Hadiah Foto Spesial"
+                      className="max-h-52 object-contain rounded-xl"
+                    />
+                  </div>
+                )}
+
+                {/* OTOMATIS VOICE NOTE AUDIO PLAYER */}
                 {giftData.audio && (
                   <div className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-2xl shadow-md flex items-center justify-between">
                     <div className="flex items-center gap-2">

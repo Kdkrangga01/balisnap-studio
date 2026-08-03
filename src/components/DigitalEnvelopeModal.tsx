@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Mic, Square, Play, Pause, Send, X, Download, Upload, Image as ImageIcon, Trash2, CheckCircle2 } from 'lucide-react';
+import { Mail, Mic, Square, Play, Pause, Send, X, Download, Upload, Image as ImageIcon, Trash2, CheckCircle2, Copy, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 import { getBestAudioMimeType, getAudioExtension, createMobileAudioElement } from '../lib/mobileAudio';
@@ -201,11 +201,22 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
     return new Blob([ab], { type: mimeString });
   }
 
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleCopyGiftLink = () => {
+    const link = buildGiftLink();
+    navigator.clipboard.writeText(link);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
   const handleShareDirectFiles = async () => {
+    const giftLink = buildGiftLink();
     let shareCaption = `💌 HADIAH FOTO KADO DIGITAL BALISNAP STUDIO 💌\n\n`;
     shareCaption += `Untuk: ${receiverName || 'Sahabatku'}\n`;
     shareCaption += `Dari: ${senderName || 'Seseorang'}\n\n`;
-    shareCaption += `"${giftMessage || 'Semoga hari kamu menyenangkan! ✨'}"`;
+    shareCaption += `"${giftMessage || 'Semoga hari kamu menyenangkan! ✨'}"\n\n`;
+    shareCaption += `✨ Buka kado foto & pesan suara kamu di link ini:\n${giftLink}`;
 
     try {
       const filesToShare: File[] = [];
@@ -245,7 +256,7 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
   };
 
   const handleDownloadPackage = () => {
-    buildGiftLink();
+    const giftLink = buildGiftLink();
 
     // 1) Unduh Foto Kado PNG
     if (activePhoto) {
@@ -269,11 +280,12 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
       }, 300);
     }
 
-    // 3) Buka WhatsApp dengan Teks Ucapan (Tanpa Link!)
+    // 3) Buka WhatsApp dengan Teks Ucapan + Link Kado Otomatis
     let text = `💌 HADIAH FOTO KADO DIGITAL BALISNAP STUDIO 💌\n\n`;
     text += `Untuk: ${receiverName || 'Sahabatku'}\n`;
     text += `Dari: ${senderName || 'Seseorang'}\n\n`;
-    text += `"${giftMessage || 'Semoga hari kamu menyenangkan! ✨'}"`;
+    text += `"${giftMessage || 'Semoga hari kamu menyenangkan! ✨'}"\n\n`;
+    text += `✨ Buka kado foto & pesan suara kamu di link ini:\n${giftLink}`;
 
     const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     window.open(waUrl, '_blank');
@@ -509,7 +521,15 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
               className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md shadow-emerald-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
             >
               <Send className="w-4 h-4" />
-              📲 KIRIM REKAMAN SUARA (WHATSAPP)
+              📲 KIRIM REKAMAN SUARA &amp; LINK (WHATSAPP)
+            </button>
+
+            <button
+              onClick={handleCopyGiftLink}
+              className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md shadow-pink-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+            >
+              {copiedLink ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+              {copiedLink ? 'TAUTAN KADO TER-SALIN!' : '🔗 SALIN LINK KADO DIGITAL SPESIAL'}
             </button>
 
             <button
