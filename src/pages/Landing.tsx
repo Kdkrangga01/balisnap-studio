@@ -555,14 +555,14 @@ export const Landing: React.FC = () => {
                     onClick={() => setActiveTutorialStep(idx)}
                     whileHover={{ scale: 1.01, x: 4 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer select-none relative overflow-hidden flex items-start gap-4 ${
+                    className={`p-5 rounded-3xl transition-all cursor-pointer select-none relative overflow-hidden flex items-start gap-4 ${
                       isActive
-                        ? 'bg-white border-pink-400 shadow-xl shadow-pink-500/10'
-                        : 'bg-white/60 border-white/80 hover:bg-white/80'
+                        ? 'bg-white border-2 border-zinc-200/80 shadow-xl shadow-purple-950/10 scale-[1.01]'
+                        : 'bg-white/70 border-2 border-white/90 hover:bg-white/90'
                     }`}
                   >
                     {isActive && (
-                      <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-pink-500 to-purple-600 rounded-r-full" />
+                      <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-purple-900 rounded-r-full" />
                     )}
 
                     <div className={`p-3 rounded-2xl shrink-0 text-white bg-gradient-to-br ${step.color} shadow-md`}>
@@ -1022,21 +1022,21 @@ export const Landing: React.FC = () => {
               {/* Body Content - Step Cards list */}
               <div className="p-6 max-h-[65vh] overflow-y-auto space-y-4">
                 {tutorialSteps.map((st) => (
-                  <div key={st.id} className="bg-pink-50/50 border border-pink-100 p-4 rounded-2xl flex items-start gap-4 text-left">
+                  <div key={st.id} className="bg-white border border-zinc-200/80 p-4 rounded-2xl flex items-start gap-4 text-left shadow-sm">
                     <div className={`p-3 rounded-2xl text-white bg-gradient-to-br ${st.color} shrink-0 shadow-sm mt-1`}>
                       {React.createElement(st.icon, { className: "w-5 h-5" })}
                     </div>
 
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-pink-600 bg-pink-100 px-2.5 py-0.5 rounded-md">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-purple-900 bg-purple-50 px-2.5 py-0.5 rounded-md border border-purple-100/60">
                           {st.badge}
                         </span>
                       </div>
                       <h4 className="font-serif font-bold text-base text-purple-950 mb-1">{st.title}</h4>
                       <p className="text-xs text-purple-950/70 font-medium mb-3">{st.shortDesc}</p>
 
-                      <div className="space-y-1.5 border-t border-pink-200/50 pt-2">
+                      <div className="space-y-1.5 border-t border-zinc-100 pt-2">
                         {st.details.map((dt, idx) => (
                           <div key={idx} className="flex items-start gap-2 text-[11px] text-zinc-700 font-medium">
                             <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
