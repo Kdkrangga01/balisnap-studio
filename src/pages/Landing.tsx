@@ -235,15 +235,6 @@ export const Landing: React.FC = () => {
         </motion.div>
 
         <nav className="hidden md:flex items-center gap-8 lg:gap-12 text-[10.5px] font-black tracking-[0.2em] text-purple-900/70 uppercase">
-          <motion.a
-            href="#cara-kerja"
-            whileHover={{ y: -2, scale: 1.05, color: '#db2777' }}
-            whileTap={{ scale: 0.95 }}
-            className="transition-colors py-1 relative select-none"
-          >
-            <span>Cara Kerja</span>
-          </motion.a>
-
           <motion.button
             onClick={() => setGuideModalOpen(true)}
             whileHover={{ y: -2, scale: 1.05, color: '#db2777' }}
@@ -333,9 +324,6 @@ export const Landing: React.FC = () => {
               <span>✨ Panduan Cara Pakai</span>
               <span className="px-2 py-0.5 bg-pink-100 text-pink-700 text-[9px] rounded-full">Info 📖</span>
             </button>
-            <a href="#cara-kerja" onClick={() => setMobileMenuOpen(false)} className="py-2 border-b border-pink-100/60 hover:text-pink-600">
-              Cara Kerja
-            </a>
             <a href="#paket-harga" onClick={() => setMobileMenuOpen(false)} className="py-2 hover:text-pink-600 flex items-center justify-between">
               <span>Paket Harga & Promo</span>
               <span className="px-2 py-0.5 bg-pink-500 text-white text-[9px] rounded-full">Hot ✨</span>
