@@ -52,7 +52,7 @@ export const Preview: React.FC = () => {
 
   // QR CODE DOWNLOAD MODAL STATE
   const [showQrModal, setShowQrModal] = useState<boolean>(false);
-  const [lanIp, setLanIp] = useState<string>(() => localStorage.getItem('balisnap_dev_ip') || '');
+  const [lanIp] = useState<string>(() => localStorage.getItem('balisnap_dev_ip') || '');
 
   const getQrTargetUrl = () => {
     const envUrl = (import.meta.env.VITE_APP_URL || import.meta.env.VITE_PUBLIC_URL || '').trim();

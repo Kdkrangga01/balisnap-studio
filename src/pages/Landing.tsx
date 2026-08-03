@@ -6,7 +6,7 @@ import { FeedbackModal } from '../components/FeedbackModal';
 import {
   Camera, Sparkles, Image as ImageIcon, ArrowRight, Maximize2, Menu, X, Star, Check,
   Crown, Wand2, UploadCloud, Download, CheckCircle2, Palette, Film, HelpCircle,
-  Layers, Sliders, Smile, QrCode, Heart, ChevronRight, ChevronLeft, Play, RefreshCw, Smartphone
+  Layers, ChevronRight, ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
