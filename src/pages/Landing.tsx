@@ -241,7 +241,6 @@ export const Landing: React.FC = () => {
             whileTap={{ scale: 0.95 }}
             className="transition-colors py-1 flex items-center gap-1.5 relative select-none cursor-pointer"
           >
-            <Sparkles className="w-3.5 h-3.5 text-pink-500" />
             <span>Cara Pakai</span>
           </motion.button>
 
@@ -252,13 +251,6 @@ export const Landing: React.FC = () => {
             className="transition-colors py-1 flex items-center gap-1.5 relative select-none"
           >
             <span>Paket Harga</span>
-            <motion.span
-              animate={{ scale: [1, 1.12, 1], y: [0, -1, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              className="px-2 py-0.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full text-[8px] lowercase font-black shadow-xs tracking-normal flex items-center gap-0.5"
-            >
-              promo ✨
-            </motion.span>
           </motion.a>
 
           <motion.button
@@ -321,12 +313,10 @@ export const Landing: React.FC = () => {
               }}
               className="py-2 border-b border-pink-100/60 hover:text-pink-600 flex items-center justify-between text-left cursor-pointer"
             >
-              <span>✨ Panduan Cara Pakai</span>
-              <span className="px-2 py-0.5 bg-pink-100 text-pink-700 text-[9px] rounded-full">Info 📖</span>
+              <span>Cara Pakai</span>
             </button>
             <a href="#paket-harga" onClick={() => setMobileMenuOpen(false)} className="py-2 hover:text-pink-600 flex items-center justify-between">
-              <span>Paket Harga & Promo</span>
-              <span className="px-2 py-0.5 bg-pink-500 text-white text-[9px] rounded-full">Hot ✨</span>
+              <span>Paket Harga</span>
             </a>
           </motion.div>
         )}
