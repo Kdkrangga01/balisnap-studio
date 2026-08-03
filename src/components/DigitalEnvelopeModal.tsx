@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Mic, Square, Play, Pause, Send, X, Download } from 'lucide-react';
+import { Mail, Mic, Square, Play, Pause, Send, X, Download, Upload, Image as ImageIcon, Trash2, CheckCircle2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 import { getBestAudioMimeType, getAudioExtension, createMobileAudioElement } from '../lib/mobileAudio';
@@ -19,6 +19,21 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
   const [senderName, setSenderName] = useState('');
   const [receiverName, setReceiverName] = useState('');
   const [giftMessage, setGiftMessage] = useState('');
+
+  // Custom Gift Photo Upload State
+  const [customGiftPhoto, setCustomGiftPhoto] = useState<string | null>(null);
+  const activePhoto = customGiftPhoto || photoStripUri;
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCustomGiftPhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Audio Voice Note Recording State
   const [isRecording, setIsRecording] = useState(false);
@@ -161,7 +176,7 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
       to: receiverName || 'Sahabatku',
       msg: giftMessage || 'Semoga hari kamu menyenangkan! ✨',
       audio: activeAudio,
-      photo: photoStripUri,
+      photo: activePhoto,
     };
 
     try {
@@ -195,8 +210,8 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
     try {
       const filesToShare: File[] = [];
 
-      if (photoStripUri) {
-        const photoBlob = dataURItoBlob(photoStripUri);
+      if (activePhoto) {
+        const photoBlob = dataURItoBlob(activePhoto);
         filesToShare.push(
           new File([photoBlob], `kado-foto-${(receiverName || 'sahabat').toLowerCase().replace(/\s+/g, '-')}.png`, {
             type: 'image/png',
@@ -232,10 +247,10 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
   const handleDownloadPackage = () => {
     buildGiftLink();
 
-    // 1) Unduh Foto Strip PNG
-    if (photoStripUri) {
+    // 1) Unduh Foto Kado PNG
+    if (activePhoto) {
       const pLink = document.createElement('a');
-      pLink.href = photoStripUri;
+      pLink.href = activePhoto;
       pLink.download = `kado-foto-${(receiverName || 'sahabat').toLowerCase().replace(/\s+/g, '-')}.png`;
       document.body.appendChild(pLink);
       pLink.click();
@@ -320,16 +335,32 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
                   KLIK UNTUK BUKA AMPLOP 💌
                 </span>
                 <span className="text-[10px] text-pink-100 font-medium mt-1">
-                  Sentuh untuk melihat hadiah ucapan
+                  Sentuh untuk melihat hadiah ucapan &amp; foto kado
                 </span>
               </motion.div>
             ) : (
               <motion.div
                 initial={{ rotateX: -90, opacity: 0 }}
                 animate={{ rotateX: 0, opacity: 1 }}
-                className="w-full flex flex-col items-center gap-1 py-2 text-rose-700 font-bold text-xs"
+                className="w-full flex flex-col items-center gap-2 py-2"
               >
-                💌 Amplop Ucapan Digital Berhasil Dibuka! 💌
+                <span className="text-rose-700 font-bold text-xs">
+                  💌 Amplop Ucapan Digital Berhasil Dibuka! 💌
+                </span>
+                {activePhoto && (
+                  <div className="relative group overflow-hidden rounded-2xl border-2 border-rose-200 shadow-md bg-white p-1 max-h-48 flex justify-center">
+                    <img
+                      src={activePhoto}
+                      alt="Foto Kado Gift Spesial"
+                      className="max-h-44 object-contain rounded-xl"
+                    />
+                    {customGiftPhoto && (
+                      <span className="absolute top-2 right-2 bg-rose-500 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-sm">
+                        📸 Foto Kado Upload
+                      </span>
+                    )}
+                  </div>
+                )}
               </motion.div>
             )}
           </div>
@@ -375,6 +406,48 @@ export const DigitalEnvelopeModal: React.FC<DigitalEnvelopeModalProps> = ({
                 onChange={(e) => setGiftMessage(e.target.value)}
                 className="w-full p-2 text-xs rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white resize-none"
               />
+            </div>
+
+            {/* UPLOAD FOTO KADO CUSTOM */}
+            <div className="pt-2 border-t border-rose-200/60 flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase text-rose-800 tracking-wider flex items-center gap-1">
+                  <ImageIcon className="w-3.5 h-3.5 text-rose-600" /> UNGGAH FOTO KADO GIFT SPESIAL:
+                </span>
+                {customGiftPhoto && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomGiftPhoto(null)}
+                    className="text-[9px] text-rose-600 hover:underline font-bold flex items-center gap-0.5 cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" /> Reset Foto
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="flex-1 py-2 px-3 bg-rose-50 hover:bg-rose-100 border border-dashed border-rose-300 text-rose-700 font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all">
+                  <Upload className="w-3.5 h-3.5 text-rose-500" />
+                  <span>{customGiftPhoto ? 'Ganti Foto Kado Upload' : 'Unggah Foto Kado Kustom'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {customGiftPhoto ? (
+                <div className="flex items-center gap-2 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Foto kado kustom berhasil diunggah!</span>
+                </div>
+              ) : (
+                <p className="text-[9.5px] text-rose-600/80 font-medium italic">
+                  *Opsional: Jika tidak diunggah, foto photobooth strip akan digunakan secara otomatis.
+                </p>
+              )}
             </div>
 
             {/* AUDIO VOICE NOTE RECORDER */}
