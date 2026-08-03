@@ -384,12 +384,14 @@ export const Landing: React.FC = () => {
             </motion.span>
           </motion.div>
 
-          <h1 className="font-serif font-bold text-4xl sm:text-6xl md:text-7xl lg:text-[80px] tracking-tight leading-[1.08] text-purple-950 mb-6 sm:mb-8 break-words">
+          <h1 className="font-serif font-bold text-4xl sm:text-6xl md:text-7xl lg:text-[80px] tracking-tight leading-[1.2] sm:leading-[1.18] text-purple-950 mb-6 sm:mb-8 break-words py-1">
             Capturing <br />
-            <span className="font-sans font-black italic bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 text-transparent bg-clip-text">
+            <span className="font-sans font-black italic bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 text-transparent bg-clip-text inline-block py-1 pr-2">
               Pure Emotion
             </span> <br />
-            in Perfect Grids.
+            <span className="inline-block pt-1">
+              in Perfect Grids.
+            </span>
           </h1>
 
           <p className="text-purple-950/70 text-xs sm:text-base font-medium tracking-wide max-w-xl mb-8 sm:mb-10 leading-relaxed">
