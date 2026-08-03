@@ -264,30 +264,6 @@ export const Landing: React.FC = () => {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <motion.button
-            onClick={() => setStep('select-frame')}
-            whileHover={{ scale: 1.05, y: -1 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.18em] bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white shadow-lg shadow-purple-950/20 flex items-center gap-2 whitespace-nowrap z-10 border border-white/20 relative overflow-hidden group cursor-pointer"
-          >
-
-            {/* Button Shimmer Light Pass */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full"
-              animate={{ x: ['-100%', '200%'] }}
-              transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut', repeatDelay: 1.5 }}
-            />
-            <span className="relative z-10">Ambil Foto</span>
-            <motion.div
-              animate={{ rotate: [0, 12, -12, 0], scale: [1, 1.15, 1] }}
-              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-              className="relative z-10"
-            >
-              <Camera className="w-3.5 h-3.5 text-pink-300 shrink-0" />
-            </motion.div>
-          </motion.button>
-
-
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 text-purple-900 hover:text-pink-600 rounded-lg bg-white/80 border border-purple-100 transition-colors"
@@ -394,15 +370,6 @@ export const Landing: React.FC = () => {
               >
                 <ArrowRight className="w-4 h-4 text-pink-300 shrink-0 group-hover:translate-x-1 transition-transform" />
               </motion.div>
-            </motion.button>
-
-            <motion.button
-              onClick={() => setGuideModalOpen(true)}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-4 rounded-2xl bg-white/90 border-2 border-pink-200/80 text-purple-950 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-md hover:bg-pink-50 transition-colors cursor-pointer select-none"
-            >
-              <span>Cara Pakai</span>
             </motion.button>
           </div>
         </div>
