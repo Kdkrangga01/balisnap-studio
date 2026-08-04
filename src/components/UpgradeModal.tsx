@@ -176,7 +176,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
               </button>
               <button
                 onClick={handleUpgrade}
-                className={`flex-1 py-3.5 ${isPremium ? 'bg-gradient-to-r from-purple-950 via-indigo-900 to-purple-900 hover:from-purple-900 hover:to-indigo-950 text-white border border-white/20 shadow-xl' : 'bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white shadow-lg shadow-pink-500/30'} font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all`}
+                className={`flex-1 py-3.5 ${isPremium ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-200/50' : 'bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-md'} font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all`}
               >
                 <span>{isPremium ? 'Beli VIP (135k)' : 'Unlock All Frame (25k) 🔓'}</span>
                 <ArrowRight className="w-4 h-4 shrink-0" />

@@ -442,10 +442,10 @@ const FrameCard: React.FC<{
         {/* Lock Overlay Badge for Locked Frames */}
         {isLocked ? (
           <div className="absolute inset-0 bg-zinc-950/55 backdrop-blur-[3px] rounded-2xl flex flex-col items-center justify-center p-3 text-center z-30 transition-all">
-            <div className={`p-2.5 rounded-2xl mb-2 border shadow-lg ${requiredTier === 'premium' ? 'bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 border-yellow-400/40 text-yellow-300' : 'bg-gradient-to-r from-pink-500 to-rose-500 border-white/40 text-white'}`}>
-              {requiredTier === 'premium' ? <Crown className="w-5 h-5 animate-bounce fill-yellow-300" /> : <Lock className="w-5 h-5 text-white" />}
+            <div className={`p-2.5 rounded-2xl mb-2 border shadow-lg ${requiredTier === 'premium' ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 border-white/40 text-white' : 'bg-gradient-to-r from-pink-500 to-rose-500 border-white/40 text-white'}`}>
+              {requiredTier === 'premium' ? <Crown className="w-5 h-5 animate-bounce fill-yellow-200" /> : <Lock className="w-5 h-5 text-white" />}
             </div>
-            <span className={`text-[9.5px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md border ${requiredTier === 'premium' ? 'bg-purple-900/90 text-yellow-300 border-yellow-400/40' : 'bg-pink-600/90 text-white border-pink-300/40'}`}>
+            <span className={`text-[9.5px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md border ${requiredTier === 'premium' ? 'bg-amber-500/90 text-white border-amber-300/40' : 'bg-pink-600/90 text-white border-pink-300/40'}`}>
               {currentTier === 'free' && completedTrialSessions >= 2 ? '🔒 KUOTA 2 SESI TERPAKAI' : requiredTier === 'premium' ? '👑 VIP PREMIUM (135k)' : '🔒 BASIC PASS (25k)'}
             </span>
             <span className="text-[9px] text-white/90 font-bold mt-1.5 drop-shadow-sm">
@@ -1102,22 +1102,22 @@ export const SelectFrame: React.FC = () => {
                   }}
                   className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm border transition-all cursor-pointer ${
                     packageTier === 'premium'
-                      ? 'bg-gradient-to-r from-purple-950 via-indigo-900 to-purple-950 text-yellow-300 border-yellow-400/40 shadow-purple-950/20'
+                      ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white border-white/60 shadow-amber-200/50'
                       : packageTier === 'basic'
-                      ? 'bg-pink-500 text-white border-pink-300 shadow-pink-500/20'
+                      ? 'bg-teal-500 text-white border-teal-300 shadow-teal-500/20'
                       : 'bg-zinc-800 text-white border-zinc-700'
                   }`}
                   title="Klik untuk lihat rincian paket"
                 >
                   {packageTier === 'premium' ? (
                     <>
-                      <Crown className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300 animate-bounce" />
+                      <Crown className="w-3.5 h-3.5 text-yellow-200 fill-yellow-200 animate-bounce" />
                       <span>👑 VIP Premium Pass</span>
                     </>
                   ) : packageTier === 'basic' ? (
                     <>
-                      <Sparkles className="w-3.5 h-3.5 text-pink-200" />
-                      <span>💖 Basic Pass</span>
+                      <Sparkles className="w-3.5 h-3.5 text-teal-100" />
+                      <span>✨ Basic Pass</span>
                     </>
                   ) : (
                     <>

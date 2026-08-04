@@ -303,7 +303,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Banner */}
-          <div className="bg-gradient-to-r from-purple-950 via-indigo-950 to-purple-900 text-white p-5 pb-4 relative shrink-0">
+          <div className="bg-gradient-to-r from-teal-600 via-cyan-600 to-zinc-900 text-white p-5 pb-4 relative shrink-0">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white cursor-pointer transition-colors"
