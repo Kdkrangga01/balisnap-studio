@@ -64,7 +64,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top Banner Header */}
-          <div className={`p-6 pb-5 relative ${isPremium ? 'bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 text-white' : 'bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white'}`}>
+          <div className={`p-6 pb-5 relative ${isPremium ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-pink-500 text-white' : 'bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 text-white'}`}>
             <button
               onClick={onClose}
               className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 border border-white/30 flex items-center justify-center text-white cursor-pointer transition-colors"
@@ -176,7 +176,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
               </button>
               <button
                 onClick={handleUpgrade}
-                className={`flex-1 py-3.5 ${isPremium ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-200/50' : 'bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-md'} font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all`}
+                className={`flex-1 py-3.5 ${isPremium ? 'bg-gradient-to-r from-pink-400 via-rose-400 to-pink-500 hover:from-pink-500 hover:to-rose-500 text-white shadow-lg shadow-pink-200/60' : 'bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 hover:from-sky-500 hover:to-indigo-500 text-white shadow-md'} font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all`}
               >
                 <span>{isPremium ? 'Beli VIP (135k)' : 'Unlock All Frame (25k) 🔓'}</span>
                 <ArrowRight className="w-4 h-4 shrink-0" />
