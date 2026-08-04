@@ -1,13 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MAX_PHOTO_ZOOM, CUSTOM_MIN_PHOTO_ZOOM, type PackageTier } from '../context/PhotoboothContext';
+import { usePhotobooth, DEFAULT_PHOTO_ZOOM, MAX_PHOTO_ZOOM, CUSTOM_MIN_PHOTO_ZOOM } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { FilterPanel } from '../components/editor/FilterPanel';
 import { RetouchPanel } from '../components/editor/RetouchPanel';
 import { FrameColorPanel } from '../components/editor/FrameColorPanel';
 import { StickerPanel } from '../components/editor/StickerPanel';
 import { TextPanel } from '../components/editor/TextPanel';
-import { UpgradeModal } from '../components/UpgradeModal';
 import { getFrame4Corners, getStickerCornerPosition } from '../lib/stickerPlacement';
 import {
   ArrowLeft,
@@ -59,14 +58,9 @@ export const Editor: React.FC = () => {
     photoTransforms,
     updatePhotoTransform,
     resetPhotoTransform,
-    packageTier,
     customHeadline,
     setCustomHeadline,
   } = usePhotobooth();
-
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [upgradeModalTier, setUpgradeModalTier] = useState<PackageTier>('basic');
-  const [upgradeModalFeature, setUpgradeModalFeature] = useState<string | undefined>(undefined);
 
   const stageRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -500,26 +494,12 @@ export const Editor: React.FC = () => {
                   { key: 'text', icon: Type, label: 'Teks' },
                 ].map((tab) => {
                   const isActive = activeTab === tab.key;
-                  const isLockedBasic = (tab.key === 'sticker' || tab.key === 'text') && packageTier === 'free';
-                  const isLockedPremium = tab.key === 'retouch' && packageTier !== 'premium';
-                  const isLocked = isLockedBasic || isLockedPremium;
+                  const isLocked = false;
 
                   return (
                     <button
                       key={tab.key}
                       onClick={() => {
-                        if (isLockedPremium) {
-                          setUpgradeModalTier('premium');
-                          setUpgradeModalFeature('Photo Fine-Tuning & Retouch Pro');
-                          setUpgradeModalOpen(true);
-                          return;
-                        }
-                        if (isLockedBasic) {
-                          setUpgradeModalTier('basic');
-                          setUpgradeModalFeature(tab.key === 'sticker' ? 'Sticker Studio' : 'Text Overlay');
-                          setUpgradeModalOpen(true);
-                          return;
-                        }
                         setActiveTab(tab.key as typeof activeTab);
                         setSelectedId(null);
                       }}
@@ -828,14 +808,6 @@ export const Editor: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Upgrade Modal Component */}
-      <UpgradeModal
-        isOpen={upgradeModalOpen}
-        onClose={() => setUpgradeModalOpen(false)}
-        targetTier={upgradeModalTier}
-        featureName={upgradeModalFeature}
-      />
 
       <style>{`
         .custom-scroll::-webkit-scrollbar {

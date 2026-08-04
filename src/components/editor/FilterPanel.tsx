@@ -6,7 +6,7 @@ import { Sparkles, Heart, Lock } from 'lucide-react';
 import { UpgradeModal } from '../UpgradeModal';
 
 export const FilterPanel: React.FC = () => {
-  const { appliedFilter, setAppliedFilter, packageTier } = usePhotobooth();
+  const { appliedFilter, setAppliedFilter } = usePhotobooth();
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   const filters: { id: FilterType; name: string; desc: string; styleClass: string }[] = [
@@ -60,7 +60,7 @@ export const FilterPanel: React.FC = () => {
       <div className="grid grid-cols-2 gap-2.5">
         {filters.map((fil) => {
           const isActive = appliedFilter === fil.id;
-          const isLocked = packageTier === 'free' && fil.id !== 'normal' && fil.id !== 'grayscale';
+          const isLocked = false;
 
           return (
             <motion.button

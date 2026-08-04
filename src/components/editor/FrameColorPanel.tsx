@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
-import { frameColors, isColorOptionLocked } from '../../data/frameColors';
+import { frameColors } from '../../data/frameColors';
 import { presets } from '../../data/presets';
 import {
     Palette,
@@ -181,16 +181,11 @@ export const FrameColorPanel: React.FC = () => {
                                 { id: '#5c1414', name: 'Maroon Wine', css: '#5c1414', reqTier: 'basic' },
                                 { id: '#ffd8e4', name: 'Pastel Pink', css: '#ffd8e4', reqTier: 'basic' },
                             ].map(l => {
-                                const isBtnLocked = packageTier === 'free' && l.reqTier !== 'free';
                                 return (
                                     <button
                                         key={l.id}
                                         type="button"
                                         onClick={() => {
-                                            if (isBtnLocked) {
-                                                triggerLockModal('basic', `Warna ${l.name}`);
-                                                return;
-                                            }
                                             setLineColor(l.id);
                                             setFrameColor(l.id);
                                         }}
@@ -199,11 +194,6 @@ export const FrameColorPanel: React.FC = () => {
                                             activeLineColor === l.id ? 'border-zinc-800 bg-white ring-2 ring-zinc-500 shadow-sm' : 'border-zinc-200 bg-white/60 hover:border-zinc-400'
                                         }`}
                                     >
-                                        {isBtnLocked && (
-                                            <span className="absolute top-0.5 right-0.5 bg-rose-600 text-white rounded-full p-0.5 z-10">
-                                                <Lock className="w-2 h-2" />
-                                            </span>
-                                        )}
                                         <span className="w-5 h-5 rounded-full border border-black/10 shadow-inner block" style={{ background: l.css }} />
                                         <span className="text-[8px] font-bold text-zinc-600 truncate w-full text-center px-1">{l.name}</span>
                                     </button>
@@ -218,7 +208,7 @@ export const FrameColorPanel: React.FC = () => {
                         <div className="grid grid-cols-6 gap-2 max-h-[180px] overflow-y-auto custom-scroll pr-1">
                             {frameColors.map((fc) => {
                                 const isSelected = activeLineColor === fc.id || activeLineColor === fc.previewCss;
-                                const isLocked = isColorOptionLocked(fc, packageTier);
+                                const isLocked = false;
                                 const reqTier = fc.requiredTier || 'premium';
 
                                 return (

@@ -17,18 +17,12 @@ export interface StickerPack {
   requiredTier?: PackageTier;
 }
 
-export function isStickerLocked(sticker: StickerItem, currentTier: PackageTier): boolean {
-  const req = sticker.requiredTier || (sticker.category === 'nailong' || sticker.category === 'cat' || sticker.category === 'anime' || sticker.category === 'badge' ? 'premium' : 'basic');
-  if (currentTier === 'premium') return false;
-  if (currentTier === 'basic') return req === 'premium';
-  return req === 'basic' || req === 'premium';
+export function isStickerLocked(_sticker: StickerItem, _currentTier: PackageTier): boolean {
+  return false;
 }
 
-export function isStickerPackLocked(pack: StickerPack, currentTier: PackageTier): boolean {
-  const req = pack.requiredTier || (pack.category === 'nailong' || pack.category === 'cat' || pack.category === 'anime' || pack.category === 'badge' || pack.category === 'aesthetic' ? 'premium' : 'basic');
-  if (currentTier === 'premium') return false;
-  if (currentTier === 'basic') return req === 'premium';
-  return req === 'basic' || req === 'premium';
+export function isStickerPackLocked(_pack: StickerPack, _currentTier: PackageTier): boolean {
+  return false;
 }
 
 // ============================================================================

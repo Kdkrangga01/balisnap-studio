@@ -138,7 +138,6 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
     stickers,
     updateSticker,
     texts,
-    packageTier,
     customHeadline,
     particleEffect,
   } = usePhotobooth();
@@ -750,33 +749,6 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           );
         })()}
 
-        {/* WATERMARK KHUSUS PAKET FREE */}
-        {packageTier === 'free' && (
-          <Layer listening={false}>
-            <Group x={frameWidth - 290} y={frameHeight - 75}>
-              <Rect
-                x={0}
-                y={0}
-                width={270}
-                height={55}
-                fill="rgba(15, 23, 42, 0.82)"
-                cornerRadius={16}
-                shadowColor="rgba(0,0,0,0.4)"
-                shadowBlur={10}
-              />
-              <Text
-                x={18}
-                y={18}
-                text="📷 BALISNAP STUDIO • FREE"
-                fontSize={14}
-                fontStyle="bold"
-                fontFamily="sans-serif"
-                fill="#ffffff"
-                letterSpacing={1.5}
-              />
-            </Group>
-          </Layer>
-        )}
       </Stage>
     </div>
   );

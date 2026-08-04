@@ -83,20 +83,35 @@ export const CUSTOM_LOCATION_ROWS = 5;
 
 export function getFrameRequiredTier(frame: FrameTemplate): PackageTier {
   if (frame.id.startsWith('custom-') || frame.slots > 4) return 'premium';
-  if (frame.category === 'studio' && frame.slots <= 2) return 'free';
   return 'basic';
 }
 
-export function isFrameLocked(frame: FrameTemplate, currentTier: PackageTier): boolean {
-  const req = getFrameRequiredTier(frame);
+export function isFrameLocked(frame: FrameTemplate, currentTier: PackageTier, completedTrialSessions: number = 0): boolean {
   if (currentTier === 'premium') return false;
-  if (currentTier === 'basic') return req === 'premium';
-  return req === 'basic' || req === 'premium';
+
+  if (currentTier === 'basic') {
+    // Basic tier unlocks ALL built-in studio frames. Only custom user uploaded frames or >4 slots require Premium.
+    if (frame.id.startsWith('custom-') || frame.slots > 4) return true;
+    return false;
+  }
+
+  // Free Tier logic:
+  // ALL frames are UNLOCKED for Free users to pick & edit for 2 full photo sessions!
+  // Once 2 full photo sessions have been completed (photo capture + download/finish), starting a 3rd session locks all frames.
+  if (completedTrialSessions < 2) {
+    return false;
+  }
+
+  return true;
 }
 
 interface PhotoboothContextProps {
   packageTier: PackageTier;
   setPackageTier: (tier: PackageTier) => void;
+  completedTrialSessions: number;
+  incrementCompletedTrialSession: () => void;
+  getRemainingTrialSessions: () => number;
+  hasCompletedAllTrialSessions: () => boolean;
   step: StepType;
   setStep: (step: StepType) => void;
   selectedFrame: FrameTemplate | null;
@@ -248,6 +263,32 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch { }
     return savedSession?.packageTier || 'free';
   });
+
+  const [completedTrialSessions, setCompletedTrialSessions] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('balisnap_completed_trial_sessions');
+      if (saved) {
+        const count = parseInt(saved, 10);
+        if (!isNaN(count)) return count;
+      }
+    } catch { }
+    return 0;
+  });
+
+  const incrementCompletedTrialSession = () => {
+    if (packageTier === 'free') {
+      setCompletedTrialSessions(prev => {
+        const next = Math.min(2, prev + 1);
+        try {
+          localStorage.setItem('balisnap_completed_trial_sessions', next.toString());
+        } catch { }
+        return next;
+      });
+    }
+  };
+
+  const getRemainingTrialSessions = () => Math.max(0, 2 - completedTrialSessions);
+  const hasCompletedAllTrialSessions = () => packageTier === 'free' && completedTrialSessions >= 2;
 
   const setPackageTier = (tier: PackageTier) => {
     setPackageTierState(tier);
@@ -967,6 +1008,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   return (
     <PhotoboothContext.Provider value={{
       packageTier, setPackageTier,
+      completedTrialSessions, incrementCompletedTrialSession, getRemainingTrialSessions, hasCompletedAllTrialSessions,
       step, setStep, selectedFrame, selectFrame, photos, setPhotos, setPhotoAtSlot, clearPhotos,
       photoTransforms, updatePhotoTransform, resetPhotoTransform,
       stickers, addSticker, applyStickerPack, updateSticker, removeSticker, texts, addText, updateText, removeText,

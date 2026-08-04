@@ -21,7 +21,8 @@ export const Preview: React.FC = () => {
     resetAll,
     packageTier,
     photos,
-    setPhotos
+    setPhotos,
+    incrementCompletedTrialSession
   } = usePhotobooth();
 
   const stageRef = useRef<any>(null);
@@ -127,6 +128,9 @@ export const Preview: React.FC = () => {
 
         // Smart download or trigger native share sheet on mobile
         await saveOrShareImage(dataUrl, filename);
+
+        // Mark 1 completed trial photo session for Free Tier
+        incrementCompletedTrialSession();
 
         confetti({
           particleCount: 180,
