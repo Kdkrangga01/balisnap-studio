@@ -95,3 +95,32 @@ ON public.feedbacks FOR DELETE USING (true);
 -- Indeks untuk mempercepat pengurutan ulasan berdasarkan tanggal
 CREATE INDEX IF NOT EXISTS idx_feedbacks_created_at ON public.feedbacks(created_at DESC);
 
+-- ===============================================================
+-- 10. Buat Tabel `sigap_reports` (Laporan Pengaduan SIGAP)
+-- ===============================================================
+CREATE TABLE IF NOT EXISTS public.sigap_reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nama_korban TEXT NOT NULL,
+    nama_terlapor TEXT NOT NULL,
+    kelas TEXT NOT NULL,
+    jenis_perundungan TEXT NOT NULL,
+    kronologi TEXT NOT NULL,
+    lokasi TEXT NOT NULL,
+    hari_tanggal TEXT DEFAULT '',
+    waktu_kejadian TEXT DEFAULT '',
+    status TEXT DEFAULT 'Baru',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.sigap_reports ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public insert access on sigap_reports" ON public.sigap_reports;
+DROP POLICY IF EXISTS "Allow public select access on sigap_reports" ON public.sigap_reports;
+
+CREATE POLICY "Allow public insert access on sigap_reports"
+ON public.sigap_reports FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public select access on sigap_reports"
+ON public.sigap_reports FOR SELECT USING (true);
+
+CREATE INDEX IF NOT EXISTS idx_sigap_reports_created_at ON public.sigap_reports(created_at DESC);

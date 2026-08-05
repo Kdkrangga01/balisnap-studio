@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": ["@types/deno"],
+    "noEmit": true,
+    "composite": true,
+    "skipLibCheck": true
+  },
+  "include": ["./**/*.ts"]
+}
