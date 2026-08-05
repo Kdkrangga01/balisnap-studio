@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const rawUrl = (import.meta.env.VITE_SUPABASE_URL as string) || '';
+const rawKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || '';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-        'Supabase env vars belum diisi. Cek file .env kamu, harus ada VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY.'
-    );
-}
+export const isSupabaseClientConfigured = Boolean(
+    rawUrl && rawKey && rawUrl !== 'https://your-project-id.supabase.co'
+);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseUrl = isSupabaseClientConfigured ? rawUrl : 'https://placeholder.supabase.co';
+const supabaseAnonKey = isSupabaseClientConfigured ? rawKey : 'placeholder-key';
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

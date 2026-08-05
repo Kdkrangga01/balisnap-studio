@@ -14,7 +14,7 @@ Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
-  
+  }
 
   // Redirect silently to Google Form
   return Response.redirect(DESTINATION_URL, 302);

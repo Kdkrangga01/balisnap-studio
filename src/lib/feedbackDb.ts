@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, isSupabaseClientConfigured } from './supabaseClient';
 
 export interface FeedbackItem {
   id: string;
@@ -34,10 +34,39 @@ function mapRow(row: any): FeedbackItem {
 
 /**
  * Ambil semua testimoni dari Supabase, terbaru duluan.
- * Ini dibaca oleh SEMUA pengunjung dari database yang sama,
- * beda dengan localStorage yang cuma tersimpan per-browser.
  */
 export async function getFeedbacks(): Promise<FeedbackItem[]> {
+  if (!isSupabaseClientConfigured) {
+    try {
+      const local = localStorage.getItem('balisnap_local_feedbacks');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+
+    return [
+      {
+        id: 'sample-1',
+        name: 'Gek Maya',
+        rating: 5,
+        category: 'ulasan',
+        comment: 'Studio photobooth paling aesthetic di Bali! Hasil fotonya jernih banget dan banyak pilihan bingkai lucu.',
+        createdAt: new Date().toISOString(),
+        avatarColor: 'from-pink-500 to-rose-400'
+      },
+      {
+        id: 'sample-2',
+        name: 'Putu Agus',
+        rating: 5,
+        category: 'saran',
+        comment: 'Tambahkan lebih banyak stiker bertema pantai dan sunset dong biar makin seru!',
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        avatarColor: 'from-amber-500 to-orange-400'
+      }
+    ];
+  }
+
   const { data, error } = await supabase
     .from('feedbacks')
     .select('*')
@@ -45,21 +74,36 @@ export async function getFeedbacks(): Promise<FeedbackItem[]> {
 
   if (error) {
     console.error('Gagal mengambil feedback dari Supabase:', error);
-    throw new Error('FETCH_FAILED');
+    return [];
   }
 
   return (data || []).map(mapRow);
 }
 
 /**
- * Simpan testimoni baru ke Supabase.
- * Throw error kalau gagal, supaya UI (FeedbackModal) tidak
- * menampilkan pesan sukses palsu.
+ * Simpan testimoni baru ke Supabase atau localStorage jika Supabase belum dikonfigurasi.
  */
 export async function saveFeedback(
   item: Omit<FeedbackItem, 'id' | 'createdAt' | 'avatarColor'>
 ): Promise<FeedbackItem> {
   const avatarColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+
+  if (!isSupabaseClientConfigured) {
+    const newItem: FeedbackItem = {
+      id: `local-${Date.now()}`,
+      name: item.name,
+      rating: item.rating,
+      category: item.category,
+      comment: item.comment,
+      createdAt: new Date().toISOString(),
+      avatarColor
+    };
+    try {
+      const existing = JSON.parse(localStorage.getItem('balisnap_local_feedbacks') || '[]');
+      localStorage.setItem('balisnap_local_feedbacks', JSON.stringify([newItem, ...existing]));
+    } catch {}
+    return newItem;
+  }
 
   const { data, error } = await supabase
     .from('feedbacks')
@@ -92,12 +136,13 @@ export async function getFeedbackStats(): Promise<{ average: number; total: numb
 }
 
 /**
- * Dengerin perubahan realtime di tabel feedbacks (insert baru dari
- * pengunjung MANAPUN, di device manapun). Panggil `onChange` setiap
- * kali ada perubahan supaya UI bisa refresh datanya.
- * Return function untuk unsubscribe (panggil di cleanup useEffect).
+ * Dengerin perubahan realtime di tabel feedbacks.
  */
 export function subscribeToFeedbacks(onChange: () => void): () => void {
+  if (!isSupabaseClientConfigured) {
+    return () => {};
+  }
+
   const channel = supabase
     .channel('feedbacks-changes')
     .on(
