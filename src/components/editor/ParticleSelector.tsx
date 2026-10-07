@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePhotobooth, type ParticleEffectType } from '../../context/PhotoboothContext';
-import { Sparkles, Heart, Flower2, CircleDot, Zap, Ban } from 'lucide-react';
+import { Star, Heart, Flower2, CircleDot, Zap, Ban } from 'lucide-react';
 
 interface ParticleOption {
   id: ParticleEffectType;
@@ -20,9 +20,9 @@ export const particleOptions: ParticleOption[] = [
   },
   {
     id: 'sparkles',
-    name: 'Sparkle Bintang',
+    name: 'Kilau Bintang',
     desc: 'Kilatan Bintang Estetik',
-    icon: <Sparkles className="w-4 h-4 text-yellow-400" />,
+    icon: <Star className="w-4 h-4 text-yellow-500 fill-yellow-400" />,
     gradient: 'from-amber-400/20 to-yellow-500/20',
   },
   {
@@ -62,7 +62,7 @@ export const ParticleSelector: React.FC = () => {
     <div className="flex flex-col gap-3 p-1">
       <div className="flex flex-col">
         <h4 className="text-xs font-black uppercase text-zinc-800 tracking-wider flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4 text-amber-500" />
+          <Zap className="w-4 h-4 text-amber-500" />
           EFEK PARTIKEL & GLITTER VIP
         </h4>
         <p className="text-[10px] text-zinc-500 font-medium mt-0.5">

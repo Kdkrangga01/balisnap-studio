@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Newspaper } from 'lucide-react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 
 export const TextPanel: React.FC = () => {
@@ -65,7 +66,8 @@ export const TextPanel: React.FC = () => {
         <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-2 border-amber-400/50 p-4 rounded-2xl text-left shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-black uppercase tracking-wider text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-              📰 Custom Nama Daerah / Headline
+              <Newspaper className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 inline" />
+              Custom Nama Daerah / Headline
             </span>
             <span className="text-[9px] bg-amber-400 text-amber-950 font-extrabold px-2 py-0.5 rounded-full uppercase">
               Newspaper Frame

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Building2, CheckCircle2, Loader2, Sparkles, ShieldCheck, ArrowRight, Copy, Check, Upload, ImageIcon, FileCheck, AlertTriangle } from 'lucide-react';
+import { X, Building2, CheckCircle2, Loader2, ShieldCheck, ArrowRight, Copy, Check, Upload, ImageIcon, FileCheck, AlertTriangle, CreditCard, QrCode } from 'lucide-react';
 import { usePhotobooth, type PackageTier } from '../context/PhotoboothContext';
 
 interface CheckoutModalProps {
@@ -53,7 +53,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     // Check 1: File size check (Minimum 8KB, Maximum 12MB)
     if (file.size < 8 * 1024) {
-      setProofError('❌ File foto terlalu kecil (minimal 8 KB). Harap upload screenshot resi m-Banking / QRIS yang jelas!');
+      setProofError('File foto terlalu kecil (minimal 8 KB). Harap upload screenshot resi m-Banking / QRIS yang jelas!');
       setProofImage('');
       setProofFileName('');
       setIsValidatingProof(false);
@@ -61,7 +61,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     }
 
     if (file.size > 12 * 1024 * 1024) {
-      setProofError('❌ Ukuran file terlalu besar (maksimal 12 MB).');
+      setProofError('Ukuran file terlalu besar (maksimal 12 MB).');
       setProofImage('');
       setProofFileName('');
       setIsValidatingProof(false);
@@ -70,7 +70,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     // Check 2: File type check
     if (!file.type.startsWith('image/')) {
-      setProofError('❌ Harap upload file foto resi (PNG / JPG / JPEG / WebP).');
+      setProofError('Harap upload file foto resi (PNG / JPG / JPEG / WebP).');
       setProofImage('');
       setProofFileName('');
       setIsValidatingProof(false);
@@ -89,7 +89,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         const height = img.naturalHeight;
 
         if (width < 100 || height < 100) {
-          setProofError('❌ Resolusi gambar terlalu kecil untuk dibaca sebagai resi transfer yang sah.');
+          setProofError('Resolusi gambar terlalu kecil untuk dibaca sebagai resi transfer yang sah.');
           setProofImage('');
           setIsValidatingProof(false);
           return;
@@ -132,7 +132,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       };
 
       img.onerror = () => {
-        setProofError('❌ Gagal membaca file foto resi.');
+        setProofError('Gagal membaca file foto resi.');
         setProofImage('');
         setIsValidatingProof(false);
       };
@@ -159,13 +159,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const handleSimulatePayment = async () => {
     if (!customerNameInput.trim()) {
-      setProofError('⚠️ Harap ketik Nama Lengkap / Pemesan kamu terlebih dahulu!');
+      setProofError('Harap ketik Nama Lengkap / Pemesan kamu terlebih dahulu!');
       return;
     }
 
     // Penolakan Otomatis jika belum meng-upload bukti pembayaran
     if (!proofImage) {
-      setProofError('⚠️ Harap upload foto bukti transfer / resi m-Banking / QRIS terlebih dahulu!');
+      setProofError('Harap upload foto bukti transfer / resi m-Banking / QRIS terlebih dahulu!');
       return;
     }
 
@@ -303,120 +303,123 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Banner */}
-          <div className="bg-gradient-to-r from-teal-600 via-cyan-600 to-zinc-900 text-white p-5 pb-4 relative shrink-0">
+          <div className="bg-gradient-to-b from-stone-50/90 via-white to-white border-b border-stone-200/80 p-5 sm:p-6 relative shrink-0">
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white cursor-pointer transition-colors"
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 hover:text-stone-800 flex items-center justify-center cursor-pointer transition-colors"
+              aria-label="Tutup"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-3 py-0.5 rounded-full bg-pink-500/30 border border-pink-400/30 text-pink-300 text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-pink-400" />
-                Payment Gateway Direct / QRIS
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-3 py-1 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-2xs">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                PAYMENT GATEWAY DIRECT / QRIS
               </span>
             </div>
 
-            <h3 className="font-serif font-bold text-xl sm:text-2xl text-white tracking-tight">
-              Checkout &amp; Pembayaran 💳
+            <h3 className="font-serif font-bold text-xl sm:text-2xl text-stone-900 tracking-tight flex items-center gap-2.5">
+              <CreditCard className="w-5 h-5 text-stone-700 inline" />
+              <span>Checkout &amp; Pembayaran</span>
             </h3>
-            <p className="text-xs text-white/70 font-medium mt-0.5">
-              Invoice ID: <span className="font-mono text-pink-300 font-bold">{invoiceId}</span>
-            </p>
+            <div className="flex items-center gap-2 text-xs text-stone-500 font-medium mt-1">
+              <span>Invoice ID:</span>
+              <span className="font-mono text-stone-800 font-bold bg-stone-100 px-2 py-0.5 rounded-md border border-stone-200/70">{invoiceId}</span>
+            </div>
           </div>
 
           {/* Success Overlay View */}
           {isSuccess ? (
-            <div className="p-8 text-center flex flex-col items-center justify-center my-6">
+            <div className="p-8 sm:p-12 text-center flex flex-col items-center justify-center my-6">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: [0, 1.2, 1] }}
                 transition={{ duration: 0.5 }}
-                className="w-20 h-20 bg-emerald-100 rounded-full border-4 border-emerald-300 flex items-center justify-center text-emerald-600 mb-4 shadow-xl shadow-emerald-500/20"
+                className="w-20 h-20 bg-emerald-50 rounded-full border-2 border-emerald-200 flex items-center justify-center text-emerald-600 mb-4 shadow-sm"
               >
                 <CheckCircle2 className="w-10 h-10" />
               </motion.div>
-              <h3 className="font-serif font-bold text-2xl text-purple-950 mb-1">
-                Pembayaran Berhasil! 🎉
+              <h3 className="font-serif font-bold text-2xl text-stone-900 mb-1">
+                Pembayaran Berhasil
               </h3>
-              <p className="text-xs text-zinc-500 font-semibold max-w-xs mx-auto mb-4">
-                Lisensi <strong className="text-pink-600">{packageName}</strong> kamu sudah otomatis aktif! Selamat berfoto ria!
+              <p className="text-xs text-stone-500 font-normal max-w-xs mx-auto mb-5 leading-relaxed">
+                Lisensi <strong className="text-stone-800 font-semibold">{packageName}</strong> kamu sudah otomatis aktif! Selamat berfoto ria!
               </p>
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 font-black text-xs rounded-full border border-emerald-200 animate-pulse">
-                <Sparkles className="w-4 h-4" /> Otomatis Membuka Bingkai...
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 font-bold text-xs rounded-full border border-emerald-200">
+                <CheckCircle2 className="w-4 h-4" /> Otomatis Membuka Bingkai...
               </span>
             </div>
           ) : (
             <>
               {/* Scrollable Body Content (2 Columns on Desktop) */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-5 max-h-[calc(92vh-135px)] custom-scrollbar">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6 max-h-[calc(92vh-140px)] custom-scrollbar">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
 
                   {/* LEFT COLUMN: Input Form & Rekening & Upload */}
-                  <div className="space-y-3.5">
+                  <div className="space-y-4">
                     {/* Customer Name Input */}
                     <div>
-                      <label className="block text-[10.5px] font-black uppercase text-purple-900/70 tracking-wider mb-1">
-                        Nama Lengkap / Pemesan <span className="text-rose-500 font-bold">* (Wajib Diisi)</span>
+                      <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                        Nama Lengkap / Pemesan <span className="text-rose-500 font-medium normal-case text-[11px]">(Wajib Diisi)</span>
                       </label>
                       <input
                         type="text"
                         value={customerNameInput}
                         onChange={(e) => setCustomerNameInput(e.target.value)}
                         placeholder="Misal: Budi"
-                        className="w-full px-3.5 py-2 bg-purple-50/50 border border-purple-200/80 rounded-xl text-xs font-bold text-purple-950 placeholder:text-zinc-400 focus:outline-none focus:border-purple-600 transition-colors"
+                        className="w-full px-3.5 py-2.5 bg-stone-50/60 border border-stone-200 rounded-xl text-xs font-medium text-stone-900 placeholder:text-stone-400 focus:outline-none focus:bg-white focus:border-stone-400 focus:ring-2 focus:ring-stone-200 transition-all"
                       />
                     </div>
 
                     {/* Order Summary Card */}
-                    <div className="bg-gradient-to-br from-purple-50 via-pink-50/50 to-rose-50/50 border border-purple-100 p-3 rounded-2xl flex items-center justify-between">
+                    <div className="bg-stone-50/80 border border-stone-200/80 p-4 rounded-2xl flex items-center justify-between shadow-xs">
                       <div>
-                        <span className="text-[9px] font-black uppercase text-purple-900/60 tracking-wider block">Item Pembelian</span>
-                        <h4 className="font-extrabold text-xs sm:text-sm text-purple-950">{packageName}</h4>
+                        <span className="text-[10px] font-bold uppercase text-stone-500 tracking-wider block">Item Pembelian</span>
+                        <h4 className="font-bold text-xs sm:text-sm text-stone-900 mt-0.5">{packageName}</h4>
                       </div>
                       <div className="text-right">
-                        <span className="text-[9px] font-black uppercase text-purple-900/60 tracking-wider block">Total Tagihan</span>
-                        <span className="text-lg sm:text-xl font-black text-purple-950">{priceFormatted}</span>
+                        <span className="text-[10px] font-bold uppercase text-stone-500 tracking-wider block">Total Tagihan</span>
+                        <span className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight">{priceFormatted}</span>
                       </div>
                     </div>
 
                     {/* Info Rekening Bank */}
-                    <div className="bg-gradient-to-br from-amber-50/90 to-orange-50/60 p-3.5 rounded-2xl border border-amber-200/80 space-y-2">
-                      <div className="flex justify-between items-center border-b border-amber-200/60 pb-1.5">
-                        <span className="text-[9.5px] font-black uppercase text-amber-900 tracking-wider flex items-center gap-1">
-                          <Building2 className="w-3.5 h-3.5 text-amber-600" /> Direct Transfer / m-Banking
+                    <div className="bg-stone-50/60 p-4 rounded-2xl border border-stone-200 space-y-3">
+                      <div className="flex justify-between items-center border-b border-stone-200/60 pb-2">
+                        <span className="text-[10.5px] font-bold uppercase text-stone-700 tracking-wider flex items-center gap-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-stone-600" /> Direct Transfer / m-Banking
                         </span>
-                        <span className="text-[8.5px] font-black uppercase bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
+                        <span className="text-[9px] font-bold uppercase bg-stone-200/70 text-stone-800 px-2.5 py-0.5 rounded-full">
                           {personalBank.name}
                         </span>
                       </div>
 
-                      <div className="bg-white p-3 rounded-xl border border-amber-200/70 shadow-sm flex items-center justify-between">
+                      <div className="bg-white p-3.5 rounded-xl border border-stone-200 shadow-2xs flex items-center justify-between gap-3">
                         <div>
-                          <span className="text-[8.5px] text-zinc-400 font-bold uppercase block">Bank {personalBank.name} • A.N {personalBank.accountHolder}</span>
-                          <span className="font-mono text-base sm:text-lg font-black text-purple-950 tracking-wider">{personalBank.accountNo}</span>
+                          <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider block">Bank {personalBank.name} • A.N {personalBank.accountHolder}</span>
+                          <span className="font-mono text-base sm:text-lg font-bold text-stone-900 tracking-wider mt-0.5 block">{personalBank.accountNo}</span>
                         </div>
                         <button
                           onClick={handleCopyBank}
-                          className="px-2.5 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 text-[11px] font-extrabold rounded-lg border border-amber-300 flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                          className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold rounded-lg border border-stone-200 flex items-center gap-1.5 cursor-pointer transition-colors shrink-0"
                         >
-                          {copiedBank ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-amber-700" />}
+                          {copiedBank ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-stone-600" />}
                           <span>{copiedBank ? 'Tersalin!' : 'Salin'}</span>
                         </button>
                       </div>
                     </div>
 
                     {/* Upload Proof Card Section */}
-                    <div className="bg-gradient-to-br from-purple-50/80 to-indigo-50/50 border border-purple-200/80 p-3.5 rounded-2xl">
-                      <label className="block text-[10px] font-black uppercase text-purple-900/80 tracking-wider mb-1.5 flex items-center justify-between">
+                    <div className="bg-stone-50/60 border border-stone-200 p-4 rounded-2xl space-y-2">
+                      <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center justify-between">
                         <span className="flex items-center gap-1.5">
-                          <Upload className="w-3.5 h-3.5 text-purple-600" /> Upload Resi / Bukti Transfer
+                          <Upload className="w-3.5 h-3.5 text-stone-600" /> Upload Resi / Bukti Transfer
                         </span>
-                        <span className="text-[8.5px] text-pink-600 font-extrabold uppercase bg-pink-100 px-2 py-0.5 rounded-full">Instan Active</span>
+                        <span className="text-[9px] text-emerald-700 font-bold uppercase bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Instan Active</span>
                       </label>
 
-                      <div className="relative">
+                      <div className="relative pt-1">
                         <input
                           type="file"
                           accept="image/*"
@@ -426,42 +429,45 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         />
                         <label
                           htmlFor="payment-proof-input"
-                          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-dashed border-purple-300 hover:border-purple-500 rounded-xl cursor-pointer transition-colors text-xs font-extrabold text-purple-950 shadow-sm"
+                          className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-white border border-dashed border-stone-300 hover:border-stone-400 rounded-xl cursor-pointer transition-colors text-xs font-semibold text-stone-700 shadow-2xs"
                         >
                           {proofImage ? (
                             <>
                               <FileCheck className="w-4 h-4 text-emerald-600" />
                               <span className="truncate max-w-[180px] text-emerald-700 font-bold">{proofFileName || 'Foto Resi Terpilih'}</span>
-                              <span className="text-[9.5px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Ganti</span>
+                              <span className="text-[9.5px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">Ganti</span>
                             </>
                           ) : (
                             <>
-                              <ImageIcon className="w-4 h-4 text-purple-500" />
+                              <ImageIcon className="w-4 h-4 text-stone-400" />
                               <span>Pilih Foto Resi dari Galeri</span>
                             </>
                           )}
                         </label>
                       </div>
                       {isValidatingProof && (
-                        <div className="mt-2 p-2 rounded-xl bg-purple-100/80 text-purple-950 text-xs font-extrabold flex items-center justify-center gap-2">
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-600" />
+                        <div className="mt-2 p-2 rounded-xl bg-stone-100 text-stone-800 text-xs font-bold flex items-center justify-center gap-2">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-stone-600" />
                           <span>Memeriksa Keaslian Foto Resi...</span>
                         </div>
                       )}
 
                       {proofError && (
-                        <div className="mt-2.5 p-3 rounded-xl bg-rose-50 border border-rose-200/90 text-rose-700 text-[11px] font-bold flex items-start gap-2 leading-relaxed">
+                        <div className="mt-2.5 p-3 rounded-xl bg-rose-50 border border-rose-200/90 text-rose-700 text-xs font-medium flex items-start gap-2 leading-relaxed">
                           <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                           <span>{proofError}</span>
                         </div>
                       )}
 
                       {proofImage && !proofError && (
-                        <div className="mt-2.5 p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10.5px] font-extrabold flex items-center gap-2">
-                          <img src={proofImage} alt="Preview Resi" className="w-8 h-8 object-cover rounded-lg border border-emerald-300 shrink-0" />
+                        <div className="mt-2.5 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2.5">
+                          <img src={proofImage} alt="Preview Resi" className="w-9 h-9 object-cover rounded-lg border border-emerald-300 shrink-0" />
                           <div className="flex-1">
-                            <span className="text-emerald-700 block font-black">Bukti Resi Terverifikasi Valid ✅</span>
-                            <span className="text-[9.5px] text-emerald-600 font-medium">Siap di-upload &amp; diaktifkan otomatis!</span>
+                            <span className="text-emerald-700 font-bold flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 inline" />
+                              Bukti Resi Terverifikasi Valid
+                            </span>
+                            <span className="text-[10px] text-emerald-600 font-normal">Siap di-upload &amp; diaktifkan otomatis!</span>
                           </div>
                         </div>
                       )}
@@ -469,22 +475,23 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </div>
 
                   {/* RIGHT COLUMN: QRIS Barcode Display (Very Big & Clear) */}
-                  <div className="bg-gradient-to-br from-amber-50/90 to-orange-50/50 p-4 rounded-3xl border-2 border-amber-300 shadow-md flex flex-col items-center justify-center text-center h-full min-h-[360px]">
+                  <div className="bg-stone-50/60 p-5 rounded-3xl border border-stone-200 flex flex-col items-center justify-center text-center h-full min-h-[360px]">
                     {personalBank.qrisUrl ? (
                       <>
-                        <div className="p-2 bg-white rounded-2xl border border-zinc-200 shadow-inner flex items-center justify-center w-full max-w-[320px]">
+                        <div className="p-3 bg-white rounded-2xl border border-stone-200/90 shadow-2xs flex items-center justify-center w-full max-w-[300px]">
                           <img
                             src={personalBank.qrisUrl}
                             alt="QRIS Resmi BaliSnap Studio"
-                            className="w-full max-h-[350px] object-contain mx-auto rounded-xl"
+                            className="w-full max-h-[340px] object-contain mx-auto rounded-xl"
                           />
                         </div>
-                        <span className="text-[10px] sm:text-[11px] text-amber-950 font-black uppercase mt-3 block tracking-wider leading-snug">
-                          📱 SCAN QRIS RESMI BALISNAP STUDIO DENGAN M-BANKING / E-WALLET ANDA
+                        <span className="text-[10px] sm:text-[11px] text-stone-600 font-bold uppercase mt-3.5 flex items-center justify-center gap-1.5 tracking-wider leading-snug">
+                          <QrCode className="w-3.5 h-3.5 text-stone-500 shrink-0" />
+                          SCAN QRIS RESMI BALISNAP STUDIO DENGAN M-BANKING / E-WALLET
                         </span>
                       </>
                     ) : (
-                      <div className="p-6 text-center text-amber-900 text-xs font-bold">
+                      <div className="p-6 text-center text-stone-500 text-xs font-medium">
                         Gambar QRIS sedang dimuat...
                       </div>
                     )}
@@ -494,18 +501,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
 
               {/* Sticky Submit Footer Buttons */}
-              <div className="p-4 bg-white border-t border-purple-100 flex gap-3 z-10 shrink-0 shadow-lg">
-                <button
-                  onClick={onClose}
-                  disabled={isProcessing}
-                  className="px-4 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-extrabold text-xs rounded-xl transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  Batal
-                </button>
+              <div className="p-4 sm:px-6 bg-white border-t border-stone-200/80 flex items-center justify-between gap-4 z-10 shrink-0">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={onClose}
+                    disabled={isProcessing}
+                    className="px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Batal
+                  </button>
+                  <div className="hidden sm:block">
+                    <span className="text-[10px] text-stone-400 uppercase font-semibold block leading-none">Total Tagihan</span>
+                    <span className="text-sm font-extrabold text-stone-900 mt-0.5 block">{priceFormatted}</span>
+                  </div>
+                </div>
+
                 <button
                   onClick={handleSimulatePayment}
                   disabled={isProcessing}
-                  className="flex-1 py-3.5 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all disabled:opacity-50"
+                  className="flex-1 sm:flex-initial sm:min-w-[240px] px-6 py-3 bg-gradient-to-r from-rose-400 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-sm shadow-rose-200 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isProcessing ? (
                     <>
@@ -514,7 +528,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </>
                   ) : (
                     <>
-                      <span>Upload &amp; Aktifkan Paket Saya ⚡</span>
+                      <span>Upload &amp; Aktifkan Paket</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

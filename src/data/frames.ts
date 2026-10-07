@@ -52,7 +52,7 @@ export const frames: FrameTemplate[] = [
   // ============================================
   {
     id: "studio-photobooth-1",
-    name: "Studio Polos 1-Slot 🎪",
+    name: "Studio Polos 1-Slot",
     slots: 1,
     category: "studio",
     src: "/templates/studio-photobooth-1.svg",
@@ -63,7 +63,7 @@ export const frames: FrameTemplate[] = [
   },
   {
     id: "studio-photobooth-2",
-    name: "Studio Polos 2-Slot 🎪",
+    name: "Studio Polos 2-Slot",
     slots: 2,
     category: "studio",
     src: "/templates/studio-photobooth-2.svg",
@@ -75,7 +75,7 @@ export const frames: FrameTemplate[] = [
   },
   {
     id: "studio-photobooth-8",
-    name: "Studio 8-Cut 🎪",
+    name: "Studio 8-Cut",
     slots: 8,
     category: "studio",
     src: "/templates/studio-photobooth-8.svg",
@@ -93,7 +93,7 @@ export const frames: FrameTemplate[] = [
   },
   {
     id: "studio-photobooth-6",
-    name: "Studio 6-Cut 🎪",
+    name: "Studio 6-Cut",
     slots: 6,
     category: "studio",
     src: "/templates/studio-photobooth-6.svg",
@@ -109,7 +109,7 @@ export const frames: FrameTemplate[] = [
   },
   {
     id: "studio-photobooth-4",
-    name: "Studio 4-Cut 🎪",
+    name: "Studio 4-Cut",
     slots: 4,
     category: "studio",
     src: "/templates/studio-photobooth-4.svg",

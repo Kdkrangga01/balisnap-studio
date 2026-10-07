@@ -220,7 +220,7 @@ export const stickers: StickerItem[] = [
   { id: "cute-cat", name: "Cute Kitten White", src: "/stickers/cute-cat.svg", category: "cat" },
 
   // ==========================================
-  // 🐲 STIKER NAILONG 3D KOSTUM PINTEREST (REAL 3D CUTOUT)
+  // 🐲 STIKER NAILONG 3D KOSTUM PINTEREST (REAL 3D CUTOUT) 
   // ==========================================
   { id: "dino-yellow-real", name: "Real 3D Nailong Full Body", src: STICKER_REAL_DINO_YELLOW, category: "nailong" },
   { id: "nailong-kitty-strawberry", name: "Nailong 3D Hello Kitty Stroberi", src: STICKER_NAILONG_KITTY_STRAWBERRY, category: "nailong" },
@@ -278,7 +278,7 @@ export const stickers: StickerItem[] = [
   { id: "cute-star", name: "Star Face", src: "/stickers/cute-star.svg", category: "cute" },
   { id: "cute-ghost", name: "Cute Ghost", src: "/stickers/cute-ghost.svg", category: "cute" },
 
-  // TEXT BUBBLES
+  // TEXT BUBBLES  
   { id: "bubble-bestie", name: "Best Friends Bubble", src: "/stickers/bubble-bestie.svg", category: "text" },
   { id: "bubble-love", name: "Love Bubble", src: "/stickers/bubble-love.svg", category: "text" },
   { id: "bubble-ootd", name: "OOTD Tag", src: "/stickers/bubble-ootd.svg", category: "text" },
@@ -360,9 +360,9 @@ export const stickers: StickerItem[] = [
 ];
 
 // ============================================================================
-// PAKET AUTO-SPREAD BARU (KUCING SQUAD, NAILONG PARTY, AESTHETIC Y2K & SPIDERMAN)
+// PAKET AUTO-SPREAD BARU (KUCING SQUAD, NAILONG PARTY, AESTHETIC Y2K & SPIDERMAN) 
 // ============================================================================
-export const stickerPacks: StickerPack[] = [
+export const stickerPacks: StickerPack[] = [ 
   {
     id: "pack-luffy-onepiece",
     name: "One Piece Luffy Pirate 🏴‍☠️",
@@ -450,7 +450,7 @@ export const stickerPacks: StickerPack[] = [
     category: "cat",
     icon: STICKER_REAL_ANGRY_CAT,
     stickers: [
-      STICKER_REAL_ANGRY_CAT,
+      STICKER_REAL_ANGRY_CAT, 
       STICKER_REAL_HELMET_CAT,
       STICKER_REAL_HIPSTER_CAT,
       STICKER_REAL_PINK_RIBBON_CAT
@@ -520,7 +520,7 @@ export const stickerPacks: StickerPack[] = [
       STICKER_PINTEREST_BEAR_HEART,
       STICKER_PINTEREST_BOBA,
       STICKER_PINTEREST_CAKE
-    ]
+    ] 
   },
   {
     id: "pack-coquette-vibe",
@@ -537,10 +537,10 @@ export const stickerPacks: StickerPack[] = [
   },
   {
     id: "pack-cat-classic",
-    name: "Kucing Cute Pack 🐾",
+    name: "Kucing Cute Pack",
     category: "cute",
     icon: "/stickers/cute-cat.svg",
-    requiredTier: 'free',
+    requiredTier: 'free', 
     stickers: [
       "/stickers/cute-cat.svg",
       "/stickers/cute-angry-cat.png",
@@ -550,7 +550,7 @@ export const stickerPacks: StickerPack[] = [
   },
   {
     id: "pack-kawaii",
-    name: "Kawaii Friends ☁️",
+    name: "Kawaii Friends",
     category: "cute",
     icon: "/stickers/cute-bunny.svg",
     requiredTier: 'free',
@@ -563,7 +563,7 @@ export const stickerPacks: StickerPack[] = [
   },
   {
     id: "pack-sparkles",
-    name: "Sparkle Y2K Magic ✨",
+    name: "Y2K Stars Deco",
     category: "emoji",
     icon: "/stickers/sparkle-gold.svg",
     requiredTier: 'basic',
@@ -576,7 +576,7 @@ export const stickerPacks: StickerPack[] = [
   },
   {
     id: "pack-washi",
-    name: "Scrapbook Washi Tape 🎀",
+    name: "Scrapbook Washi Tape",
     category: "washi",
     icon: "/stickers/tape-pink.svg",
     requiredTier: 'basic',
@@ -589,7 +589,7 @@ export const stickerPacks: StickerPack[] = [
   },
   {
     id: "pack-speech",
-    name: "Cute Speech Bubbles 💬",
+    name: "Cute Speech Bubbles",
     category: "text",
     icon: "/stickers/bubble-love.svg",
     requiredTier: 'basic',

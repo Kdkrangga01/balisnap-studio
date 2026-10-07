@@ -14,7 +14,14 @@ import {
   ImageIcon,
   Eye,
   ExternalLink,
-  RefreshCw
+  RefreshCw,
+  BarChart3,
+  Plus,
+  Settings,
+  Save,
+  PlusCircle,
+  KeyRound,
+  ArrowRight
 } from 'lucide-react';
 
 import { usePhotobooth, type PackageTier } from '../context/PhotoboothContext';
@@ -126,7 +133,7 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
 
   const handleUnlockMyOwnerVIP = () => {
     setPackageTier('premium');
-    alert('🎉 Selamat! Paket PREMIUM VIP Pass telah aktif untuk Anda sebagai Owner!');
+    alert('Selamat! Paket PREMIUM VIP Pass telah aktif untuk Anda sebagai Owner!');
   };
 
   // Kuis & Hitung Omset
@@ -153,7 +160,7 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="font-serif font-black text-xl md:text-2xl text-white tracking-tight">
-                    Panel Admin &amp; Laporan Keuangan 📊
+                    Panel Admin &amp; Laporan Keuangan
                   </h2>
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10px] font-black uppercase tracking-wider">
                     Owner Dashboard
@@ -180,7 +187,7 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                 <Lock className="w-8 h-8 text-pink-400" />
               </div>
               <h3 className="font-serif font-bold text-2xl text-white mb-2">
-                Login Dashboard Admin 🔒
+                Login Dashboard Admin
               </h3>
               <p className="text-xs text-zinc-400 font-medium mb-6 leading-relaxed">
                 Silakan masukkan ID Admin &amp; Password untuk masuk ke Dashboard Laporan Keuangan dan Akses VIP Owner.
@@ -215,16 +222,17 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 mt-2 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-pink-500/20 cursor-pointer transition-all active:scale-95"
+                  className="w-full py-3.5 mt-2 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-pink-500/20 cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
-                  Masuk Dashboard Admin 🚀
+                  <span>Masuk Dashboard Admin</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
 
               <div className="mt-6 p-3.5 bg-purple-950/40 border border-purple-800/30 rounded-2xl text-left flex items-start gap-2.5">
                 <HelpCircle className="w-4.5 h-4.5 text-purple-400 shrink-0 mt-0.5" />
                 <div className="text-[11px] text-purple-200/90 leading-snug space-y-0.5">
-                  <p>🔑 <strong>Akses Admin Bawaan:</strong></p>
+                  <p><strong>Akses Admin Bawaan:</strong></p>
                   <p>• Admin: <strong className="font-mono text-pink-300">admin</strong></p>
                   <p>• Password: <strong className="font-mono text-pink-300">admin 081239</strong></p>
                 </div>
@@ -239,33 +247,36 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                 <div className="flex gap-2">
                   <button
                     onClick={() => setActiveTab('overview')}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer transition-colors ${
+                    className={`px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer transition-colors flex items-center gap-1.5 ${
                       activeTab === 'overview'
                         ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
                         : 'bg-zinc-800 text-zinc-400 hover:text-white'
                     }`}
                   >
-                    📊 Ringkasan &amp; Rekap Excel
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    <span>Ringkasan &amp; Rekap Excel</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('addManual')}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer transition-colors ${
+                    className={`px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer transition-colors flex items-center gap-1.5 ${
                       activeTab === 'addManual'
                         ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
                         : 'bg-zinc-800 text-zinc-400 hover:text-white'
                     }`}
                   >
-                    ➕ Catat Transaksi Manual
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Catat Transaksi Manual</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('settings')}
-                    className={`px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer transition-colors ${
+                    className={`px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer transition-colors flex items-center gap-1.5 ${
                       activeTab === 'settings'
                         ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
                         : 'bg-zinc-800 text-zinc-400 hover:text-white'
                     }`}
                   >
-                    ⚙️ Pengaturan Passcode
+                    <Settings className="w-3.5 h-3.5" />
+                    <span>Pengaturan Passcode</span>
                   </button>
                 </div>
 
@@ -290,7 +301,7 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                       className="px-4 py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 text-white text-xs font-black rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all border border-emerald-400/30"
                     >
                       <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                      <span>Status VIP Owner: AKTIF ✅</span>
+                      <span>Status VIP Owner: AKTIF</span>
                     </button>
                   ) : (
                     <button
@@ -298,7 +309,7 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                       className="px-4 py-2 bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600 text-white text-xs font-black rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
                     >
                       <Crown className="w-4 h-4 text-amber-200" />
-                      <span>Buka Akses Premium Saya Sekarang 👑</span>
+                      <span>Buka Akses Premium Saya Sekarang</span>
                     </button>
                   )}
                 </div>
@@ -380,7 +391,7 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                         className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black rounded-xl shadow-lg shadow-emerald-600/30 flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
                       >
                         <FileSpreadsheet className="w-4 h-4" />
-                        <span>📥 Download File Excel (.xlsx)</span>
+                        <span>Download File Excel (.xlsx)</span>
                       </button>
 
                       {transactions.length > 0 && (
@@ -464,7 +475,7 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                                         className="px-2.5 py-1.5 bg-purple-900/80 hover:bg-purple-800 border border-purple-500/50 text-purple-200 hover:text-white text-[10.5px] font-black rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
                                       >
                                         <ImageIcon className="w-3.5 h-3.5 text-pink-400" />
-                                        <span>Perbesar Resi 🔍</span>
+                                        <span>Perbesar Resi</span>
                                       </button>
                                     </div>
                                   ) : (
@@ -513,7 +524,10 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
               {activeTab === 'addManual' && (
                 <div className="bg-zinc-950 p-6 rounded-2xl border border-zinc-800 max-w-xl mx-auto space-y-4">
                   <div className="border-b border-zinc-800 pb-3">
-                    <h3 className="font-extrabold text-base text-white">➕ Catat Transaksi Manual (Offline/Manual Transfer)</h3>
+                    <h3 className="font-extrabold text-base text-white flex items-center gap-1.5">
+                      <PlusCircle className="w-4 h-4 text-purple-400" />
+                      Catat Transaksi Manual (Offline/Manual Transfer)
+                    </h3>
                     <p className="text-xs text-zinc-400 mt-1">
                       Gunakan form ini jika pelanggan membayar langsung via cash atau transfer manual tanpa sistem otomatis.
                     </p>
@@ -605,9 +619,10 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
 
                     <button
                       type="submit"
-                      className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-colors"
+                      className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-colors flex items-center justify-center gap-2"
                     >
-                      Simpan ke Laporan Keuangan 💾
+                      <Save className="w-4 h-4" />
+                      <span>Simpan ke Laporan Keuangan</span>
                     </button>
                   </form>
                 </div>
@@ -617,7 +632,10 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
               {activeTab === 'settings' && (
                 <div className="bg-zinc-950 p-6 rounded-2xl border border-zinc-800 max-w-xl mx-auto space-y-4">
                   <div className="border-b border-zinc-800 pb-3">
-                    <h3 className="font-extrabold text-base text-white">⚙️ Pengaturan Secret Passcode Owner</h3>
+                    <h3 className="font-extrabold text-base text-white flex items-center gap-1.5">
+                      <KeyRound className="w-4 h-4 text-purple-400" />
+                      Pengaturan Secret Passcode Owner
+                    </h3>
                     <p className="text-xs text-zinc-400 mt-1">
                       Ubah kata sandi rahasia yang dipakai untuk membuka paket VIP dan mengakses laporan ini.
                     </p>
@@ -649,9 +667,10 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                     <button
                       type="submit"
                       disabled={!newPasscode.trim()}
-                      className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-colors"
+                      className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-colors flex items-center justify-center gap-2"
                     >
-                      Simpan Passcode Baru 🔒
+                      <Save className="w-4 h-4" />
+                      <span>Simpan Passcode Baru</span>
                     </button>
                   </form>
                 </div>
@@ -681,7 +700,7 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
               <div className="w-full flex items-center justify-between border-b border-zinc-800 pb-3 mb-3 shrink-0">
                 <h4 className="font-extrabold text-sm sm:text-base text-white flex items-center gap-2">
                   <ImageIcon className="w-5 h-5 text-pink-400" />
-                  Foto Bukti Pembayaran / Resi Transfer (Resolusi Asli HD 🔍)
+                  Foto Bukti Pembayaran / Resi Transfer (Resolusi Asli HD)
                 </h4>
                 <button
                   onClick={() => setSelectedProofImage(null)}
@@ -711,7 +730,7 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                   className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-purple-300 hover:text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  <span>Buka di Tab Baru / Tab Penuh 🔗</span>
+                  <span>Buka di Tab Baru / Tab Penuh</span>
                 </button>
 
                 <button

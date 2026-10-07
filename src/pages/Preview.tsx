@@ -7,9 +7,9 @@ import { DigitalEnvelopeModal } from '../components/DigitalEnvelopeModal';
 import { UpgradeModal } from '../components/UpgradeModal';
 import { FeedbackModal } from '../components/FeedbackModal';
 import {
-  ArrowLeft, Download, RotateCcw, Check, Share2, Sparkles, Heart, X,
+  ArrowLeft, Download, RotateCcw, Check, Share2, Camera, Heart, X,
   ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown,
-  Film, Loader2, Mail, MessageSquarePlus, Star
+  Film, Loader2, Mail, MessageSquarePlus, Star, Smartphone 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -302,36 +302,30 @@ export const Preview: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFF5F8] via-[#FFFBF7] to-[#FFF0F5] py-8 px-4 md:py-12 md:px-8 relative overflow-hidden flex flex-col items-center justify-center select-none">
+    <div className="min-h-screen bg-[#F8F9FA] py-8 px-4 md:py-12 md:px-8 relative overflow-hidden flex flex-col items-center justify-center select-none text-zinc-800">
 
-      {/* MEWAH: BACKGROUND GRID PASTEL ELEGAN WITH SOFT GLOW PATTERN */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,182,193,0.18)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,182,193,0.18)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0" />
+      {/* BACKGROUND MICRO-GRID & AMBIENT SOFT LIGHTING */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-100/70 via-zinc-50/40 to-transparent pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.025)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0" />
 
       {/* AMBIENT LIGHTING ORBS */}
-      <div className="absolute top-10 left-1/4 w-96 h-96 bg-pink-300/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-rose-300/20 rounded-full blur-3xl pointer-events-none" />
-
-      {/* DECORATIVE ELEMENTS */}
-      <div className="absolute top-20 left-10 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block" style={{ animationDuration: '3s' }}>🎀</div>
-      <div className="absolute top-1/2 left-8 text-2xl animate-pulse pointer-events-none opacity-60 hidden xl:block text-pink-400"><Sparkles className="w-7 h-7 fill-current" /></div>
-      <div className="absolute bottom-24 left-12 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block" style={{ animationDuration: '4s' }}>🧸</div>
-      <div className="absolute top-28 right-10 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block" style={{ animationDuration: '3.5s' }}>💖</div>
-      <div className="absolute bottom-16 right-10 text-3xl animate-bounce pointer-events-none opacity-80 hidden xl:block" style={{ animationDuration: '4.5s' }}>✨</div>
+      <div className="absolute top-10 left-1/4 w-96 h-96 bg-slate-200/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-zinc-200/25 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-6xl w-full mx-auto flex flex-col items-center relative z-10">
 
         {/* ===== TOP NAVBAR / HEADER ROW ===== */}
-        <div className="w-full flex flex-col md:flex-row justify-between items-center bg-white/80 backdrop-blur-md border border-pink-200/60 p-4 md:p-6 rounded-3xl shadow-xl shadow-pink-100/50 gap-4 mb-8">
+        <div className="w-full flex flex-col md:flex-row justify-between items-center bg-white/90 backdrop-blur-xl border border-zinc-200/80 p-4 md:p-6 rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] gap-4 mb-8">
           <div className="text-center md:text-left flex flex-col items-center md:items-start">
             <button
-              onClick={() => setStep('editor')}
-              className="inline-flex items-center gap-2 text-pink-600 hover:text-pink-700 font-extrabold text-[11px] tracking-wider uppercase mb-1.5 transition-all group px-3.5 py-1.5 bg-pink-100/60 rounded-full border border-pink-200/80 shadow-sm"
+              onClick={() => setStep('editor')} 
+              className="inline-flex items-center gap-2 text-zinc-700 hover:text-zinc-900 font-extrabold text-[11px] tracking-wider uppercase mb-1.5 transition-all group px-3.5 py-1.5 bg-zinc-100/90 rounded-full border border-zinc-200 shadow-sm"
             >
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-              Kembali ke Editor
+              Kembali ke Editor 
             </button>
             <h1 className="font-serif text-3xl md:text-4xl font-black text-zinc-900 tracking-tight leading-none mt-1">
-              Pratinjau Studio HD
+              Pratinjau Studio HD 
             </h1>
             <p className="text-zinc-500 text-xs font-medium mt-1">
               Hasil karya foto Anda telah rampung &amp; siap diunduh dalam kualitas tertinggi.
@@ -364,8 +358,9 @@ export const Preview: React.FC = () => {
           {/* LEFT COLUMN: CANVIEW CANVAS SHOWCASE */}
           <div className="lg:col-span-6 flex flex-col justify-center items-center relative" ref={containerRef}>
             {/* CUTE TAPE STRIP */}
-            <div className="absolute top-[-12px] left-1/2 -translate-x-1/2 w-36 h-7 bg-pink-200/80 backdrop-blur-md border border-white/80 skew-x-[-10deg] z-20 shadow-md pointer-events-none flex items-center justify-center text-[9px] text-pink-700 font-black tracking-widest uppercase rounded-sm">
-              ✨ BALISNAP MEMORIES ✨
+            <div className="absolute top-[-12px] left-1/2 -translate-x-1/2 px-4 h-7 bg-zinc-100/90 backdrop-blur-md border border-zinc-200 skew-x-[-10deg] z-20 shadow-xs pointer-events-none flex items-center justify-center gap-1.5 text-[9px] text-zinc-700 font-bold tracking-widest uppercase rounded-sm">
+              <Camera className="w-3 h-3 text-zinc-500 inline" />
+              <span>BALISNAP MEMORIES</span>
             </div>
 
             <div
@@ -563,15 +558,16 @@ export const Preview: React.FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               {/* CUTE TAPE DECORATION */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-5 bg-pink-200/80 border border-white/80 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center text-[8px] text-pink-700 font-black tracking-widest uppercase">
-                ✨ BALISNAP MEMORIES ✨
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 px-3 h-5 bg-zinc-100 border border-zinc-200 skew-x-[-10deg] shadow-xs pointer-events-none flex items-center justify-center gap-1 text-[8px] text-zinc-700 font-bold tracking-widest uppercase">
+                <Camera className="w-2.5 h-2.5 text-zinc-500 inline" />
+                <span>BALISNAP MEMORIES</span>
               </div>
 
               {/* CLOSE BUTTON */}
               <button
                 onClick={() => setShowSuccessModal(false)}
-                className="absolute top-4 right-4 w-9 h-9 bg-pink-50 hover:bg-pink-100 text-pink-600 rounded-full flex items-center justify-center transition-all shadow-sm group"
-                aria-label="Tutup"
+                className="absolute top-4 right-4 w-9 h-9 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full flex items-center justify-center transition-all shadow-xs group"
+                aria-label="Tutup" 
               >
                 <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
               </button>
@@ -582,7 +578,7 @@ export const Preview: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-1.5 px-3.5 py-1 bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full">
-                <Sparkles className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-3.5 h-3.5" />
                 Unduh Berhasil!
               </div>
 
@@ -593,7 +589,7 @@ export const Preview: React.FC = () => {
 
               {/* MOBILE GALLERY TIP */}
               <div className="w-full p-3.5 bg-pink-50/90 border border-pink-200/80 rounded-2xl text-[11px] text-zinc-600 leading-relaxed font-medium text-left flex items-start gap-2.5 select-auto">
-                <span className="text-lg flex-shrink-0">📱</span>
+                <Smartphone className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-extrabold text-pink-600">Pengguna Smartphone:</span> Jika foto belum masuk otomatis ke Galeri, <span className="font-bold underline text-pink-600">tekan &amp; tahan foto</span> di bawah ini lalu pilih <b>"Simpan Gambar" (Save Image)</b>.
                 </div>
@@ -681,8 +677,9 @@ export const Preview: React.FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               {/* CUTE TAPE DECORATION */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-5 bg-purple-200/80 border border-white/80 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center text-[8px] text-purple-700 font-black tracking-widest uppercase">
-                🎬 BOOMERANG GIF STUDIO 🎬
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 px-3 h-5 bg-purple-200/80 border border-white/80 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center gap-1 text-[8px] text-purple-700 font-black tracking-widest uppercase">
+                <Film className="w-2.5 h-2.5 text-purple-600 inline" />
+                <span>BOOMERANG GIF STUDIO</span>
               </div>
 
               {/* CLOSE BUTTON */}
@@ -742,15 +739,16 @@ export const Preview: React.FC = () => {
               {/* SPEED CONTROLS */}
               {!isGeneratingGif && (
                 <div className="w-full flex flex-col gap-1.5">
-                  <span className="text-[10px] font-black uppercase text-purple-700 tracking-wider text-left">
-                    ⚡ Kecepatan Animasi Boomerang:
+                  <span className="text-[10px] font-black uppercase text-purple-700 tracking-wider text-left flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-purple-600 inline" />
+                    Kecepatan Animasi Boomerang:
                   </span>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-2"> 
                     {[
-                      { label: '🏃 Cepat', value: 0.2 },
-                      { label: '✨ Normal', value: 0.35 },
-                      { label: '🐢 Santai', value: 0.5 },
-                    ].map((s) => (
+                      { label: 'Cepat (0.2s)', value: 0.2 },
+                      { label: 'Normal (0.35s)', value: 0.35 }, 
+                      { label: 'Santai (0.5s)', value: 0.5 }, 
+                    ].map((s) => ( 
                       <button
                         key={s.value}
                         onClick={() => handleOpenGifModal(s.value)}
@@ -768,7 +766,7 @@ export const Preview: React.FC = () => {
               )}
 
               {/* DOWNLOAD GIF BUTTON */}
-              {!isGeneratingGif && gifResult && (
+              {!isGeneratingGif && gifResult && ( 
                 <button
                   onClick={handleDownloadGif}
                   className="w-full py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 hover:from-purple-700 hover:to-rose-600 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-lg shadow-purple-300/50 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"

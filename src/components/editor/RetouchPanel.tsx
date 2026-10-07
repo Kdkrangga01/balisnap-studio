@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
-import { Sun, Contrast, Palette, Sparkles, RotateCcw, Crown } from 'lucide-react';
+import { Sun, Contrast, Palette, Wand2, RotateCcw, Crown } from 'lucide-react';
 
 export const RetouchPanel: React.FC = () => {
   const { fineTuning, setFineTuning, resetFineTuning } = usePhotobooth();
@@ -11,7 +11,7 @@ export const RetouchPanel: React.FC = () => {
       <div className="flex items-center justify-between bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-rose-500/10 p-3 rounded-2xl border border-purple-200/60">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-sm">
-            <Sparkles className="w-4 h-4" />
+            <Wand2 className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
@@ -114,7 +114,7 @@ export const RetouchPanel: React.FC = () => {
       <div className="bg-white/80 border border-slate-200/80 p-3.5 rounded-2xl shadow-sm space-y-2">
         <div className="flex justify-between items-center text-xs font-bold text-slate-700">
           <span className="flex items-center gap-1.5 text-pink-600">
-            <Sparkles className="w-4 h-4" /> Soft Focus (Skin Retouch)
+            <Wand2 className="w-4 h-4" /> Soft Focus (Skin Retouch)
           </span>
           <span className="font-mono text-[11px] bg-pink-50 text-pink-700 px-2 py-0.5 rounded-lg border border-pink-200/60">
             {fineTuning.softFocus}px

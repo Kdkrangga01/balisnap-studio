@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Play, Pause, X, Volume2 } from 'lucide-react';
+import { Mail, Play, Pause, X, Volume2, Heart } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { createMobileAudioElement } from '../lib/mobileAudio';
 
@@ -161,8 +161,9 @@ export const RecipientGiftModal: React.FC = () => {
           onClick={(e) => e.stopPropagation()}
         >
           {/* TAPE DECORATION */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-5 bg-pink-300/80 border border-white/80 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center text-[8px] text-rose-800 font-black tracking-widest uppercase">
-            💌 KADO AMPLOP SURAT DIGITAL 💌
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 px-3 h-5 bg-pink-300/80 border border-white/80 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center gap-1 text-[8px] text-rose-800 font-black tracking-widest uppercase">
+            <Heart className="w-2.5 h-2.5 text-rose-700 inline" />
+            <span>KADO AMPLOP SURAT DIGITAL</span>
           </div>
 
           <button
@@ -194,7 +195,7 @@ export const RecipientGiftModal: React.FC = () => {
                 <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors" />
                 <Mail className="w-14 h-14 text-white mb-2 group-hover:scale-110 transition-transform animate-pulse" />
                 <span className="text-sm font-black text-white uppercase tracking-wider drop-shadow-sm">
-                  KLIK UNTUK BUKA AMPLOP 💌
+                  KLIK UNTUK BUKA AMPLOP
                 </span>
                 <span className="text-[10px] text-pink-100 font-medium mt-1">
                   Sentuh untuk mendengarkan pesan suara &amp; foto strip!

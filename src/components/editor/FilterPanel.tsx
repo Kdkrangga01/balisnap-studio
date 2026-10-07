@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 import type { FilterType } from '../../context/PhotoboothContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Heart, Lock } from 'lucide-react';
+import { Sliders, Heart, Lock } from 'lucide-react';
 import { UpgradeModal } from '../UpgradeModal';
 
 export const FilterPanel: React.FC = () => {
@@ -12,37 +12,37 @@ export const FilterPanel: React.FC = () => {
   const filters: { id: FilterType; name: string; desc: string; styleClass: string }[] = [
     {
       id: 'normal',
-      name: 'Original ✨',
+      name: 'Original',
       desc: 'Warna asli potretmu',
       styleClass: 'bg-gradient-to-br from-[#EFEBE2] to-[#DCD7CD]'
     },
     {
       id: 'grayscale',
-      name: 'Noir B&W 🖤',
+      name: 'Noir B&W',
       desc: 'Hitam & putih klasik',
       styleClass: 'bg-gradient-to-br from-zinc-300 to-zinc-600'
     },
     {
       id: 'vintage',
-      name: 'Retro Warm 🎞️',
+      name: 'Retro Warm',
       desc: 'Nuansa hangat nostalgic',
       styleClass: 'bg-gradient-to-br from-amber-100 to-amber-500'
     },
     {
       id: 'sepia',
-      name: 'Warm Sepia ☕',
+      name: 'Warm Sepia',
       desc: 'Warna cokelat antik',
       styleClass: 'bg-gradient-to-br from-orange-200 to-amber-800'
     },
     {
       id: 'cool',
-      name: 'Cool Dream ❄️',
+      name: 'Cool Dream',
       desc: 'Tampilan dingin modern',
       styleClass: 'bg-gradient-to-br from-sky-100 to-indigo-500'
     },
     {
       id: 'vivid',
-      name: 'Vivid Chrome 🌈',
+      name: 'Vivid Chrome',
       desc: 'Warna kontras & pop',
       styleClass: 'bg-gradient-to-br from-pink-300 to-rose-500'
     }
@@ -52,7 +52,7 @@ export const FilterPanel: React.FC = () => {
     <div className="flex flex-col gap-2.5 text-left select-none">
       {/* Label Title bergaya cute pastel gallery */}
       <label className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-pink-400 mb-1 bg-pink-50/60 border border-pink-100/40 px-2.5 py-1 rounded-full w-fit">
-        <Sparkles className="w-3 h-3 text-pink-400 animate-pulse" />
+        <Sliders className="w-3 h-3 text-pink-400" />
         Pilih Filter Foto
       </label>
 

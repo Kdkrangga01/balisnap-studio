@@ -19,7 +19,7 @@ declare global {
 }
 
 /**
- * Load Midtrans Snap Script dynamically into the document
+ * Load Midtrans Snap Script dynamically into the document 
  */
 export function loadMidtransSnapScript(clientKey: string, isSandbox = true): Promise<boolean> {
   return new Promise((resolve) => {

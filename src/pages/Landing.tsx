@@ -4,9 +4,9 @@ import { CheckoutModal } from '../components/CheckoutModal';
 import { TestimonialSection } from '../components/TestimonialSection';
 import { FeedbackModal } from '../components/FeedbackModal';
 import {
-  Camera, Sparkles, Image as ImageIcon, ArrowRight, Maximize2, Menu, X, Star, Check,
+  Camera, Image as ImageIcon, ArrowRight, Maximize2, Menu, X, Star, Check,
   Crown, Wand2, UploadCloud, Download, CheckCircle2, Palette, Film, HelpCircle,
-  Layers, ChevronRight, ChevronLeft
+  Layers, ChevronRight, ChevronLeft, ShieldCheck, Clock, BookOpen, Zap, Mail
 } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
@@ -119,7 +119,7 @@ export const Landing: React.FC = () => {
         'VIP Canva Upload: Pengguna VIP dapat mengunggah desain bingkai kustom buatan sendiri (PNG transparan) dari Canva atau Photoshop.'
       ],
       previewImg: '/cat1.png',
-      previewTag: '🎨 100+ Template Ready'
+      previewTag: '100+ Template Ready'
     },
     {
       id: 2,
@@ -134,7 +134,7 @@ export const Landing: React.FC = () => {
         'Fitur Retake (Foto Ulang): Jika ada pose foto yang kurang pas atau merem, cukup klik "Retake" pada slot tersebut tanpa harus ulang dari awal!'
       ],
       previewImg: '/cat2.jpg',
-      previewTag: '📸 Auto Timer & Retake'
+      previewTag: 'Auto Timer & Retake'
     },
     {
       id: 3,
@@ -150,7 +150,7 @@ export const Landing: React.FC = () => {
         'Retouch Pro & Fine-Tuning: Kontrol presisi Brightness, Contrast, Saturation, dan Skin Smooth Blur.'
       ],
       previewImg: '/cat3.png',
-      previewTag: '✨ Full Creative Control'
+      previewTag: 'Full Creative Control'
     },
     {
       id: 4,
@@ -165,7 +165,7 @@ export const Landing: React.FC = () => {
         'Kado Amplop Digital 3D (VIP): Kirimkan foto strip sebagai kado ucapan 3D romantis berpesan suara via WhatsApp!'
       ],
       previewImg: '/cat1.png',
-      previewTag: '🎬 HD PNG & Boomerang GIF'
+      previewTag: 'HD PNG & Boomerang GIF'
     }
   ];
 
@@ -194,11 +194,13 @@ export const Landing: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-[100vw] bg-gradient-to-br from-[#FFF8F6] via-[#F6F0FF] to-[#EDF6FF] text-zinc-800 selection:bg-pink-200 selection:text-pink-900 overflow-x-hidden relative font-sans antialiased">
+    <div className="min-h-screen w-full max-w-[100vw] bg-[#F8F9FA] text-zinc-800 selection:bg-zinc-200 selection:text-zinc-900 overflow-x-hidden relative font-sans antialiased">
 
-      {/* ===== SOFT PASTEL AURA BACKGROUND ===== */}
-      <div className="absolute top-[-8%] left-[-8%] w-[70vw] sm:w-[50vw] h-[70vw] sm:h-[50vw] bg-pink-200/40 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
-      <div className="absolute top-[22%] right-[-10%] w-[65vw] sm:w-[45vw] h-[65vw] sm:h-[45vw] bg-purple-200/40 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none" />
+      {/* ===== SOFT ARCHITECTURAL AMBIENT BACKGROUND ===== */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-100/70 via-zinc-50/40 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.025)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+      <div className="absolute top-[-8%] left-[-8%] w-[50vw] h-[50vw] bg-slate-200/20 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[22%] right-[-10%] w-[45vw] h-[45vw] bg-zinc-200/25 rounded-full blur-[140px] pointer-events-none" />
 
 
 
@@ -440,7 +442,6 @@ export const Landing: React.FC = () => {
                 className="bg-zinc-900 rounded-lg flex-1 w-full flex items-center justify-center relative overflow-hidden group/img"
               >
                 <img src="/cat3.png" alt="Preview 3" className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-500 group-hover/img:scale-105" />
-                <Sparkles className="w-5 h-5 text-white/40 z-10" />
               </motion.div>
 
               <div className="text-center font-serif tracking-[0.25em] text-[8.5px] sm:text-[9.5px] text-pink-300 font-bold pt-1 border-t border-zinc-800 z-10">
@@ -466,7 +467,7 @@ export const Landing: React.FC = () => {
               <span>PANDUAN LENGKAP CARA PAKAI</span>
             </div>
             <h2 className="font-serif font-bold text-3xl sm:text-5xl text-purple-950 tracking-tight leading-tight mb-4">
-              Mudah Banget! 4 Langkah Foto Strip 📸
+              Mudah Banget! 4 Langkah Foto Strip
             </h2>
             <p className="text-purple-950/70 text-xs sm:text-base font-medium leading-relaxed">
               Ikuti alur sederhana dari memilih bingkai hingga menyimpan hasil foto berkualitas tinggi langsung di smartphone Anda.
@@ -505,7 +506,7 @@ export const Landing: React.FC = () => {
                         </span>
                         {isActive && (
                           <span className="text-[9px] font-black text-purple-900 bg-purple-100 px-2 py-0.5 rounded-full">
-                            Aktif 👈
+                            Aktif
                           </span>
                         )}
                       </div>
@@ -526,7 +527,8 @@ export const Landing: React.FC = () => {
                   className="text-xs font-black text-pink-600 hover:text-pink-700 flex items-center gap-1.5 uppercase tracking-wider py-2 cursor-pointer"
                 >
                   <HelpCircle className="w-4 h-4" />
-                  <span>Buka Panduan Detail (Pop-Up) ➔</span>
+                  <span>Buka Panduan Detail (Pop-Up)</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
                 <div className="flex gap-2">
                   <button
@@ -619,9 +621,10 @@ export const Landing: React.FC = () => {
                   <div className="pt-4 border-t border-pink-100 flex items-center justify-between gap-3">
                     <button
                       onClick={() => setGuideModalOpen(true)}
-                      className="text-[11px] font-black text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-4 py-3 rounded-2xl transition-colors cursor-pointer"
+                      className="text-[11px] font-black text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-4 py-3 rounded-2xl transition-colors cursor-pointer flex items-center gap-1.5"
                     >
-                      Buka Modal Panduan Lengkap 📖
+                      <BookOpen className="w-4 h-4 text-purple-700" />
+                      <span>Buka Panduan Lengkap</span>
                     </button>
 
                     <button
@@ -648,14 +651,14 @@ export const Landing: React.FC = () => {
 
           {/* Section Header */}
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pink-100/80 border border-pink-200 text-pink-700 text-[9px] sm:text-[10px] font-black tracking-widest uppercase mb-4 shadow-sm">
-              <Camera className="w-3.5 h-3.5 text-pink-500" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-100/90 border border-stone-200/80 text-stone-700 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase mb-4 shadow-xs">
+              <Camera className="w-3.5 h-3.5 text-stone-500" />
               <span>PILIHAN AKSES STUDIO</span>
             </div>
-            <h2 className="font-serif font-bold text-3xl sm:text-5xl md:text-6xl text-purple-950 tracking-tight leading-tight mb-4">
-              Pilih Paket Photobooth Studiomu! 📸
+            <h2 className="font-serif font-bold text-3xl sm:text-5xl md:text-6xl text-stone-900 tracking-tight leading-tight mb-4">
+              Pilih Paket Photobooth Studio
             </h2>
-            <p className="text-purple-950/70 text-xs sm:text-base font-medium leading-relaxed">
+            <p className="text-stone-500 text-xs sm:text-base font-normal leading-relaxed">
               Abadikan momen serumu bareng pacar, sahabat, atau diri sendiri langsung dari HP atau Laptop tanpa perlu antre ke studio mahal!
             </p>
           </div>
@@ -663,7 +666,7 @@ export const Landing: React.FC = () => {
           {/* 3 Pricing Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch pt-8 sm:pt-10">
 
-            {/* 1. PAKET GRATIS (Biru Soft) */}
+            {/* 1. PAKET GRATIS (Clean Studio White) */}
             <motion.div
               custom={0}
               initial="hidden"
@@ -671,54 +674,56 @@ export const Landing: React.FC = () => {
               viewport={{ once: true, margin: "-30px" }}
               variants={cardPopUpVariants}
               style={{ willChange: "transform, opacity" }}
-              className="bg-gradient-to-br from-[#F4F9FF] via-[#EBF3FE] to-[#E0ECFD] border-2 border-sky-200/80 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-2 relative text-left"
+              className="bg-white/95 border border-stone-200/90 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1.5 relative text-left"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl">🆓</span>
-                  <span className="text-[10px] font-black tracking-widest text-sky-700 uppercase bg-sky-100/90 px-3 py-1 rounded-full border border-sky-200/70">
+                  <div className="w-9 h-9 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-600 shadow-xs border border-stone-200/60">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-bold tracking-widest text-stone-600 uppercase bg-stone-100/90 px-3 py-1 rounded-full border border-stone-200/80">
                     FREE TRIAL PASS
                   </span>
                 </div>
-                <h3 className="font-serif font-bold text-xl text-zinc-900 mb-1">Paket GRATIS</h3>
-                <p className="text-[11px] text-zinc-500 font-medium mb-5 min-h-[32px]">
-                  💡 Coba gratis 2 sesi foto lengkap dengan 100% fitur studio.
+                <h3 className="font-serif font-bold text-xl text-stone-900 mb-1">Paket GRATIS</h3>
+                <p className="text-xs text-stone-500 font-normal leading-relaxed mb-5 min-h-[36px]">
+                  Coba gratis 2 sesi foto lengkap dengan 100% fitur studio.
                 </p>
 
-                <div className="mb-6 pb-6 border-b border-sky-200/60">
+                <div className="mb-6 pb-6 border-b border-stone-100">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl sm:text-4xl font-black text-zinc-900">Rp 0</span>
+                    <span className="text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">Rp 0</span>
                   </div>
-                  <span className="text-[10px] font-black uppercase text-sky-800 bg-sky-100/80 px-2.5 py-1 rounded-md inline-block mt-2 border border-sky-200/80">
-                    ⏱️ Masa Aktif: 2 Sesi Foto (Foto &amp; Unduh HD 2x)
+                  <span className="text-[10px] font-medium uppercase text-stone-600 bg-stone-100/80 px-2.5 py-1 rounded-lg inline-flex items-center mt-2 border border-stone-200/70">
+                    <Clock className="w-3 h-3 inline mr-1 text-stone-500" /> Masa Aktif: 2 Sesi Foto (Foto &amp; Unduh HD 2x)
                   </span>
                 </div>
 
-                <ul className="space-y-3 text-xs text-zinc-700 font-medium mb-8">
+                <ul className="space-y-3 text-xs text-stone-600 font-normal leading-relaxed mb-8">
                   <li className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
-                    <span>🎨 Akses <strong>SEMUA Filter Warna, Stiker Studio &amp; Fitur Pro</strong> di Editor.</span>
+                    <Check className="w-4 h-4 text-stone-400 shrink-0 mt-0.5" />
+                    <span>Akses <strong>SEMUA Filter Warna, Stiker Studio &amp; Fitur Pro</strong> di Editor.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
-                    <span>🎁 <strong>Bebas 2 Sesi Foto Sepenuhnya</strong> (proses foto + edit + unduh 2x).</span>
+                    <Check className="w-4 h-4 text-stone-400 shrink-0 mt-0.5" />
+                    <span><strong>Bebas 2 Sesi Foto Sepenuhnya</strong> (proses foto + edit + unduh 2x).</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
-                    <span>📱 <strong>Unduh Hasil Foto HD Jernih</strong> pada 2 sesi coba pertama.</span>
+                    <Check className="w-4 h-4 text-stone-400 shrink-0 mt-0.5" />
+                    <span><strong>Unduh Hasil Foto HD Jernih</strong> pada 2 sesi coba pertama.</span>
                   </li>
                 </ul>
               </div>
 
               <button
                 onClick={() => handleSelectPackage('free')}
-                className="w-full py-3.5 px-4 bg-white/90 hover:bg-sky-50 text-sky-900 font-black text-xs uppercase tracking-widest rounded-2xl transition-colors active:scale-95 cursor-pointer border border-sky-200/80"
+                className="w-full py-3.5 px-4 bg-white hover:bg-stone-50 text-stone-800 font-bold text-xs uppercase tracking-wider rounded-2xl transition-all duration-200 active:scale-95 cursor-pointer border border-stone-300 shadow-xs flex items-center justify-center gap-1.5"
               >
                 Coba Gratis Sekarang
               </button>
             </motion.div>
 
-            {/* 2. PAKET BASIC / SINGLE EVENT (Biru Soft Ocean) */}
+            {/* 2. PAKET BASIC / SINGLE EVENT (Soft Sky Pearl) */}
             <motion.div
               custom={1}
               initial="hidden"
@@ -726,154 +731,155 @@ export const Landing: React.FC = () => {
               viewport={{ once: true, margin: "-30px" }}
               variants={cardPopUpVariants}
               style={{ willChange: "transform, opacity" }}
-              className="bg-gradient-to-br from-[#F0F8FF] via-[#E6F2FF] to-[#D9EBFF] border-2 border-blue-200/90 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-md shadow-blue-100/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 relative text-left"
+              className="bg-gradient-to-b from-white via-sky-50/30 to-indigo-50/20 border border-sky-200/80 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1.5 relative text-left"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl">✨</span>
-                  <span className="text-[10px] font-black tracking-widest text-blue-700 uppercase bg-blue-100/90 px-3 py-1 rounded-full border border-blue-200/70">
-                    24h UNLIMITED PASS
+                  <div className="w-9 h-9 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-600 shadow-xs border border-sky-100">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-bold tracking-widest text-sky-700 uppercase bg-sky-50 px-3 py-1 rounded-full border border-sky-200/70">
+                    24H UNLIMITED PASS
                   </span>
                 </div>
-                <h3 className="font-serif font-bold text-xl text-zinc-900 mb-1">Paket BASIC</h3>
-                <p className="text-[11px] text-zinc-500 font-medium mb-5 min-h-[32px]">
-                  ✨ Pilihan favorit foto aesthetic bareng pacar, bestie, atau selfie.
+                <h3 className="font-serif font-bold text-xl text-stone-900 mb-1">Paket BASIC</h3>
+                <p className="text-xs text-stone-500 font-normal leading-relaxed mb-5 min-h-[36px]">
+                  Pilihan favorit foto aesthetic bareng pacar, bestie, atau selfie.
                 </p>
 
-                <div className="mb-6 pb-6 border-b border-blue-200/60">
+                <div className="mb-6 pb-6 border-b border-sky-100">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-xs text-zinc-400 line-through font-bold">Rp 35.000</span>
-                    <span className="text-3xl sm:text-4xl font-black text-zinc-900">Rp 25.000</span>
+                    <span className="text-xs text-stone-400 line-through font-medium">Rp 35.000</span>
+                    <span className="text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">Rp 25.000</span>
                   </div>
-                  <span className="text-[10px] font-black uppercase text-blue-800 bg-blue-100/80 px-2.5 py-1 rounded-md inline-block mt-2 border border-blue-200/80">
-                    ⏱️ Masa Aktif: Pass 24 Jam (Foto &amp; Download Sepuasnya)
+                  <span className="text-[10px] font-medium uppercase text-sky-800 bg-sky-50 px-2.5 py-1 rounded-lg inline-flex items-center mt-2 border border-sky-100">
+                    <Clock className="w-3 h-3 inline mr-1 text-sky-600" /> Masa Aktif: Pass 24 Jam (Foto &amp; Download Sepuasnya)
                   </span>
                 </div>
 
-                <ul className="space-y-3 text-xs text-zinc-700 font-medium mb-8">
+                <ul className="space-y-3 text-xs text-stone-600 font-normal leading-relaxed mb-8">
                   <li className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                    <span>⚡ <strong>Fitur Foto Ulang (Retake) Tanpa Batas</strong> per slot foto.</span>
+                    <Check className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                    <span><strong>Fitur Foto Ulang (Retake) Tanpa Batas</strong> per slot foto.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                    <span>🔓 <strong>UNLOCK SEMUA Frame Studio</strong> (Korean, Y2K, Polaroid, Cute, Retro, Filmstrip).</span>
+                    <Check className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                    <span><strong>Unlock Semua Frame Studio</strong> (Korean, Y2K, Polaroid, Cute, Retro, Filmstrip).</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                    <span>🎀 <strong>Bebas Foto &amp; Unduh Sepuasnya 24 Jam</strong> tanpa batasan 2 sesi.</span>
+                    <Check className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                    <span><strong>Bebas Foto &amp; Unduh Sepuasnya 24 Jam</strong> tanpa batasan 2 sesi.</span>
                   </li>
                 </ul>
               </div>
 
               <button
                 onClick={() => handleSelectPackage('basic')}
-                className="w-full py-3.5 px-4 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-400 hover:from-sky-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-md transition-transform active:scale-95 cursor-pointer"
+                className="w-full py-3.5 px-4 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs uppercase tracking-wider rounded-2xl shadow-sm shadow-sky-600/20 transition-all duration-200 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
               >
                 Pilih Paket Basic (Rp 25.000)
               </button>
             </motion.div>
 
-            {/* 3. PAKET PREMIUM / VIP CREATOR PASS (Pink Soft) */}
+            {/* 3. PAKET PREMIUM / VIP CREATOR PASS (Soft Elegant Rose Pearl) */}
             <div className="relative pt-4">
-              {/* Badge Populer — positioned cleanly with top clearance */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-gradient-to-r from-pink-400 via-rose-400 to-pink-500 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-md shadow-pink-200/60 flex items-center gap-1.5 whitespace-nowrap z-30 border border-white/80">
-                <Crown className="w-3.5 h-3.5 text-pink-100 fill-pink-100 shrink-0" />
-                <span>⭐ VIP UNLIMITED &amp; FULL ACCESS</span>
+              {/* Floating VIP Badge */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-gradient-to-r from-rose-400 to-rose-500 text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-sm shadow-rose-200/50 flex items-center gap-1.5 whitespace-nowrap z-30 border border-white/60">
+                <Crown className="w-3.5 h-3.5 text-rose-100 fill-rose-100 shrink-0" />
+                <span>VIP UNLIMITED &amp; FULL ACCESS</span>
               </div>
 
-            <motion.div
-              custom={2}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-30px" }}
-              variants={cardPopUpVariants}
-              style={{ willChange: "transform, opacity" }}
-              className="bg-gradient-to-br from-[#FFF5F8] via-[#FDF0F5] to-[#FCE4EC] border-2 border-pink-200/90 text-zinc-900 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-lg shadow-pink-100/50 hover:-translate-y-2 relative text-left transition-all duration-300"
-            >
-              {/* Ambient Soft Glow Effect */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-pink-200/20 via-rose-100/15 to-purple-100/10 rounded-full blur-3xl pointer-events-none" />
-
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4 mt-2">
-                  <span className="text-2xl">👑</span>
-                  <span className="text-[10px] font-black tracking-widest text-pink-700 uppercase bg-pink-100/90 px-3 py-1 rounded-full border border-pink-200/70">
-                    VIP CREATOR PASS
-                  </span>
-                </div>
-                <h3 className="font-serif font-bold text-2xl text-zinc-900 mb-1">Paket PREMIUM VIP</h3>
-                <p className="text-[11px] text-zinc-500 font-medium mb-5 min-h-[32px]">
-                  👑 Solusi komplit! Bebas foto sepuasnya 60 Hari + Upload Canva Frame Sendiri &amp; Fitur Custom Pro.
-                </p>
-
-                <div className="mb-6 pb-6 border-b border-pink-200/60">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl sm:text-4xl font-black text-zinc-900">Rp 135.000</span>
-                  </div>
-                  <span className="text-[10px] font-black uppercase text-pink-800 bg-pink-100/80 px-2.5 py-1 rounded-md inline-block mt-2 border border-pink-200/80">
-                    ⏱️ Masa Aktif: Pass 60 Hari (2 Bulan Bebas Foto)
-                  </span>
-                </div>
-
-                <div className="text-[10px] font-black uppercase tracking-wider text-pink-800/80 mb-3 flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-pink-500" /> Semua Fitur Basic + Benefit VIP Eksklusif:
-                </div>
-
-                <ul className="space-y-2.5 text-xs text-zinc-700 font-medium mb-8">
-                  <li className="flex items-start gap-2.5">
-                    <Star className="w-3.5 h-3.5 text-pink-400 fill-pink-300 shrink-0 mt-0.5" />
-                    <span>⭐ <strong>Semua Akses Paket Basic Included</strong> (Bebas Watermark, All Filters, QR Download).</span>
-                  </li>
-
-                  <li className="flex items-start gap-2.5 bg-pink-500/8 p-2.5 rounded-xl border border-pink-200/60">
-                    <UploadCloud className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
-                    <span>🖼️ <strong>Unlimited Upload Custom Frame</strong> — Import bingkai karya sendiri (Canva/Photoshop PNG &amp; SVG) tanpa batas.</span>
-                  </li>
-
-                  <li className="flex items-start gap-2.5 bg-rose-500/8 p-2.5 rounded-xl border border-rose-200/60">
-                    <CheckCircle2 className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                    <span>📸 <strong>VIP Studio Extended Grid</strong> — Akses Grid Rame-rame 6-Cut &amp; 8-Cut khusus grup besar &amp; pesta.</span>
-                  </li>
-
-                  <li className="flex items-start gap-2.5">
-                    <Palette className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
-                    <span>🎨 <strong>Full Custom Color &amp; Wallpaper Studio</strong> — Bebas atur Color Picker HEX, Border Thickness, Radius, Shadow &amp; Custom Backdrop.</span>
-                  </li>
-
-                  <li className="flex items-start gap-2.5">
-                    <Wand2 className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
-                    <span>🪄 <strong>Photo Fine-Tuning &amp; Retouch Pro</strong> — Kontrol presisi Brightness, Contrast, Saturation &amp; Soft Focus.</span>
-                  </li>
-
-                  <li className="flex items-start gap-2.5 bg-pink-500/8 p-2.5 rounded-xl border border-pink-200/60">
-                    <Film className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
-                    <span>🎬 <strong>Unduh Animasi GIF (Boomerang Photobooth)</strong> — Ekspor foto bergerak beresolusi tinggi dengan pilihan kecepatan animasi.</span>
-                  </li>
-
-                  <li className="flex items-start gap-2.5 bg-rose-500/8 p-2.5 rounded-xl border border-rose-200/60">
-                    <Sparkles className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                    <span>💌 <strong>Kirim Kado Amplop Digital 3D &amp; Voice Note</strong> — Kirim foto strip ucapan &amp; rekaman suara otomatis via WhatsApp.</span>
-                  </li>
-
-                  <li className="flex items-start gap-2.5 bg-pink-500/8 p-2.5 rounded-xl border border-pink-200/60">
-                    <Sparkles className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
-                    <span>🌟 <strong>Dynamic Sparkle &amp; Partikel Overlays</strong> — Efek glitter, sakura, love, &amp; partikel kilau estetik pada foto.</span>
-                  </li>
-
-                  <li className="flex items-start gap-2.5">
-                    <Download className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
-                    <span>🚀 <strong>Export Super Ultra-HD 4K Print-Ready</strong> — Hasil cetak fisik kualitas studio tanpa terkompresi.</span>
-                  </li>
-                </ul>
-              </div>
-
-              <button
-                onClick={() => handleSelectPackage('premium')}
-                className="w-full py-4 px-4 bg-gradient-to-r from-pink-400 via-rose-400 to-pink-500 hover:from-pink-500 hover:to-rose-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-pink-200/60 transition-transform active:scale-95 flex items-center justify-center gap-2 border border-white/40 cursor-pointer relative z-10"
+              <motion.div
+                custom={2}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-30px" }}
+                variants={cardPopUpVariants}
+                style={{ willChange: "transform, opacity" }}
+                className="bg-gradient-to-b from-white via-rose-50/40 to-pink-50/30 border-2 border-rose-300/80 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-xl shadow-rose-200/30 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative text-left"
               >
-                <span>Pilih Paket Premium VIP</span>
-              </button>
-            </motion.div>
+                <div>
+                  <div className="flex items-center justify-between mb-4 mt-2">
+                    <div className="w-9 h-9 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600 shadow-xs border border-rose-100">
+                      <Crown className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] font-bold tracking-widest text-rose-700 uppercase bg-rose-50 px-3 py-1 rounded-full border border-rose-200/70">
+                      VIP CREATOR PASS
+                    </span>
+                  </div>
+                  <h3 className="font-serif font-bold text-2xl text-stone-900 mb-1">Paket PREMIUM VIP</h3>
+                  <p className="text-xs text-stone-500 font-normal leading-relaxed mb-5 min-h-[36px]">
+                    Solusi komplit! Bebas foto sepuasnya 60 Hari + Upload Canva Frame Sendiri &amp; Fitur Custom Pro.
+                  </p>
+
+                  <div className="mb-6 pb-6 border-b border-rose-100">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">Rp 135.000</span>
+                    </div>
+                    <span className="text-[10px] font-medium uppercase text-rose-800 bg-rose-50 px-2.5 py-1 rounded-lg inline-flex items-center mt-2 border border-rose-100">
+                      <Clock className="w-3 h-3 inline mr-1 text-rose-600" /> Masa Aktif: Pass 60 Hari (2 Bulan Bebas Foto)
+                    </span>
+                  </div>
+
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700 mb-3 flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-rose-500" /> Semua Fitur Basic + Benefit VIP Eksklusif:
+                  </div>
+
+                  <ul className="space-y-2.5 text-xs text-stone-600 font-normal leading-relaxed mb-8">
+                    <li className="flex items-start gap-2.5">
+                      <Check className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Semua Akses Paket Basic Included</strong> (Bebas Watermark, All Filters, QR Download).</span>
+                    </li>
+
+                    <li className="flex items-start gap-2.5">
+                      <UploadCloud className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Unlimited Upload Custom Frame</strong> — Import bingkai karya sendiri (Canva/Photoshop PNG &amp; SVG) tanpa batas.</span>
+                    </li>
+
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>VIP Studio Extended Grid</strong> — Akses Grid Rame-rame 6-Cut &amp; 8-Cut khusus grup besar &amp; pesta.</span>
+                    </li>
+
+                    <li className="flex items-start gap-2.5">
+                      <Palette className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Full Custom Color &amp; Wallpaper Studio</strong> — Bebas atur Color Picker HEX, Border Thickness, Radius, Shadow &amp; Custom Backdrop.</span>
+                    </li>
+
+                    <li className="flex items-start gap-2.5">
+                      <Wand2 className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Photo Fine-Tuning &amp; Retouch Pro</strong> — Kontrol presisi Brightness, Contrast, Saturation &amp; Soft Focus.</span>
+                    </li>
+
+                    <li className="flex items-start gap-2.5">
+                      <Film className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Unduh Animasi GIF (Boomerang Photobooth)</strong> — Ekspor foto bergerak beresolusi tinggi dengan pilihan kecepatan animasi.</span>
+                    </li>
+
+                    <li className="flex items-start gap-2.5">
+                      <Mail className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Kirim Kado Amplop Digital 3D &amp; Voice Note</strong> — Kirim foto strip ucapan &amp; rekaman suara otomatis via WhatsApp.</span>
+                    </li>
+
+                    <li className="flex items-start gap-2.5">
+                      <Wand2 className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Dynamic Atmosphere &amp; Partikel Overlays</strong> — Efek kilau lembut, sakura, love, &amp; partikel estetik pada foto.</span>
+                    </li>
+
+                    <li className="flex items-start gap-2.5">
+                      <Download className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                      <span><strong>Export Super Ultra-HD 4K Print-Ready</strong> — Hasil cetak fisik kualitas studio tanpa terkompresi.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <button
+                  onClick={() => handleSelectPackage('premium')}
+                  className="w-full py-4 px-4 bg-gradient-to-r from-rose-400 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white font-bold text-xs uppercase tracking-widest rounded-2xl shadow-sm shadow-rose-200 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer relative z-10"
+                >
+                  <span>Pilih Paket Premium VIP</span>
+                </button>
+              </motion.div>
             </div>
 
           </div>
@@ -927,15 +933,15 @@ export const Landing: React.FC = () => {
 
                 <div className="flex items-center gap-2 mb-2">
                   <span className="p-2 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md">
-                    <Sparkles className="w-5 h-5 text-pink-300" />
+                    <BookOpen className="w-5 h-5 text-white" />
                   </span>
                   <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full border border-white/20">
-                    📖 PANDUAN PENGGUNA BARU
+                    PANDUAN PENGGUNA BARU
                   </span>
                 </div>
 
                 <h2 className="font-serif font-bold text-2xl sm:text-3xl text-white mb-1">
-                  Cara Pakai BaliSnap Studio 📸
+                  Cara Pakai BaliSnap Studio
                 </h2>
                 <p className="text-xs text-white/80 font-medium leading-relaxed">
                   Panduan lengkap dari memilih bingkai hingga foto tersimpan di galeri ponselmu.

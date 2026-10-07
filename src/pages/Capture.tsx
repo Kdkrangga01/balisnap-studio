@@ -6,7 +6,9 @@ import {
   ArrowLeft,
   Upload,
   RefreshCw,
-  Sparkles,
+  Check,
+  Camera,
+  Zap,
   ChevronRight,
   AlertCircle,
   CheckCircle,
@@ -18,21 +20,19 @@ import {
   Smile,
   Volume2,
   VolumeX,
-  Zap,
   Wand2,
-  Sun,
-  Sparkle
+  Sun
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
 
 const CAMERA_FILTERS = [
-  { id: 'none', label: 'Natural ✨', filterCss: 'contrast(100%) saturate(100%)' },
-  { id: 'soft-glow', label: 'Korea Soft Glow 🌸', filterCss: 'contrast(98%) brightness(108%) saturate(110%) blur(0.3px)' },
-  { id: 'y2k-gloss', label: 'Y2K Glossy 💅', filterCss: 'contrast(112%) brightness(105%) saturate(130%) hue-rotate(-5deg)' },
-  { id: 'indie-vibes', label: 'Indie Film 🎞️', filterCss: 'contrast(92%) brightness(102%) sepia(20%) saturate(95%)' },
-  { id: 'moody-cyber', label: 'Moody Cyber 🌃', filterCss: 'contrast(115%) brightness(98%) saturate(125%) hue-rotate(15deg)' },
-  { id: 'sweet-pink', label: 'Sweet Pink 🎀', filterCss: 'contrast(102%) saturate(115%) sepia(8%) hue-rotate(-10deg)' },
-  { id: 'bw-elegant', label: 'B&W Vintage 🖤', filterCss: 'grayscale(100%) contrast(118%) brightness(102%)' }
+  { id: 'none', label: 'Natural', filterCss: 'contrast(100%) saturate(100%)' },
+  { id: 'soft-glow', label: 'Korea Soft Glow', filterCss: 'contrast(98%) brightness(108%) saturate(110%) blur(0.3px)' },
+  { id: 'y2k-gloss', label: 'Y2K Glossy', filterCss: 'contrast(112%) brightness(105%) saturate(130%) hue-rotate(-5deg)' },
+  { id: 'indie-vibes', label: 'Indie Film', filterCss: 'contrast(92%) brightness(102%) sepia(20%) saturate(95%)' },
+  { id: 'moody-cyber', label: 'Moody Cyber', filterCss: 'contrast(115%) brightness(98%) saturate(125%) hue-rotate(15deg)' },
+  { id: 'sweet-pink', label: 'Sweet Pink', filterCss: 'contrast(102%) saturate(115%) sepia(8%) hue-rotate(-10deg)' },
+  { id: 'bw-elegant', label: 'B&W Vintage', filterCss: 'grayscale(100%) contrast(118%) brightness(102%)' }
 ];
 
 // Helper Audio Synth
@@ -203,6 +203,9 @@ export const Capture: React.FC = () => {
   const [actualResolution, setActualResolution] = useState<{ width: number; height: number } | null>(null);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
+  const [cameraErrorDetail, setCameraErrorDetail] = useState<string | null>(null);
+  const [cameraRetryCount, setCameraRetryCount] = useState<number>(0);
+  const [isRetryingCamera, setIsRetryingCamera] = useState<boolean>(false);
   const [isAutoShooting, setIsAutoShooting] = useState<boolean>(false);
 
   const [activeFilter, setActiveFilter] = useState<string>('none');
@@ -304,6 +307,7 @@ export const Capture: React.FC = () => {
 
   const handleUserMedia = (stream: MediaStream) => {
     setHasCamera(true);
+    setCameraErrorDetail(null);
     const track = stream.getVideoTracks()[0];
     if (track) {
       const settings = track.getSettings();
@@ -312,7 +316,53 @@ export const Capture: React.FC = () => {
       }
     }
   };
-  const handleUserMediaError = () => setHasCamera(false);
+
+  const handleUserMediaError = (error: any) => {
+    console.warn('Webcam onUserMediaError:', error);
+    setHasCamera(false);
+    let detail = 'Kamera tidak terdeteksi atau akses ditolak.';
+    if (error) {
+      const errName = error.name || (typeof error === 'string' ? error : '');
+      if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
+        detail = 'Izin kamera diblokir browser. Klik ikon gembok/setelan di sebelah kiri URL localhost, lalu ubah Kamera menjadi "Izinkan" (Allow).';
+      } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
+        detail = 'Tidak ada webcam yang terhubung ke komputer/laptop ini.';
+      } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
+        detail = 'Kamera sedang digunakan oleh aplikasi lain (seperti Zoom, Meet, OBS, atau tab browser lain).';
+      } else if (errName === 'OverconstrainedError') {
+        detail = 'Resolusi yang diminta tidak didukung webcam Anda. Mencoba resolusi standar...';
+        if (cameraRetryCount === 0) {
+          setCameraRetryCount(1);
+          setHasCamera(true);
+          return;
+        }
+      } else if (error.message) {
+        detail = error.message;
+      }
+    }
+    setCameraErrorDetail(detail);
+  };
+
+  const retryCamera = async () => {
+    setIsRetryingCamera(true);
+    setCaptureError(null);
+    setCameraErrorDetail(null);
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const testStream = await navigator.mediaDevices.getUserMedia(
+          cameraRetryCount > 0 ? { video: true } : { video: { width: { ideal: 1280 }, height: { ideal: 720 } } }
+        );
+        testStream.getTracks().forEach((track) => track.stop());
+      }
+      setCameraRetryCount((prev) => prev + 1);
+      setHasCamera(true);
+    } catch (err: any) {
+      console.warn('Retry camera failed:', err);
+      handleUserMediaError(err);
+    } finally {
+      setIsRetryingCamera(false);
+    }
+  };
 
   useEffect(() => {
     if (!hasCamera) return;
@@ -402,10 +452,16 @@ export const Capture: React.FC = () => {
   const activeSlotAspect = getSlotAspectRatio(activeSlot);
 
   const getVideoConstraints = () => {
+    if (cameraRetryCount > 0) {
+      return {
+        width: { ideal: 1280, max: 1920 },
+        height: { ideal: 720, max: 1080 },
+      };
+    }
     return {
       facingMode: 'user',
-      width: { ideal: 1280 },
-      aspectRatio: { ideal: activeSlotAspect },
+      width: { ideal: 1280, max: 1920 },
+      height: { ideal: 720, max: 1080 },
     };
   };
 
@@ -514,18 +570,11 @@ export const Capture: React.FC = () => {
     <>
       <div
         onMouseMove={handleKawaiiMouseMove}
-        className="min-h-screen w-full bg-[#FAF6FF] text-zinc-800 py-3 px-3 sm:px-6 lg:px-12 relative overflow-hidden antialiased font-sans flex flex-col items-center justify-between group/canvas select-none"
+        className="min-h-screen w-full bg-[#F8F9FA] text-zinc-800 py-3 px-3 sm:px-6 lg:px-12 relative overflow-hidden antialiased font-sans flex flex-col items-center justify-between group/canvas select-none"
       >
-        {/* Animated Background Mesh */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-pink-200/40 via-purple-100/20 to-cyan-100/30 pointer-events-none z-0" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#E9D5FF_1px,transparent_1px),linear-gradient(to_bottom,#E9D5FF_1px,transparent_1px)] bg-[size:36px_36px] opacity-[0.5] pointer-events-none z-0" />
-
-        {/* Floating Animated Aesthetics */}
-        <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }} className="absolute top-16 left-8 text-3xl pointer-events-none opacity-80 hidden xl:block z-0">🌸</motion.div>
-        <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }} className="absolute top-1/2 left-10 text-2xl pointer-events-none text-purple-400 hidden xl:block z-0"><Sparkles className="w-6 h-6 fill-current animate-pulse" /></motion.div>
-        <motion.div animate={{ y: [0, 12, 0] }} transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }} className="absolute bottom-24 left-12 text-3xl pointer-events-none opacity-80 hidden xl:block z-0">🍧</motion.div>
-        <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }} className="absolute top-24 right-10 text-3xl pointer-events-none opacity-80 hidden xl:block z-0">🔮</motion.div>
-        <motion.div animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }} className="absolute bottom-20 right-12 text-3xl pointer-events-none opacity-80 hidden xl:block z-0">✨</motion.div>
+        {/* Soft Background Mesh */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-slate-100/70 via-zinc-50/40 to-transparent pointer-events-none z-0" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.025)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0" />
 
         <motion.div
           className="pointer-events-none absolute -inset-px opacity-0 group-hover/canvas:opacity-100 transition duration-500 hidden md:block z-0"
@@ -533,7 +582,7 @@ export const Capture: React.FC = () => {
             background: useMotionTemplate`
               radial-gradient(
                 600px circle at ${bX}px ${bY}px,
-                rgba(216, 180, 254, 0.25),
+                rgba(148, 163, 184, 0.08),
                 transparent 80%
               )
             `,
@@ -567,7 +616,9 @@ export const Capture: React.FC = () => {
             >
               <motion.div variants={popupVariants} initial="hidden" animate="visible" exit="exit" className="bg-white/90 backdrop-blur-xl border-4 border-purple-200 rounded-[36px] p-8 text-center shadow-[0_20px_50px_rgba(168,85,247,0.3)] max-w-sm w-full mx-4 relative overflow-hidden">
                 <div className="absolute -top-10 -right-10 w-28 h-28 bg-purple-200/50 rounded-full blur-xl pointer-events-none" />
-                <motion.div animate={{ rotate: [0, 15, -15, 15, 0], scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 1.2 }} className="text-6xl mb-4 relative z-10">🎉</motion.div>
+                <motion.div animate={{ rotate: [0, 15, -15, 15, 0], scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 1.2 }} className="w-16 h-16 mx-auto mb-4 bg-gradient-to-tr from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-purple-300 relative z-10">
+                  <Check className="w-8 h-8" />
+                </motion.div>
                 <h2 className="font-serif text-2xl font-black text-zinc-900 leading-tight">Sesi Selesai!</h2>
                 <p className="text-zinc-500 text-xs mt-2 font-light">Semua foto lengkap! Klik <strong className="text-purple-600 font-bold">Lanjut ke Editor</strong> untuk berkreasi.</p>
               </motion.div>
@@ -660,9 +711,48 @@ export const Capture: React.FC = () => {
                     style={{ filter: combinedFilterStyle }}
                   />
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-400 p-4 bg-zinc-900 text-center">
-                    <AlertCircle className="w-8 h-8 text-purple-300 mb-2 animate-bounce" />
-                    <h3 className="font-serif font-bold text-sm text-zinc-200">Kamera Tidak Terdeteksi</h3>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-300 p-6 bg-zinc-950 text-center z-10 overflow-y-auto">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-amber-400 mb-3 shadow-lg">
+                      <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    </div>
+                    <h3 className="font-serif font-bold text-base sm:text-lg text-white mb-1.5">
+                      Kamera Belum Terdeteksi
+                    </h3>
+                    <p className="text-xs text-zinc-400 max-w-md mx-auto mb-5 leading-relaxed">
+                      {cameraErrorDetail || 'Browser belum dapat mengakses webcam Anda. Pastikan izin kamera aktif dan tidak sedang digunakan aplikasi lain.'}
+                    </p>
+
+                    <div className="flex flex-wrap items-center justify-center gap-2.5 max-w-lg">
+                      <button
+                        onClick={retryCamera}
+                        disabled={isRetryingCamera}
+                        className="px-4 py-2.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isRetryingCamera ? 'animate-spin' : ''}`} />
+                        <span>{isRetryingCamera ? 'Mencoba...' : 'Coba Sambungkan Lagi'}</span>
+                      </button>
+
+                      <button
+                        onClick={() => { setIsAutoShooting(false); fileInputRef.current?.click(); }}
+                        className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                      >
+                        <Upload className="w-3.5 h-3.5 text-zinc-400" />
+                        <span>Upload Foto dari File</span>
+                      </button>
+
+                      <button
+                        onClick={handleDemoPhoto}
+                        className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-zinc-200 border border-zinc-800 font-semibold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>Gunakan Foto Demo</span>
+                      </button>
+                    </div>
+
+                    <div className="mt-5 p-2.5 bg-zinc-900/90 rounded-xl border border-zinc-800 text-[10.5px] text-zinc-400 max-w-sm flex items-center gap-2 text-left">
+                      <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                      <span><strong>Tips:</strong> Klik ikon setelan / gembok di sebelah kiri URL browser untuk memastikan Kamera diatur ke <strong>Izinkan (Allow)</strong>.</span>
+                    </div>
                   </div>
                 )}
 
@@ -678,7 +768,7 @@ export const Capture: React.FC = () => {
                 {/* Watermark Overlay */}
                 {showWatermark && (
                   <div className="absolute bottom-6 left-5 z-20 pointer-events-none flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-white/90 font-mono text-[9px] uppercase tracking-wider shadow-lg">
-                    <Sparkles className="w-3 h-3 text-purple-300 animate-spin-slow" />
+                    <Camera className="w-3 h-3 text-zinc-300" />
                     <span>BALISNAP • BOOTH LIVE</span>
                   </div>
                 )}
@@ -696,7 +786,7 @@ export const Capture: React.FC = () => {
                       className={`bg-zinc-950/80 backdrop-blur-md text-[7px] sm:text-[8px] font-black uppercase px-2 py-1.5 rounded-full shadow-md border border-white/10 transition-all active:scale-95 flex items-center gap-1 ${isBeautyMode ? 'text-pink-300 border-pink-400/50' : 'text-zinc-400'}`}
                       title="Toggle Beauty Cam Blur"
                     >
-                      <Sparkle className="w-3 h-3 flex-shrink-0" />
+                      <Wand2 className="w-3 h-3 flex-shrink-0" />
                       <span>{isBeautyMode ? 'Beauty: ON' : 'Beauty: OFF'}</span>
                     </button>
 
@@ -830,7 +920,7 @@ export const Capture: React.FC = () => {
                     className="px-4 sm:px-5 py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-400 text-white rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none disabled:opacity-40 shadow-[0_4px_15px_rgba(168,85,247,0.3)] hover:shadow-purple-300 active:scale-95"
                   >
                     <Zap className="w-3.5 h-3.5 text-yellow-200 fill-current flex-shrink-0" />
-                    <span className="truncate">{isAutoShooting ? 'Rentetan...' : 'Mulai Foto Otomatis ✨'}</span>
+                    <span className="truncate">{isAutoShooting ? 'Rentetan...' : 'Mulai Foto Otomatis'}</span>
                   </button>
                   <button
                     onClick={() => { setIsAutoShooting(false); fileInputRef.current?.click(); }}
@@ -950,17 +1040,17 @@ export const Capture: React.FC = () => {
                 <div className="mt-4 pt-2 border-t-2 border-dashed border-purple-100 flex-shrink-0">
                   {isAutoShooting ? (
                     <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-700 text-[10px] font-bold flex items-center gap-1.5 shadow-sm animate-pulse">
-                      <Sparkles className="w-3.5 h-3.5 flex-shrink-0 text-indigo-500 animate-spin" />
-                      <span>Mode berantai aktif dengan jeda {timerInterval}s!</span>
+                      <Zap className="w-3.5 h-3.5 flex-shrink-0 text-indigo-500" />
+                      <span>Mode berantai aktif dengan jeda {timerInterval}s!</span> 
                     </div>
                   ) : !isAllFilled ? (
                     <div className="flex items-start gap-2 p-2 bg-amber-50/70 border border-amber-100 rounded-xl text-amber-800 text-[10px] font-medium leading-tight">
-                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-500" />
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-500" /> 
                       <span>Lengkapi matriks slot foto untuk lanjut hias.</span>
                     </div>
                   ) : (
                     <div className="p-2 bg-emerald-50/80 border border-emerald-100 rounded-xl text-emerald-800 text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
-                      <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 text-emerald-500" />
+                      <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 text-emerald-500" /> 
                       <span>Komposisi rampung! Siap beralih.</span>
                     </div>
                   )}

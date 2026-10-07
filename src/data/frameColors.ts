@@ -86,25 +86,25 @@ export const frameColors: FrameColorOption[] = [
         requiredTier: 'free',
     },
 
-    // ---- 🌸 Aesthetic Cute & Kawaii ----
-    { id: 'strawberryMilk', name: 'Strawberry Milk 🍓', previewCss: '#ffd8e4', getFill: solid('#ffd8e4'), requiredTier: 'basic' },
-    { id: 'matchaLatte', name: 'Matcha Latte 🍵', previewCss: '#dbe6c4', getFill: solid('#dbe6c4'), requiredTier: 'basic' },
-    { id: 'softLilac', name: 'Soft Lilac 🔮', previewCss: '#e2d5f8', getFill: solid('#e2d5f8'), requiredTier: 'basic' },
-    { id: 'butterCream', name: 'Butter Cream 🧈', previewCss: '#fff3cc', getFill: solid('#fff3cc'), requiredTier: 'basic' },
-    { id: 'babyPeach', name: 'Baby Peach 🍑', previewCss: '#ffe4d6', getFill: solid('#ffe4d6'), requiredTier: 'basic' },
-    { id: 'cloudBlue', name: 'Cloud Blue ☁️', previewCss: '#d4e9ff', getFill: solid('#d4e9ff'), requiredTier: 'basic' },
-    { id: 'mintyFresh', name: 'Minty Fresh 🌿', previewCss: '#cff2e5', getFill: solid('#cff2e5'), requiredTier: 'basic' },
+    // ---- Aesthetic Cute & Kawaii ----
+    { id: 'strawberryMilk', name: 'Strawberry Milk', previewCss: '#ffd8e4', getFill: solid('#ffd8e4'), requiredTier: 'basic' },
+    { id: 'matchaLatte', name: 'Matcha Latte', previewCss: '#dbe6c4', getFill: solid('#dbe6c4'), requiredTier: 'basic' },
+    { id: 'softLilac', name: 'Soft Lilac', previewCss: '#e2d5f8', getFill: solid('#e2d5f8'), requiredTier: 'basic' },
+    { id: 'butterCream', name: 'Butter Cream', previewCss: '#fff3cc', getFill: solid('#fff3cc'), requiredTier: 'basic' },
+    { id: 'babyPeach', name: 'Baby Peach', previewCss: '#ffe4d6', getFill: solid('#ffe4d6'), requiredTier: 'basic' },
+    { id: 'cloudBlue', name: 'Cloud Blue', previewCss: '#d4e9ff', getFill: solid('#d4e9ff'), requiredTier: 'basic' },
+    { id: 'mintyFresh', name: 'Minty Fresh', previewCss: '#cff2e5', getFill: solid('#cff2e5'), requiredTier: 'basic' },
 
-    // ---- 🎞️ Aesthetic Vintage & Retro ----
-    { id: 'warmVintageCream', name: 'Vintage Cream 📜', previewCss: '#f5efe6', getFill: solid('#f5efe6'), requiredTier: 'basic' },
-    { id: 'antiqueOlive', name: 'Antique Olive 🫒', previewCss: '#6b705c', getFill: solid('#6b705c'), requiredTier: 'basic' },
-    { id: 'terracotta', name: 'Terracotta Warm 🏺', previewCss: '#b56576', getFill: solid('#b56576'), requiredTier: 'basic' },
-    { id: 'vintageSepia', name: 'Vintage Sepia ☕', previewCss: '#d4a373', getFill: solid('#d4a373'), requiredTier: 'basic' },
-    { id: 'deepWine', name: 'Deep Wine Burgundy 🍷', previewCss: '#4a1525', getFill: solid('#4a1525'), requiredTier: 'basic' },
+    // ---- Aesthetic Vintage & Retro ----
+    { id: 'warmVintageCream', name: 'Vintage Cream', previewCss: '#f5efe6', getFill: solid('#f5efe6'), requiredTier: 'basic' },
+    { id: 'antiqueOlive', name: 'Antique Olive', previewCss: '#6b705c', getFill: solid('#6b705c'), requiredTier: 'basic' },
+    { id: 'terracotta', name: 'Terracotta Warm', previewCss: '#b56576', getFill: solid('#b56576'), requiredTier: 'basic' },
+    { id: 'vintageSepia', name: 'Vintage Sepia', previewCss: '#d4a373', getFill: solid('#d4a373'), requiredTier: 'basic' },
+    { id: 'deepWine', name: 'Deep Wine Burgundy', previewCss: '#4a1525', getFill: solid('#4a1525'), requiredTier: 'basic' },
 
-    // ---- 🖤 Modern & Minimalist ----
-    { id: 'slateBlue', name: 'Slate Blue 🏙️', previewCss: '#475569', getFill: solid('#475569'), requiredTier: 'basic' },
-    { id: 'charcoalMinimal', name: 'Charcoal Black 🖤', previewCss: '#18181b', getFill: solid('#18181b'), requiredTier: 'basic' },
+    // ---- Modern & Minimalist ----
+    { id: 'slateBlue', name: 'Slate Blue', previewCss: '#475569', getFill: solid('#475569'), requiredTier: 'basic' },
+    { id: 'charcoalMinimal', name: 'Charcoal Black', previewCss: '#18181b', getFill: solid('#18181b'), requiredTier: 'basic' },
 
     // ---- Pastel solids ----
     { id: 'pastelPink', name: 'Pastel Pink', previewCss: '#f7c9dd', getFill: solid('#f7c9dd'), requiredTier: 'basic' },
@@ -479,7 +479,7 @@ export const frameColors: FrameColorOption[] = [
     },
     {
         id: 'sparkleWhite',
-        name: 'Sparkle White',
+        name: 'Shimmer White',
         previewCss: 'radial-gradient(circle, #ffe9a8 0 1.5px, transparent 2px), #ffffff',
         getFill: tileFill((tctx, size) => {
             tctx.fillStyle = '#ffffff';

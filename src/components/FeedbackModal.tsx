@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Sparkles, CheckCircle2, Send } from 'lucide-react';
+import { X, Star, CheckCircle2, Send, Lightbulb, Wrench } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { saveFeedback } from '../lib/feedbackDb';
 
@@ -95,7 +95,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             </button>
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl">
-                <Sparkles className="w-6 h-6 text-yellow-200" />
+                <Star className="w-6 h-6 text-yellow-200 fill-yellow-200" />
               </div>
               <div>
                 <h3 className="text-xl font-bold font-serif">Ulasan, Kritik & Saran</h3>
@@ -115,7 +115,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
-                <h4 className="text-2xl font-bold text-gray-800">Terima Kasih Banyak! ❤️</h4>
+                <h4 className="text-2xl font-bold text-gray-800">Terima Kasih Banyak!</h4>
                 <p className="text-sm text-gray-600 max-w-sm mx-auto">
                   Ulasan dan saran Anda telah berhasil terkirim. Dukungan Anda sangat berarti bagi kami untuk terus berkembang!
                 </p>
@@ -137,32 +137,35 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setCategory('ulasan')}
-                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1 ${category === 'ulasan'
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1.5 ${category === 'ulasan'
                           ? 'bg-white text-pink-600 shadow-sm font-bold'
                           : 'text-gray-600 hover:text-gray-900'
                         }`}
                     >
-                      <span>🌟 Ulasan</span>
+                      <Star className="w-3.5 h-3.5" />
+                      <span>Ulasan</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setCategory('saran')}
-                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1 ${category === 'saran'
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1.5 ${category === 'saran'
                           ? 'bg-white text-amber-600 shadow-sm font-bold'
                           : 'text-gray-600 hover:text-gray-900'
                         }`}
                     >
-                      <span>💡 Saran</span>
+                      <Lightbulb className="w-3.5 h-3.5" />
+                      <span>Saran</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setCategory('kritik')}
-                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1 ${category === 'kritik'
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1.5 ${category === 'kritik'
                           ? 'bg-white text-purple-600 shadow-sm font-bold'
                           : 'text-gray-600 hover:text-gray-900'
                         }`}
                     >
-                      <span>🛠️ Kritik</span>
+                      <Wrench className="w-3.5 h-3.5" />
+                      <span>Kritik</span>
                     </button>
                   </div>
                 </div>
@@ -195,11 +198,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     })}
                   </div>
                   <p className="text-xs font-medium text-amber-600 mt-2">
-                    {rating === 5 && 'Sangat Memuaskan! 😍'}
-                    {rating === 4 && 'Bagus Banget! 😊'}
-                    {rating === 3 && 'Cukup Baik 👍'}
-                    {rating === 2 && 'Perlu Ditingkatkan 😐'}
-                    {rating === 1 && 'Kurang Memuaskan 🙁'}
+                    {rating === 5 && 'Sangat Memuaskan (5/5)'}
+                    {rating === 4 && 'Bagus Sekali (4/5)'}
+                    {rating === 3 && 'Cukup Baik (3/5)'}
+                    {rating === 2 && 'Perlu Ditingkatkan (2/5)'}
+                    {rating === 1 && 'Kurang Memuaskan (1/5)'}
                   </p>
                 </div>
 

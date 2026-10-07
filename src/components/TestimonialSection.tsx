@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Star, MessageSquarePlus, Heart, Sparkles, Loader2 } from 'lucide-react';
+import { Star, MessageSquarePlus, Heart, Loader2, Lightbulb, Wrench } from 'lucide-react';
 import {
   getFeedbacks,
   getFeedbackStats,
@@ -52,16 +52,16 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
   });
 
   return (
-    <section id="ulasan" className="py-20 bg-gradient-to-b from-white via-rose-50/30 to-white relative overflow-hidden">
+    <section id="ulasan" className="py-20 bg-gradient-to-b from-white via-zinc-50/50 to-white relative overflow-hidden">
       {/* Decorative Ornaments */}
-      <div className="absolute top-10 left-10 w-72 h-72 bg-pink-200/30 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-80 h-80 bg-amber-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-10 left-10 w-72 h-72 bg-slate-100/70 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-80 h-80 bg-zinc-100/70 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
           <div className="inline-flex items-center space-x-2 px-4 py-1.5 bg-rose-100/80 border border-rose-200 rounded-full text-rose-700 text-xs font-bold tracking-wide uppercase shadow-sm">
-            <Sparkles className="w-4 h-4 text-rose-500" />
+            <Star className="w-4 h-4 text-rose-500 fill-rose-500" />
             <span>Kata Mereka Pengguna BaliSnap</span>
           </div>
 
@@ -78,9 +78,9 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
             <div className="flex items-center space-x-2">
               <span className="text-3xl font-black text-gray-900">{stats.average}</span>
               <div>
-                <div className="flex text-amber-400">
+                <div className="flex text-amber-400"> 
                   {[1, 2, 3, 4, 5].map((s) => (
-                    <Star key={s} className="w-4 h-4 fill-amber-400" />
+                    <Star key={s} className="w-4 h-4 fill-amber-400" /> 
                   ))}
                 </div>
                 <p className="text-xs text-gray-500 text-left font-medium">{stats.total} Penilaian Pengguna</p>
@@ -113,30 +113,33 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
             </button>
             <button
               onClick={() => setActiveTab('ulasan')}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${activeTab === 'ulasan'
+              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${activeTab === 'ulasan'
                   ? 'bg-white text-pink-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
-              <span>🌟 Ulasan</span>
+              <Star className="w-3.5 h-3.5" />
+              <span>Ulasan</span>
             </button>
             <button
               onClick={() => setActiveTab('saran')}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${activeTab === 'saran'
+              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${activeTab === 'saran'
                   ? 'bg-white text-amber-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
-              <span>💡 Saran</span>
+              <Lightbulb className="w-3.5 h-3.5" />
+              <span>Saran</span>
             </button>
             <button
               onClick={() => setActiveTab('kritik')}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${activeTab === 'kritik'
+              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 ${activeTab === 'kritik'
                   ? 'bg-white text-purple-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
-              <span>🛠️ Kritik</span>
+              <Wrench className="w-3.5 h-3.5" />
+              <span>Kritik</span>
             </button>
           </div>
         </div>
@@ -195,16 +198,31 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onOpenFe
 
                     {/* Category Badge */}
                     <span
-                      className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${item.category === 'ulasan'
+                      className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider inline-flex items-center gap-1 ${item.category === 'ulasan'
                           ? 'bg-pink-50 text-pink-600 border border-pink-100'
                           : item.category === 'saran'
                             ? 'bg-amber-50 text-amber-600 border border-amber-100'
                             : 'bg-purple-50 text-purple-600 border border-purple-100'
                         }`}
                     >
-                      {item.category === 'ulasan' && '🌟 Ulasan'}
-                      {item.category === 'saran' && '💡 Saran'}
-                      {item.category === 'kritik' && '🛠️ Kritik'}
+                      {item.category === 'ulasan' && (
+                        <>
+                          <Star className="w-3 h-3 fill-pink-500" />
+                          <span>Ulasan</span>
+                        </>
+                      )}
+                      {item.category === 'saran' && (
+                        <>
+                          <Lightbulb className="w-3 h-3" />
+                          <span>Saran</span>
+                        </>
+                      )}
+                      {item.category === 'kritik' && (
+                        <>
+                          <Wrench className="w-3 h-3" />
+                          <span>Kritik</span>
+                        </>
+                      )}
                     </span>
                   </div>
 

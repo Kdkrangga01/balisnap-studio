@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Mic, Square, Play, Pause, Send, X, Download, Upload, Image as ImageIcon, Trash2, CheckCircle2, Copy, Check } from 'lucide-react';
+import { Mail, Mic, Square, Play, Pause, Send, X, Download, Upload, Image as ImageIcon, Trash2, CheckCircle2, Copy, Check, Heart } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 import { getBestAudioMimeType, getAudioExtension, createMobileAudioElement } from '../lib/mobileAudio';
@@ -445,8 +445,9 @@ const createCombinedGiftCardCanvas = async (
           onClick={(e) => e.stopPropagation()}
         >
           {/* TAPE DECORATION */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-5 bg-pink-300/80 border border-white/80 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center text-[8px] text-rose-800 font-black tracking-widest uppercase">
-            💌 DIGITAL GIFT ENVELOPE 💌
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 px-3 h-5 bg-pink-300/80 border border-white/80 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center gap-1 text-[8px] text-rose-800 font-black tracking-widest uppercase">
+            <Heart className="w-2.5 h-2.5 text-rose-700 inline" />
+            <span>DIGITAL GIFT ENVELOPE</span>
           </div>
 
           <button
@@ -478,7 +479,7 @@ const createCombinedGiftCardCanvas = async (
                 <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors" />
                 <Mail className="w-12 h-12 text-white mb-2 group-hover:scale-110 transition-transform" />
                 <span className="text-sm font-black text-white uppercase tracking-wider drop-shadow-sm">
-                  KLIK UNTUK BUKA AMPLOP 💌
+                  KLIK UNTUK BUKA AMPLOP
                 </span>
                 <span className="text-[10px] text-pink-100 font-medium mt-1">
                   Sentuh untuk melihat hadiah ucapan &amp; foto kado
@@ -490,8 +491,9 @@ const createCombinedGiftCardCanvas = async (
                 animate={{ rotateX: 0, opacity: 1 }}
                 className="w-full flex flex-col items-center gap-2 py-2"
               >
-                <span className="text-rose-700 font-bold text-xs">
-                  💌 Amplop Ucapan Digital Berhasil Dibuka! 💌
+                <span className="text-rose-700 font-bold text-xs flex items-center gap-1">
+                  <Mail className="w-3.5 h-3.5 text-rose-600 inline" />
+                  Amplop Ucapan Digital Berhasil Dibuka!
                 </span>
                 {activePhoto && (
                   <div className="relative group overflow-hidden rounded-2xl border-2 border-rose-200 shadow-md bg-white p-1 max-h-48 flex justify-center">
@@ -502,7 +504,7 @@ const createCombinedGiftCardCanvas = async (
                     />
                     {customGiftPhoto && (
                       <span className="absolute top-2 right-2 bg-rose-500 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-sm">
-                        📸 Foto Kado Upload
+                        Foto Kado Upload
                       </span>
                     )}
                   </div>
@@ -655,7 +657,7 @@ const createCombinedGiftCardCanvas = async (
               className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md shadow-emerald-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
             >
               <Send className="w-4 h-4" />
-              📲 KIRIM REKAMAN SUARA &amp; LINK (WHATSAPP)
+              KIRIM REKAMAN SUARA &amp; LINK (WHATSAPP)
             </button>
 
             <button
@@ -663,7 +665,7 @@ const createCombinedGiftCardCanvas = async (
               className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md shadow-pink-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
             >
               {copiedLink ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
-              {copiedLink ? 'TAUTAN KADO TER-SALIN!' : '🔗 SALIN LINK KADO DIGITAL SPESIAL'}
+              {copiedLink ? 'TAUTAN KADO TER-SALIN!' : 'SALIN LINK KADO DIGITAL SPESIAL'}
             </button>
 
             <button
@@ -671,7 +673,7 @@ const createCombinedGiftCardCanvas = async (
               className="w-full py-3 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
               <Download className="w-4 h-4 text-rose-500" />
-              📦 UNDUH PAKET KADO (VOICE NOTE &amp; UCAPAN)
+              UNDUH PAKET KADO (VOICE NOTE &amp; UCAPAN)
             </button>
           </div>
         </motion.div>

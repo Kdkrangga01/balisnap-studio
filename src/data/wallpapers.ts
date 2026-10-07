@@ -471,14 +471,14 @@ export const wallpapers: WallpaperOption[] = [
 ];
 
 export const wallpaperCategories = [
-  { id: 'all', name: 'Semua', emoji: '✨' },
-  { id: 'cute', name: 'Cute & Girly', emoji: '🌸' },
-  { id: 'sky', name: 'Sky & Cloud', emoji: '☁' },
-  { id: 'floral', name: 'Nature & Floral', emoji: '🌿' },
-  { id: 'ocean', name: 'Ocean & Beach', emoji: '🌊' },
-  { id: 'glitter', name: 'Glitter & Stars', emoji: '✨' },
-  { id: 'gradient', name: 'Gradients', emoji: '🎨' },
-  { id: 'galaxy', name: 'Galaxy & Moon', emoji: '🌌' },
-  { id: 'pixel', name: 'Retro & Y2K', emoji: '🎮' },
-  { id: 'aesthetic', name: 'Aesthetic & Kekinian', emoji: '🎀' }
+  { id: 'all', name: 'Semua' },
+  { id: 'cute', name: 'Cute & Girly' },
+  { id: 'sky', name: 'Sky & Cloud' },
+  { id: 'floral', name: 'Nature & Floral' },
+  { id: 'ocean', name: 'Ocean & Beach' },
+  { id: 'glitter', name: 'Glitter & Stars' },
+  { id: 'gradient', name: 'Gradients' },
+  { id: 'galaxy', name: 'Galaxy & Moon' },
+  { id: 'pixel', name: 'Retro & Y2K' },
+  { id: 'aesthetic', name: 'Aesthetic & Modern' }
 ];

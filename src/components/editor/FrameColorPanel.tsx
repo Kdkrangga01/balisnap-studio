@@ -5,10 +5,11 @@ import { presets } from '../../data/presets';
 import {
     Palette,
     Sliders,
-    Sparkles,
+    Wand2,
     Heart,
     Crown,
-    Lock
+    Lock,
+    PenTool
 } from 'lucide-react';
 import { UpgradeModal } from '../UpgradeModal';
 
@@ -70,7 +71,7 @@ export const FrameColorPanel: React.FC = () => {
                 {[
                     { id: 'line', label: 'Warna Garis Pembatas', icon: Palette },
                     { id: 'detail', label: 'Detail Studio Pro', icon: Sliders, isPremiumOnly: true },
-                    { id: 'preset', label: 'Preset', icon: Sparkles },
+                    { id: 'preset', label: 'Preset', icon: Wand2 },
                 ].map(t => (
                     <button
                         key={t.id}
@@ -98,8 +99,9 @@ export const FrameColorPanel: React.FC = () => {
             {subTab === 'line' && (
                 <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-rose-800">
-                            ✏️ Warna Garis Pembatas (Dividers)
+                        <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 flex items-center gap-1.5">
+                            <PenTool className="w-3 h-3 text-rose-600 inline" />
+                            Warna Garis Pembatas (Dividers)
                         </span>
                         <span className="text-[8px] text-rose-500 font-medium">Ubah warna garis pembatas &amp; border</span>
                     </div>

@@ -49,8 +49,8 @@ export function exportHighResCanvas(stage: any, targetWidth = 1800): string | nu
   }
 }
 
-/**
- * Converts Base64 Data URI string to binary Blob object
+/** 
+ * Converts Base64 Data URI string to binary Blob objec
  */
 export function dataURItoBlob(dataURI: string): Blob {
   const arr = dataURI.split(',');
@@ -120,7 +120,7 @@ export async function saveOrShareImage(dataURI: string, filename: string): Promi
           return false;
         }
       }
-    }
+    } 
   } catch (err) {
     console.warn("Share preparation error:", err);
   }

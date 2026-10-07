@@ -24,3 +24,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# AI Agents & IDE metadata
+.agents/
+.gemini/
+.claude/
+skills-lock.json
+
+# Scratch & build cache
+scratch/
+*.tsbuildinfo
+

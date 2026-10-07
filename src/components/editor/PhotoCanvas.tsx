@@ -678,13 +678,13 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           const count = 22;
           const items = [];
           const symbols: Record<string, string> = {
-            sparkles: '✨',
-            gold_glitter: '🌟',
+            sparkles: '✦',
+            gold_glitter: '★',
             butterflies: '🦋',
             sakura: '🌸',
-            hearts: '💖',
+            hearts: '♥',
           };
-          const char = symbols[particleEffect] || '✨';
+          const char = symbols[particleEffect] || '✦';
 
           for (let i = 0; i < count; i++) {
             const x = Math.round(((i * 73 + 17) % 100) / 100 * frameWidth);

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { stickers, stickerPacks, isStickerLocked, isStickerPackLocked } from '../../data/stickers';
 import type { StickerItem, StickerPack } from '../../data/stickers';
 import { usePhotobooth } from '../../context/PhotoboothContext';
-import { Heart, Sparkles, Lock } from 'lucide-react';
+import { Heart, Star, Lock } from 'lucide-react';
 import { UpgradeModal } from '../UpgradeModal';
 import { ParticleSelector } from './ParticleSelector';
 
@@ -17,26 +17,26 @@ export const StickerPanel: React.FC = () => {
   const [upgradeTargetTier, setUpgradeTargetTier] = useState<'basic' | 'premium'>('premium');
   const [upgradeFeatureName, setUpgradeFeatureName] = useState('Stiker Premium Studio');
 
-  const triggerLockModal = (tier: 'basic' | 'premium', feature: string) => {
+  const triggerLockModal = (tier: 'basic' | 'premium', feature: string) => {  
     setUpgradeTargetTier(tier);
     setUpgradeFeatureName(feature);
     setUpgradeModalOpen(true);
   };
 
   const categories = [
-    { id: 'packs', name: '✨ Paket Auto-Spread' },
-    { id: 'particles', name: '🌟 Partikel & Sparkle' },
-    { id: 'cat', name: '🐱 Kucing' },
-    { id: 'nailong', name: '🐲 Nailong' },
-    { id: 'anime', name: '🏴‍☠️ One Piece' },
-    { id: 'aesthetic', name: '✨ Aesthetic' },
+    { id: 'packs', name: 'Paket Auto-Spread' },
+    { id: 'particles', name: 'Partikel & Efek' },
+    { id: 'cat', name: 'Kucing' },
+    { id: 'nailong', name: 'Nailong' },
+    { id: 'anime', name: 'One Piece' },
+    { id: 'aesthetic', name: 'Aesthetic' },
     { id: 'cute', name: 'Kawaii' },
     { id: 'emoji', name: 'Emoji' },
     { id: 'all', name: 'Semua' },
     { id: 'favorit', name: 'Favorit' }
   ];
 
-  const filteredStickers = activeCategory === 'all'
+  const filteredStickers = activeCategory === 'all' 
     ? stickers
     : activeCategory === 'favorit'
       ? stickers.filter(s => favoriteStickers.includes(s.src))
@@ -44,9 +44,10 @@ export const StickerPanel: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full text-charcoal">
+
       {/* Category Tabs */}
       <div className="flex flex-wrap gap-1.5 mb-4 pb-2 border-b border-cream-dark/20">
-        {categories.map((cat) => (
+        {categories.map((cat) => ( 
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
@@ -60,13 +61,13 @@ export const StickerPanel: React.FC = () => {
         ))}
       </div>
 
-      {/* Efek Partikel & Sparkle */}
+      {/* Efek Partikel & Efek */}
       {activeCategory === 'particles' ? (
         <ParticleSelector />
       ) : activeCategory === 'packs' ? (
         <div className="grid grid-cols-2 gap-3 overflow-y-auto max-h-[220px] md:max-h-[260px] pr-2 custom-scroll">
           {stickerPacks.map((pack: StickerPack) => {
-            const isLocked = isStickerPackLocked(pack, packageTier);
+            const isLocked = isStickerPackLocked(pack, packageTier);  
             const reqTier = pack.requiredTier || (pack.category === 'nailong' || pack.category === 'cat' || pack.category === 'anime' || pack.category === 'badge' || pack.category === 'aesthetic' ? 'premium' : 'basic');
 
             return (
@@ -94,7 +95,7 @@ export const StickerPanel: React.FC = () => {
                     alt={pack.name}
                     className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-200"
                   />
-                  <Sparkles className="w-3 h-3 text-amber-500 absolute -top-1 -right-1 animate-pulse" />
+                  <Star className="w-3 h-3 text-amber-500 fill-amber-400 absolute -top-1 -right-1" />
                 </div>
                 <span className="text-[11px] font-bold text-charcoal group-hover:text-mahogany">
                   {pack.name}

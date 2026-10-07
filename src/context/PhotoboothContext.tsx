@@ -231,7 +231,7 @@ const PhotoboothContext = createContext<PhotoboothContextProps | undefined>(unde
 const getInitialSession = () => {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
-    if (raw) {
+    if (raw) { 
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
         return parsed;
@@ -393,17 +393,17 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const setOwnerPasscode = (newPass: string) => {
     const trimmed = newPass.trim();
-    setOwnerPasscodeState(trimmed);
+    setOwnerPasscodeState(trimmed); 
     try {
       localStorage.setItem('balisnap_owner_passcode', trimmed);
     } catch { }
   };
 
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
-  const [isOwnerAuthenticated, setIsOwnerAuthenticated] = useState<boolean>(false);
+  const [isOwnerAuthenticated, setIsOwnerAuthenticated] = useState<boolean>(false); 
 
   // Initial transactions from localStorage / Cloud
-  const [transactions, setTransactions] = useState<TransactionRecord[]>(() => {
+  const [transactions, setTransactions] = useState<TransactionRecord[]>(() => { 
     try {
       const saved = localStorage.getItem('balisnap_transactions_v1');
       if (saved) {
@@ -411,11 +411,11 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (Array.isArray(parsed)) return parsed;
       }
     } catch { }
-    // Initial sample data so user immediately sees populated transactions in Excel export!
+    // Initial sample data so user immediately sees populated transactions in Excel export! 
     return [
       {
         id: '#SNAP-100801',
-        date: new Date(Date.now() - 3600000 * 3).toLocaleString('id-ID'),
+        date: new Date(Date.now() - 3600000 * 3).toLocaleString('id-ID'), 
         customerName: 'Budi Santoso',
         packageName: 'Paket PREMIUM VIP Pass (60 Hari)',
         packageTier: 'premium',
@@ -500,9 +500,9 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       syncCloudTransactions();
     }, 4000);
     return () => clearInterval(interval);
-  }, [syncCloudTransactions]);
+  }, [syncCloudTransactions]); 
 
-  const refreshTransactions = useCallback(async () => {
+  const refreshTransactions = useCallback(async () => { 
     await syncCloudTransactions();
   }, [syncCloudTransactions]);
 
@@ -778,11 +778,11 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setAppliedFilter('normal');
     setCustomHeadline('');
     setCustomLocations(Array(5).fill(''));
-    setFrameColor('original');
+    setFrameColor('original'); 
     setFrameStyle('solid');
     setBorderThickness(0);
     setBorderRadius(10);
-    setShadowIntensity(0);
+    setShadowIntensity(0); 
     setShadowBlur(5);
     setShadowColor('#000000');
     setFrameOpacity(1);
@@ -876,7 +876,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     const availableStickers = [...pack.stickers];
     const newStickers: CanvasSticker[] = [];
-    const renderCanvasW = 400;
+    const renderCanvasW = 400; 
 
     // Jumlah stiker otomatis menyesuaikan jumlah slot foto bingkai!
     const slotCount = selectedFrame.slots || selectedFrame.slotCoords.length || 4;
