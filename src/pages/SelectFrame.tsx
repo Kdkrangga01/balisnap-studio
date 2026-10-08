@@ -339,10 +339,8 @@ const FrameCard: React.FC<{
   currentTier: PackageTier;
   completedTrialSessions: number;
   onFavorite: (e: React.MouseEvent) => void;
-  onDelete: (e: React.MouseEvent) => void;
-  onEdit: (e: React.MouseEvent) => void;
   onClick: () => void;
-}> = ({ frame, idx: _idx, isTrending, isFavorite, isCustom: _isCustom, categoryStyle, currentTier, completedTrialSessions, onFavorite, onDelete, onEdit, onClick }) => {
+}> = ({ frame, idx: _idx, isTrending, isFavorite, isCustom: _isCustom, categoryStyle, currentTier, completedTrialSessions, onFavorite, onClick }) => {
   const requiredTier = frame.id.startsWith('custom-') || frame.slots > 4 ? 'premium' : 'basic';
   const isLocked = isFrameLocked(frame, currentTier, completedTrialSessions);
 
@@ -380,20 +378,6 @@ const FrameCard: React.FC<{
             title="Favorit"
           >
             <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'fill-rose-500 text-rose-500' : 'text-zinc-400 hover:text-zinc-600'}`} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(e); }}
-            className="w-8 h-8 rounded-xl bg-white/90 border border-zinc-200 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-zinc-50 shadow-xs active:scale-90 cursor-pointer"
-            title="Ubah Nama"
-          >
-            <Pencil className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-800" />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(e); }}
-            className="w-8 h-8 rounded-xl bg-white/90 border border-zinc-200 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-50 hover:border-rose-200 shadow-xs active:scale-90 cursor-pointer"
-            title="Hapus Frame"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-zinc-400 hover:text-rose-600" />
           </button>
         </div>
       </div>
@@ -566,7 +550,7 @@ export const SelectFrame: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<FrameTemplate | null>(null);
   const [deleteToastMessage, setDeleteToastMessage] = useState<string | null>(null);
 
-  const handleOpenDeleteConfirm = useCallback((frame: FrameTemplate, e?: React.MouseEvent) => {
+  const _handleOpenDeleteConfirm = useCallback((frame: FrameTemplate, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
       e.preventDefault();
@@ -1319,8 +1303,6 @@ export const SelectFrame: React.FC = () => {
                       currentTier={packageTier}
                       completedTrialSessions={completedTrialSessions}
                       onFavorite={(e) => toggleFavorite(frame.id, e)}
-                      onDelete={(e) => handleOpenDeleteConfirm(frame, e)}
-                      onEdit={(e) => handleOpenRename(frame, e)}
                       onClick={() => handleFrameClick(frame)}
                     />
                   );
