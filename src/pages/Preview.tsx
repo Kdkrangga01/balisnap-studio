@@ -34,7 +34,7 @@ export const Preview: React.FC = () => {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   // NEW FEATURES STATE
-  const [exportQuality, setExportQuality] = useState<'1080p' | '2k' | '4k'>('2k');
+  const [exportQuality, setExportQuality] = useState<'standard' | 'high' | 'print'>('high');
 
   // BOOMERANG GIF STATE
   const [showGifModal, setShowGifModal] = useState<boolean>(false);
@@ -109,9 +109,9 @@ export const Preview: React.FC = () => {
   // Determine export dimension pixel multiplier based on selection
   const getQualityPixelSize = () => {
     switch (exportQuality) {
-      case '1080p': return 1200;
-      case '2k': return 1800;
-      case '4k': return 2800;
+      case 'standard': return 1200;
+      case 'high': return 1800;
+      case 'print': return 2800;
       default: return 1800;
     }
   };
@@ -427,21 +427,20 @@ export const Preview: React.FC = () => {
                 </p>
               </div>
 
-              {/* NEW FEATURE: RESOLUTION QUALITY SELECTOR */}
+              {/* RESOLUTION QUALITY SELECTOR */}
               <div className="bg-pink-50/60 border border-pink-100 p-3.5 rounded-2xl flex flex-col gap-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-pink-700 flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 fill-current text-pink-500" />
-                    Pilih Kualitas Resolusi Ekspor:
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-pink-700">
+                    Pilihan Kualitas Foto:
                   </span>
-                  <span className="text-[10px] font-bold text-pink-400">PNG HQ</span>
+                  <span className="text-[10px] font-bold text-pink-400">Format PNG</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: '1080p', label: '1080p HD', desc: 'Cepat & Ringan' },
-                    { id: '2k', label: '2K Studio', desc: 'Rekomendasi' },
-                    { id: '4k', label: '4K Ultra', desc: 'Maksimal Cetak', isPremiumOnly: true },
+                    { id: 'standard', label: 'Standar', desc: 'Cepat & Ringan' },
+                    { id: 'high', label: 'Kualitas Tinggi', desc: 'Rekomendasi' },
+                    { id: 'print', label: 'Kualitas Cetak', desc: 'Siap Cetak Fisik', isPremiumOnly: true },
                   ].map((q) => {
                     const isLocked = q.isPremiumOnly && packageTier !== 'premium';
                     return (
@@ -792,7 +791,7 @@ export const Preview: React.FC = () => {
         isOpen={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
         targetTier="premium"
-        featureName="Export Super Ultra-HD 4K Print-Ready"
+        featureName="Ekspor Kualitas Cetak Fisik"
       />
 
       {/* Feedback Modal */}

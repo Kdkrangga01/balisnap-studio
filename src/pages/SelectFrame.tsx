@@ -1572,7 +1572,7 @@ export const SelectFrame: React.FC = () => {
 
                         <li className="flex items-start gap-2.5">
                           <Download className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                          <span><strong>Export Super Ultra-HD 4K Print-Ready</strong> — Hasil cetak fisik kualitas studio tanpa terkompresi.</span>
+                          <span><strong>Ekspor Kualitas Cetak Fisik</strong> — Hasil cetak tajam kualitas studio tanpa kompresi.</span>
                         </li>
                       </ul>
                     </div>

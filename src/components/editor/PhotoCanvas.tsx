@@ -175,25 +175,9 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
       return;
     }
 
-    const isNewspaper = selectedFrame.id.includes('newspaper') ||
-      selectedFrame.id.includes('special') ||
-      selectedFrame.name?.toLowerCase().includes('special') ||
-      selectedFrame.name?.toLowerCase().includes('retro') ||
-      selectedFrame.name?.toLowerCase().includes('newspaper');
-
-    // KOORDINAT PENUTUP COVERRECT SANGAT PRESISI:
-    // y: 195 (Mulai dari bawah pita BREKING NEWS)
-    // h: 205 (Mencakup seluruh bodi huruf DENPASAR sampai garis bawah)
-    const cfg = selectedFrame.headlineConfig || (isNewspaper ? {
-      coverRect: { x: 30, y: 195, w: 1140, h: 205 },
-      fontSize: 165,
-      fontFamily: "'Oswald', 'Impact', 'Bebas Neue', sans-serif",
-      defaultText: 'DENPASAR',
-      fill: '#111827',
-      letterSpacing: 4
-    } : null);
-
-    if (!cfg) {
+    // Hanya aktifkan headline canvas jika bingkai memang memiliki headlineConfig DAN user mengisi custom headline
+    const cfg = selectedFrame.headlineConfig;
+    if (!cfg || !customHeadline || !customHeadline.trim()) {
       setHeadlineFrameCanvas(null);
       return;
     }
@@ -208,26 +192,12 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
       // 1) Gambar bingkai asli
       ctx.drawImage(frameImage, 0, 0, frameWidth, frameHeight);
 
-      // 2) Ambil sampel warna kertas krem di area atas pita hitam (x: 50, y: 185)
-      const sampleX = 50;
-      const sampleY = 185;
-      const sampleData = ctx.getImageData(sampleX, sampleY, 1, 1).data;
+      // 2) Ambil warna background dari cfg.coverRect.fill atau sampel warna
+      const bgColor = cfg.coverRect.fill || '#F4ECE1';
 
-      const isSampleValid = sampleData[0] > 120 && sampleData[1] > 120;
-      const bgColor = isSampleValid
-        ? `rgb(${sampleData[0]}, ${sampleData[1]}, ${sampleData[2]})`
-        : '#F4ECE1';
-
-      if (isNewspaper) {
-        // HAPUS TOTAL KOTAK LOCATION: Lapisi seluruh area kotak LOCATION (header + 5 baris kota) dengan warna kertas krem
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 220, 340, 670);
-      }
-
-      if (cfg) {
-        // 3) HAPUS TOTAL: Lapisi seluruh area DENPASAR dengan warna kertas krem
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(cfg.coverRect.x, cfg.coverRect.y, cfg.coverRect.w, cfg.coverRect.h);
+      // 3) Lapisi area teks lama dengan warna background
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(cfg.coverRect.x, cfg.coverRect.y, cfg.coverRect.w, cfg.coverRect.h);
 
         // 4) Tuliskan Nama Daerah Baru (misal "PALEMBANG") tepat di posisi yang sudah dibersihkan.
         // Font di-cek lebarnya dulu (measureText) lalu diperkecil bertahap sampai
@@ -270,11 +240,10 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           (ctx as any).letterSpacing = '0px';
         }
 
-        // 5) Rapikan kembali 2 garis batas hitam tipis koran di bagian paling bawah
-        ctx.fillStyle = '#111827';
-        ctx.fillRect(cfg.coverRect.x, cfg.coverRect.y + cfg.coverRect.h - 6, cfg.coverRect.w, 3);
-        ctx.fillRect(cfg.coverRect.x, cfg.coverRect.y + cfg.coverRect.h - 1, cfg.coverRect.w, 2);
-      }
+      // 5) Rapikan kembali 2 garis batas hitam tipis koran di bagian paling bawah
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(cfg.coverRect.x, cfg.coverRect.y + cfg.coverRect.h - 6, cfg.coverRect.w, 3);
+      ctx.fillRect(cfg.coverRect.x, cfg.coverRect.y + cfg.coverRect.h - 1, cfg.coverRect.w, 2);
 
       setHeadlineFrameCanvas(c);
     } catch (err) {

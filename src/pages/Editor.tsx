@@ -32,8 +32,6 @@ import {
   Maximize,
   Scan,
   Lock,
-  MapPin,
-  Edit3,
   MoveUpLeft,
   MoveUpRight,
   MoveDownLeft,
@@ -203,14 +201,6 @@ export const Editor: React.FC = () => {
     resetPhotoTransform(selectedPhotoIndex);
   };
 
-  // Cek apakah bingkai saat ini berjenis Newspaper / Frame Special
-  const isNewspaperFrame = selectedFrame.id.includes('newspaper') ||
-    selectedFrame.name.toLowerCase().includes('special') ||
-    selectedFrame.name.toLowerCase().includes('retro') ||
-    selectedFrame.name.toLowerCase().includes('newspaper');
-
-
-
   // Pindahkan stiker terpilih ke sudut bingkai (Pojok Kiri-Atas, Kanan-Atas, Kanan-Bawah, Kiri-Bawah)
   const moveStickerToSlotCorner = (corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
     if (!selectedId || !selectedId.startsWith('sticker-') || !selectedFrame) return;
@@ -375,63 +365,6 @@ export const Editor: React.FC = () => {
                 borderColor: 'rgba(255, 255, 255, 0.9)',
               }}
             >
-
-              {/* ===== FITUR CUSTOM NAMA DAERAH (DIPAKAI JIKA isNewspaperFrame AKTIF) ===== */}
-              {(selectedFrame && isNewspaperFrame) && (
-                <div className="bg-gradient-to-r from-stone-900 via-zinc-900 to-black p-4 rounded-2xl border border-amber-500/30 text-white shadow-lg relative overflow-hidden">
-                  <div className="absolute top-0 right-0 translate-x-4 -translate-y-4 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
-
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-amber-500 text-stone-950 flex items-center justify-center font-black text-xs shadow-sm">
-                        <MapPin className="w-4 h-4" />
-                      </div>
-                      <span className="text-xs font-black uppercase tracking-wider text-amber-400">
-                        Custom Nama Daerah / Kota
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      Font Bawaan Koran
-                    </span>
-                  </div>
-
-                  <p className="text-[11px] text-zinc-300 mb-3">
-                    Ketik nama daerah kamu untuk mengganti teks utama pada header bingkai koran ini. Kosongkan untuk memakai teks bawaan "DENPASAR".
-                  </p>
-
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={customHeadline}
-                      onChange={(e) => {
-                        const val = e.target.value.toUpperCase();
-                        if (setCustomHeadline) {
-                          setCustomHeadline(val);
-                        }
-                      }}
-                      placeholder="DENPASAR"
-                      maxLength={18}
-                      className="w-full bg-zinc-800/90 border border-amber-500/40 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30 rounded-xl px-3.5 py-2.5 text-amber-200 font-extrabold uppercase tracking-widest text-base shadow-inner transition-all outline-none placeholder:text-zinc-500 placeholder:font-extrabold"
-                      style={{
-                        fontFamily: "'Oswald', 'Impact', 'Bebas Neue', sans-serif",
-                        letterSpacing: '0.08em',
-                      }}
-                    />
-                    <Edit3 className="w-4 h-4 text-amber-400 absolute right-3 pointer-events-none opacity-80" />
-                  </div>
-
-                  {/* Font Style Preview Badge */}
-                  <div className="mt-2.5 flex items-center justify-between text-[10px] text-zinc-400 font-medium">
-                    <span>Preview Font Style:</span>
-                    <span
-                      className="text-amber-300 font-black tracking-widest uppercase bg-zinc-800 px-2.5 py-0.5 rounded border border-zinc-700"
-                      style={{ fontFamily: "'Oswald', 'Impact', sans-serif" }}
-                    >
-                      {customHeadline || 'DENPASAR'}
-                    </span>
-                  </div>
-                </div>
-              )}
 
               {/* Quick Select Slot Foto Bar */}
               <div className="bg-purple-50/80 border border-purple-100 p-2.5 rounded-2xl flex flex-col gap-2">
