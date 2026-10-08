@@ -226,10 +226,15 @@ interface PhotoboothContextProps {
 }
 
 
-const PhotoboothContext = createContext<PhotoboothContextProps | undefined>(undefined); const SESSION_KEY = 'balisnap_active_session_v1';
+const PhotoboothContext = createContext<PhotoboothContextProps | undefined>(undefined);
+const SESSION_KEY = 'balisnap_active_session_v2';
 
 const getInitialSession = () => {
   try {
+    // Bersihkan sesi lama yang masih menyimpan data URL foto demo lama
+    sessionStorage.removeItem('balisnap_active_session_v1');
+    sessionStorage.removeItem('balisnap_session');
+
     const raw = sessionStorage.getItem(SESSION_KEY);
     if (raw) { 
       const parsed = JSON.parse(raw);

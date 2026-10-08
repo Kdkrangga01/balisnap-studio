@@ -706,49 +706,6 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
           return <Layer listening={false}>{items}</Layer>;
         })()}
 
-        {/* LAYER 5: BRAND — BaliSnap Studio */}
-        {(() => {
-          const isCustom = selectedFrame.category === 'custom' || selectedFrame.id.startsWith('custom-');
-          const hasExistingBrand = selectedFrame.hasBrandName === true || selectedFrame.category !== 'studio';
-
-          if (isCustom || hasExistingBrand) {
-            return null;
-          }
-
-          return (
-            <Layer listening={false}>
-              <Text
-                x={0}
-                y={frameHeight - Math.round(frameWidth * 0.08)}
-                width={frameWidth}
-                align="center"
-                text="BaliSnap Studio"
-                fontSize={Math.max(16, Math.round(frameWidth * 0.026))}
-                fontStyle="600"
-                fontFamily="'Poppins', sans-serif"
-                fill="rgba(0, 0, 0, 0.4)"
-                letterSpacing={2}
-                shadowColor="rgba(0, 0, 0, 0.6)"
-                shadowBlur={5}
-                shadowOffsetX={0}
-                shadowOffsetY={0}
-              />
-              <Text
-                x={0}
-                y={frameHeight - Math.round(frameWidth * 0.08)}
-                width={frameWidth}
-                align="center"
-                text="BaliSnap Studio"
-                fontSize={Math.max(16, Math.round(frameWidth * 0.026))}
-                fontStyle="600"
-                fontFamily="'Poppins', sans-serif"
-                fill="rgba(255, 255, 255, 0.85)"
-                letterSpacing={2}
-              />
-            </Layer>
-          );
-        })()}
-
       </Stage>
     </div>
   );

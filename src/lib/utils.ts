@@ -96,23 +96,6 @@ export function generateDemoPhoto(slotIndex: number): string {
   ctx.quadraticCurveTo(600, 170, 600, 140);
   ctx.fill();
 
-  // Typography labels
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-  ctx.shadowBlur = 10;
-  ctx.shadowOffsetY = 4;
-  
-  ctx.fillStyle = '#6B4A3A';
-  ctx.font = 'bold 44px "Playfair Display", Georgia, serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(`BaliSnap Studio`, 600, 750);
-  
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
-  
-  ctx.font = '600 24px "Poppins", sans-serif';
-  ctx.fillStyle = '#C9A66B'; // Gold accent
-  ctx.fillText(`PORTRAIT CAPTURE - SLOT ${slotIndex + 1}`, 600, 800);
-  
   return canvas.toDataURL('image/jpeg', 0.95);
 }
 
