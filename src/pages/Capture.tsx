@@ -21,7 +21,9 @@ import {
   Volume2,
   VolumeX,
   Wand2,
-  Sun
+  Sun,
+  Users,
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
 
@@ -113,7 +115,8 @@ function fitDataUrlToSlotAspect(
   filterId: string,
   brightnessLevel: number,
   isBeautyMode: boolean,
-  targetAspect?: number | null
+  targetAspect?: number | null,
+  cameraMode: 'group' | 'solo' = 'group'
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
@@ -125,15 +128,16 @@ function fitDataUrlToSlotAspect(
         return;
       }
 
-      // Tentukan area sumber (crop) dari foto asli supaya rasionya
-      // persis sama dengan targetAspect. Pakai anchor yang sama kayak
-      // cover-fit di editor: center horizontal, 25%-dari-atas vertikal.
+      // Default: pertahankan gambar penuh (Full Field of View)
       let cropX = 0;
       let cropY = 0;
       let cropW = srcW;
       let cropH = srcH;
 
-      if (targetAspect && targetAspect > 0) {
+      // Pada MODE SOLO: potong sisi foto agar pas dengan bentuk rasio slot bingkai (close-up).
+      // Pada MODE GRUP: JANGAN POTONG KIRI-KANAN SAMA SEKALI, agar foto ber-3 atau ber-4
+      // tetap utuh seluruh wajah dan badannya tanpa ada yang terpotong di pinggir.
+      if (cameraMode === 'solo' && targetAspect && targetAspect > 0) {
         const srcAspect = srcW / srcH;
         if (srcAspect > targetAspect) {
           // Foto lebih "lebar" dari slot -> potong kiri-kanan, center-crop.
@@ -213,6 +217,7 @@ export const Capture: React.FC = () => {
   const [isBeautyMode, setIsBeautyMode] = useState<boolean>(false);
   const [isMirrorMode, setIsMirrorMode] = useState<boolean>(true);
   const [timerInterval, setTimerInterval] = useState<number>(3);
+  const [cameraMode, setCameraMode] = useState<'group' | 'solo'>('group');
 
   // States Opsi Tampilan & Fitur Pendukung
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
@@ -415,7 +420,7 @@ export const Capture: React.FC = () => {
     const capturedSlot = activeSlot;
     const targetAspect = getSlotAspectRatio(capturedSlot);
 
-    fitDataUrlToSlotAspect(imageSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect)
+    fitDataUrlToSlotAspect(imageSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect, cameraMode)
       .then((croppedSrc) => {
         setPhotoAtSlot(capturedSlot, croppedSrc);
 
@@ -436,19 +441,13 @@ export const Capture: React.FC = () => {
         setIsProcessingPhoto(false);
         setIsAutoShooting(false);
       });
-  }, [webcamRef, activeSlot, isAutoShooting, activeFilter, brightness, isBeautyMode, timerInterval, setPhotoAtSlot, selectNextEmptySlot, actualResolution, soundEnabled, getSlotAspectRatio]);
+  }, [webcamRef, activeSlot, isAutoShooting, activeFilter, brightness, isBeautyMode, timerInterval, setPhotoAtSlot, selectNextEmptySlot, actualResolution, soundEnabled, getSlotAspectRatio, cameraMode]);
 
   if (!selectedFrame) return null;
 
   const { slots: totalSlots, name: frameName } = selectedFrame;
 
-  // Rasio slot yang sedang dibidik. Dipakai buat:
-  // 1) Kasih HINT rasio ke kamera (browser cuma "ideal", bukan garansi --
-  //    tapi kalau kameranya support, native stream jadi udah mendekati
-  //    bentuk slot, jadi crop yang perlu dilakukan makin sedikit).
-  // 2) Bentuk kotak viewfinder di layar (lihat `aspectRatio: viewfinderAspect`
-  //    di bawah), supaya WYSIWYG -- apa yang user lihat di viewfinder
-  //    SAMA PERSIS dengan area yang bakal di-crop & disimpan di capturePhoto().
+  // Rasio slot yang sedang dibidik
   const activeSlotAspect = getSlotAspectRatio(activeSlot);
 
   const getVideoConstraints = () => {
@@ -471,11 +470,10 @@ export const Capture: React.FC = () => {
       ? actualResolution.width / actualResolution.height
       : fallbackAspect;
 
-  // Kotak viewfinder di-set ke rasio SLOT (bukan rasio native kamera).
-  // Video di dalamnya tetap `object-cover` (lihat className Webcam di bawah),
-  // jadi secara visual videonya otomatis center-crop pas ke bentuk ini --
-  // persis prinsip yang dipakai fitDataUrlToSlotAspect() saat capture.
-  const viewfinderAspect = activeSlotAspect || cameraAspect;
+  // Pada mode grup: gunakan rasio sudut lebar kamera (cameraAspect, mis. 16:9 atau 4:3)
+  // agar seluruh bidang pandang kamera muat tanpa terpotong sisi kiri/kanan.
+  // Pada mode solo: gunakan rasio slot bingkai (activeSlotAspect) untuk close-up pas slot.
+  const viewfinderAspect = cameraMode === 'group' ? cameraAspect : (activeSlotAspect || cameraAspect);
 
   const startSingleClickMultiShoot = () => {
     const firstEmpty = photosStateRef.current.findIndex((p) => p === null);
@@ -521,7 +519,7 @@ export const Capture: React.FC = () => {
       setIsProcessingPhoto(true);
       setCaptureError(null);
 
-      fitDataUrlToSlotAspect(rawSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect)
+      fitDataUrlToSlotAspect(rawSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect, cameraMode)
         .then((croppedSrc) => {
           setPhotoAtSlot(targetSlot, croppedSrc);
           const updatedPhotos = [...photosStateRef.current];
@@ -531,7 +529,7 @@ export const Capture: React.FC = () => {
         })
         .catch((err) => {
           console.error("Gagal memproses foto upload, mencoba fallback...", err);
-          fitDataUrlToSlotAspect(rawSrc, 1024, 'none', 100, false, targetAspect)
+          fitDataUrlToSlotAspect(rawSrc, 1024, 'none', 100, false, targetAspect, cameraMode)
             .then((fallbackSrc) => {
               setPhotoAtSlot(targetSlot, fallbackSrc);
               const updatedPhotos = [...photosStateRef.current];
@@ -689,6 +687,40 @@ export const Capture: React.FC = () => {
                 BALISNAP FX STUDIO
               </div>
 
+              {/* TOGGLE MODE KAMERA: GRUP WIDE vs SOLO CLOSE-UP */}
+              <div className="w-full max-w-xl mx-auto flex items-center justify-center mb-1 z-20">
+                <div className="bg-white/95 backdrop-blur-md p-1 sm:p-1.5 rounded-2xl border-2 border-purple-200 shadow-md flex items-center w-full gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setCameraMode('group')}
+                    className={`flex-1 py-1.5 sm:py-2 px-3 rounded-xl font-black text-[10px] sm:text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+                      cameraMode === 'group'
+                        ? 'bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 text-white shadow-md shadow-purple-300 scale-[1.01]'
+                        : 'text-zinc-600 hover:text-purple-600 hover:bg-purple-50/70'
+                    }`}
+                  >
+                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="font-extrabold">👥 Mode Rame-Rame (Ber 3 - 4)</span>
+                    <span className="hidden xs:inline-block bg-white/20 text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider">
+                      Sudut Lebar
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCameraMode('solo')}
+                    className={`flex-1 py-1.5 sm:py-2 px-3 rounded-xl font-black text-[10px] sm:text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+                      cameraMode === 'solo'
+                        ? 'bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 text-white shadow-md shadow-purple-300 scale-[1.01]'
+                        : 'text-zinc-600 hover:text-purple-600 hover:bg-purple-50/70'
+                    }`}
+                  >
+                    <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="font-extrabold">👤 Mode Solo / Close-up</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Viewfinder Frame (Ditambahkan padding-top pt-5 sm:pt-4 agar HUD tidak sesak) */}
               <div
                 className="relative bg-zinc-950 border-4 border-purple-200/80 shadow-[0_20px_50px_rgba(216,180,254,0.4)] rounded-[20px] sm:rounded-[28px] overflow-hidden mx-auto w-full max-w-4xl flex-1 min-h-0 group pt-5 sm:pt-4"
@@ -762,6 +794,35 @@ export const Capture: React.FC = () => {
                     <div className="border-r border-b border-white" /><div className="border-r border-b border-white" /><div className="border-b border-white" />
                     <div className="border-r border-b border-white" /><div className="border-r border-b border-white" /><div className="border-b border-white" />
                     <div className="border-r border-white" /><div className="border-r border-white" /><div />
+                  </div>
+                )}
+
+                {/* Panduan Batas Berdiri Grup (Group Safe Zone Overlay) */}
+                {cameraMode === 'group' && (
+                  <div className="absolute inset-0 pointer-events-none z-15 flex flex-col justify-between p-3 sm:p-5">
+                    {/* Garis Batas Kiri & Kanan */}
+                    <div className="absolute inset-y-12 left-2 sm:left-5 border-l-2 border-dashed border-purple-400/80 shadow-[0_0_12px_rgba(168,85,247,0.7)] flex items-center">
+                      <span className="hidden sm:inline-block -rotate-90 text-[8px] font-black tracking-widest text-purple-200 uppercase whitespace-nowrap -ml-7 bg-zinc-950/85 px-2 py-0.5 rounded-full border border-purple-400/40">
+                        Batas Kiri
+                      </span>
+                    </div>
+                    <div className="absolute inset-y-12 right-2 sm:right-5 border-r-2 border-dashed border-purple-400/80 shadow-[0_0_12px_rgba(168,85,247,0.7)] flex items-center justify-end">
+                      <span className="hidden sm:inline-block rotate-90 text-[8px] font-black tracking-widest text-purple-200 uppercase whitespace-nowrap -mr-7 bg-zinc-950/85 px-2 py-0.5 rounded-full border border-purple-400/40">
+                        Batas Kanan
+                      </span>
+                    </div>
+
+                    {/* Badge Panduan Berdiri */}
+                    <div className="self-center mt-7 sm:mt-6 bg-zinc-950/85 backdrop-blur-md px-3 sm:px-4 py-1 rounded-full border border-purple-400/50 text-white text-[8px] sm:text-[9.5px] font-black tracking-wider uppercase flex items-center gap-1.5 shadow-lg">
+                      <Users className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
+                      <span>Area Berdiri Ber-3 / Ber-4 • Wajah &amp; Badan Utuh</span>
+                    </div>
+
+                    {/* Hint Bawah */}
+                    <div className="self-center mb-6 bg-zinc-950/75 backdrop-blur-md px-3 py-0.5 rounded-full border border-white/10 text-zinc-300 text-[8px] font-bold flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      <span>Berdiri sejajar di dalam garis batas putus-putus</span>
+                    </div>
                   </div>
                 )}
 

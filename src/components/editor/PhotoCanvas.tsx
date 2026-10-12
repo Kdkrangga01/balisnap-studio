@@ -457,6 +457,16 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                   ctx.closePath();
                 }}
               >
+                {/* Background slot bersih agar jika foto grup lebar terpasang di slot vertikal, latar belakang tetap rapi */}
+                <Rect
+                  x={0}
+                  y={0}
+                  width={slot.w}
+                  height={slot.h}
+                  fill="#ffffff"
+                  listening={false}
+                />
+
                 <KonvaImage
                   image={photoImg}
                   x={centeredX}
