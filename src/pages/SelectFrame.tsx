@@ -39,6 +39,20 @@ const REMOVED_FRAME_IDS = new Set([
   'retro-caramel-6',
   'custom-1784433846432-eq88',
   'custom-1784638039985-r0ku',
+  'polaroid-double',
+  'polaroid-triple',
+  'polaroid-grid-4',
+  'polaroid-collection-6',
+  'polaroid-wall-8',
+  'cute-lavender-2',
+  'cute-lemon-6',
+  'retro-ticket-2',
+  'retro-mosaic-8',
+  'elegant-gold-1',
+  'filmstrip-double-6',
+  'grand-group-8',
+  'grid-classic-6',
+  'grid-mint-2',
 ]);
 
 // PUSTAKA KATA-KATA ESTETIK UNTUK KOMBINASI NAMA UNIK (TANPA ANGKA / SIMBOL)

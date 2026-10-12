@@ -236,79 +236,11 @@ export const frames: FrameTemplate[] = [
     width: 1200, height: 1500,
     slotCoords: [{ x: 80, y: 80, w: 1040, h: 1040 }]
   },
-  {
-    id: "polaroid-double",
-    name: "Polaroid Duo",
-    slots: 2,
-    category: "polaroid",
-    src: "/templates/polaroid-double.png",
-    width: 1200, height: 1000,
-    slotCoords: [
-      { x: 60, y: 60, w: 510, h: 600 },
-      { x: 630, y: 60, w: 510, h: 600 }
-    ]
-  },
-  {
-    id: "polaroid-triple",
-    name: "Polaroid Triple",
-    slots: 3,
-    category: "polaroid",
-    src: "/templates/polaroid-triple.png",
-    width: 800, height: 2200,
-    slotCoords: [
-      { x: 80, y: 80, w: 640, h: 460 },
-      { x: 80, y: 590, w: 640, h: 460 },
-      { x: 80, y: 1100, w: 640, h: 460 }
-    ]
-  },
-  {
-    id: "polaroid-grid-4",
-    name: "Polaroid Grid",
-    slots: 4,
-    category: "polaroid",
-    src: "/templates/polaroid-grid-4.png",
-    width: 1200, height: 1500,
-    slotCoords: [
-      { x: 60, y: 60, w: 510, h: 510 },
-      { x: 630, y: 60, w: 510, h: 510 },
-      { x: 60, y: 620, w: 510, h: 510 },
-      { x: 630, y: 620, w: 510, h: 510 }
-    ]
-  },
-  {
-    id: "polaroid-collection-6",
-    name: "Polaroid Collection",
-    slots: 6,
-    category: "polaroid",
-    src: "/templates/polaroid-collection-6.png",
-    width: 1200, height: 1600,
-    slotCoords: [
-      { x: 60, y: 60, w: 350, h: 500 },
-      { x: 425, y: 60, w: 350, h: 500 },
-      { x: 790, y: 60, w: 350, h: 500 },
-      { x: 60, y: 620, w: 350, h: 500 },
-      { x: 425, y: 620, w: 350, h: 500 },
-      { x: 790, y: 620, w: 350, h: 500 }
-    ]
-  },
-  {
-    id: "polaroid-wall-8",
-    name: "Polaroid Wall",
-    slots: 8,
-    category: "polaroid",
-    src: "/templates/polaroid-wall-8.png",
-    width: 1200, height: 1600,
-    slotCoords: [
-      { x: 50, y: 50, w: 250, h: 300 },
-      { x: 330, y: 50, w: 250, h: 300 },
-      { x: 610, y: 50, w: 250, h: 300 },
-      { x: 890, y: 50, w: 250, h: 300 },
-      { x: 50, y: 420, w: 250, h: 300 },
-      { x: 330, y: 420, w: 250, h: 300 },
-      { x: 610, y: 420, w: 250, h: 300 },
-      { x: 890, y: 420, w: 250, h: 300 }
-    ]
-  },
+  
+  
+  
+  
+  
 
   // ============================================
   // CUTE / KAWAII (6 templates)
@@ -349,34 +281,8 @@ export const frames: FrameTemplate[] = [
       { x: 70, y: 1730, w: 660, h: 500, rx: 18 }
     ]
   },
-  {
-    id: "cute-lavender-2",
-    name: "Lavender Duo",
-    slots: 2,
-    category: "cute",
-    src: "/templates/cute-lavender-2.png",
-    width: 1200, height: 1400,
-    slotCoords: [
-      { x: 80, y: 80, w: 490, h: 900, rx: 20 },
-      { x: 630, y: 80, w: 490, h: 900, rx: 20 }
-    ]
-  },
-  {
-    id: "cute-lemon-6",
-    name: "Lemon Stars",
-    slots: 6,
-    category: "cute",
-    src: "/templates/cute-lemon-6.png",
-    width: 1200, height: 1800,
-    slotCoords: [
-      { x: 65, y: 65, w: 510, h: 400, rx: 18 },
-      { x: 625, y: 65, w: 510, h: 400, rx: 18 },
-      { x: 65, y: 515, w: 510, h: 400, rx: 18 },
-      { x: 625, y: 515, w: 510, h: 400, rx: 18 },
-      { x: 65, y: 965, w: 510, h: 400, rx: 18 },
-      { x: 625, y: 965, w: 510, h: 400, rx: 18 }
-    ]
-  },
+  
+  
   {
     id: "cute-cotton-8",
     name: "Y2K Cyber Star",
@@ -419,18 +325,7 @@ export const frames: FrameTemplate[] = [
     width: 1200, height: 1500,
     slotCoords: [{ x: 100, y: 90, w: 1000, h: 1050, rx: 6 }]
   },
-  {
-    id: "retro-ticket-2",
-    name: "Retro Ticket",
-    slots: 2,
-    category: "retro",
-    src: "/templates/retro-ticket-2.png",
-    width: 1200, height: 1000,
-    slotCoords: [
-      { x: 80, y: 80, w: 490, h: 580, rx: 4 },
-      { x: 630, y: 80, w: 490, h: 580, rx: 4 }
-    ]
-  },
+  
   {
     id: "retro-sage-3",
     name: "Breaking News",
@@ -459,98 +354,13 @@ export const frames: FrameTemplate[] = [
     ]
   },
 
-  {
-    id: "retro-mosaic-8",
-    name: "Vintage Mosaic",
-    slots: 8,
-    category: "retro",
-    src: "/templates/retro-mosaic-8.png",
-    width: 1200, height: 2000,
-    slotCoords: [
-      { x: 65, y: 55, w: 510, h: 340, rx: 4 },
-      { x: 625, y: 55, w: 510, h: 340, rx: 4 },
-      { x: 65, y: 445, w: 510, h: 340, rx: 4 },
-      { x: 625, y: 445, w: 510, h: 340, rx: 4 },
-      { x: 65, y: 835, w: 510, h: 340, rx: 4 },
-      { x: 625, y: 835, w: 510, h: 340, rx: 4 },
-      { x: 65, y: 1225, w: 510, h: 340, rx: 4 },
-      { x: 625, y: 1225, w: 510, h: 340, rx: 4 }
-    ]
-  },
-  {
-    id: "elegant-gold-1",
-    name: "Elegant Gold 1",
-    slots: 1,
-    category: "cute",
-    src: "/templates/elegant-gold-1.png",
-    width: 1200, height: 1500,
-    slotCoords: [
-      { x: 104, y: 104, w: 992, h: 1092, rx: 10 }
-    ]
-  },
   
-  {
-    id: "filmstrip-double-6",
-    name: "Filmstrip Double 6",
-    slots: 6,
-    category: "filmstrip",
-    src: "/templates/filmstrip-double-6.png",
-    width: 1200, height: 1600,
-    slotCoords: [
-      { x: 104, y: 84, w: 462, h: 342 },
-      { x: 634, y: 84, w: 462, h: 342 },
-      { x: 104, y: 474, w: 462, h: 342 },
-      { x: 634, y: 474, w: 462, h: 342 },
-      { x: 104, y: 864, w: 462, h: 342 },
-      { x: 634, y: 864, w: 462, h: 342 }
-    ]
-  },
-  {
-    id: "grand-group-8",
-    name: "Grand Group 8",
-    slots: 8,
-    category: "cute",
-    src: "/templates/grand-group-8.png",
-    width: 1200, height: 1800,
-    slotCoords: [
-      { x: 84, y: 84, w: 482, h: 312, rx: 10 },
-      { x: 634, y: 84, w: 482, h: 312, rx: 10 },
-      { x: 84, y: 434, w: 482, h: 312, rx: 10 },
-      { x: 634, y: 434, w: 482, h: 312, rx: 10 },
-      { x: 84, y: 784, w: 482, h: 312, rx: 10 },
-      { x: 634, y: 784, w: 482, h: 312, rx: 10 },
-      { x: 84, y: 1134, w: 482, h: 312, rx: 10 },
-      { x: 634, y: 1134, w: 482, h: 312, rx: 10 }
-    ]
-  },
-  {
-    id: "grid-classic-6",
-    name: "Grid Classic 6",
-    slots: 6,
-    category: "cute",
-    src: "/templates/grid-classic-6.png",
-    width: 1200, height: 1600,
-    slotCoords: [
-      { x: 84, y: 84, w: 482, h: 352, rx: 10 },
-      { x: 634, y: 84, w: 482, h: 352, rx: 10 },
-      { x: 84, y: 484, w: 482, h: 352, rx: 10 },
-      { x: 634, y: 484, w: 482, h: 352, rx: 10 },
-      { x: 84, y: 884, w: 482, h: 352, rx: 10 },
-      { x: 634, y: 884, w: 482, h: 352, rx: 10 }
-    ]
-  },
-  {
-    id: "grid-mint-2",
-    name: "Grid Mint 2",
-    slots: 2,
-    category: "cute",
-    src: "/templates/grid-mint-2.png",
-    width: 1200, height: 1600,
-    slotCoords: [
-      { x: 104, y: 104, w: 992, h: 552, rx: 10 },
-      { x: 104, y: 724, w: 992, h: 552, rx: 10 }
-    ]
-  },
+  
+  
+  
+  
+  
+  
   {
     id: "grid-peach-2x2",
     name: "Grid Peach 2x2",
