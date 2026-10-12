@@ -630,11 +630,11 @@ export const Preview: React.FC = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.85, opacity: 0, y: 20 }}
               transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-              className="bg-white border-2 border-purple-200 rounded-[36px] max-w-sm sm:max-w-md w-full p-6 shadow-[0_25px_60px_-15px_rgba(168,85,247,0.4)] relative overflow-hidden text-center flex flex-col items-center gap-4 z-50 select-none max-h-[90vh] overflow-y-auto"
+              className="bg-white border border-stone-200/90 rounded-[32px] max-w-sm sm:max-w-md w-full p-6 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.12)] relative overflow-hidden text-center flex flex-col items-center gap-3.5 z-50 select-none max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* CUTE TAPE DECORATION */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 px-3 h-5 bg-purple-200/80 border border-white/80 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center gap-1 text-[8px] text-purple-700 font-black tracking-widest uppercase">
+              {/* TAPE STRIP */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 px-3 h-5 bg-stone-100 border border-stone-200 skew-x-[-10deg] shadow-2xs pointer-events-none flex items-center justify-center gap-1 text-[8px] text-stone-700 font-bold tracking-widest uppercase">
                 <Film className="w-2.5 h-2.5 text-purple-600 inline" />
                 <span>BOOMERANG GIF STUDIO</span>
               </div>
@@ -643,41 +643,41 @@ export const Preview: React.FC = () => {
               {!isGeneratingGif && (
                 <button
                   onClick={() => setShowGifModal(false)}
-                  className="absolute top-4 right-4 w-9 h-9 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-full flex items-center justify-center transition-all shadow-sm cursor-pointer"
+                  className="absolute top-4 right-4 w-9 h-9 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-full flex items-center justify-center transition-all shadow-2xs cursor-pointer"
                   aria-label="Tutup"
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
 
-              <div className="flex flex-col items-center gap-1 mt-3">
-                <h3 className="text-lg font-black tracking-tight text-zinc-900 flex items-center gap-2">
-                  <Film className="w-5 h-5 text-purple-600 animate-pulse" />
+              <div className="flex flex-col items-center gap-1 mt-2">
+                <h3 className="font-serif text-xl font-bold tracking-tight text-stone-900 flex items-center gap-2">
+                  <Film className="w-5 h-5 text-purple-600" />
                   Pratinjau Animasi GIF
                 </h3>
-                <p className="text-xs text-zinc-500 font-medium">
+                <p className="text-xs text-stone-500 font-normal">
                   Foto Boomerang bergerak hasil momen Photobooth Anda!
                 </p>
               </div>
 
               {/* GIF PREVIEW CONTAINER / LOADING STATE WITH DYNAMIC ASPECT FIT */}
               <div
-                className="w-full bg-purple-950/10 rounded-2xl border-2 border-purple-200/70 overflow-hidden flex items-center justify-center relative shadow-inner p-2.5 my-1"
-                style={{ minHeight: '260px', maxHeight: '55vh' }}
+                className="w-full bg-stone-50 rounded-2xl border border-stone-200/80 overflow-hidden flex items-center justify-center relative shadow-inner p-2.5 my-1"
+                style={{ minHeight: '260px', maxHeight: '52vh' }}
               >
                 {isGeneratingGif ? (
                   <div className="flex flex-col items-center gap-3 p-6 text-center">
-                    <Loader2 className="w-10 h-10 text-purple-600 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-[#E15A6E] animate-spin" />
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs font-black uppercase text-purple-700 tracking-wider">
+                      <span className="text-xs font-bold text-stone-700">
                         Memproses Animasi GIF Full Frame...
                       </span>
-                      <span className="text-[11px] text-purple-600 font-extrabold">{gifProgress}%</span>
+                      <span className="text-[11px] text-[#E15A6E] font-extrabold">{gifProgress}%</span>
                     </div>
                     {/* PROGRESS BAR */}
-                    <div className="w-48 h-2.5 bg-purple-100 rounded-full overflow-hidden border border-purple-200 shadow-inner">
+                    <div className="w-48 h-2 bg-stone-200 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 rounded-full"
+                        className="h-full bg-[#E15A6E] transition-all duration-300 rounded-full"
                         style={{ width: `${gifProgress}%` }}
                       />
                     </div>
@@ -686,18 +686,18 @@ export const Preview: React.FC = () => {
                   <img
                     src={gifResult.dataUrl}
                     alt="Animasi GIF Boomerang Full Frame Strip"
-                    className="max-h-[50vh] max-w-full w-auto h-auto object-contain drop-shadow-md rounded-lg"
+                    className="max-h-[48vh] max-w-full w-auto h-auto object-contain drop-shadow-md rounded-xl"
                   />
                 ) : (
-                  <div className="text-xs text-zinc-400 font-medium">Gagal memuat pratinjau</div>
+                  <div className="text-xs text-stone-400 font-medium">Gagal memuat pratinjau</div>
                 )}
               </div>
 
               {/* SPEED CONTROLS */}
               {!isGeneratingGif && (
                 <div className="w-full flex flex-col gap-1.5">
-                  <span className="text-[10px] font-black uppercase text-purple-700 tracking-wider text-left flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 text-purple-600 inline" />
+                  <span className="text-[10px] font-bold uppercase text-stone-600 tracking-wider text-left flex items-center gap-1.5 px-0.5">
+                    <Zap className="w-3.5 h-3.5 text-amber-500 inline" />
                     Kecepatan Animasi Boomerang:
                   </span>
                   <div className="grid grid-cols-3 gap-2"> 
@@ -709,10 +709,10 @@ export const Preview: React.FC = () => {
                       <button
                         key={s.value}
                         onClick={() => handleOpenGifModal(s.value)}
-                        className={`py-2 px-1 text-[11px] font-black rounded-xl border transition-all cursor-pointer ${
+                        className={`py-2 px-1 text-[11px] rounded-xl border transition-all cursor-pointer font-semibold ${
                           gifInterval === s.value
-                            ? 'bg-purple-600 text-white border-purple-600 shadow-sm ring-2 ring-purple-300'
-                            : 'bg-white text-purple-700 border-purple-200 hover:bg-purple-50'
+                            ? 'bg-[#E15A6E] text-white border-[#E15A6E] shadow-2xs font-bold'
+                            : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
                         }`}
                       >
                         {s.label}
@@ -726,7 +726,7 @@ export const Preview: React.FC = () => {
               {!isGeneratingGif && gifResult && ( 
                 <button
                   onClick={handleDownloadGif}
-                  className="w-full py-3.5 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 hover:from-purple-700 hover:to-rose-600 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-lg shadow-purple-300/50 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+                  className="w-full py-3.5 bg-[#E15A6E] hover:bg-[#D4485D] text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
                 >
                   <Download className="w-4 h-4" />
                   UNDUH FILE ANIMASI .GIF

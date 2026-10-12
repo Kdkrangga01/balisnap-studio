@@ -237,19 +237,19 @@ const createCombinedGiftCardCanvas = async (
         canvas.width = cardWidth;
         canvas.height = cardHeight;
 
-        // Background Gradient
+        // Background Gradient - Soft Warm Studio Photobooth
         const bgGrad = ctx.createLinearGradient(0, 0, 0, cardHeight);
-        bgGrad.addColorStop(0, '#fff5f7');
-        bgGrad.addColorStop(0.5, '#fce7f3');
-        bgGrad.addColorStop(1, '#fbcfe8');
+        bgGrad.addColorStop(0, '#FAFAF9');
+        bgGrad.addColorStop(0.5, '#FFF5F6');
+        bgGrad.addColorStop(1, '#FCE8EB');
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, cardWidth, cardHeight);
 
         // Main Card Container Background
         ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = 'rgba(244, 114, 182, 0.3)';
-        ctx.shadowBlur = 30;
-        ctx.shadowOffsetY = 10;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetY = 8;
         ctx.beginPath();
         if (ctx.roundRect) {
           ctx.roundRect(padding, padding, cardWidth - padding * 2, cardHeight - padding * 2, 28);
@@ -268,8 +268,8 @@ const createCombinedGiftCardCanvas = async (
 
         // Divider
         const cardDividerY = photoY + photoH + 28;
-        ctx.strokeStyle = '#fbcfe8';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#E5E7EB';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(photoX, cardDividerY);
         ctx.lineTo(photoX + photoW, cardDividerY);
@@ -278,19 +278,19 @@ const createCombinedGiftCardCanvas = async (
         let currentY = cardDividerY + 34;
 
         // Header: UNTUK & DARI
-        ctx.fillStyle = '#be185d';
+        ctx.fillStyle = '#1F2937';
         ctx.font = 'bold 22px sans-serif';
         ctx.textAlign = 'left';
         ctx.fillText(`💌 UNTUK: ${toStr.toUpperCase()}`, photoX, currentY);
 
-        ctx.fillStyle = '#9d174d';
-        ctx.font = 'bold 17px sans-serif';
+        ctx.fillStyle = '#6B7280';
+        ctx.font = '500 16px sans-serif';
         ctx.fillText(`Dari: ${fromStr}`, photoX, currentY + 28);
 
         currentY += 68;
 
         // Message Box
-        ctx.fillStyle = '#fdf2f8';
+        ctx.fillStyle = '#F9FAFB';
         ctx.beginPath();
         if (ctx.roundRect) {
           ctx.roundRect(photoX, currentY, photoW, 110, 16);
@@ -299,8 +299,12 @@ const createCombinedGiftCardCanvas = async (
         }
         ctx.fill();
 
-        ctx.fillStyle = '#831843';
-        ctx.font = 'italic 18px sans-serif';
+        ctx.strokeStyle = '#E5E7EB';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.fillStyle = '#374151';
+        ctx.font = 'italic 17px sans-serif';
 
         const words = msgStr.split(' ');
         let line = '';
@@ -322,8 +326,8 @@ const createCombinedGiftCardCanvas = async (
 
         // Footer Branding
         currentY += 135;
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = '#9CA3AF';
+        ctx.font = '600 13px sans-serif';
         ctx.fillText('📸 BaliSnap Studio | Digital Gift Card', photoX, currentY);
 
         resolve(canvas.toDataURL('image/png'));
@@ -441,47 +445,49 @@ const createCombinedGiftCardCanvas = async (
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.85, opacity: 0, y: 20 }}
           transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-          className="bg-gradient-to-b from-rose-50 via-pink-50 to-purple-50 border-2 border-pink-300 rounded-[36px] max-w-sm sm:max-w-md w-full p-6 shadow-[0_25px_60px_-15px_rgba(244,114,182,0.5)] relative overflow-hidden text-center flex flex-col items-center gap-4 z-50 select-none max-h-[92vh] overflow-y-auto"
+          className="bg-white/95 backdrop-blur-xl border border-stone-200/90 rounded-[32px] max-w-sm sm:max-w-md w-full p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] relative overflow-hidden text-center flex flex-col items-center gap-4 z-50 select-none max-h-[92vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* TAPE DECORATION */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 px-3 h-5 bg-pink-300/80 border border-white/80 skew-x-[-10deg] shadow-sm pointer-events-none flex items-center justify-center gap-1 text-[8px] text-rose-800 font-black tracking-widest uppercase">
-            <Heart className="w-2.5 h-2.5 text-rose-700 inline" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 px-3 h-5 bg-stone-100/95 border border-stone-200/90 skew-x-[-10deg] shadow-xs pointer-events-none flex items-center justify-center gap-1.5 text-[8.5px] text-stone-600 font-bold tracking-widest uppercase">
+            <Heart className="w-2.5 h-2.5 text-[#E15A6E]" />
             <span>DIGITAL GIFT ENVELOPE</span>
           </div>
 
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-full flex items-center justify-center transition-all shadow-sm cursor-pointer"
+            className="absolute top-4 right-4 w-8 h-8 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-full flex items-center justify-center transition-all shadow-xs cursor-pointer"
             aria-label="Tutup"
           >
             <X className="w-4 h-4" />
           </button>
 
-          <div className="flex flex-col items-center gap-1 mt-3">
-            <h3 className="text-xl font-serif font-black tracking-tight text-rose-950 flex items-center gap-2">
-              <Mail className="w-5 h-5 text-rose-600 animate-bounce" />
-              Amplop Surat & Gift Digital
+          <div className="flex flex-col items-center gap-1 mt-2">
+            <h3 className="text-xl font-serif font-black tracking-tight text-stone-900 flex items-center gap-2">
+              <Mail className="w-5 h-5 text-[#E15A6E]" />
+              Amplop Surat &amp; Gift Digital
             </h3>
-            <p className="text-xs text-rose-700/80 font-medium">
-              Kirim foto strip ini sebagai hadiah ucapan & pesan suara spesial!
+            <p className="text-xs text-stone-500 font-medium">
+              Kirim foto strip ini sebagai hadiah ucapan &amp; pesan suara spesial!
             </p>
           </div>
 
           {/* ANIMASI AMPLOP 3D INTERAKTIF */}
-          <div className="w-full relative flex flex-col items-center justify-center my-1">
+          <div className="w-full relative flex flex-col items-center justify-center">
             {!isEnvelopeOpen ? (
               <motion.div
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={handleOpenEnvelope}
-                className="w-full h-48 bg-gradient-to-br from-rose-400 via-pink-500 to-purple-500 rounded-2xl border-2 border-white/80 shadow-lg flex flex-col items-center justify-center p-4 cursor-pointer relative overflow-hidden group"
+                className="w-full h-44 bg-gradient-to-b from-[#FFF7F7] via-[#FFF1F3] to-[#FCE8EB] rounded-2xl border border-rose-200/80 hover:border-[#E15A6E]/50 shadow-xs hover:shadow-md flex flex-col items-center justify-center p-4 cursor-pointer relative overflow-hidden group transition-all"
               >
-                <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors" />
-                <Mail className="w-12 h-12 text-white mb-2 group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-black text-white uppercase tracking-wider drop-shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-white shadow-xs border border-rose-100 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
+                  <Mail className="w-6 h-6 text-[#E15A6E]" />
+                </div>
+                <span className="text-xs font-black text-stone-800 uppercase tracking-wider">
                   KLIK UNTUK BUKA AMPLOP
                 </span>
-                <span className="text-[10px] text-pink-100 font-medium mt-1">
+                <span className="text-[11px] text-stone-500 font-medium mt-0.5">
                   Sentuh untuk melihat hadiah ucapan &amp; foto kado
                 </span>
               </motion.div>
@@ -489,21 +495,21 @@ const createCombinedGiftCardCanvas = async (
               <motion.div
                 initial={{ rotateX: -90, opacity: 0 }}
                 animate={{ rotateX: 0, opacity: 1 }}
-                className="w-full flex flex-col items-center gap-2 py-2"
+                className="w-full flex flex-col items-center gap-2 py-1"
               >
-                <span className="text-rose-700 font-bold text-xs flex items-center gap-1">
-                  <Mail className="w-3.5 h-3.5 text-rose-600 inline" />
+                <span className="text-stone-700 font-bold text-xs flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-[#E15A6E]" />
                   Amplop Ucapan Digital Berhasil Dibuka!
                 </span>
                 {activePhoto && (
-                  <div className="relative group overflow-hidden rounded-2xl border-2 border-rose-200 shadow-md bg-white p-1 max-h-48 flex justify-center">
+                  <div className="relative group overflow-hidden rounded-2xl border border-stone-200 bg-stone-50/60 shadow-xs p-1.5 max-h-48 flex justify-center">
                     <img
                       src={activePhoto}
                       alt="Foto Kado Gift Spesial"
                       className="max-h-44 object-contain rounded-xl"
                     />
                     {customGiftPhoto && (
-                      <span className="absolute top-2 right-2 bg-rose-500 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-sm">
+                      <span className="absolute top-2.5 right-2.5 bg-stone-900/80 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-xs">
                         Foto Kado Upload
                       </span>
                     )}
@@ -514,10 +520,10 @@ const createCombinedGiftCardCanvas = async (
           </div>
 
           {/* FORM UCAPAN & SENDER/RECEIVER */}
-          <div className="w-full flex flex-col gap-2.5 text-left bg-white/70 backdrop-blur-sm p-4 rounded-2xl border border-rose-200 shadow-sm">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="w-full flex flex-col gap-3 text-left bg-stone-50/70 p-4 rounded-2xl border border-stone-200/80 shadow-xs">
+            <div className="grid grid-cols-2 gap-2.5">
               <div>
-                <label className="text-[10px] font-black uppercase text-rose-800 tracking-wider block mb-1">
+                <label className="text-[10px] font-bold uppercase text-stone-500 tracking-wider block mb-1">
                   Dari (Pengirim):
                 </label>
                 <input
@@ -525,12 +531,12 @@ const createCombinedGiftCardCanvas = async (
                   placeholder="Nama Kamu"
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
-                  className="w-full p-2 text-xs rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 focus:outline-none focus:border-[#E15A6E] focus:ring-1 focus:ring-[#E15A6E] bg-white text-stone-800 placeholder:text-stone-400"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase text-rose-800 tracking-wider block mb-1">
+                <label className="text-[10px] font-bold uppercase text-stone-500 tracking-wider block mb-1">
                   Untuk (Penerima):
                 </label>
                 <input
@@ -538,13 +544,13 @@ const createCombinedGiftCardCanvas = async (
                   placeholder="Nama Sahabat/Pacar"
                   value={receiverName}
                   onChange={(e) => setReceiverName(e.target.value)}
-                  className="w-full p-2 text-xs rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 focus:outline-none focus:border-[#E15A6E] focus:ring-1 focus:ring-[#E15A6E] bg-white text-stone-800 placeholder:text-stone-400"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase text-rose-800 tracking-wider block mb-1">
+              <label className="text-[10px] font-bold uppercase text-stone-500 tracking-wider block mb-1">
                 Pesan Ucapan Spesial:
               </label>
               <textarea
@@ -552,21 +558,21 @@ const createCombinedGiftCardCanvas = async (
                 rows={2}
                 value={giftMessage}
                 onChange={(e) => setGiftMessage(e.target.value)}
-                className="w-full p-2 text-xs rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-400 bg-white resize-none"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 focus:outline-none focus:border-[#E15A6E] focus:ring-1 focus:ring-[#E15A6E] bg-white text-stone-800 placeholder:text-stone-400 resize-none"
               />
             </div>
 
             {/* UPLOAD FOTO KADO CUSTOM */}
-            <div className="pt-2 border-t border-rose-200/60 flex flex-col gap-1.5">
+            <div className="pt-2.5 border-t border-stone-200/70 flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase text-rose-800 tracking-wider flex items-center gap-1">
-                  <ImageIcon className="w-3.5 h-3.5 text-rose-600" /> UNGGAH FOTO KADO GIFT SPESIAL:
+                <span className="text-[10px] font-bold uppercase text-stone-500 tracking-wider flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-stone-400" /> UNGGAH FOTO KADO GIFT SPESIAL:
                 </span>
                 {customGiftPhoto && (
                   <button
                     type="button"
                     onClick={() => setCustomGiftPhoto(null)}
-                    className="text-[9px] text-rose-600 hover:underline font-bold flex items-center gap-0.5 cursor-pointer"
+                    className="text-[9.5px] text-rose-600 hover:underline font-bold flex items-center gap-1 cursor-pointer"
                   >
                     <Trash2 className="w-3 h-3" /> Reset Foto
                   </button>
@@ -574,8 +580,8 @@ const createCombinedGiftCardCanvas = async (
               </div>
 
               <div className="flex items-center gap-2">
-                <label className="flex-1 py-2 px-3 bg-rose-50 hover:bg-rose-100 border border-dashed border-rose-300 text-rose-700 font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all">
-                  <Upload className="w-3.5 h-3.5 text-rose-500" />
+                <label className="flex-1 py-2 px-3 bg-white hover:bg-stone-50 border border-dashed border-stone-300 text-stone-700 font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all shadow-xs">
+                  <Upload className="w-3.5 h-3.5 text-stone-500" />
                   <span>{customGiftPhoto ? 'Ganti Foto Kado Upload' : 'Unggah Foto Kado Kustom'}</span>
                   <input
                     type="file"
@@ -592,16 +598,16 @@ const createCombinedGiftCardCanvas = async (
                   <span>Foto kado kustom berhasil diunggah!</span>
                 </div>
               ) : (
-                <p className="text-[9.5px] text-rose-600/80 font-medium italic">
+                <p className="text-[10px] text-stone-400 font-medium">
                   *Opsional: Jika tidak diunggah, foto photobooth strip akan digunakan secara otomatis.
                 </p>
               )}
             </div>
 
             {/* AUDIO VOICE NOTE RECORDER */}
-            <div className="pt-2 border-t border-rose-200/60 flex flex-col gap-1.5">
-              <span className="text-[10px] font-black uppercase text-rose-800 tracking-wider flex items-center gap-1">
-                <Mic className="w-3.5 h-3.5 text-rose-600" /> REKAM PESAN SUARA (VOICE NOTE 10s):
+            <div className="pt-2.5 border-t border-stone-200/70 flex flex-col gap-1.5">
+              <span className="text-[10px] font-bold uppercase text-stone-500 tracking-wider flex items-center gap-1.5">
+                <Mic className="w-3.5 h-3.5 text-stone-400" /> REKAM PESAN SUARA (VOICE NOTE 10s):
               </span>
 
               <div className="flex items-center gap-2">
@@ -609,7 +615,7 @@ const createCombinedGiftCardCanvas = async (
                   <button
                     type="button"
                     onClick={startRecording}
-                    className="flex-1 py-2 px-3 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                    className="flex-1 py-2 px-3 bg-[#E15A6E] hover:bg-[#CC475B] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
                   >
                     <Mic className="w-3.5 h-3.5" />
                     {audioUrl ? 'Rekam Ulang Suara' : 'Mulai Rekam Suara'}
@@ -618,7 +624,7 @@ const createCombinedGiftCardCanvas = async (
                   <button
                     type="button"
                     onClick={stopRecording}
-                    className="flex-1 py-2 px-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-sm animate-pulse cursor-pointer"
+                    className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs animate-pulse cursor-pointer"
                   >
                     <Square className="w-3.5 h-3.5 fill-white" />
                     Stop Rekam ({recordingSeconds}s)
@@ -630,7 +636,7 @@ const createCombinedGiftCardCanvas = async (
                     <button
                       type="button"
                       onClick={togglePlayAudio}
-                      className="py-2 px-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer"
+                      className="py-2 px-3 bg-stone-800 hover:bg-stone-900 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer transition-all"
                     >
                       {isPlayingAudio ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                       Putar
@@ -638,11 +644,11 @@ const createCombinedGiftCardCanvas = async (
                     <button
                       type="button"
                       onClick={handleDownloadAudio}
-                      className="py-2 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm cursor-pointer"
+                      className="py-2 px-2.5 bg-white hover:bg-stone-100 text-stone-700 border border-stone-200 font-bold text-xs rounded-xl flex items-center gap-1 shadow-xs cursor-pointer transition-all"
                       title="Unduh file rekaman pesan suara ini"
                     >
-                      <Download className="w-3.5 h-3.5" />
-                      Unduh Audio
+                      <Download className="w-3.5 h-3.5 text-stone-500" />
+                      Unduh
                     </button>
                   </div>
                 )}
@@ -654,27 +660,29 @@ const createCombinedGiftCardCanvas = async (
           <div className="w-full flex flex-col gap-2">
             <button
               onClick={handleShareDirectFiles}
-              className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md shadow-emerald-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black tracking-wider uppercase text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
             >
               <Send className="w-4 h-4" />
               KIRIM REKAMAN SUARA &amp; LINK (WHATSAPP)
             </button>
 
-            <button
-              onClick={handleCopyGiftLink}
-              className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md shadow-pink-200 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
-            >
-              {copiedLink ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
-              {copiedLink ? 'TAUTAN KADO TER-SALIN!' : 'SALIN LINK KADO DIGITAL SPESIAL'}
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleCopyGiftLink}
+                className="py-2.5 px-3 bg-white hover:bg-stone-50 text-stone-700 border border-stone-200 font-bold tracking-wider uppercase text-[11px] rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99]"
+              >
+                {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-stone-400" />}
+                <span>{copiedLink ? 'Link Tersalin!' : 'Salin Link Kado'}</span>
+              </button>
 
-            <button
-              onClick={handleDownloadPackage}
-              className="w-full py-3 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Download className="w-4 h-4 text-rose-500" />
-              UNDUH PAKET KADO (VOICE NOTE &amp; UCAPAN)
-            </button>
+              <button
+                onClick={handleDownloadPackage}
+                className="py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-800 font-bold tracking-wider uppercase text-[11px] rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-stone-500" />
+                <span>Unduh Paket</span>
+              </button>
+            </div>
           </div>
         </motion.div>
       </motion.div>
