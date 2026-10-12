@@ -737,12 +737,6 @@ export const Capture: React.FC = () => {
                         Batas Kanan
                       </span>
                     </div>
-
-                    {/* Hint Rame-Rame Minimalis Atas */}
-                    <div className="self-center mt-7 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 text-white/90 text-[9px] font-bold tracking-wide flex items-center gap-1.5 shadow-sm">
-                      <Users className="w-3 h-3 text-rose-300" />
-                      <span>Area Foto Rame-Rame • Muat 3 – 5 Orang</span>
-                    </div>
                   </div>
                 )}
 
