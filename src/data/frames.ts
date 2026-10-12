@@ -47,80 +47,11 @@ export interface FrameTemplate {
 
 export const frames: FrameTemplate[] = [
 
-  // ============================================
-  // STUDIO PHOTOBOOTH (simple grid, tirai-merah ready)
-  // ============================================
-  {
-    id: "studio-photobooth-1",
-    name: "Studio Polos 1-Slot",
-    slots: 1,
-    category: "studio",
-    src: "/templates/studio-photobooth-1.svg",
-    width: 1200, height: 1200,
-    slotCoords: [
-      { x: 50, y: 50, w: 1100, h: 1100 }
-    ]
-  },
-  {
-    id: "studio-photobooth-2",
-    name: "Studio Polos 2-Slot",
-    slots: 2,
-    category: "studio",
-    src: "/templates/studio-photobooth-2.svg",
-    width: 1200, height: 1600,
-    slotCoords: [
-      { x: 50, y: 50, w: 1100, h: 720 },
-      { x: 50, y: 830, w: 1100, h: 720 }
-    ]
-  },
-  {
-    id: "studio-photobooth-8",
-    name: "Studio 8-Cut",
-    slots: 8,
-    category: "studio",
-    src: "/templates/studio-photobooth-8.svg",
-    width: 1200, height: 2000,
-    slotCoords: [
-      { x: 26, y: 26, w: 570, h: 481 },
-      { x: 604, y: 26, w: 570, h: 481 },
-      { x: 26, y: 515, w: 570, h: 481 },
-      { x: 604, y: 515, w: 570, h: 481 },
-      { x: 26, y: 1004, w: 570, h: 481 },
-      { x: 604, y: 1004, w: 570, h: 481 },
-      { x: 26, y: 1493, w: 570, h: 481 },
-      { x: 604, y: 1493, w: 570, h: 481 }
-    ]
-  },
-  {
-    id: "studio-photobooth-6",
-    name: "Studio 6-Cut",
-    slots: 6,
-    category: "studio",
-    src: "/templates/studio-photobooth-6.svg",
-    width: 1200, height: 1600,
-    slotCoords: [
-      { x: 25, y: 25, w: 571, h: 511 },
-      { x: 604, y: 25, w: 571, h: 511 },
-      { x: 25, y: 544, w: 571, h: 511 },
-      { x: 604, y: 544, w: 571, h: 511 },
-      { x: 25, y: 1063, w: 571, h: 511 },
-      { x: 604, y: 1063, w: 571, h: 511 }
-    ]
-  },
-  {
-    id: "studio-photobooth-4",
-    name: "Studio 4-Cut",
-    slots: 4,
-    category: "studio",
-    src: "/templates/studio-photobooth-4.svg",
-    width: 1200, height: 1200,
-    slotCoords: [
-      { x: 26, y: 26, w: 570, h: 570 },
-      { x: 604, y: 26, w: 570, h: 570 },
-      { x: 26, y: 604, w: 570, h: 570 },
-      { x: 604, y: 604, w: 570, h: 570 }
-    ]
-  },
+    
+  
+  
+  
+  
 
   // ============================================
   // FILM STRIP (6 templates)
@@ -557,19 +488,7 @@ export const frames: FrameTemplate[] = [
       { x: 104, y: 104, w: 992, h: 1092, rx: 10 }
     ]
   },
-  {
-    id: "filmstrip-classic-3",
-    name: "Filmstrip Classic 3",
-    slots: 3,
-    category: "filmstrip",
-    src: "/templates/filmstrip-classic-3.png",
-    width: 1200, height: 1800,
-    slotCoords: [
-      { x: 154, y: 84, w: 892, h: 452 },
-      { x: 154, y: 584, w: 892, h: 452 },
-      { x: 154, y: 1084, w: 892, h: 452 }
-    ]
-  },
+  
   {
     id: "filmstrip-double-6",
     name: "Filmstrip Double 6",
@@ -721,30 +640,8 @@ export const frames: FrameTemplate[] = [
       { x: 634, y: 1104, w: 482, h: 302, rx: 10 }
     ]
   },
-  {
-    id: "polaroid-classic-1",
-    name: "Polaroid Classic 1",
-    slots: 1,
-    category: "polaroid",
-    src: "/templates/polaroid-classic-1.png",
-    width: 1200, height: 1500,
-    slotCoords: [
-      { x: 84, y: 84, w: 1032, h: 1032 }
-    ]
-  },
-  {
-    id: "polaroid-trio-3",
-    name: "Polaroid Trio 3",
-    slots: 3,
-    category: "polaroid",
-    src: "/templates/polaroid-trio-3.png",
-    width: 1200, height: 1800,
-    slotCoords: [
-      { x: 104, y: 104, w: 992, h: 392 },
-      { x: 104, y: 544, w: 992, h: 392 },
-      { x: 104, y: 984, w: 992, h: 392 }
-    ]
-  },
+  
+  
   {
     id: "rainbow-pastel-6",
     name: "Rainbow Pastel 6",
@@ -761,22 +658,7 @@ export const frames: FrameTemplate[] = [
       { x: 634, y: 924, w: 482, h: 372, rx: 10 }
     ]
   },
-  {
-    id: "retro-caramel-6",
-    name: "Retro Caramel 6",
-    slots: 6,
-    category: "retro",
-    src: "/templates/retro-caramel-6.png",
-    width: 1200, height: 1800,
-    slotCoords: [
-      { x: 84, y: 84, w: 482, h: 372, rx: 10 },
-      { x: 634, y: 84, w: 482, h: 372, rx: 10 },
-      { x: 84, y: 504, w: 482, h: 372, rx: 10 },
-      { x: 634, y: 504, w: 482, h: 372, rx: 10 },
-      { x: 84, y: 924, w: 482, h: 372, rx: 10 },
-      { x: 634, y: 924, w: 482, h: 372, rx: 10 }
-    ]
-  },
+  
   {
     id: "sakura-yellow-3",
     name: "Sakura Yellow 3",
@@ -907,24 +789,7 @@ export const frames: FrameTemplate[] = [
       { x: 706, y: 1133, w: 305, h: 235, rx: 7 }
     ]
   },
-  {
-    id: "custom-1784433846432-eq88",
-    name: "testing",
-    slots: 8,
-    category: "custom",
-    src: "/templates/custom-1784433846432-eq88.png",
-    width: 1543, height: 1019,
-    slotCoords: [
-      { x: 27, y: 50, w: 359, h: 369, rx: 11 },
-      { x: 404, y: 50, w: 359, h: 369, rx: 11 },
-      { x: 781, y: 50, w: 358, h: 369, rx: 11 },
-      { x: 1157, y: 50, w: 358, h: 369, rx: 11 },
-      { x: 28, y: 563, w: 358, h: 367, rx: 11 },
-      { x: 404, y: 563, w: 359, h: 367, rx: 11 },
-      { x: 781, y: 563, w: 358, h: 367, rx: 11 },
-      { x: 1157, y: 563, w: 359, h: 367, rx: 11 }
-    ]
-  },
+  
   {
     id: "custom-1784531653783-vt9t",
     name: "Bali Clasic Frame",
@@ -1113,18 +978,7 @@ export const frames: FrameTemplate[] = [
       { x: 216, y: 761, w: 243, h: 250, rx: 7 }
     ]
   },
-  {
-    id: "custom-1784638039985-r0ku",
-    name: "ahhh",
-    slots: 2,
-    category: "cute",
-    src: "/templates/custom-1784638039985-r0ku.png",
-    width: 675, height: 1200,
-    slotCoords: [
-      { x: 91, y: 101, w: 323, h: 330, rx: 10 },
-      { x: 250, y: 648, w: 344, h: 348, rx: 10 }
-    ]
-  },
+  
   {
     id: "custom-1784638914224-t68k",
     name: "1 photo frame kawai",
@@ -1168,8 +1022,8 @@ export const frames: FrameTemplate[] = [
     ]
   },
   {
-    id: "custom-1785059867455-4qiw",
-    name: "Frame memory lane",
+    id: "custom-1785059867455-4qiw", 
+    name: "Frame memory lane", 
     slots: 4,
     category: "polaroid",
     src: "/templates/custom-1785059867455-4qiw.png",

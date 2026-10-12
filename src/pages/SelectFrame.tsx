@@ -4,6 +4,7 @@ import { UpgradeModal } from '../components/UpgradeModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
+import { removeCustomFrame } from '../lib/frameDb';
 import {
   ArrowLeft, Palette, Search, X, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, CheckCircle2, ScanSearch, Eye, SlidersHorizontal, LayoutGrid, Grid2X2, BookmarkCheck, Zap, Sliders,
   Camera, Check, Crown, Wand2, UploadCloud, Download, Lock, Film, Gift, LockOpen, ShieldCheck, Ticket, Layers, Smile, Mail
@@ -25,6 +26,20 @@ function loadFrameNameOverrides(): Record<string, string> {
     return {};
   }
 }
+
+const REMOVED_FRAME_IDS = new Set([
+  'studio-photobooth-1',
+  'studio-photobooth-2',
+  'studio-photobooth-4',
+  'studio-photobooth-6',
+  'studio-photobooth-8',
+  'filmstrip-classic-3',
+  'polaroid-classic-1',
+  'polaroid-trio-3',
+  'retro-caramel-6',
+  'custom-1784433846432-eq88',
+  'custom-1784638039985-r0ku',
+]);
 
 // PUSTAKA KATA-KATA ESTETIK UNTUK KOMBINASI NAMA UNIK (TANPA ANGKA / SIMBOL)
 const FIRST_WORDS: Record<string, string[]> = {
@@ -506,14 +521,28 @@ export const SelectFrame: React.FC = () => {
   const [customSlotCoords, setCustomSlotCoords] = useState<(SlotCoord | null)[]>([null]);
   const [isAutoDetecting, setIsAutoDetecting] = useState(false);
 
+  useEffect(() => {
+    // Bersihkan frame yang dihapus jika masih tersimpan di IndexedDB
+    for (const id of REMOVED_FRAME_IDS) {
+      removeCustomFrame(id).catch(() => {});
+    }
+  }, []);
+
   const rawAllFrames = useMemo(() => {
     const seenIds = new Set<string>();
+    const seenSrcs = new Set<string>();
     const result: FrameTemplate[] = [];
+
     for (const f of [...customFrames, ...frames]) {
-      if (!seenIds.has(f.id)) {
-        seenIds.add(f.id);
-        result.push(f);
-      }
+      if (REMOVED_FRAME_IDS.has(f.id)) continue;
+      if (seenIds.has(f.id)) continue;
+
+      const normalizedSrc = (f.src || '').toLowerCase().trim();
+      if (normalizedSrc && seenSrcs.has(normalizedSrc)) continue;
+
+      seenIds.add(f.id);
+      if (normalizedSrc) seenSrcs.add(normalizedSrc);
+      result.push(f);
     }
     return result;
   }, [customFrames]);
