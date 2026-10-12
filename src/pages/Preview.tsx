@@ -6,7 +6,7 @@ import { generateBoomerangGif } from '../lib/gifExport';
 import { DigitalEnvelopeModal } from '../components/DigitalEnvelopeModal';
 import { UpgradeModal } from '../components/UpgradeModal';
 import {
-  ArrowLeft, Download, RotateCcw, Check, Share2, Camera, Heart, X,
+  ArrowLeft, Download, RotateCcw, Check, Share2, Camera, X,
   ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown,
   Film, Loader2, Mail, Smartphone 
 } from 'lucide-react';
@@ -75,32 +75,7 @@ export const Preview: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Trigger celebratory confetti on mount
-  useEffect(() => {
-    const duration = 1.8 * 1000;
-    const end = Date.now() + duration;
 
-    (function frame() {
-      confetti({
-        particleCount: 4,
-        angle: 60,
-        spread: 60,
-        origin: { x: 0, y: 0.8 },
-        colors: ['#FF2A85', '#FF73B3', '#FBBF24', '#38BDF8']
-      });
-      confetti({
-        particleCount: 4,
-        angle: 120,
-        spread: 60,
-        origin: { x: 1, y: 0.8 },
-        colors: ['#FF2A85', '#FF73B3', '#FBBF24', '#38BDF8']
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    }());
-  }, []);
 
   if (!selectedFrame) return null;
 
@@ -131,11 +106,11 @@ export const Preview: React.FC = () => {
         incrementCompletedTrialSession();
 
         confetti({
-          particleCount: 180,
-          spread: 90,
-          origin: { y: 0.6 },
+          particleCount: 180, 
+          spread: 90, 
+          origin: { y: 0.6 }, 
           colors: ['#FF2A85', '#FF85C0', '#FBBF24', '#38BDF8', '#10B981', '#A855F7']
-        });
+        });  
 
         setShowSuccessModal(true);
       }
@@ -344,13 +319,13 @@ export const Preview: React.FC = () => {
               onClick={resetAll}
               className="px-4 py-2.5 rounded-2xl text-[11px] font-extrabold uppercase tracking-wider bg-white hover:bg-rose-50 border border-rose-200 text-zinc-700 transition-all shadow-sm flex items-center gap-2"
             >
-              <RotateCcw className="w-4 h-4 text-pink-500" />
+              <RotateCcw className="w-4 h-4 text-pink-500" /> 
               Foto Baru
             </button>
           </div>
         </div>
 
-        {/* ===== MAIN WORKSPACE ===== */}
+        {/* ===== MAIN WORKSPACE ===== */} 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
 
           {/* LEFT COLUMN: CANVIEW CANVAS SHOWCASE */}
@@ -359,19 +334,19 @@ export const Preview: React.FC = () => {
             <div className="absolute top-[-12px] left-1/2 -translate-x-1/2 px-4 h-7 bg-zinc-100/90 backdrop-blur-md border border-zinc-200 skew-x-[-10deg] z-20 shadow-xs pointer-events-none flex items-center justify-center gap-1.5 text-[9px] text-zinc-700 font-bold tracking-widest uppercase rounded-sm">
               <Camera className="w-3 h-3 text-zinc-500 inline" />
               <span>BALISNAP MEMORIES</span>
-            </div>
+            </div> 
 
             <div
-              className="relative p-3 md:p-4 bg-white/90 backdrop-blur-xl border-2 border-pink-200/90 shadow-[0_20px_50px_rgba(255,105,180,0.25)] rounded-[36px] flex flex-col items-center overflow-hidden transition-all duration-300 hover:shadow-[0_25px_60px_rgba(255,105,180,0.35)]"
+              className="relative p-3 md:p-4 bg-white/95 backdrop-blur-xl border border-stone-200/90 shadow-[0_16px_40px_rgba(0,0,0,0.06)] rounded-[32px] flex flex-col items-center overflow-hidden transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)]"
               style={{ filter: getFilterCss() }}
             >
               <PhotoCanvas stageRef={stageRef} containerWidth={canvasWidth} isPreviewMode={true} />
             </div>
 
-            {/* NEW FEATURE: QUICK PRESET VIBE FILTER BAR */}
-            <div className="mt-4 bg-white/80 backdrop-blur-md border border-pink-100 p-2.5 rounded-2xl shadow-sm flex items-center gap-2 w-full justify-center max-w-md">
-              <span className="text-[10px] font-black uppercase text-pink-600 tracking-wider flex items-center gap-1 pl-1">
-                <Sliders className="w-3 h-3" /> Vibe Tone:
+            {/* QUICK PRESET VIBE FILTER BAR */}
+            <div className="mt-4 bg-white/90 backdrop-blur-md border border-stone-200/80 p-2 rounded-2xl shadow-2xs flex items-center gap-2 w-full justify-center max-w-md">
+              <span className="text-[10px] font-bold uppercase text-stone-500 tracking-wider flex items-center gap-1 pl-1">
+                <Sliders className="w-3 h-3 text-rose-500" /> Vibe Tone:
               </span>
               <div className="flex gap-1.5">
                 {[
@@ -383,10 +358,11 @@ export const Preview: React.FC = () => {
                   <button
                     key={preset.id}
                     onClick={() => setActivePresetFilter(preset.id as any)}
-                    className={`px-3 py-1 rounded-xl text-[10px] font-extrabold uppercase transition-all ${activePresetFilter === preset.id
-                        ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md'
-                        : 'bg-pink-50 text-zinc-600 hover:bg-pink-100'
-                      }`}
+                    className={`px-3 py-1 rounded-xl text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                      activePresetFilter === preset.id
+                        ? 'bg-[#E15A6E] text-white shadow-xs'
+                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200/70'
+                    }`}
                   >
                     {preset.label}
                   </button>
@@ -397,49 +373,51 @@ export const Preview: React.FC = () => {
 
           {/* RIGHT COLUMN: ACTION & SETTINGS PANEL */}
           <div className="lg:col-span-6 flex flex-col gap-5 w-full">
-            <div className="bg-white/90 backdrop-blur-xl border-2 border-pink-100/90 p-6 md:p-8 rounded-[36px] shadow-[0_15px_40px_rgba(255,182,193,0.2)] flex flex-col gap-5 text-left relative overflow-hidden">
+            <div className="bg-white/95 backdrop-blur-xl border border-stone-200/80 p-6 md:p-7 rounded-[32px] shadow-[0_16px_40px_rgba(0,0,0,0.04)] flex flex-col gap-4.5 text-left relative overflow-hidden">
 
-              {/* LIGHT ACCENT BACKGROUND */}
-              <div className="absolute -top-20 -right-20 w-48 h-48 bg-pink-100/50 rounded-full blur-2xl pointer-events-none" />
+              {/* SOFT AMBIENT ACCENT */}
+              <div className="absolute -top-20 -right-20 w-48 h-48 bg-rose-50/50 rounded-full blur-3xl pointer-events-none" />
 
-              {/* RENDER SUCCESS BADGE */}
+              {/* RENDER SUCCESS BADGE & SPECS */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-400 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-md shadow-emerald-200">
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                  RENDER SELESAI (STUDIO READY)
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-2xs">
+                  <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Siap Diunduh • Studio Ready</span>
                 </div>
 
-                <span className="text-[10px] font-bold text-pink-500 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" /> High-Density Export
+                <span className="text-[11px] font-semibold text-stone-400 flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-rose-400" /> High-Density HD
                 </span>
               </div>
 
               {/* HEADING */}
               <div>
-                <h2 className="font-serif text-3xl md:text-4xl font-black text-zinc-900 tracking-tight leading-tight flex items-center gap-2">
-                  Foto Anda Menawan!
-                  <Heart className="w-7 h-7 text-pink-500 fill-current animate-pulse" />
+                <h2 className="font-serif text-2xl md:text-3xl font-bold text-stone-900 tracking-tight leading-snug">
+                  Hasil Foto Anda Siap!
                 </h2>
-                <p className="text-zinc-500 text-xs md:text-sm font-medium leading-relaxed mt-2">
-                  Unduh file PNG kualitas studio dengan kejernihan maksimal tanpa kompresi. Cocok untuk dicetak langsung pada kertas cetak foto atau dibagikan ke Instagram!
+                <p className="text-stone-500 text-xs md:text-sm font-normal leading-relaxed mt-1">
+                  Foto telah selesai diproses dengan kejernihan maksimal tanpa kompresi. Siap disimpan ke galeri, dicetak fisik, atau dibagikan ke media sosial.
                 </p>
               </div>
 
               {/* RESOLUTION QUALITY SELECTOR */}
-              <div className="bg-pink-50/60 border border-pink-100 p-3.5 rounded-2xl flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-pink-700">
+              <div className="bg-stone-50 border border-stone-200/70 p-3 rounded-2xl flex flex-col gap-2">
+                <div className="flex justify-between items-center px-0.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-stone-600">
                     Pilihan Kualitas Foto:
                   </span>
-                  <span className="text-[10px] font-bold text-pink-400">Format PNG</span>
+                  <span className="text-[10px] font-semibold text-rose-500">
+                    Format PNG HD
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: 'standard', label: 'Standar', desc: 'Cepat & Ringan' },
+                    { id: 'standard', label: 'Standar', desc: 'Ringan & Cepat' },
                     { id: 'high', label: 'Kualitas Tinggi', desc: 'Rekomendasi' },
-                    { id: 'print', label: 'Kualitas Cetak', desc: 'Siap Cetak Fisik', isPremiumOnly: true },
+                    { id: 'print', label: 'Siap Cetak', desc: 'Ultra HD Fisik', isPremiumOnly: true },
                   ].map((q) => {
+                    const isSelected = exportQuality === q.id;
                     const isLocked = q.isPremiumOnly && packageTier !== 'premium';
                     return (
                       <button
@@ -451,18 +429,21 @@ export const Preview: React.FC = () => {
                           }
                           setExportQuality(q.id as any);
                         }}
-                        className={`p-2 rounded-xl text-center border transition-all flex flex-col items-center justify-center relative cursor-pointer ${exportQuality === q.id
-                            ? 'bg-white border-pink-400 text-pink-600 shadow-sm font-extrabold ring-2 ring-pink-300'
-                            : 'bg-white/50 border-pink-100 text-zinc-500 hover:bg-white font-medium'
-                          }`}
+                        className={`py-2 px-2 rounded-xl text-center border transition-all flex flex-col items-center justify-center relative cursor-pointer ${
+                          isSelected
+                            ? 'bg-white border-rose-300 text-stone-900 shadow-xs ring-1 ring-rose-200/70 font-bold'
+                            : 'bg-white/60 border-stone-200/70 text-stone-500 hover:bg-white hover:text-stone-800 font-medium'
+                        }`}
                       >
                         {isLocked && (
-                          <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm">
-                            <Crown className="w-2 h-2 text-yellow-200 fill-yellow-200" /> VIP
+                          <span className="absolute -top-1.5 -right-1 bg-amber-500 text-white text-[7px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-xs">
+                            <Crown className="w-2 h-2 text-yellow-100 fill-yellow-100" /> VIP
                           </span>
                         )}
-                        <span className="text-[11px] font-black">{q.label}</span>
-                        <span className="text-[8px] opacity-70">{q.desc}</span>
+                        <span className={`text-[11px] ${isSelected ? 'text-rose-600 font-bold' : 'text-stone-700 font-semibold'}`}>
+                          {q.label}
+                        </span>
+                        <span className="text-[8px] text-stone-400 mt-0.5">{q.desc}</span>
                       </button>
                     );
                   })}
@@ -470,43 +451,45 @@ export const Preview: React.FC = () => {
               </div>
 
               {/* ACTION BUTTONS */}
-              <div className="flex flex-col gap-3 mt-1">
-                {/* PRIMARY GLOW SHIMMER DOWNLOAD BUTTON */}
+              <div className="flex flex-col gap-2.5 mt-0.5">
+                {/* PRIMARY ACTION: HERO UNDUH FOTO PNG */}
                 <button
                   onClick={handleDownload}
-                  className="w-full py-4 bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 active:scale-[0.99] text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-lg shadow-pink-300/60 flex items-center justify-center gap-2.5 group relative overflow-hidden cursor-pointer"
+                  className="w-full py-3.5 px-6 bg-[#E15A6E] hover:bg-[#D4485D] active:scale-[0.99] text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group cursor-pointer relative overflow-hidden"
                 >
-                  {/* SHIMMER LIGHT EFFECT */}
-                  <span className="absolute inset-0 w-1/2 h-full bg-white/25 skew-x-[-20deg] translate-x-[-150%] group-hover:translate-x-[250%] transition-transform duration-1000 ease-out" />
                   <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
-                  UNDUH FOTO PNG ({exportQuality.toUpperCase()})
+                  <span>Unduh Foto PNG</span>
+                  <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
+                    {exportQuality}
+                  </span>
                 </button>
 
-                {/* BOOMERANG ANIMATED GIF BUTTON */}
-                <button
-                  onClick={() => handleOpenGifModal()}
-                  className="w-full py-3.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 active:scale-[0.99] text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md shadow-indigo-200 flex items-center justify-center gap-2.5 cursor-pointer relative overflow-hidden group"
-                >
-                  <Film className="w-4 h-4 text-purple-200 group-hover:scale-110 transition-transform" />
-                  UNDUH ANIMASI GIF (BOOMERANG)
-                </button>
+                {/* SECONDARY ROW (2-KOLOM SEIMBANG): BOOMERANG GIF & DIGITAL ENVELOPE */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <button
+                    onClick={() => handleOpenGifModal()}
+                    className="py-3 px-3.5 bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-200/80 hover:border-stone-300 font-semibold text-xs rounded-2xl transition-all shadow-2xs flex items-center justify-center gap-2 cursor-pointer group"
+                  >
+                    <Film className="w-4 h-4 text-purple-500 group-hover:scale-110 transition-transform shrink-0" />
+                    <span>Animasi Boomerang</span>
+                  </button>
 
-                {/* DIGITAL ENVELOPE GIFT BUTTON */}
-                <button
-                  onClick={() => setShowEnvelopeModal(true)}
-                  className="w-full py-3.5 bg-gradient-to-r from-pink-500 via-rose-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 active:scale-[0.99] text-white font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-md shadow-pink-200 flex items-center justify-center gap-2.5 cursor-pointer relative overflow-hidden group"
-                >
-                  <Mail className="w-4 h-4 text-pink-200 group-hover:scale-110 transition-transform" />
-                  KIRIM SEBAGAI GIFT / AMPLOP DIGITAL
-                </button>
+                  <button
+                    onClick={() => setShowEnvelopeModal(true)}
+                    className="py-3 px-3.5 bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-200/80 hover:border-stone-300 font-semibold text-xs rounded-2xl transition-all shadow-2xs flex items-center justify-center gap-2 cursor-pointer group"
+                  >
+                    <Mail className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform shrink-0" />
+                    <span>Amplop Digital / Gift</span>
+                  </button>
+                </div>
 
-                {/* SECONDARY SHARE BUTTON */}
+                {/* TERTIARY ACTION: BAGIKAN KE SOSIAL MEDIA */}
                 <button
                   onClick={handleShare}
-                  className="w-full py-3.5 bg-white hover:bg-pink-50 text-pink-600 border-2 border-pink-200 font-black tracking-widest uppercase text-xs rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2.5 cursor-pointer"
+                  className="w-full py-2.5 px-4 bg-white hover:bg-stone-50 text-stone-600 border border-stone-200 hover:border-stone-300 font-semibold text-xs rounded-2xl transition-all shadow-2xs flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Share2 className="w-4 h-4 text-pink-500" />
-                  BAGIKAN KE SOSIAL MEDIA
+                  <Share2 className="w-3.5 h-3.5 text-stone-400" />
+                  <span>Bagikan ke Sosial Media</span>
                 </button>
               </div>
             </div>
@@ -529,44 +512,43 @@ export const Preview: React.FC = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.85, opacity: 0, y: 20 }}
               transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-              className="bg-white border-2 border-pink-200 rounded-[36px] max-w-sm sm:max-w-md w-full p-6 md:p-8 shadow-[0_25px_60px_-15px_rgba(244,114,182,0.4)] relative overflow-hidden text-center flex flex-col items-center gap-3.5 z-50 select-none max-h-[90vh] overflow-y-auto"
+              className="bg-white border border-stone-200/90 rounded-[32px] max-w-sm sm:max-w-md w-full p-6 md:p-8 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.12)] relative overflow-hidden text-center flex flex-col items-center gap-3.5 z-50 select-none max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* CUTE TAPE DECORATION */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 px-3 h-5 bg-zinc-100 border border-zinc-200 skew-x-[-10deg] shadow-xs pointer-events-none flex items-center justify-center gap-1 text-[8px] text-zinc-700 font-bold tracking-widest uppercase">
-                <Camera className="w-2.5 h-2.5 text-zinc-500 inline" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 px-3 h-5 bg-stone-100 border border-stone-200 skew-x-[-10deg] shadow-2xs pointer-events-none flex items-center justify-center gap-1 text-[8px] text-stone-700 font-bold tracking-widest uppercase">
+                <Camera className="w-2.5 h-2.5 text-stone-500 inline" />
                 <span>BALISNAP MEMORIES</span>
               </div>
 
               {/* CLOSE BUTTON */}
               <button
                 onClick={() => setShowSuccessModal(false)}
-                className="absolute top-4 right-4 w-9 h-9 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-full flex items-center justify-center transition-all shadow-xs group"
+                className="absolute top-4 right-4 w-9 h-9 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-full flex items-center justify-center transition-all shadow-2xs group cursor-pointer"
                 aria-label="Tutup" 
               >
-                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <X className="w-4 h-4 group-hover:scale-110 transition-transform" />
               </button>
 
               {/* SUCCESS ANIMATED BADGE */}
-              <div className="mt-2 w-16 h-16 bg-gradient-to-tr from-emerald-400 to-teal-300 rounded-full flex items-center justify-center shadow-lg shadow-emerald-200 animate-bounce" style={{ animationDuration: '2.2s' }}>
-                <Check className="w-9 h-9 text-white stroke-[3.5]" />
+              <div className="mt-2 w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center shadow-md shadow-emerald-200 animate-bounce" style={{ animationDuration: '2.2s' }}>
+                <Check className="w-8 h-8 text-white stroke-[3]" />
               </div>
 
-              <div className="flex items-center gap-1.5 px-3.5 py-1 bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-full">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200/70 text-emerald-700 text-[10px] font-bold uppercase tracking-wider rounded-full">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Unduh Berhasil!
               </div>
 
-              <h3 className="font-serif text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight leading-snug">
-                Frame Photobooth Berhasil Diunduh!{' '}
-                <Heart className="inline-block w-5 h-5 text-pink-500 fill-current animate-pulse align-text-top" />
+              <h3 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight leading-snug">
+                Frame Foto Berhasil Disimpan!
               </h3>
 
               {/* MOBILE GALLERY TIP */}
-              <div className="w-full p-3.5 bg-pink-50/90 border border-pink-200/80 rounded-2xl text-[11px] text-zinc-600 leading-relaxed font-medium text-left flex items-start gap-2.5 select-auto">
-                <Smartphone className="w-4 h-4 text-pink-500 shrink-0 mt-0.5" />
+              <div className="w-full p-3.5 bg-stone-50 border border-stone-200/80 rounded-2xl text-[11px] text-stone-600 leading-relaxed font-medium text-left flex items-start gap-2.5 select-auto">
+                <Smartphone className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-extrabold text-pink-600">Pengguna Smartphone:</span> Jika foto belum masuk otomatis ke Galeri, <span className="font-bold underline text-pink-600">tekan &amp; tahan foto</span> di bawah ini lalu pilih <b>"Simpan Gambar" (Save Image)</b>.
+                  <span className="font-bold text-stone-800">Pengguna Smartphone:</span> Jika foto belum masuk otomatis ke Galeri, <span className="font-bold underline text-rose-600">tekan &amp; tahan foto</span> di bawah ini lalu pilih <b>"Simpan Gambar" (Save Image)</b>.
                 </div>
               </div>
 
