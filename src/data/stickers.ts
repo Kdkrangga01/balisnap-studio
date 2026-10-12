@@ -4,14 +4,14 @@ export interface StickerItem {
   id: string;
   name: string;
   src: string;
-  category: 'cute' | 'text' | 'emoji' | 'washi' | 'badge' | 'cat' | 'nailong' | 'aesthetic' | 'anime';
+  category: 'cute' | 'text' | 'emoji' | 'washi' | 'badge' | 'cat' | 'nailong' | 'aesthetic' | 'anime' | 'panda';
   requiredTier?: PackageTier;
 }
 
 export interface StickerPack {
   id: string;
   name: string;
-  category: 'cute' | 'text' | 'emoji' | 'washi' | 'badge' | 'cat' | 'nailong' | 'aesthetic' | 'anime';
+  category: 'cute' | 'text' | 'emoji' | 'washi' | 'badge' | 'cat' | 'nailong' | 'aesthetic' | 'anime' | 'panda';
   icon: string;
   stickers: string[];
   requiredTier?: PackageTier;
@@ -26,6 +26,25 @@ export function isStickerPackLocked(_pack: StickerPack, _currentTier: PackageTie
 }
 
 export const stickers: StickerItem[] = [
+  // ==========================================
+  // 🐼 STIKER PANDA FULL PACKS HD JERNIH (DIE-CUT CUTOUT)
+  // ==========================================
+  { id: "panda-good-morning", name: "Panda Good Morning ☀️", src: "/stickers/panda-good-morning.png", category: "panda" },
+  { id: "panda-whattt", name: "Panda Whattt Terkejut 😲", src: "/stickers/panda-whattt.png", category: "panda" },
+  { id: "panda-huh", name: "Panda Huh Bingung 🤔", src: "/stickers/panda-huh.png", category: "panda" },
+  { id: "panda-reminding", name: "Panda Reminding Kacamata 👓", src: "/stickers/panda-reminding.png", category: "panda" },
+  { id: "panda-so-sleepy", name: "Panda So Sleepy Ngantuk 💤", src: "/stickers/panda-so-sleepy.png", category: "panda" },
+  { id: "panda-wow", name: "Panda Wow Sparkling Eyes ✨", src: "/stickers/panda-wow.png", category: "panda" },
+  { id: "panda-approved", name: "Panda Approved Centang Hijau ✅", src: "/stickers/panda-approved.png", category: "panda" },
+  { id: "panda-nice", name: "Panda Nice Jempol Love 👍", src: "/stickers/panda-nice.png", category: "panda" },
+  { id: "panda-hey-you", name: "Panda Hey You Menunjuk 👆", src: "/stickers/panda-hey-you.png", category: "panda" },
+  { id: "panda-achoo", name: "Panda Achoo Bersin Tisu 🤧", src: "/stickers/panda-achoo.png", category: "panda" },
+  { id: "panda-angry", name: "Panda Angry Ngambek 💢", src: "/stickers/panda-angry.png", category: "panda" },
+  { id: "panda-huh-confused", name: "Panda Huh Cemas Gemes ❓", src: "/stickers/panda-huh-confused.png", category: "panda" },
+  { id: "panda-good-night", name: "Panda Good Night Bintang 🌙", src: "/stickers/panda-good-night.png", category: "panda" },
+  { id: "panda-too-cute", name: "Panda Too Cuteee Pink Love 💖", src: "/stickers/panda-too-cute.png", category: "panda" },
+  { id: "panda-cool-guy", name: "Panda Cool Hoodie Kacamata 😎", src: "/stickers/panda-cool-guy.png", category: "panda" },
+
   // ==========================================
   // 🐱 STIKER KUCING REAL PHOTO HD PINTEREST (CUTOUT JERNIH)
   // ==========================================
@@ -149,6 +168,29 @@ export const stickers: StickerItem[] = [
 // PAKET AUTO-SPREAD (SEMUA ID DAN NAMA UNIK, TANPA DUPLIKAT)
 // ============================================================================
 export const stickerPacks: StickerPack[] = [
+  {
+    id: "pack-panda-cute",
+    name: "Panda Full Pack HD 🐼",
+    category: "panda",
+    icon: "/stickers/panda-good-morning.png",
+    stickers: [
+      "/stickers/panda-good-morning.png",
+      "/stickers/panda-whattt.png",
+      "/stickers/panda-huh.png",
+      "/stickers/panda-reminding.png",
+      "/stickers/panda-so-sleepy.png",
+      "/stickers/panda-wow.png",
+      "/stickers/panda-approved.png",
+      "/stickers/panda-nice.png",
+      "/stickers/panda-hey-you.png",
+      "/stickers/panda-achoo.png",
+      "/stickers/panda-angry.png",
+      "/stickers/panda-huh-confused.png",
+      "/stickers/panda-good-night.png",
+      "/stickers/panda-too-cute.png",
+      "/stickers/panda-cool-guy.png"
+    ]
+  },
   {
     id: "pack-cat-squad",
     name: "Real Cat Photo Pinterest 🐱",

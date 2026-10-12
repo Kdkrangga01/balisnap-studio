@@ -358,22 +358,18 @@ export const Editor: React.FC = () => {
 
           {/* RIGHT: Control Panel */}
           <div className="lg:col-span-5 flex flex-col gap-4">
-            <div
-              className="p-5 rounded-3xl border backdrop-blur-xl flex flex-col gap-5 shadow-xl shadow-stone-200/50"
-              style={{
-                background: 'rgba(255, 255, 255, 0.85)',
-                borderColor: 'rgba(255, 255, 255, 0.9)',
-              }}
-            >
+            <div className="p-5 md:p-6 rounded-[32px] border border-stone-200/80 bg-white/95 backdrop-blur-xl flex flex-col gap-4.5 shadow-[0_16px_40px_rgba(0,0,0,0.04)] text-left">
 
-              {/* Quick Select Slot Foto Bar */}
-              <div className="bg-purple-50/80 border border-purple-100 p-2.5 rounded-2xl flex flex-col gap-2">
-                <div className="flex items-center justify-between text-[10px] font-black uppercase text-purple-700 tracking-wider">
-                  <span className="flex items-center gap-1">
-                    <ImageIcon className="w-3.5 h-3.5 text-purple-500" />
+              {/* Quick Select Slot Foto Bar - Clean Minimalist Studio Look */}
+              <div className="bg-stone-50/90 border border-stone-200/70 p-3 rounded-2xl flex flex-col gap-2">
+                <div className="flex items-center justify-between text-[11px] font-bold tracking-wider uppercase text-stone-500">
+                  <span className="flex items-center gap-1.5 text-stone-700">
+                    <Scan className="w-3.5 h-3.5 text-[#E15A6E]" />
                     Pilih Foto Untuk Disesuaikan:
                   </span>
-                  <span className="text-slate-400 font-bold">{totalSlots} Slot</span>
+                  <span className="text-[10px] bg-stone-200/60 text-stone-600 px-2 py-0.5 rounded-full font-bold">
+                    {totalSlots} Slot
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5 overflow-x-auto custom-scroll pb-1"> 
                   {Array.from({ length: totalSlots }).map((_, idx) => { 
@@ -382,12 +378,13 @@ export const Editor: React.FC = () => {
                       <button 
                         key={idx} 
                         onClick={() => setSelectedId(`photo-${idx}`)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${isSelected
-                          ? 'bg-purple-600 text-white shadow-md shadow-purple-200 scale-105' 
-                          : 'bg-white text-slate-600 border border-purple-100 hover:bg-purple-100/60' 
-                          }`}
+                        className={`px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer active:scale-95 ${
+                          isSelected
+                            ? 'bg-[#E15A6E] text-white shadow-xs font-bold ring-2 ring-rose-200/70' 
+                            : 'bg-white text-stone-600 border border-stone-200/80 hover:bg-stone-100/80 hover:text-stone-900 font-semibold' 
+                        }`}
                       >
-                        <Scan className="w-3 h-3" />
+                        <ImageIcon className={`w-3 h-3 ${isSelected ? 'text-white' : 'text-stone-400'}`} />
                         <span>Foto #{idx + 1}</span>
                       </button>
                     );
@@ -395,14 +392,8 @@ export const Editor: React.FC = () => {
                 </div>
               </div>
 
-              {/* Tool Tabs */}
-              <div
-                className="grid grid-cols-5 gap-1 p-1.5 rounded-2xl border"
-                style={{
-                  background: '#F8F1E7',
-                  borderColor: '#EFE5D8'
-                }}
-              >
+              {/* Tool Tabs - Clean Segmented Control with Soft Active State */}
+              <div className="grid grid-cols-5 gap-1.5 p-1.5 rounded-2xl bg-stone-100/90 border border-stone-200/70">
                 {[
                   { key: 'filter', icon: Sliders, label: 'Filter' },
                   { key: 'retouch', icon: Wand2, label: 'Retouch', isPremium: true },
@@ -420,17 +411,14 @@ export const Editor: React.FC = () => {
                         setActiveTab(tab.key as typeof activeTab);
                         setSelectedId(null);
                       }}
-                      className="relative py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer"
-                      style={{
-                        background: isActive
-                          ? 'linear-gradient(135deg, #FB7185 0%, #E11D48 100%)'
-                          : 'transparent',
-                        color: isActive ? '#ffffff' : '#64748B',
-                        boxShadow: isActive ? '0 4px 12px rgba(225,29,72,0.25)' : 'none'
-                      }}
+                      className={`relative py-2.5 rounded-xl text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 ${
+                        isActive
+                          ? 'bg-white text-stone-900 shadow-xs border border-stone-200/80 font-bold'
+                          : 'text-stone-500 hover:text-stone-800 hover:bg-white/50 font-semibold'
+                      }`}
                     >
-                      {isLocked && <Lock className="w-3 h-3 text-pink-500 shrink-0" />}
-                      <tab.icon className="w-4 h-4 shrink-0" />
+                      {isLocked && <Lock className="w-3 h-3 text-[#E15A6E] shrink-0" />}
+                      <tab.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#E15A6E]' : 'text-stone-400'}`} />
                       <span className="hidden sm:inline">{tab.label}</span>
                     </button>
                   );
@@ -629,27 +617,22 @@ export const Editor: React.FC = () => {
                 ) : selectedPhotoIndex !== null ? (
                   <motion.div
                     key="selected-photo-zoom"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
                     className="overflow-hidden"
                   >
-                    <div
-                      className="flex items-center justify-between p-3.5 rounded-2xl border transition-all shadow-sm"
-                      style={{
-                        background: '#F3E8FF',
-                        borderColor: '#E9D5FF'
-                      }}
-                    >
+                    <div className="flex items-center justify-between p-3.5 rounded-2xl border border-stone-200/80 bg-stone-50/90 shadow-2xs transition-all">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center border border-purple-200">
-                          <ImageIcon className="w-5 h-5 text-purple-600" />
+                        <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center border border-stone-200/80 shadow-2xs text-[#E15A6E]">
+                          <ImageIcon className="w-4 h-4" />
                         </div>
                         <div className="text-left">
-                          <span className="text-xs font-bold text-slate-800">
+                          <span className="text-xs font-bold text-stone-900 block leading-tight">
                             Foto #{selectedPhotoIndex + 1}
                           </span>
-                          <p className="text-[10px] text-purple-700 font-semibold">
+                          <p className="text-[10px] text-stone-500 font-medium mt-0.5">
                             Zoom {Math.round(selectedPhotoZoom * 100)}% • Geser Foto
                           </p>
                         </div>
@@ -660,33 +643,33 @@ export const Editor: React.FC = () => {
                         <button
                           onClick={() => handlePhotoZoom(-1)}
                           disabled={selectedPhotoZoom <= CUSTOM_MIN_PHOTO_ZOOM}
-                          className="p-2 bg-white hover:bg-purple-100/80 rounded-xl text-slate-700 border border-purple-200 transition-all disabled:opacity-30 shadow-sm cursor-pointer"
-                          title="Perkecil foto (Zoom Out) agar latar belakang tidak terpotong"
+                          className="w-8 h-8 bg-white hover:bg-stone-100 rounded-xl text-stone-700 border border-stone-200/80 transition-all disabled:opacity-30 shadow-2xs flex items-center justify-center cursor-pointer active:scale-95"
+                          title="Perkecil foto (Zoom Out)"
                         >
-                          <ZoomOut className="w-4 h-4 text-purple-700" />
+                          <ZoomOut className="w-3.5 h-3.5 text-stone-600" />
                         </button>
                         <button
                           onClick={() => handlePhotoZoom(1)}
                           disabled={selectedPhotoZoom >= MAX_PHOTO_ZOOM}
-                          className="p-2 bg-white hover:bg-purple-100/80 rounded-xl text-slate-700 border border-purple-200 transition-all disabled:opacity-30 shadow-sm cursor-pointer"
+                          className="w-8 h-8 bg-white hover:bg-stone-100 rounded-xl text-stone-700 border border-stone-200/80 transition-all disabled:opacity-30 shadow-2xs flex items-center justify-center cursor-pointer active:scale-95"
                           title="Perbesar foto (Zoom In)"
                         >
-                          <ZoomIn className="w-4 h-4 text-purple-700" />
+                          <ZoomIn className="w-3.5 h-3.5 text-stone-600" />
                         </button>
                         <button
                           onClick={handlePhotoFitToFrame}
-                          className="px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 active:scale-95 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
-                          title="Otomatis paskan foto 100% penuh dalam bingkai (tanpa celah)"
+                          className="px-3 py-2 bg-[#E15A6E] hover:bg-[#d04b5f] active:scale-95 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-xs flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
+                          title="Otomatis paskan foto 100% penuh dalam bingkai"
                         >
-                          <Maximize className="w-3.5 h-3.5 shrink-0" />
+                          <Maximize className="w-3 h-3 shrink-0" />
                           <span className="whitespace-nowrap">Pas Bingkai</span>
                         </button>
                         <button
                           onClick={handlePhotoZoomReset}
-                          className="p-2 bg-white hover:bg-purple-100/80 rounded-xl text-slate-700 border border-purple-200 transition-all shadow-sm cursor-pointer"
+                          className="w-8 h-8 bg-white hover:bg-stone-100 rounded-xl text-stone-600 border border-stone-200/80 transition-all shadow-2xs flex items-center justify-center cursor-pointer active:scale-95"
                           title="Reset posisi & zoom"
                         >
-                          <RotateCcw className="w-4 h-4 text-slate-600" />
+                          <RotateCcw className="w-3.5 h-3.5 text-stone-500" />
                         </button>
                       </div>
                     </div>
@@ -694,14 +677,15 @@ export const Editor: React.FC = () => {
                 ) : (
                   <motion.div
                     key="no-selection"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.15 }}
                     className="overflow-hidden flex flex-col gap-2"
                   >
-                    <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50/60 border border-amber-200/60 rounded-xl text-xs text-amber-800 text-left">
-                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
-                      Klik stiker atau foto pada bingkai untuk mengaktifkan pengaturan cepat
+                    <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-stone-50 border border-stone-200/80 rounded-2xl text-xs text-stone-600 text-left font-medium">
+                      <AlertCircle className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Klik foto atau stiker pada bingkai untuk mengatur zoom &amp; posisi</span>
                     </div>
                   </motion.div>
                 )}

@@ -45,6 +45,7 @@ export const StickerPanel: React.FC = () => {
     { id: 'packs', name: 'Paket Auto-Spread' },
     { id: 'particles', name: 'Partikel & Efek' },
     { id: 'cat', name: 'Kucing' },
+    { id: 'panda', name: 'Panda 🐼' },
     { id: 'nailong', name: 'Nailong' },
     { id: 'anime', name: 'One Piece' },
     { id: 'aesthetic', name: 'Aesthetic' },
@@ -64,15 +65,16 @@ export const StickerPanel: React.FC = () => {
     <div className="flex flex-col h-full text-charcoal">
 
       {/* Category Tabs */}
-      <div className="flex flex-wrap gap-1.5 mb-4 pb-2 border-b border-cream-dark/20">
+      <div className="flex flex-wrap gap-1.5 mb-3.5 pb-2.5 border-b border-stone-200/70">
         {categories.map((cat) => ( 
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
-            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${activeCategory === cat.id
-              ? 'bg-mahogany text-white shadow-md'
-              : 'bg-cream-light text-charcoal/60 hover:bg-cream'
-              }`}
+            className={`px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95 ${
+              activeCategory === cat.id
+                ? 'bg-stone-900 text-white shadow-xs'
+                : 'bg-stone-100 text-stone-600 hover:bg-stone-200/70'
+            }`}
           >
             {cat.name}
           </button>
@@ -83,7 +85,7 @@ export const StickerPanel: React.FC = () => {
       {activeCategory === 'particles' ? (
         <ParticleSelector />
       ) : activeCategory === 'packs' ? (
-        <div className="grid grid-cols-2 gap-3 overflow-y-auto max-h-[220px] md:max-h-[260px] pr-2 custom-scroll">
+        <div className="grid grid-cols-2 gap-2.5 overflow-y-auto max-h-[220px] md:max-h-[260px] pr-1.5 custom-scroll">
           {stickerPacks.map((pack: StickerPack) => {
             const isLocked = isStickerPackLocked(pack, packageTier);  
             const reqTier = pack.requiredTier || (pack.category === 'nailong' || pack.category === 'cat' || pack.category === 'anime' || pack.category === 'badge' || pack.category === 'aesthetic' ? 'premium' : 'basic');
@@ -105,10 +107,10 @@ export const StickerPanel: React.FC = () => {
                     applyStickerPack(pack.id);
                   }
                 }}
-                className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all group duration-200 text-center relative cursor-pointer ${
+                className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all group duration-200 text-center relative cursor-pointer active:scale-98 ${
                   isPackActive
-                    ? 'bg-rose-50/70 border-rose-400 ring-2 ring-rose-300 shadow-md'
-                    : 'bg-ivory-dark border-cream/60 hover:border-gold-light hover:bg-white hover:shadow-lg'
+                    ? 'bg-white border-stone-900 ring-2 ring-stone-900/10 shadow-xs'
+                    : 'bg-white border-stone-200/80 hover:border-stone-300 hover:bg-stone-50/70 shadow-2xs'
                 }`}
               >
                 {isLocked && (

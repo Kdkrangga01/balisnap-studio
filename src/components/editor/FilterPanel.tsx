@@ -49,12 +49,15 @@ export const FilterPanel: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-2.5 text-left select-none">
-      {/* Label Title bergaya cute pastel gallery */}
-      <label className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-pink-400 mb-1 bg-pink-50/60 border border-pink-100/40 px-2.5 py-1 rounded-full w-fit">
-        <Sliders className="w-3 h-3 text-pink-400" />
-        Pilih Filter Foto
-      </label>
+    <div className="flex flex-col gap-3 text-left select-none">
+      {/* Label Title */}
+      <div className="flex items-center justify-between px-0.5">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+          <Sliders className="w-3.5 h-3.5 text-[#E15A6E]" />
+          Pilihan Preset Filter
+        </span>
+        <span className="text-[10px] text-stone-400 font-medium">Tone warna foto</span>
+      </div>
 
       {/* Grid Matriks Pilihan Filter */}
       <div className="grid grid-cols-2 gap-2.5">
@@ -66,7 +69,7 @@ export const FilterPanel: React.FC = () => {
             <motion.button
               key={fil.id}
               type="button"
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.015 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 if (isLocked) {
@@ -75,29 +78,26 @@ export const FilterPanel: React.FC = () => {
                 }
                 setAppliedFilter(fil.id);
               }}
-              className={`flex flex-col items-left text-left p-3 rounded-2xl border-2 transition-all duration-300 shadow-sm relative overflow-hidden group cursor-pointer ${isActive
-                  ? 'border-pink-400 bg-gradient-to-br from-white to-rose-50/20 ring-1 ring-pink-300'
-                  : 'border-rose-50 bg-white hover:border-rose-200 hover:bg-zinc-50/40'
-                }`}
+              className={`flex flex-col text-left p-3 rounded-2xl border transition-all duration-200 shadow-2xs relative overflow-hidden group cursor-pointer ${
+                isActive
+                  ? 'border-stone-900 bg-white ring-2 ring-stone-900/10 shadow-xs'
+                  : 'border-stone-200/80 bg-white hover:border-stone-300 hover:bg-stone-50/70'
+              }`}
             >
               {/* Lock Badge overlay jika terkunci */}
               {isLocked && (
-                <div className="absolute top-2 right-2 z-10 bg-pink-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
+                <div className="absolute top-2 right-2 z-10 bg-[#E15A6E] text-white text-[8px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-xs">
                   <Lock className="w-2.5 h-2.5" />
-                  <span>BASIC</span>
+                  <span>VIP</span>
                 </div>
-              )}
-              {/* Background Glow Effect saat Active */}
-              {isActive && (
-                <div className="absolute inset-0 bg-pink-400/5 pointer-events-none" />
               )}
 
               {/* Visual Mini Tone Box representing the filter look */}
-              <div className={`w-full h-9 rounded-xl mb-2.5 shadow-inner transition-transform group-hover:scale-[1.01] ${fil.styleClass}`} />
+              <div className={`w-full h-8 rounded-xl mb-2 shadow-inner transition-transform group-hover:scale-[1.01] ${fil.styleClass}`} />
 
               {/* Filter Name Label Row */}
               <div className="flex items-center justify-between w-full min-w-0">
-                <span className={`text-xs font-black tracking-wide truncate ${isActive ? 'text-pink-500' : 'text-zinc-700'}`}>
+                <span className={`text-xs tracking-tight truncate ${isActive ? 'font-bold text-stone-900' : 'font-semibold text-stone-700'}`}>
                   {fil.name}
                 </span>
 
@@ -108,17 +108,17 @@ export const FilterPanel: React.FC = () => {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 10 }}
-                      className="flex-shrink-0"
+                      transition={{ type: 'spring', stiffness: 400, damping: 12 }}
+                      className="shrink-0"
                     >
-                      <Heart className="w-3 h-3 text-pink-400 fill-current" />
+                      <Heart className="w-3 h-3 text-[#E15A6E] fill-current" />
                     </motion.span>
                   )}
                 </AnimatePresence>
               </div>
 
               {/* Deskripsi Singkat Nuansa Filter */}
-              <span className={`text-[9px] font-medium mt-0.5 leading-tight ${isActive ? 'text-pink-400/80' : 'text-zinc-400'}`}>
+              <span className="text-[10px] font-normal text-stone-400 mt-0.5 leading-tight">
                 {fil.desc}
               </span>
             </motion.button>

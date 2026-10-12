@@ -65,11 +65,11 @@ export const FrameColorPanel: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col gap-4 text-charcoal">
-            {/* Sub tabs */}
-            <div className="flex gap-1 border-b border-cream/20 pb-2">
+        <div className="flex flex-col gap-4 text-stone-800 text-left">
+            {/* Sub tabs - Clean Proportional Segmented Control */}
+            <div className="bg-stone-100/90 p-1 rounded-xl flex gap-1 border border-stone-200/60">
                 {[
-                    { id: 'line', label: 'Warna Garis Pembatas', icon: Palette },
+                    { id: 'line', label: 'Warna Garis', icon: Palette },
                     { id: 'detail', label: 'Detail Studio Pro', icon: Sliders, isPremiumOnly: true },
                     { id: 'preset', label: 'Preset', icon: Wand2 },
                 ].map(t => (
@@ -83,27 +83,28 @@ export const FrameColorPanel: React.FC = () => {
                             }
                             setSubTab(t.id as any);
                         }}
-                        className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer ${subTab === t.id
-                            ? 'bg-rose-600 text-white shadow-sm'
-                            : 'text-charcoal/60 hover:bg-rose-50'
-                            }`}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] tracking-wider uppercase transition-all cursor-pointer active:scale-95 ${
+                            subTab === t.id
+                                ? 'bg-white text-stone-900 shadow-xs font-bold border border-stone-200/60'
+                                : 'text-stone-500 hover:text-stone-800 hover:bg-white/50 font-semibold'
+                        }`}
                     >
                         {t.isPremiumOnly && packageTier !== 'premium' && <Crown className="w-2.5 h-2.5 text-amber-500" />}
-                        <t.icon className="w-3 h-3" />
-                        {t.label}
+                        <t.icon className={`w-3.5 h-3.5 ${subTab === t.id ? 'text-[#E15A6E]' : 'text-stone-400'}`} />
+                        <span>{t.label}</span>
                     </button>
                 ))}
             </div>
 
             {/* TAB: WARNA GARIS PEMBATAS (DIVIDERS & BORDER) */}
             {subTab === 'line' && (
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 flex items-center gap-1.5">
-                            <PenTool className="w-3 h-3 text-rose-600 inline" />
-                            Warna Garis Pembatas (Dividers)
+                <div className="flex flex-col gap-3.5">
+                    <div className="flex items-center justify-between px-0.5">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                            <PenTool className="w-3.5 h-3.5 text-[#E15A6E] inline" />
+                            Warna Garis &amp; Pembatas
                         </span>
-                        <span className="text-[8px] text-rose-500 font-medium">Ubah warna garis pembatas &amp; border</span>
+                        <span className="text-[10px] text-stone-400 font-medium">Ubah bingkai &amp; border</span>
                     </div>
 
                     {/* Custom Line Color Picker & HEX Input */}
@@ -113,8 +114,8 @@ export const FrameColorPanel: React.FC = () => {
                         const displayName = selectedFcOpt ? selectedFcOpt.name : (activeLineColor === 'original' ? 'Asli (Default)' : activeLineColor);
 
                         return (
-                            <div className="flex items-center gap-2.5 bg-white p-2 rounded-xl border border-rose-200 shadow-sm">
-                                <div className="relative w-7 h-7 rounded-full overflow-hidden border border-rose-300 shadow-inner flex-shrink-0 cursor-pointer">
+                            <div className="flex items-center gap-2.5 bg-stone-50/80 p-2 rounded-2xl border border-stone-200/80 shadow-2xs">
+                                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-stone-300 shadow-2xs shrink-0 cursor-pointer ring-2 ring-white">
                                     <input
                                         type="color"
                                         value={activeLineColor.startsWith('#') ? activeLineColor : '#18181b'}
@@ -162,7 +163,7 @@ export const FrameColorPanel: React.FC = () => {
                                             }
                                         }}
                                         placeholder="#18181b"
-                                        className="w-full bg-rose-50/50 border border-rose-200 rounded-lg px-2.5 py-1 text-xs font-semibold text-zinc-700 focus:outline-none focus:ring-1 focus:ring-rose-400"
+                                        className="w-full bg-white border border-stone-200/90 rounded-xl px-3 py-1.5 text-xs font-semibold text-stone-800 focus:outline-none focus:ring-1 focus:ring-stone-400 shadow-2xs"
                                     />
                                 </div>
                             </div>
@@ -171,18 +172,19 @@ export const FrameColorPanel: React.FC = () => {
 
                     {/* Quick Line Color Buttons */}
                     <div>
-                        <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/60 mb-1.5">Warna Garis Populer</span>
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5 px-0.5">Warna Garis Populer</span>
                         <div className="grid grid-cols-4 gap-1.5">
                             {[
-                                { id: 'original', name: 'Asli (Default)', css: 'repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%) 0 0/10px 10px', reqTier: 'free' },
-                                { id: '#18181b', name: 'Hitam Klasik', css: '#18181b', reqTier: 'free' },
-                                { id: '#ffffff', name: 'Putih Bersih', css: '#ffffff', reqTier: 'free' },
-                                { id: '#3d261d', name: 'Deep Coffee', css: '#3d261d', reqTier: 'basic' },
+                                { id: 'original', name: 'Asli', css: 'repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%) 0 0/10px 10px', reqTier: 'free' },
+                                { id: '#18181b', name: 'Hitam', css: '#18181b', reqTier: 'free' },
+                                { id: '#ffffff', name: 'Putih', css: '#ffffff', reqTier: 'free' },
+                                { id: '#3d261d', name: 'Coffee', css: '#3d261d', reqTier: 'basic' },
                                 { id: '#d4a373', name: 'Rose Gold', css: '#d4a373', reqTier: 'basic' },
                                 { id: '#475569', name: 'Slate Blue', css: '#475569', reqTier: 'basic' },
-                                { id: '#5c1414', name: 'Maroon Wine', css: '#5c1414', reqTier: 'basic' },
+                                { id: '#5c1414', name: 'Maroon', css: '#5c1414', reqTier: 'basic' },
                                 { id: '#ffd8e4', name: 'Pastel Pink', css: '#ffd8e4', reqTier: 'basic' },
                             ].map(l => {
+                                const isSelected = activeLineColor === l.id;
                                 return (
                                     <button
                                         key={l.id}
@@ -192,12 +194,14 @@ export const FrameColorPanel: React.FC = () => {
                                             setFrameColor(l.id);
                                         }}
                                         title={l.name}
-                                        className={`py-1.5 rounded-lg border flex flex-col items-center gap-1 transition-all relative cursor-pointer ${
-                                            activeLineColor === l.id ? 'border-zinc-800 bg-white ring-2 ring-zinc-500 shadow-sm' : 'border-zinc-200 bg-white/60 hover:border-zinc-400'
+                                        className={`py-2 px-1 rounded-xl border flex flex-col items-center gap-1.5 transition-all relative cursor-pointer active:scale-95 ${
+                                            isSelected 
+                                                ? 'border-stone-900 bg-white ring-2 ring-stone-900/10 shadow-xs' 
+                                                : 'border-stone-200/80 bg-white hover:border-stone-300 hover:bg-stone-50/70'
                                         }`}
                                     >
-                                        <span className="w-5 h-5 rounded-full border border-black/10 shadow-inner block" style={{ background: l.css }} />
-                                        <span className="text-[8px] font-bold text-zinc-600 truncate w-full text-center px-1">{l.name}</span>
+                                        <span className="w-5 h-5 rounded-full border border-black/10 shadow-2xs block" style={{ background: l.css }} />
+                                        <span className={`text-[9px] truncate w-full text-center px-0.5 ${isSelected ? 'font-bold text-stone-900' : 'font-semibold text-stone-600'}`}>{l.name}</span>
                                     </button>
                                 );
                             })}
@@ -206,15 +210,15 @@ export const FrameColorPanel: React.FC = () => {
 
                     {/* Aesthetic Color & Pattern Swatches */}
                     <div>
-                        <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/60 mb-2">Semua Palette &amp; Pattern Estetik</span>
-                        <div className="grid grid-cols-6 gap-2 max-h-[180px] overflow-y-auto custom-scroll pr-1">
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-2 px-0.5">Semua Palette &amp; Pattern Estetik</span>
+                        <div className="grid grid-cols-6 gap-2.5 max-h-[185px] overflow-y-auto custom-scroll p-1">
                             {frameColors.map((fc) => {
                                 const isSelected = activeLineColor === fc.id || activeLineColor === fc.previewCss;
                                 const isLocked = false;
                                 const reqTier = fc.requiredTier || 'premium';
 
                                 return (
-                                    <div key={fc.id} className="relative group">
+                                    <div key={fc.id} className="relative group flex items-center justify-center">
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -227,12 +231,14 @@ export const FrameColorPanel: React.FC = () => {
                                                 addRecentColor(fc.previewCss);
                                             }}
                                             title={fc.name}
-                                            className={`flex items-center justify-center p-0.5 rounded-full transition-all duration-200 w-8 h-8 relative cursor-pointer ${
-                                                isSelected ? 'ring-2 ring-rose-500 ring-offset-1 scale-105 shadow-md' : 'hover:scale-105'
+                                            className={`flex items-center justify-center rounded-full transition-all duration-150 w-8 h-8 relative cursor-pointer p-0.5 ${
+                                                isSelected 
+                                                    ? 'ring-2 ring-stone-900 ring-offset-2 scale-105 shadow-sm' 
+                                                    : 'hover:scale-110 active:scale-95'
                                             }`}
                                         >
                                             <span
-                                                className="w-full h-full rounded-full shadow-inner border border-black/10 block overflow-hidden"
+                                                className="w-full h-full rounded-full shadow-2xs border border-black/10 block overflow-hidden"
                                                 style={{ background: fc.previewCss }}
                                             />
                                             {isLocked && (
@@ -243,10 +249,10 @@ export const FrameColorPanel: React.FC = () => {
                                         </button>
                                         <button
                                             onClick={() => toggleFavoriteColor(fc.id)}
-                                            className="absolute -top-1 -right-1 p-0.5 rounded-full bg-white shadow-md border border-cream/30 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                            className="absolute -top-1 -right-1 p-0.5 rounded-full bg-white shadow-xs border border-stone-200 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                         >
                                             <Heart
-                                                className={`w-2.5 h-2.5 ${favoriteColors.includes(fc.id) ? 'fill-red-500 text-red-500' : 'text-charcoal/30'}`}
+                                                className={`w-2.5 h-2.5 ${favoriteColors.includes(fc.id) ? 'fill-red-500 text-red-500' : 'text-stone-300'}`}
                                             />
                                         </button>
                                     </div>
@@ -259,9 +265,9 @@ export const FrameColorPanel: React.FC = () => {
 
             {/* Favorite Colors */}
             {favoriteColors.length > 0 && (
-                <div>
-                    <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/40 mb-1">Favorit</span>
-                    <div className="flex flex-wrap gap-1.5">
+                <div className="pt-1 border-t border-stone-200/60">
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5 px-0.5">Favorit</span>
+                    <div className="flex flex-wrap gap-2">
                         {favoriteColors.map(c => {
                             const fc = frameColors.find(o => o.id === c);
                             const preview = fc ? fc.previewCss : c;
@@ -271,7 +277,7 @@ export const FrameColorPanel: React.FC = () => {
                                     onClick={() => {
                                         setLineColor(c);
                                     }}
-                                    className="w-6 h-6 rounded-full border border-black/10 shadow-sm"
+                                    className="w-7 h-7 rounded-full border border-black/10 shadow-2xs hover:scale-110 active:scale-95 transition-all cursor-pointer"
                                     style={{ background: preview }}
                                     title={fc ? fc.name : c}
                                 />
@@ -282,11 +288,12 @@ export const FrameColorPanel: React.FC = () => {
             )}
 
             {subTab === 'detail' && (
-                <div className="flex flex-col gap-3 text-xs">
+                <div className="flex flex-col gap-3.5 text-xs">
                     {/* Sliders */}
-                    <div>
-                        <div className="flex justify-between font-semibold mb-1 text-[10px]">
-                            <span className="text-charcoal/60 uppercase">Ketebalan Border ({borderThickness}px)</span>
+                    <div className="bg-stone-50/80 p-2.5 rounded-2xl border border-stone-200/70 flex flex-col gap-1">
+                        <div className="flex justify-between font-bold text-[10px] text-stone-700">
+                            <span className="uppercase">Ketebalan Border</span>
+                            <span className="text-stone-500">{borderThickness}px</span>
                         </div>
                         <input
                             type="range"
@@ -294,13 +301,14 @@ export const FrameColorPanel: React.FC = () => {
                             max="30"
                             value={borderThickness}
                             onChange={(e) => setBorderThickness(Number(e.target.value))}
-                            className="w-full accent-mahogany cursor-pointer"
+                            className="w-full accent-[#E15A6E] cursor-pointer h-1.5 bg-stone-200 rounded-lg appearance-none"
                         />
                     </div>
 
-                    <div>
-                        <div className="flex justify-between font-semibold mb-1 text-[10px]">
-                            <span className="text-charcoal/60 uppercase">Sudut Radius ({borderRadius}px)</span>
+                    <div className="bg-stone-50/80 p-2.5 rounded-2xl border border-stone-200/70 flex flex-col gap-1">
+                        <div className="flex justify-between font-bold text-[10px] text-stone-700">
+                            <span className="uppercase">Sudut Radius</span>
+                            <span className="text-stone-500">{borderRadius}px</span>
                         </div>
                         <input
                             type="range"
@@ -308,13 +316,14 @@ export const FrameColorPanel: React.FC = () => {
                             max="40"
                             value={borderRadius}
                             onChange={(e) => setBorderRadius(Number(e.target.value))}
-                            className="w-full accent-mahogany cursor-pointer"
+                            className="w-full accent-[#E15A6E] cursor-pointer h-1.5 bg-stone-200 rounded-lg appearance-none"
                         />
                     </div>
 
-                    <div>
-                        <div className="flex justify-between font-semibold mb-1 text-[10px]">
-                            <span className="text-charcoal/60 uppercase">Padding Foto ({framePadding}px)</span>
+                    <div className="bg-stone-50/80 p-2.5 rounded-2xl border border-stone-200/70 flex flex-col gap-1">
+                        <div className="flex justify-between font-bold text-[10px] text-stone-700">
+                            <span className="uppercase">Padding Foto</span>
+                            <span className="text-stone-500">{framePadding}px</span>
                         </div>
                         <input
                             type="range"
@@ -322,13 +331,14 @@ export const FrameColorPanel: React.FC = () => {
                             max="40"
                             value={framePadding}
                             onChange={(e) => setFramePadding(Number(e.target.value))}
-                            className="w-full accent-mahogany cursor-pointer"
+                            className="w-full accent-[#E15A6E] cursor-pointer h-1.5 bg-stone-200 rounded-lg appearance-none"
                         />
                     </div>
 
-                    <div className="border-t border-cream/10 pt-2 flex flex-col gap-2">
-                        <div className="flex justify-between font-semibold mb-1 text-[10px]">
-                            <span className="text-charcoal/60 uppercase">Intensitas Bayangan ({shadowIntensity})</span>
+                    <div className="bg-stone-50/80 p-2.5 rounded-2xl border border-stone-200/70 flex flex-col gap-1">
+                        <div className="flex justify-between font-bold text-[10px] text-stone-700">
+                            <span className="uppercase">Intensitas Bayangan</span>
+                            <span className="text-stone-500">{shadowIntensity}</span>
                         </div>
                         <input
                             type="range"
@@ -336,36 +346,37 @@ export const FrameColorPanel: React.FC = () => {
                             max="10"
                             value={shadowIntensity}
                             onChange={(e) => setShadowIntensity(Number(e.target.value))}
-                            className="w-full accent-mahogany cursor-pointer"
+                            className="w-full accent-[#E15A6E] cursor-pointer h-1.5 bg-stone-200 rounded-lg appearance-none"
                         />
                     </div>
 
                     <div className="flex gap-2">
-                        <div className="flex-1">
-                            <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/40 mb-1">Blur Bayangan</span>
+                        <div className="flex-1 bg-stone-50/80 p-2.5 rounded-2xl border border-stone-200/70 flex flex-col gap-1">
+                            <span className="block text-[10px] font-bold uppercase text-stone-700">Blur Bayangan ({shadowBlur}px)</span>
                             <input
                                 type="range"
                                 min="0"
                                 max="30"
                                 value={shadowBlur}
                                 onChange={(e) => setShadowBlur(Number(e.target.value))}
-                                className="w-full accent-mahogany cursor-pointer"
+                                className="w-full accent-[#E15A6E] cursor-pointer h-1.5 bg-stone-200 rounded-lg appearance-none"
                             />
                         </div>
-                        <div className="w-[100px] flex flex-col justify-end">
-                            <span className="block text-[9px] font-bold uppercase tracking-wider text-charcoal/40 mb-1">Warna Bayangan</span>
+                        <div className="w-[110px] bg-stone-50/80 p-2.5 rounded-2xl border border-stone-200/70 flex flex-col gap-1">
+                            <span className="block text-[10px] font-bold uppercase text-stone-700">Warna Bayangan</span>
                             <input
                                 type="color"
                                 value={shadowColor}
                                 onChange={(e) => setShadowColor(e.target.value)}
-                                className="w-full h-8 rounded-lg border border-cream/20 cursor-pointer"
+                                className="w-full h-7 rounded-xl border border-stone-200 cursor-pointer"
                             />
                         </div>
                     </div>
 
-                    <div>
-                        <div className="flex justify-between font-semibold mb-1 text-[10px]">
-                            <span className="text-charcoal/60 uppercase">Transparansi Frame ({Math.round(frameOpacity * 100)}%)</span>
+                    <div className="bg-stone-50/80 p-2.5 rounded-2xl border border-stone-200/70 flex flex-col gap-1">
+                        <div className="flex justify-between font-bold text-[10px] text-stone-700">
+                            <span className="uppercase">Transparansi Frame</span>
+                            <span className="text-stone-500">{Math.round(frameOpacity * 100)}%</span>
                         </div>
                         <input
                             type="range"
@@ -374,7 +385,7 @@ export const FrameColorPanel: React.FC = () => {
                             step="0.05"
                             value={frameOpacity}
                             onChange={(e) => setFrameOpacity(Number(e.target.value))}
-                            className="w-full accent-mahogany cursor-pointer"
+                            className="w-full accent-[#E15A6E] cursor-pointer h-1.5 bg-stone-200 rounded-lg appearance-none"
                         />
                     </div>
                 </div>
@@ -382,25 +393,24 @@ export const FrameColorPanel: React.FC = () => {
 
             {subTab === 'preset' && (
                 <div className="flex flex-col gap-3">
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-charcoal/50">Gaya Siap Pakai</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 px-0.5">Gaya Siap Pakai</span>
                     <div className="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1 custom-scroll">
                         {presets.map(p => (
                             <button
                                 key={p.id}
                                 type="button"
                                 onClick={() => handleApplyPreset(p)}
-                                className="p-3 bg-white hover:bg-amber-50/20 border border-cream/20 hover:border-cream rounded-xl text-left transition-all shadow-sm hover:shadow-md flex flex-col gap-1 relative overflow-hidden group"
+                                className="p-3 bg-white hover:bg-stone-50 border border-stone-200/80 hover:border-stone-300 rounded-2xl text-left transition-all shadow-2xs hover:shadow-xs flex flex-col gap-1 relative overflow-hidden group cursor-pointer active:scale-98"
                             >
                                 <div className="flex items-center gap-1.5">
-                                    <span className="text-lg leading-none">{p.emoji}</span>
-                                    <span className="font-bold text-xs leading-none text-charcoal">{p.name}</span>
+                                    <span className="text-base leading-none">{p.emoji}</span>
+                                    <span className="font-bold text-xs leading-none text-stone-800">{p.name}</span>
                                 </div>
-                                <div className="flex gap-1 mt-1 text-[8px] text-charcoal/40 font-semibold uppercase">
+                                <div className="flex gap-1 mt-1 text-[8px] text-stone-400 font-semibold uppercase">
                                     <span>Frame: {p.frameColor}</span>
                                     <span>•</span>
                                     <span>Filter: {p.appliedFilter}</span>
                                 </div>
-                                <span className="absolute bottom-0 right-0 w-8 h-8 rounded-tl-full bg-gold/10 group-hover:bg-gold/20 transition-all pointer-events-none" />
                             </button>
                         ))}
                     </div>
