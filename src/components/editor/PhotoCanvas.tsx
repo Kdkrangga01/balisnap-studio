@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Stage, Layer, Image as KonvaImage, Group, Rect, Text } from 'react-konva';
+import React, { useEffect, useState, useRef } from 'react';
+import { Stage, Layer, Image as KonvaImage, Group, Rect, Text, Transformer } from 'react-konva';
 import { usePhotobooth, type FilterType, DEFAULT_PHOTO_ZOOM, CUSTOM_MIN_PHOTO_ZOOM, MAX_PHOTO_ZOOM } from '../../context/PhotoboothContext';
 import { frameColors } from '../../data/frameColors';
 
@@ -149,6 +149,24 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
   const [filteredPhotos, setFilteredPhotos] = useState<(HTMLImageElement | null)[]>([]);
   const [loadedStickerImages, setLoadedStickerImages] = useState<Record<string, HTMLImageElement>>({});
   const [hoveredPhotoIndex, setHoveredPhotoIndex] = useState<number | null>(null);
+  const stickerTransformerRef = useRef<any>(null);
+
+  // Pasang transformer interaktif saat ada stiker yang dipilih user
+  useEffect(() => {
+    if (stickerTransformerRef.current) {
+      if (selectedId && selectedId.startsWith('sticker-')) {
+        const stage = stickerTransformerRef.current.getStage();
+        const node = stage?.findOne(`#${selectedId}`);
+        if (node) {
+          stickerTransformerRef.current.nodes([node]);
+          stickerTransformerRef.current.getLayer()?.batchDraw();
+          return;
+        }
+      }
+      stickerTransformerRef.current.nodes([]);
+      stickerTransformerRef.current.getLayer()?.batchDraw();
+    }
+  }, [selectedId, stickers]);
 
   const frameWidth = selectedFrame?.width || 1200;
   const frameHeight = selectedFrame?.height || 1800;
@@ -608,18 +626,19 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const targetW = st.width || defaultTargetW;
             const targetH = st.height || Math.round(targetW * aspectRatio);
 
-            const scaleFactor = st.scale || st.scaleX || 1;
-            const finalWidth = Math.round(targetW * scaleFactor);
-            const finalHeight = Math.round(targetH * scaleFactor);
+            const scaleFactor = st.scaleX ?? st.scale ?? 1;
 
             return (
               <KonvaImage
                 key={st.id}
+                id={st.id}
                 image={stImg}
                 x={st.x}
                 y={st.y}
-                width={finalWidth}
-                height={finalHeight}
+                width={targetW}
+                height={targetH}
+                scaleX={scaleFactor}
+                scaleY={scaleFactor}
                 rotation={st.rotation || 0}
                 draggable={!isPreviewMode}
                 perfectDrawEnabled={true}
@@ -634,9 +653,59 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                     y: e.target.y(),
                   });
                 }}
+                onTransformEnd={(e) => {
+                  if (isPreviewMode) return;
+                  const node = e.target;
+                  const currentScaleX = node.scaleX();
+                  const clampedScale = Math.max(0.3, Math.min(3.0, currentScaleX));
+                  node.scaleX(clampedScale);
+                  node.scaleY(clampedScale);
+                  updateSticker(st.id, {
+                    x: node.x(),
+                    y: node.y(),
+                    scaleX: Number(clampedScale.toFixed(2)),
+                    scaleY: Number(clampedScale.toFixed(2)),
+                    rotation: Math.round(node.rotation()),
+                  });
+                }}
+                onWheel={(e) => {
+                  if (isPreviewMode) return;
+                  e.evt.preventDefault();
+                  if (selectedId !== st.id) setSelectedId(st.id);
+                  const currentScale = st.scaleX ?? 1;
+                  const zoomStep = 0.08;
+                  const dir = e.evt.deltaY > 0 ? -1 : 1;
+                  const nextScale = Math.max(0.3, Math.min(3.0, Number((currentScale + dir * zoomStep).toFixed(2))));
+                  updateSticker(st.id, {
+                    scaleX: nextScale,
+                    scaleY: nextScale,
+                  });
+                }}
               />
             );
           })}
+
+          {!isPreviewMode && (
+            <Transformer
+              ref={stickerTransformerRef}
+              keepRatio={true}
+              enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
+              rotateEnabled={true}
+              borderStroke="#F43F5E"
+              borderStrokeWidth={2}
+              borderDash={[6, 4]}
+              anchorStroke="#F43F5E"
+              anchorFill="#FFFFFF"
+              anchorSize={12}
+              anchorCornerRadius={6}
+              boundBoxFunc={(oldBox, newBox) => {
+                if (Math.abs(newBox.width) < 25 || Math.abs(newBox.height) < 25) {
+                  return oldBox;
+                }
+                return newBox;
+              }}
+            />
+          )}
 
           {texts.map((txt: any) => (
             <Text

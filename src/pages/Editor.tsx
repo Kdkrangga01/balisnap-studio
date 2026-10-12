@@ -47,6 +47,7 @@ export const Editor: React.FC = () => {
     setSelectedId,
     removeSticker,
     removeText,
+    updateSticker,
     addSticker,
     addText,
     stickers: canvasStickers,
@@ -503,6 +504,84 @@ export const Editor: React.FC = () => {
                         </button>
                       </div>
                     </div>
+
+                    {/* BAR KONTROL UKURAN & ZOOM STIKER */}
+                    {selectedId?.startsWith('sticker-') && (() => {
+                      const selectedStk = canvasStickers.find((s) => s.id === selectedId);
+                      const currentScale = selectedStk?.scaleX ?? 1;
+                      const scalePercent = Math.round(currentScale * 100);
+
+                      return (
+                        <div className="bg-rose-50/90 border border-rose-200/90 p-2.5 rounded-2xl flex flex-col gap-2 shadow-sm">
+                          <div className="flex items-center justify-between text-[10px] font-black uppercase text-rose-800">
+                            <span className="flex items-center gap-1.5">
+                              <Maximize className="w-3.5 h-3.5 text-rose-500" />
+                              Ukuran Stiker: <span className="text-rose-600 font-extrabold">{scalePercent}%</span>
+                            </span>
+                            {scalePercent !== 100 && (
+                              <button
+                                onClick={() => {
+                                  if (selectedStk) {
+                                    updateSticker(selectedStk.id, { scaleX: 1, scaleY: 1 });
+                                  }
+                                }}
+                                className="text-[10px] text-rose-500 hover:text-rose-700 underline font-semibold cursor-pointer"
+                              >
+                                Reset (100%)
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Tombol Min, Slider, Tombol Plus */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                if (selectedStk) {
+                                  const next = Math.max(0.3, Number((currentScale - 0.1).toFixed(2)));
+                                  updateSticker(selectedStk.id, { scaleX: next, scaleY: next });
+                                }
+                              }}
+                              className="p-1.5 bg-white hover:bg-rose-100 rounded-xl text-rose-700 border border-rose-200 shadow-sm transition-all cursor-pointer shrink-0"
+                              title="Perkecil Stiker (-10%)"
+                            >
+                              <ZoomOut className="w-4 h-4" />
+                            </button>
+
+                            <input
+                              type="range"
+                              min={30}
+                              max={250}
+                              step={5}
+                              value={scalePercent}
+                              onChange={(e) => {
+                                if (selectedStk) {
+                                  const val = Number(e.target.value) / 100;
+                                  updateSticker(selectedStk.id, { scaleX: val, scaleY: val });
+                                }
+                              }}
+                              className="flex-1 accent-rose-500 cursor-pointer h-2 bg-rose-200 rounded-lg appearance-none"
+                            />
+
+                            <button
+                              onClick={() => {
+                                if (selectedStk) {
+                                  const next = Math.min(2.5, Number((currentScale + 0.1).toFixed(2)));
+                                  updateSticker(selectedStk.id, { scaleX: next, scaleY: next });
+                                }
+                              }}
+                              className="p-1.5 bg-white hover:bg-rose-100 rounded-xl text-rose-700 border border-rose-200 shadow-sm transition-all cursor-pointer shrink-0"
+                              title="Perbesar Stiker (+10%)"
+                            >
+                              <ZoomIn className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5 border-t border-rose-200/50">
+                            <span>💡 Tarik sudut stiker di bingkai foto atau scroll mouse untuk ubah ukuran</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* BAR OTOMATIS PENEMPATAN STIKER DI POJOK SLOT FOTO */}
                     {selectedId?.startsWith('sticker-') && (
