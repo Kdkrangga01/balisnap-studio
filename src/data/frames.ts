@@ -361,196 +361,22 @@ export const frames: FrameTemplate[] = [
   
   
   
-  {
-    id: "grid-peach-2x2",
-    name: "Grid Peach 2x2",
-    slots: 4,
-    category: "cute",
-    src: "/templates/grid-peach-2x2.png",
-    width: 1200, height: 1600,
-    slotCoords: [
-      { x: 94, y: 94, w: 472, h: 512, rx: 10 },
-      { x: 634, y: 94, w: 472, h: 512, rx: 10 },
-      { x: 94, y: 664, w: 472, h: 512, rx: 10 },
-      { x: 634, y: 664, w: 472, h: 512, rx: 10 }
-    ]
-  },
-  {
-    id: "korean-4cut-lavender",
-    name: "Korean 4-Cut Lavender",
-    slots: 4,
-    category: "korean",
-    src: "/templates/korean-4cut-lavender.png",
-    width: 1000, height: 3000,
-    slotCoords: [
-      { x: 84, y: 84, w: 832, h: 552, rx: 10 },
-      { x: 84, y: 704, w: 832, h: 552, rx: 10 },
-      { x: 84, y: 1324, w: 832, h: 552, rx: 10 },
-      { x: 84, y: 1944, w: 832, h: 552, rx: 10 }
-    ]
-  },
-  {
-    id: "korean-maroon-4",
-    name: "Korean Maroon 4",
-    slots: 4,
-    category: "korean",
-    src: "/templates/korean-maroon-4.png",
-    width: 800, height: 3000,
-    slotCoords: [
-      { x: 82, y: 82, w: 636, h: 496, rx: 10 },
-      { x: 82, y: 632, w: 636, h: 496, rx: 10 },
-      { x: 82, y: 1182, w: 636, h: 496, rx: 10 },
-      { x: 82, y: 1732, w: 636, h: 496, rx: 10 }
-    ]
-  },
-  {
-    id: "mini-polaroid-8",
-    name: "Mini Polaroid 8",
-    slots: 8,
-    category: "polaroid",
-    src: "/templates/mini-polaroid-8.png",
-    width: 1200, height: 1800,
-    slotCoords: [
-      { x: 84, y: 84, w: 222, h: 532 },
-      { x: 354, y: 84, w: 222, h: 532 },
-      { x: 624, y: 84, w: 222, h: 532 },
-      { x: 894, y: 84, w: 222, h: 532 },
-      { x: 84, y: 724, w: 222, h: 532 },
-      { x: 354, y: 724, w: 222, h: 532 },
-      { x: 624, y: 724, w: 222, h: 532 },
-      { x: 894, y: 724, w: 222, h: 532 }
-    ]
-  },
-  {
-    id: "minimalist-lines-1",
-    name: "Minimalist Lines 1",
-    slots: 1,
-    category: "cute",
-    src: "/templates/minimalist-lines-1.png",
-    width: 1200, height: 1500,
-    slotCoords: [
-      { x: 104, y: 104, w: 992, h: 1092, rx: 10 }
-    ]
-  },
-  {
-    id: "party-style-8",
-    name: "Party Style 8",
-    slots: 8,
-    category: "cute",
-    src: "/templates/party-style-8.png",
-    width: 1200, height: 1800,
-    slotCoords: [
-      { x: 84, y: 84, w: 482, h: 302, rx: 10 },
-      { x: 634, y: 84, w: 482, h: 302, rx: 10 },
-      { x: 84, y: 424, w: 482, h: 302, rx: 10 },
-      { x: 634, y: 424, w: 482, h: 302, rx: 10 },
-      { x: 84, y: 764, w: 482, h: 302, rx: 10 },
-      { x: 634, y: 764, w: 482, h: 302, rx: 10 },
-      { x: 84, y: 1104, w: 482, h: 302, rx: 10 },
-      { x: 634, y: 1104, w: 482, h: 302, rx: 10 }
-    ]
-  },
   
   
-  {
-    id: "rainbow-pastel-6",
-    name: "Rainbow Pastel 6",
-    slots: 6,
-    category: "cute",
-    src: "/templates/rainbow-pastel-6.png",
-    width: 1200, height: 1800,
-    slotCoords: [
-      { x: 84, y: 84, w: 482, h: 372, rx: 10 },
-      { x: 634, y: 84, w: 482, h: 372, rx: 10 },
-      { x: 84, y: 504, w: 482, h: 372, rx: 10 },
-      { x: 634, y: 504, w: 482, h: 372, rx: 10 },
-      { x: 84, y: 924, w: 482, h: 372, rx: 10 },
-      { x: 634, y: 924, w: 482, h: 372, rx: 10 }
-    ]
-  },
   
-  {
-    id: "sakura-yellow-3",
-    name: "Sakura Yellow 3",
-    slots: 3,
-    category: "cute",
-    src: "/templates/sakura-yellow-3.png",
-    width: 1200, height: 1800,
-    slotCoords: [
-      { x: 84, y: 104, w: 312, h: 1092, rx: 10 },
-      { x: 444, y: 104, w: 312, h: 1092, rx: 10 },
-      { x: 804, y: 104, w: 312, h: 1092, rx: 10 }
-    ]
-  },
-  {
-    id: "split-cute-2",
-    name: "Split Cute 2",
-    slots: 2,
-    category: "cute",
-    src: "/templates/split-cute-2.png",
-    width: 1200, height: 1600,
-    slotCoords: [
-      { x: 94, y: 104, w: 472, h: 1092, rx: 10 },
-      { x: 634, y: 104, w: 472, h: 1092, rx: 10 }
-    ]
-  },
-  {
-    id: "vintage-paper-1",
-    name: "Vintage Paper 1",
-    slots: 1,
-    category: "retro",
-    src: "/templates/vintage-paper-1.png",
-    width: 1200, height: 1500,
-    slotCoords: [
-      { x: 104, y: 104, w: 992, h: 1092, rx: 10 }
-    ]
-  },
-  {
-    id: "vintage-retro-6",
-    name: "Vintage Retro 6",
-    slots: 6,
-    category: "retro",
-    src: "/templates/vintage-retro-6.png",
-    width: 1200, height: 1800,
-    slotCoords: [
-      { x: 84, y: 84, w: 482, h: 372, rx: 10 },
-      { x: 634, y: 84, w: 482, h: 372, rx: 10 },
-      { x: 84, y: 504, w: 482, h: 372, rx: 10 },
-      { x: 634, y: 504, w: 482, h: 372, rx: 10 },
-      { x: 84, y: 924, w: 482, h: 372, rx: 10 },
-      { x: 634, y: 924, w: 482, h: 372, rx: 10 }
-    ]
-  },
-  {
-    id: "y2k-retro-6",
-    name: "Y2K Retro 6",
-    slots: 6,
-    category: "retro",
-    src: "/templates/y2k-retro-6.png",
-    width: 1200, height: 1600,
-    slotCoords: [
-      { x: 84, y: 84, w: 482, h: 352, rx: 10 },
-      { x: 634, y: 84, w: 482, h: 352, rx: 10 },
-      { x: 84, y: 484, w: 482, h: 352, rx: 10 },
-      { x: 634, y: 484, w: 482, h: 352, rx: 10 },
-      { x: 84, y: 884, w: 482, h: 352, rx: 10 },
-      { x: 634, y: 884, w: 482, h: 352, rx: 10 }
-    ]
-  },
-  {
-    id: "y2k-stars-4cut",
-    name: "Y2K Stars 4-Cut",
-    slots: 4,
-    category: "retro",
-    src: "/templates/y2k-stars-4cut.png",
-    width: 1000, height: 3000,
-    slotCoords: [
-      { x: 84, y: 84, w: 832, h: 552, rx: 10 },
-      { x: 84, y: 704, w: 832, h: 552, rx: 10 },
-      { x: 84, y: 1324, w: 832, h: 552, rx: 10 },
-      { x: 84, y: 1944, w: 832, h: 552, rx: 10 }
-    ]
-  },
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   {
     id: "custom-1784424710599-i4k0",
     name: "Frame Aestetik",

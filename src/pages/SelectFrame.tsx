@@ -28,7 +28,7 @@ function loadFrameNameOverrides(): Record<string, string> {
 }
 
 const REMOVED_FRAME_IDS = new Set([
-  'studio-photobooth-1',
+'studio-photobooth-1',
   'studio-photobooth-2',
   'studio-photobooth-4',
   'studio-photobooth-6',
@@ -53,6 +53,19 @@ const REMOVED_FRAME_IDS = new Set([
   'grand-group-8',
   'grid-classic-6',
   'grid-mint-2',
+  'grid-peach-2x2',
+  'korean-4cut-lavender',
+  'korean-maroon-4',
+  'mini-polaroid-8',
+  'minimalist-lines-1',
+  'party-style-8',
+  'rainbow-pastel-6',
+  'sakura-yellow-3',
+  'split-cute-2',
+  'vintage-paper-1',
+  'vintage-retro-6',
+  'y2k-retro-6',
+  'y2k-stars-4cut',
 ]);
 
 // PUSTAKA KATA-KATA ESTETIK UNTUK KOMBINASI NAMA UNIK (TANPA ANGKA / SIMBOL)
