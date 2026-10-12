@@ -55,8 +55,6 @@ export const Editor: React.FC = () => {
     photoTransforms,
     updatePhotoTransform,
     resetPhotoTransform,
-    customHeadline,
-    setCustomHeadline,
   } = usePhotobooth();
 
   const stageRef = useRef<any>(null);

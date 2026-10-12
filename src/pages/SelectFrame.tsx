@@ -5,27 +5,14 @@ import { CheckoutModal } from '../components/CheckoutModal';
 import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import {
-  ArrowLeft, Palette, Search, X, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, Trash2, CheckCircle2, ScanSearch, Eye, Pencil, SlidersHorizontal, LayoutGrid, Grid2X2, BookmarkCheck, Zap, Sliders,
+  ArrowLeft, Palette, Search, X, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, CheckCircle2, ScanSearch, Eye, SlidersHorizontal, LayoutGrid, Grid2X2, BookmarkCheck, Zap, Sliders,
   Camera, Check, Crown, Wand2, UploadCloud, Download, Lock, Film, Gift, LockOpen, ShieldCheck, Ticket, Layers, Smile, Mail
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate, type Variants } from 'framer-motion';
 
 type SlotCoord = FrameTemplate['slotCoords'][number];
 
-const HIDDEN_FRAMES_STORAGE_KEY = 'balisnap-hidden-frames';
 const FRAME_NAME_OVERRIDES_STORAGE_KEY = 'balisnap-frame-name-overrides';
-
-function loadHiddenFrameIds(): Set<string> {
-  try {
-    const stored = localStorage.getItem(HIDDEN_FRAMES_STORAGE_KEY);
-    if (!stored) return new Set();
-    const parsed = JSON.parse(stored);
-    if (Array.isArray(parsed)) return new Set(parsed);
-    return new Set();
-  } catch {
-    return new Set();
-  }
-}
 
 function loadFrameNameOverrides(): Record<string, string> {
   try {
@@ -444,7 +431,7 @@ export const SelectFrame: React.FC = () => {
   if (!context) {
     throw new Error('SelectFrame must be used within a PhotoboothProvider');
   }
-  const { selectFrame, setStep, customFrames, addCustomFrame, deleteCustomFrame, packageTier, setPackageTier, completedTrialSessions, getRemainingTrialSessions, hasCompletedAllTrialSessions } = context;
+  const { selectFrame, setStep, customFrames, addCustomFrame, packageTier, setPackageTier, completedTrialSessions, getRemainingTrialSessions, hasCompletedAllTrialSessions } = context;
 
   // Upgrade & Checkout Modal State
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
@@ -493,14 +480,6 @@ export const SelectFrame: React.FC = () => {
 
   const spotlightBackground = useMotionTemplate`radial-gradient(600px circle at ${bX}px ${bY}px, rgba(148,163,184,0.07), transparent 70%)`;
 
-  const [hiddenFrameIds, setHiddenFrameIds] = useState<Set<string>>(() => loadHiddenFrameIds());
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(HIDDEN_FRAMES_STORAGE_KEY, JSON.stringify(Array.from(hiddenFrameIds)));
-    } catch { }
-  }, [hiddenFrameIds]);
-
   const [frameNameOverrides, setFrameNameOverrides] = useState<Record<string, string>>(() => loadFrameNameOverrides());
 
   useEffect(() => {
@@ -508,89 +487,6 @@ export const SelectFrame: React.FC = () => {
       localStorage.setItem(FRAME_NAME_OVERRIDES_STORAGE_KEY, JSON.stringify(frameNameOverrides));
     } catch { }
   }, [frameNameOverrides]);
-
-  const [renameTarget, setRenameTarget] = useState<FrameTemplate | null>(null);
-  const [renameValue, setRenameValue] = useState('');
-  const [renameError, setRenameError] = useState<string | null>(null);
-
-  const handleOpenRename = useCallback((frame: FrameTemplate, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setRenameTarget(frame);
-    setRenameValue(frame.name);
-    setRenameError(null);
-  }, []);
-
-  const handleCloseRename = useCallback(() => {
-    setRenameTarget(null);
-    setRenameValue('');
-    setRenameError(null);
-  }, []);
-
-  const handleSaveRename = useCallback(() => {
-    if (!renameTarget) return;
-    const trimmed = renameValue.trim();
-    if (!trimmed) {
-      setRenameError('Nama frame tidak boleh kosong.');
-      return;
-    }
-    setFrameNameOverrides((prev) => ({ ...prev, [renameTarget.id]: trimmed }));
-    handleCloseRename();
-  }, [renameTarget, renameValue, handleCloseRename]);
-
-  const handleResetRenameToDefault = useCallback(() => {
-    if (!renameTarget) return;
-    setFrameNameOverrides((prev) => {
-      const next = { ...prev };
-      delete next[renameTarget.id];
-      return next;
-    });
-    handleCloseRename();
-  }, [renameTarget, handleCloseRename]);
-
-  const [deleteTarget, setDeleteTarget] = useState<FrameTemplate | null>(null);
-  const [deleteToastMessage, setDeleteToastMessage] = useState<string | null>(null);
-
-  const _handleOpenDeleteConfirm = useCallback((frame: FrameTemplate, e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
-    setDeleteTarget(frame);
-  }, []);
-
-  const handleCloseDeleteConfirm = useCallback(() => {
-    setDeleteTarget(null);
-  }, []);
-
-  const handleConfirmDelete = useCallback(() => {
-    if (!deleteTarget) return;
-
-    const frameId = deleteTarget.id;
-    const frameName = deleteTarget.name;
-
-    setHiddenFrameIds((prev) => {
-      const next = new Set(prev);
-      next.add(frameId);
-      return next;
-    });
-
-    if (frameId.startsWith('custom-') || customFrames.some((c) => c.id === frameId)) {
-      deleteCustomFrame(frameId);
-      fetch('/api/delete-frame', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: frameId }),
-      }).catch((err) => {
-        console.warn('Permanent file deletion failed:', err);
-      });
-    }
-
-    setDeleteTarget(null);
-    setDeleteToastMessage(`Bingkai "${frameName}" berhasil dihapus`);
-    setTimeout(() => {
-      setDeleteToastMessage(null);
-    }, 3000);
-  }, [deleteTarget, customFrames, deleteCustomFrame]);
 
   // STATE MODAL UPLOAD BINGKAI KUSTOM
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -614,13 +510,13 @@ export const SelectFrame: React.FC = () => {
     const seenIds = new Set<string>();
     const result: FrameTemplate[] = [];
     for (const f of [...customFrames, ...frames]) {
-      if (!seenIds.has(f.id) && !hiddenFrameIds.has(f.id)) {
+      if (!seenIds.has(f.id)) {
         seenIds.add(f.id);
         result.push(f);
       }
     }
     return result;
-  }, [customFrames, hiddenFrameIds]);
+  }, [customFrames]);
 
   const allFrames = useMemo(
     () => rawAllFrames.map((f) => (frameNameOverrides[f.id] ? { ...f, name: frameNameOverrides[f.id] } : f)),
@@ -1651,13 +1547,6 @@ export const SelectFrame: React.FC = () => {
 
                 <div className="flex items-center justify-center gap-2 mt-4">
                   <h3 className="font-extrabold text-xl text-zinc-900 leading-tight">{previewFrame.name}</h3>
-                  <button
-                    onClick={(e) => handleOpenRename(previewFrame, e)}
-                    className="w-7 h-7 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-500 hover:bg-sky-500 hover:text-white transition-colors flex-shrink-0 cursor-pointer"
-                    title="Ubah Nama"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
                 </div>
 
                 <div className="flex items-center justify-center gap-2 mt-2 text-xs font-black uppercase tracking-wider text-zinc-400">
@@ -1712,137 +1601,7 @@ export const SelectFrame: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* MODAL UBAH NAMA */}
-      <AnimatePresence>
-        {renameTarget && (
-          <motion.div
-            variants={overlayVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="fixed inset-0 z-[70] bg-zinc-950/60 backdrop-blur-md flex items-center justify-center p-4"
-            onClick={handleCloseRename}
-          >
-            <motion.div
-              variants={popupVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="relative max-w-sm w-full bg-white/95 backdrop-blur-2xl border-2 border-white rounded-[36px] shadow-2xl overflow-hidden flex flex-col text-left"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button onClick={handleCloseRename} className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-pink-600 cursor-pointer">
-                <X className="w-4 h-4" />
-              </button>
 
-              <div className="p-6">
-                <div className="flex items-center gap-3.5 mb-4">
-                  <div className="w-10 h-10 rounded-2xl bg-sky-100 border border-sky-200 flex items-center justify-center text-sky-600 flex-shrink-0">
-                    <Pencil className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h2 className="font-extrabold text-lg text-zinc-900">Ubah Nama Frame</h2>
-                    <p className="text-[11px] text-zinc-400 font-semibold">Nama baru akan tampil di seluruh katalog.</p>
-                  </div>
-                </div>
-
-                {renameError && (
-                  <div className="bg-rose-50 border border-rose-200 text-rose-500 text-xs px-3.5 py-2 rounded-2xl mb-3 font-semibold">
-                    {renameError}
-                  </div>
-                )}
-
-                <label className="block text-[10px] font-black uppercase tracking-wider text-zinc-400 mb-1.5">Nama Baru</label>
-                <input
-                  type="text"
-                  value={renameValue}
-                  onChange={(e) => setRenameValue(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleSaveRename(); }}
-                  autoFocus
-                  placeholder="Masukkan nama frame..."
-                  className="w-full px-4 py-3 bg-white border-2 border-rose-100 focus:border-pink-400 rounded-2xl text-xs sm:text-sm text-zinc-800 focus:outline-none focus:ring-4 focus:ring-pink-100 transition-all shadow-sm font-semibold"
-                />
-              </div>
-
-              <div className="p-5 pt-0 flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <button onClick={handleCloseRename} className="flex-1 py-3 bg-white border-2 border-rose-200 rounded-2xl text-xs font-bold text-zinc-600 hover:bg-rose-50 transition-colors cursor-pointer">Batal</button>
-                  <button onClick={handleSaveRename} className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-xs tracking-wider uppercase rounded-2xl shadow-md cursor-pointer">Simpan</button>
-                </div>
-                {frameNameOverrides[renameTarget.id] && (
-                  <button onClick={handleResetRenameToDefault} className="text-[10px] font-bold text-zinc-400 hover:text-rose-500 self-center mt-1 cursor-pointer">Kembalikan ke nama awal</button>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* MODAL KONFIRMASI HAPUS FRAME */}
-      <AnimatePresence>
-        {deleteTarget && (
-          <motion.div
-            variants={overlayVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="fixed inset-0 z-[80] bg-zinc-950/60 backdrop-blur-md flex items-center justify-center p-4 select-none"
-            onClick={handleCloseDeleteConfirm}
-          >
-            <motion.div
-              variants={popupVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="relative max-w-sm w-full bg-white/95 backdrop-blur-2xl border-2 border-white rounded-[36px] shadow-2xl overflow-hidden flex flex-col text-center p-6 md:p-8"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button onClick={handleCloseDeleteConfirm} className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-rose-500 hover:bg-rose-200 transition-colors cursor-pointer">
-                <X className="w-4 h-4" />
-              </button>
-
-              <div className="w-14 h-14 bg-rose-100 border border-rose-200 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce" style={{ animationDuration: '2s' }}>
-                <Trash2 className="w-6 h-6 text-rose-500" />
-              </div>
-
-              <h2 className="font-extrabold text-xl text-zinc-900 mb-1">Hapus Bingkai Ini?</h2>
-              <p className="text-xs text-zinc-500 leading-relaxed mb-6 font-medium">
-                Apakah Anda yakin ingin menghapus bingkai <span className="font-extrabold text-zinc-800">"{deleteTarget.name}"</span>? Bingkai ini tidak akan lagi ditampilkan di katalog Anda.
-              </p>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={handleCloseDeleteConfirm}
-                  className="flex-1 py-3 bg-white border-2 border-rose-200 rounded-2xl text-xs font-bold text-zinc-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={handleConfirmDelete}
-                  className="flex-1 py-3 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black text-xs tracking-wider uppercase rounded-2xl shadow-md transition-all cursor-pointer"
-                >
-                  Hapus Bingkai
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* TOAST NOTIFIKASI SUKSES HAPUS */}
-      <AnimatePresence>
-        {deleteToastMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] bg-zinc-900/90 backdrop-blur-md text-white text-xs font-bold px-5 py-3 rounded-full shadow-2xl border border-white/20 flex items-center gap-2 pointer-events-none select-none"
-          >
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            {deleteToastMessage}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* UPLOAD STUDIO MODAL */}
       <AnimatePresence>
