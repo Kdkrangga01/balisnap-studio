@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { stickers, stickerPacks, isStickerLocked, isStickerPackLocked } from '../../data/stickers';
+import { stickers as stickersList, stickerPacks, isStickerLocked, isStickerPackLocked } from '../../data/stickers';
 import type { StickerItem, StickerPack } from '../../data/stickers';
 import { usePhotobooth } from '../../context/PhotoboothContext';
 import { Heart, Star, Lock } from 'lucide-react';
@@ -20,7 +20,16 @@ const StickerThumbnail: React.FC<{ src: string; alt: string; className?: string 
 };
 
 export const StickerPanel: React.FC = () => {
-  const { addSticker, applyStickerPack, favoriteStickers, toggleFavoriteSticker, packageTier } = usePhotobooth();
+  const { 
+    addSticker, 
+    applyStickerPack, 
+    favoriteStickers, 
+    toggleFavoriteSticker,
+    packageTier, 
+    stickers, 
+    activeStickerPackId, 
+    removeSticker 
+  } = usePhotobooth();
   const [activeCategory, setActiveCategory] = useState<string>('packs');
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeTargetTier, setUpgradeTargetTier] = useState<'basic' | 'premium'>('premium');
@@ -46,10 +55,10 @@ export const StickerPanel: React.FC = () => {
   ];
 
   const filteredStickers = activeCategory === 'all' 
-    ? stickers
+    ? stickersList
     : activeCategory === 'favorit'
-      ? stickers.filter(s => favoriteStickers.includes(s.src))
-      : stickers.filter(s => s.category === activeCategory);
+      ? stickersList.filter(s => favoriteStickers.includes(s.src))
+      : stickersList.filter(s => s.category === activeCategory);
 
   return (
     <div className="flex flex-col h-full text-charcoal">
@@ -78,6 +87,7 @@ export const StickerPanel: React.FC = () => {
           {stickerPacks.map((pack: StickerPack) => {
             const isLocked = isStickerPackLocked(pack, packageTier);  
             const reqTier = pack.requiredTier || (pack.category === 'nailong' || pack.category === 'cat' || pack.category === 'anime' || pack.category === 'badge' || pack.category === 'aesthetic' ? 'premium' : 'basic');
+            const isPackActive = activeStickerPackId === pack.id || (stickers.length > 0 && stickers.some(s => pack.stickers.includes(s.stickerId)));
 
             return (
               <button
@@ -90,12 +100,26 @@ export const StickerPanel: React.FC = () => {
                   }
                   applyStickerPack(pack.id);
                 }}
-                className="flex flex-col items-center justify-center p-3 bg-ivory-dark rounded-xl border border-cream/60 hover:border-gold-light hover:bg-white hover:shadow-lg transition-all group duration-200 text-center relative cursor-pointer"
+                onDoubleClick={() => {
+                  if (!isLocked) {
+                    applyStickerPack(pack.id);
+                  }
+                }}
+                className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all group duration-200 text-center relative cursor-pointer ${
+                  isPackActive
+                    ? 'bg-rose-50/70 border-rose-400 ring-2 ring-rose-300 shadow-md'
+                    : 'bg-ivory-dark border-cream/60 hover:border-gold-light hover:bg-white hover:shadow-lg'
+                }`}
               >
                 {isLocked && (
                   <div className="absolute top-1.5 right-1.5 z-10 bg-rose-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
                     <Lock className="w-2.5 h-2.5" />
                     <span>{reqTier === 'premium' ? 'VIP' : 'BASIC'}</span>
+                  </div>
+                )}
+                {isPackActive && (
+                  <div className="absolute top-1.5 left-1.5 z-10 bg-rose-500 text-white text-[7px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
+                    AKTIF
                   </div>
                 )}
                 <div className="relative mb-2">
@@ -109,8 +133,12 @@ export const StickerPanel: React.FC = () => {
                 <span className="text-[11px] font-bold text-charcoal group-hover:text-mahogany">
                   {pack.name}
                 </span>
-                <span className="text-[9px] text-charcoal/50 mt-0.5">
-                  {isLocked ? 'Fitur Terkunci (Klik Upgrade)' : 'Klik Auto Pasang Ke Frame'}
+                <span className={`text-[9px] mt-0.5 font-medium ${isPackActive ? 'text-rose-600 font-bold' : 'text-charcoal/50'}`}>
+                  {isLocked 
+                    ? 'Fitur Terkunci (Klik Upgrade)' 
+                    : isPackActive 
+                      ? '✓ Terpasang (Klik lagi / 2x: Hapus)' 
+                      : 'Klik Auto Pasang Ke Frame'}
                 </span>
               </button>
             );
@@ -128,6 +156,7 @@ export const StickerPanel: React.FC = () => {
             const isFav = favoriteStickers.includes(sticker.src);
             const isLocked = isStickerLocked(sticker, packageTier);
             const reqTier = sticker.requiredTier || (sticker.category === 'nailong' || sticker.category === 'cat' || sticker.category === 'anime' || sticker.category === 'badge' ? 'premium' : 'basic');
+            const inFrameCount = stickers.filter(s => s.stickerId === sticker.src).length;
 
             return (
               <div key={sticker.id} className="relative group">
@@ -140,14 +169,32 @@ export const StickerPanel: React.FC = () => {
                     }
                     addSticker(sticker.src);
                   }}
-                  className="flex items-center justify-center p-2 bg-ivory-dark rounded-xl border border-cream/40 hover:border-gold-light hover:bg-white hover:shadow-md transition-all w-full h-14 group duration-200 relative cursor-pointer overflow-hidden"
-                  title={sticker.name}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    if (!isLocked) {
+                      const matches = stickers.filter(s => s.stickerId === sticker.src);
+                      if (matches.length > 0) {
+                        removeSticker(matches[matches.length - 1].id);
+                      }
+                    }
+                  }}
+                  className={`flex items-center justify-center p-2 rounded-xl border transition-all w-full h-14 group duration-200 relative cursor-pointer overflow-hidden ${
+                    inFrameCount > 0
+                      ? 'bg-rose-50/50 border-rose-300 ring-1 ring-rose-200'
+                      : 'bg-ivory-dark border-cream/40 hover:border-gold-light hover:bg-white hover:shadow-md'
+                  }`}
+                  title={`${sticker.name}${inFrameCount > 0 ? ' (Klik 2x untuk hapus dari frame)' : ''}`}
                 >
                   <StickerThumbnail
                     src={sticker.src}
                     alt={sticker.name}
                     className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-200"
                   />
+                  {inFrameCount > 0 && (
+                    <span className="absolute bottom-1 left-1.5 bg-rose-500 text-white text-[7px] font-bold px-1 rounded-full shadow-sm pointer-events-none">
+                      {inFrameCount}x
+                    </span>
+                  )}
                   {isLocked && (
                     <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] flex items-center justify-center text-white">
                       <span className="bg-rose-600 p-1 rounded-full text-white shadow-md">

@@ -769,7 +769,7 @@ export const Capture: React.FC = () => {
                       title={soundEnabled ? 'Matikan Suara' : 'Nyalakan Suara'}
                     >
                       {soundEnabled ? <Volume2 className="w-3 h-3 text-emerald-400" /> : <VolumeX className="w-3 h-3 text-rose-400" />}
-                    </button>
+                    </button> 
 
                     <button
                       onClick={() => setGridOverlay(!gridOverlay)}
@@ -799,8 +799,8 @@ export const Capture: React.FC = () => {
                 <AnimatePresence>
                   {countdown !== null && (
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                      initial={{ opacity: 0 }} 
+                      animate={{ opacity: 1 }} 
                       exit={{ opacity: 0 }}
                       className="absolute inset-0 flex items-center justify-center bg-black/35 backdrop-blur-[2px] z-30"
                     >

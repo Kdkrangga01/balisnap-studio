@@ -137,6 +137,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
     fineTuning,
     stickers,
     updateSticker,
+    removeSticker,
     texts,
     customHeadline,
     particleEffect,
@@ -624,6 +625,8 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                 perfectDrawEnabled={true}
                 onClick={() => !isPreviewMode && setSelectedId(st.id)}
                 onTap={() => !isPreviewMode && setSelectedId(st.id)}
+                onDblClick={() => !isPreviewMode && removeSticker(st.id)}
+                onDblTap={() => !isPreviewMode && removeSticker(st.id)}
                 onDragEnd={(e) => {
                   if (isPreviewMode) return;
                   updateSticker(st.id, {

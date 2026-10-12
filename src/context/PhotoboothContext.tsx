@@ -124,6 +124,7 @@ interface PhotoboothContextProps {
   updatePhotoTransform: (index: number, transform: Partial<PhotoTransform>) => void;
   resetPhotoTransform: (index: number) => void;
   stickers: CanvasSticker[];
+  activeStickerPackId: string | null;
   addSticker: (stickerId: string, overridePosition?: { x: number; y: number }) => void;
   applyStickerPack: (packId: string) => void;
   updateSticker: (id: string, attrs: Partial<CanvasSticker>) => void;
@@ -350,6 +351,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [photos, setPhotos] = useState<(string | null)[]>(savedSession?.photos || []);
   const [photoTransforms, setPhotoTransforms] = useState<PhotoTransform[]>(savedSession?.photoTransforms || []);
   const [stickers, setStickers] = useState<CanvasSticker[]>(savedSession?.stickers || []);
+  const [activeStickerPackId, setActiveStickerPackId] = useState<string | null>(null);
   const [texts, setTexts] = useState<CanvasText[]>(savedSession?.texts || []);
   const [selectedId, setSelectedId] = useState<string | null>(savedSession?.selectedId || null);
   const [appliedFilter, setAppliedFilter] = useState<FilterType>(savedSession?.appliedFilter || 'normal');
@@ -874,10 +876,23 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setSelectedId(id);
   };
 
-  // AUTO-SPREAD PAKET STIKER (MENYESUAIKAN JUMLAH SLOT BINGKAI, SERAGAM DI LUAR SETIAP SLOT FOTO)
+  // AUTO-SPREAD PAKET STIKER (KLIK 1x PASANG, KLIK 2x / KLIK LAGI OTOMATIS HAPUS DARI FRAME)
   const applyStickerPack = (packId: string) => {
     const pack = stickerPacks.find(p => p.id === packId);
     if (!pack || !selectedFrame) return;
+
+    // Cek apakah paket ini sudah terpasang di frame
+    const isAlreadyApplied =
+      activeStickerPackId === packId ||
+      (stickers.length > 0 && stickers.some(s => pack.stickers.includes(s.stickerId)));
+
+    // JIKA DIKLIK LAGI / KLIK 2x: OTOMATIS HILANG / HAPUS SEMUA STIKER DARI FRAME!
+    if (isAlreadyApplied) {
+      setStickers(prev => prev.filter(s => !pack.stickers.includes(s.stickerId)));
+      setActiveStickerPackId(null);
+      setSelectedId(null);
+      return;
+    }
 
     const availableStickers = [...pack.stickers];
     const newStickers: CanvasSticker[] = [];
@@ -906,6 +921,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
 
     setStickers(newStickers);
+    setActiveStickerPackId(packId);
   };
 
   const updateSticker = (id: string, attrs: Partial<CanvasSticker>) => {
@@ -1016,7 +1032,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       completedTrialSessions, incrementCompletedTrialSession, getRemainingTrialSessions, hasCompletedAllTrialSessions,
       step, setStep, selectedFrame, selectFrame, photos, setPhotos, setPhotoAtSlot, clearPhotos,
       photoTransforms, updatePhotoTransform, resetPhotoTransform,
-      stickers, addSticker, applyStickerPack, updateSticker, removeSticker, texts, addText, updateText, removeText,
+      stickers, activeStickerPackId, addSticker, applyStickerPack, updateSticker, removeSticker, texts, addText, updateText, removeText,
       selectedId, setSelectedId, appliedFilter, setAppliedFilter, particleEffect, setParticleEffect, fineTuning, setFineTuning, resetFineTuning, frameColor, setFrameColor,
       cardColor, setCardColor, lineColor, setLineColor,
       frameStyle, setFrameStyle, borderThickness, setBorderThickness, borderRadius, setBorderRadius,
