@@ -378,13 +378,8 @@ export const Preview: React.FC = () => {
               {/* SOFT AMBIENT ACCENT */}
               <div className="absolute -top-20 -right-20 w-48 h-48 bg-rose-50/50 rounded-full blur-3xl pointer-events-none" />
 
-              {/* RENDER SUCCESS BADGE & SPECS */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-2xs">
-                  <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                  <span>Siap Diunduh • Studio Ready</span>
-                </div>
-
+              {/* SPECS */}
+              <div className="flex items-center justify-end">
                 <span className="text-[11px] font-semibold text-stone-400 flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-rose-400" /> High-Density HD
                 </span>
@@ -482,15 +477,6 @@ export const Preview: React.FC = () => {
                     <span>Amplop Digital / Gift</span>
                   </button>
                 </div>
-
-                {/* TERTIARY ACTION: BAGIKAN KE SOSIAL MEDIA */}
-                <button
-                  onClick={handleShare}
-                  className="w-full py-2.5 px-4 bg-white hover:bg-stone-50 text-stone-600 border border-stone-200 hover:border-stone-300 font-semibold text-xs rounded-2xl transition-all shadow-2xs flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Share2 className="w-3.5 h-3.5 text-stone-400" />
-                  <span>Bagikan ke Sosial Media</span>
-                </button>
               </div>
             </div>
           </div>
