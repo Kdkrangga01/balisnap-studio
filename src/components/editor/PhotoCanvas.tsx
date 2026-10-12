@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Stage, Layer, Image as KonvaImage, Group, Rect, Text, Transformer } from 'react-konva';
+import React, { useEffect, useState } from 'react';
+import { Stage, Layer, Image as KonvaImage, Group, Rect, Text, Line, Circle } from 'react-konva';
 import { usePhotobooth, type FilterType, DEFAULT_PHOTO_ZOOM, CUSTOM_MIN_PHOTO_ZOOM, MAX_PHOTO_ZOOM } from '../../context/PhotoboothContext';
 import { frameColors } from '../../data/frameColors';
 
@@ -149,24 +149,6 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
   const [filteredPhotos, setFilteredPhotos] = useState<(HTMLImageElement | null)[]>([]);
   const [loadedStickerImages, setLoadedStickerImages] = useState<Record<string, HTMLImageElement>>({});
   const [hoveredPhotoIndex, setHoveredPhotoIndex] = useState<number | null>(null);
-  const stickerTransformerRef = useRef<any>(null);
-
-  // Pasang transformer interaktif saat ada stiker yang dipilih user
-  useEffect(() => {
-    if (stickerTransformerRef.current) {
-      if (selectedId && selectedId.startsWith('sticker-')) {
-        const stage = stickerTransformerRef.current.getStage();
-        const node = stage?.findOne(`#${selectedId}`);
-        if (node) {
-          stickerTransformerRef.current.nodes([node]);
-          stickerTransformerRef.current.getLayer()?.batchDraw();
-          return;
-        }
-      }
-      stickerTransformerRef.current.nodes([]);
-      stickerTransformerRef.current.getLayer()?.batchDraw();
-    }
-  }, [selectedId, stickers]);
 
   const frameWidth = selectedFrame?.width || 1200;
   const frameHeight = selectedFrame?.height || 1800;
@@ -621,91 +603,285 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const aspectRatio = baseH / baseW;
 
             // Target ukuran ideal stiker: sekitar 12.5% dari lebar bingkai
-            // Pas manis di sudut bingkai foto tanpa menutupi area wajah foto
             const defaultTargetW = Math.round(frameWidth * 0.125);
             const targetW = st.width || defaultTargetW;
             const targetH = st.height || Math.round(targetW * aspectRatio);
 
-            const scaleFactor = st.scaleX ?? st.scale ?? 1;
+            const scaleFactor = Math.abs(st.scaleX ?? st.scale ?? 1);
+            const isFlipped = (st.scaleX ?? 1) < 0;
+            const currentW = Math.round(targetW * scaleFactor);
+            const currentH = Math.round(targetH * scaleFactor);
+            const isSelected = !isPreviewMode && selectedId === st.id;
 
             return (
-              <KonvaImage
+              <Group
                 key={st.id}
                 id={st.id}
-                image={stImg}
-                x={st.x}
-                y={st.y}
-                width={targetW}
-                height={targetH}
-                scaleX={scaleFactor}
-                scaleY={scaleFactor}
+                x={st.x + currentW / 2}
+                y={st.y + currentH / 2}
+                offsetX={currentW / 2}
+                offsetY={currentH / 2}
                 rotation={st.rotation || 0}
                 draggable={!isPreviewMode}
-                perfectDrawEnabled={true}
                 onClick={() => !isPreviewMode && setSelectedId(st.id)}
                 onTap={() => !isPreviewMode && setSelectedId(st.id)}
                 onDblClick={() => !isPreviewMode && removeSticker(st.id)}
                 onDblTap={() => !isPreviewMode && removeSticker(st.id)}
                 onDragEnd={(e) => {
                   if (isPreviewMode) return;
-                  updateSticker(st.id, {
-                    x: e.target.x(),
-                    y: e.target.y(),
-                  });
-                }}
-                onTransformEnd={(e) => {
-                  if (isPreviewMode) return;
+                  if (e.target !== e.currentTarget) return;
                   const node = e.target;
-                  const currentScaleX = node.scaleX();
-                  const clampedScale = Math.max(0.3, Math.min(3.0, currentScaleX));
-                  node.scaleX(clampedScale);
-                  node.scaleY(clampedScale);
                   updateSticker(st.id, {
-                    x: node.x(),
-                    y: node.y(),
-                    scaleX: Number(clampedScale.toFixed(2)),
-                    scaleY: Number(clampedScale.toFixed(2)),
-                    rotation: Math.round(node.rotation()),
+                    x: Math.round(node.x() - currentW / 2),
+                    y: Math.round(node.y() - currentH / 2),
                   });
                 }}
                 onWheel={(e) => {
                   if (isPreviewMode) return;
                   e.evt.preventDefault();
                   if (selectedId !== st.id) setSelectedId(st.id);
-                  const currentScale = st.scaleX ?? 1;
                   const zoomStep = 0.08;
                   const dir = e.evt.deltaY > 0 ? -1 : 1;
-                  const nextScale = Math.max(0.3, Math.min(3.0, Number((currentScale + dir * zoomStep).toFixed(2))));
+                  const nextScale = Math.max(0.35, Math.min(2.8, Number((scaleFactor + dir * zoomStep).toFixed(2))));
                   updateSticker(st.id, {
-                    scaleX: nextScale,
+                    scaleX: isFlipped ? -nextScale : nextScale,
                     scaleY: nextScale,
                   });
                 }}
-              />
+              >
+                {/* 1. GAMBAR STIKER */}
+                <KonvaImage
+                  image={stImg}
+                  x={isFlipped ? currentW : 0}
+                  y={0}
+                  width={currentW}
+                  height={currentH}
+                  scaleX={isFlipped ? -1 : 1}
+                  perfectDrawEnabled={true}
+                />
+
+                {/* 2. OVERLAY KONTROL INTERAKTIF KHAS PHOTOBOOTH (HANYA SAAT STIKER TERPILIH) */}
+                {isSelected && (
+                  <>
+                    {/* Bounding Box Putus-putus Pink Manis */}
+                    <Rect
+                      x={0}
+                      y={0}
+                      width={currentW}
+                      height={currentH}
+                      stroke="#FF6B8B"
+                      strokeWidth={2.5}
+                      dash={[8, 6]}
+                      listening={false}
+                    />
+
+                    {/* PIN ROTASI ATAS-TENGAH (STEM & LINGKARAN PUTAR) */}
+                    <Line
+                      points={[currentW / 2, 0, currentW / 2, -38]}
+                      stroke="#FF6B8B"
+                      strokeWidth={2.5}
+                      listening={false}
+                    />
+                    <Circle
+                      x={currentW / 2}
+                      y={-38}
+                      radius={17}
+                      fill="#FFFFFF"
+                      stroke="#FF6B8B"
+                      strokeWidth={2.5}
+                      shadowColor="rgba(0,0,0,0.18)"
+                      shadowBlur={4}
+                      draggable={true}
+                      onMouseEnter={(e) => {
+                        const stage = e.target.getStage();
+                        if (stage) stage.container().style.cursor = 'grab';
+                      }}
+                      onMouseLeave={(e) => {
+                        const stage = e.target.getStage();
+                        if (stage) stage.container().style.cursor = 'default';
+                      }}
+                      onDragStart={(e) => {
+                        e.cancelBubble = true;
+                      }}
+                      onDragMove={(e) => {
+                        e.cancelBubble = true;
+                        const group = e.target.getParent();
+                        const stage = e.target.getStage();
+                        if (!group || !stage) return;
+                        const pointer = stage.getPointerPosition();
+                        if (!pointer) return;
+
+                        const stageScale = stage.scaleX();
+                        const groupCenterX = group.x() * stageScale;
+                        const groupCenterY = group.y() * stageScale;
+
+                        const dx = pointer.x - groupCenterX;
+                        const dy = pointer.y - groupCenterY;
+                        const angleDeg = (Math.atan2(dy, dx) * 180 / Math.PI) + 90;
+                        group.rotation(angleDeg);
+                      }}
+                      onDragEnd={(e) => {
+                        e.cancelBubble = true;
+                        e.target.position({ x: currentW / 2, y: -38 });
+                        const group = e.target.getParent();
+                        if (group) {
+                          updateSticker(st.id, {
+                            rotation: Math.round(group.rotation()),
+                          });
+                        }
+                      }}
+                    />
+                    {/* Titik pink manis di dalam lingkaran rotasi */}
+                    <Circle
+                      x={currentW / 2}
+                      y={-38}
+                      radius={5}
+                      fill="#FF6B8B"
+                      listening={false}
+                    />
+
+                    {/* TOMBOL FLIP HORIZONTAL (KIRI-ATAS) */}
+                    <Group
+                      x={0}
+                      y={0}
+                      onClick={(e) => {
+                        e.cancelBubble = true;
+                        updateSticker(st.id, {
+                          scaleX: isFlipped ? scaleFactor : -scaleFactor,
+                        });
+                      }}
+                      onTap={(e) => {
+                        e.cancelBubble = true;
+                        updateSticker(st.id, {
+                          scaleX: isFlipped ? scaleFactor : -scaleFactor,
+                        });
+                      }}
+                      onMouseEnter={(e) => {
+                        const stage = e.target.getStage();
+                        if (stage) stage.container().style.cursor = 'pointer';
+                      }}
+                      onMouseLeave={(e) => {
+                        const stage = e.target.getStage();
+                        if (stage) stage.container().style.cursor = 'default';
+                      }}
+                    >
+                      <Circle
+                        radius={17}
+                        fill="#FFFFFF"
+                        stroke="#FF6B8B"
+                        strokeWidth={2.5}
+                        shadowColor="rgba(0,0,0,0.18)"
+                        shadowBlur={4}
+                      />
+                      <Text
+                        text="⇆"
+                        fontSize={18}
+                        fill="#FF6B8B"
+                        fontStyle="bold"
+                        offsetX={9}
+                        offsetY={9}
+                      />
+                    </Group>
+
+                    {/* TOMBOL HAPUS (KANAN-ATAS) */}
+                    <Group
+                      x={currentW}
+                      y={0}
+                      onClick={(e) => {
+                        e.cancelBubble = true;
+                        removeSticker(st.id);
+                      }}
+                      onTap={(e) => {
+                        e.cancelBubble = true;
+                        removeSticker(st.id);
+                      }}
+                      onMouseEnter={(e) => {
+                        const stage = e.target.getStage();
+                        if (stage) stage.container().style.cursor = 'pointer';
+                      }}
+                      onMouseLeave={(e) => {
+                        const stage = e.target.getStage();
+                        if (stage) stage.container().style.cursor = 'default';
+                      }}
+                    >
+                      <Circle
+                        radius={17}
+                        fill="#FFFFFF"
+                        stroke="#FF6B8B"
+                        strokeWidth={2.5}
+                        shadowColor="rgba(0,0,0,0.18)"
+                        shadowBlur={4}
+                      />
+                      <Text
+                        text="✕"
+                        fontSize={17}
+                        fill="#FF6B8B"
+                        fontStyle="bold"
+                        offsetX={7}
+                        offsetY={8}
+                      />
+                    </Group>
+
+                    {/* TOMBOL PERBESAR/PERKECIL DRAG RESIZE (KANAN-BAWAH) */}
+                    <Group
+                      x={currentW}
+                      y={currentH}
+                      draggable={true}
+                      onMouseEnter={(e) => {
+                        const stage = e.target.getStage();
+                        if (stage) stage.container().style.cursor = 'nwse-resize';
+                      }}
+                      onMouseLeave={(e) => {
+                        const stage = e.target.getStage();
+                        if (stage) stage.container().style.cursor = 'default';
+                      }}
+                      onDragStart={(e) => {
+                        e.cancelBubble = true;
+                      }}
+                      onDragMove={(e) => {
+                        e.cancelBubble = true;
+                        const stage = e.target.getStage();
+                        const group = e.target.getParent();
+                        if (!stage || !group) return;
+
+                        const transform = group.getAbsoluteTransform().copy().invert();
+                        const pointer = stage.getPointerPosition();
+                        if (!pointer) return;
+                        const localPos = transform.point(pointer);
+
+                        const newScale = Math.max(0.35, Math.min(2.8, localPos.x / targetW));
+                        updateSticker(st.id, {
+                          scaleX: isFlipped ? -newScale : newScale,
+                          scaleY: newScale,
+                        });
+                      }}
+                      onDragEnd={(e) => {
+                        e.cancelBubble = true;
+                        e.target.position({ x: currentW, y: currentH });
+                      }}
+                    >
+                      <Circle
+                        radius={19}
+                        fill="#FF6B8B"
+                        stroke="#FFFFFF"
+                        strokeWidth={2.5}
+                        shadowColor="rgba(0,0,0,0.22)"
+                        shadowBlur={5}
+                      />
+                      <Text
+                        text="⤢"
+                        fontSize={19}
+                        fill="#FFFFFF"
+                        fontStyle="bold"
+                        offsetX={8}
+                        offsetY={10}
+                      />
+                    </Group>
+                  </>
+                )}
+              </Group>
             );
           })}
-
-          {!isPreviewMode && (
-            <Transformer
-              ref={stickerTransformerRef}
-              keepRatio={true}
-              enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
-              rotateEnabled={true}
-              borderStroke="#F43F5E"
-              borderStrokeWidth={2}
-              borderDash={[6, 4]}
-              anchorStroke="#F43F5E"
-              anchorFill="#FFFFFF"
-              anchorSize={12}
-              anchorCornerRadius={6}
-              boundBoxFunc={(oldBox, newBox) => {
-                if (Math.abs(newBox.width) < 25 || Math.abs(newBox.height) < 25) {
-                  return oldBox;
-                }
-                return newBox;
-              }}
-            />
-          )}
 
           {texts.map((txt: any) => (
             <Text
