@@ -7,7 +7,16 @@ import { UpgradeModal } from '../UpgradeModal';
 import { ParticleSelector } from './ParticleSelector';
 
 const StickerThumbnail: React.FC<{ src: string; alt: string; className?: string }> = ({ src, alt, className }) => {
-  return <img src={src} alt={alt} className={className} />;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      className={`${className || ''}`}
+      style={{ imageRendering: 'auto', WebkitBackfaceVisibility: 'hidden' }}
+    />
+  );
 };
 
 export const StickerPanel: React.FC = () => {

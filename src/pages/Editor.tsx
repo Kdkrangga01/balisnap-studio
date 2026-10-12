@@ -373,16 +373,16 @@ export const Editor: React.FC = () => {
                   </span>
                   <span className="text-slate-400 font-bold">{totalSlots} Slot</span>
                 </div>
-                <div className="flex items-center gap-1.5 overflow-x-auto custom-scroll pb-1">
-                  {Array.from({ length: totalSlots }).map((_, idx) => {
-                    const isSelected = selectedPhotoIndex === idx;
-                    return (
-                      <button
-                        key={idx}
+                <div className="flex items-center gap-1.5 overflow-x-auto custom-scroll pb-1"> 
+                  {Array.from({ length: totalSlots }).map((_, idx) => { 
+                    const isSelected = selectedPhotoIndex === idx; 
+                    return ( 
+                      <button 
+                        key={idx} 
                         onClick={() => setSelectedId(`photo-${idx}`)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${isSelected
-                          ? 'bg-purple-600 text-white shadow-md shadow-purple-200 scale-105'
-                          : 'bg-white text-slate-600 border border-purple-100 hover:bg-purple-100/60'
+                          ? 'bg-purple-600 text-white shadow-md shadow-purple-200 scale-105' 
+                          : 'bg-white text-slate-600 border border-purple-100 hover:bg-purple-100/60' 
                           }`}
                       >
                         <Scan className="w-3 h-3" />

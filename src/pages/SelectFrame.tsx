@@ -1554,35 +1554,35 @@ export const SelectFrame: React.FC = () => {
                     {previewFrame.category}
                   </span>
                   <span className="flex items-center gap-1 text-zinc-500"><Images className="w-3.5 h-3.5 text-pink-500" /> {previewFrame.slots} Slots</span>
-                </div>
-              </div>
+                </div> 
+              </div> 
 
               <div className="p-4 sm:p-5 border-t border-rose-100 bg-rose-50/50 flex gap-2.5 sm:gap-3 relative shrink-0">
                 <button
-                  onClick={closePreview}
+                  onClick={closePreview} 
                   disabled={isConfirmingSelection}
                   className="flex-1 py-3 bg-white border-2 border-rose-200 rounded-2xl font-bold text-xs text-zinc-600 hover:bg-rose-50 transition-colors cursor-pointer"
                 >
                   Batal
-                </button>
+                </button> 
                 <button
-                  onClick={handleConfirmSelectFrame}
+                  onClick={handleConfirmSelectFrame} 
                   disabled={isConfirmingSelection}
                   className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-black text-xs tracking-wider uppercase rounded-2xl shadow-lg shadow-pink-500/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Camera className="w-4 h-4" />
-                  <span>{isConfirmingSelection ? 'Memuat...' : 'Mulai Foto'}</span>
+                  <span>{isConfirmingSelection ? 'Memuat...' : 'Mulai Foto'}</span> 
                 </button>
 
-                <AnimatePresence>
+                <AnimatePresence> 
                   {showConfetti && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-visible">
                       {confettiPieces.map((p) => {
-                        const rad = (p.angle * Math.PI) / 180;
+                        const rad = (p.angle * Math.PI) / 180; 
                         const x = Math.cos(rad) * p.distance;
-                        const y = Math.sin(rad) * p.distance;
+                        const y = Math.sin(rad) * p.distance; 
                         return (
-                          <motion.span
+                          <motion.span 
                             key={p.id}
                             initial={{ x: 0, y: 0, opacity: 1, scale: 0.5, rotate: 0 }}
                             animate={{ x, y, opacity: 0, scale: 1.2, rotate: p.angle }}
