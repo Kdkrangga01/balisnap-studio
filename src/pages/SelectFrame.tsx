@@ -6,7 +6,7 @@ import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import { removeCustomFrame } from '../lib/frameDb';
 import {
-  ArrowLeft, Palette, Search, X, Grid3x3, Images, Clock, RefreshCw, Heart, Upload, CheckCircle2, ScanSearch, Eye, SlidersHorizontal, LayoutGrid, Grid2X2, BookmarkCheck, Zap, Sliders,
+  ArrowLeft, Palette, Search, X, Grid3x3, Images, Clock, Heart, Upload, CheckCircle2, ScanSearch, Eye, SlidersHorizontal, LayoutGrid, Grid2X2, BookmarkCheck, Zap, Sliders,
   Camera, Check, Crown, Wand2, UploadCloud, Download, Lock, Film, Gift, LockOpen, ShieldCheck, Ticket, Layers, Smile, Mail
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate, type Variants } from 'framer-motion';
@@ -1164,13 +1164,7 @@ export const SelectFrame: React.FC = () => {
                   </button>
                 </div>
 
-                <button
-                  onClick={resetFilters}
-                  className="p-2.5 bg-white border border-zinc-200 rounded-xl text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 shadow-xs transition-all flex-shrink-0 cursor-pointer"
-                  title="Reset Semua Filter"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                </button>
+                
               </div>
             </div>
 
