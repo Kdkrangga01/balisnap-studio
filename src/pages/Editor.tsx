@@ -7,7 +7,7 @@ import { RetouchPanel } from '../components/editor/RetouchPanel';
 import { FrameColorPanel } from '../components/editor/FrameColorPanel';
 import { StickerPanel } from '../components/editor/StickerPanel';
 import { TextPanel } from '../components/editor/TextPanel';
-import { getFrame4Corners, getStickerCornerPosition } from '../lib/stickerPlacement';
+import { getSlotCornerPosition, findNextBestStickerPosition } from '../lib/stickerPlacement';
 import {
   ArrowLeft,
   Camera,
@@ -199,34 +199,35 @@ export const Editor: React.FC = () => {
     resetPhotoTransform(selectedPhotoIndex);
   };
 
-  // Pindahkan stiker terpilih ke sudut bingkai (Pojok Kiri-Atas, Kanan-Atas, Kanan-Bawah, Kiri-Bawah)
+  // Pindahkan stiker terpilih ke sudut bingkai foto (Pojok Kiri-Atas, Kanan-Atas, Kiri-Bawah, Kanan-Bawah)
   const moveStickerToSlotCorner = (corner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
     if (!selectedId || !selectedId.startsWith('sticker-') || !selectedFrame) return;
     const targetSticker = canvasStickers.find((s) => s.id === selectedId);
     if (!targetSticker) return;
 
-    const renderW = canvasWidth || 400;
-    const corners = getFrame4Corners(selectedFrame, renderW, 44, 44);
-    const targetCorner = corners.find((c) => c.cornerName === corner) || corners[0];
+    const slotIdx = selectedPhotoIndex !== null ? selectedPhotoIndex : 0;
+    const pos = getSlotCornerPosition(selectedFrame, slotIdx, corner);
 
-    targetSticker.x = targetCorner.x;
-    targetSticker.y = targetCorner.y;
+    targetSticker.x = pos.x;
+    targetSticker.y = pos.y;
+    targetSticker.rotation = pos.rotation;
 
     // Refresh penanda elemen
     setSelectedId(null);
     setTimeout(() => setSelectedId(selectedId), 30);
   };
 
-  // PAKET AUTO SPREAD: Menyebarkan SELURUH stiker yang ada secara seragam khusus di 4 POJOK LUAR BINGKAI
+  // PAKET AUTO SPREAD: Menyebarkan SELURUH stiker yang ada secara seragam dan rapi di sudut bingkai
   const autoSpreadStickersEqually = () => {
     if (canvasStickers.length === 0 || !selectedFrame) return;
 
-    const renderW = canvasWidth || 400;
-
-    canvasStickers.forEach((stk, index) => {
-      const pos = getStickerCornerPosition(selectedFrame, renderW, index, 44, 44);
+    const placed: Array<{ x: number; y: number }> = [];
+    canvasStickers.forEach((stk) => {
+      const pos = findNextBestStickerPosition(selectedFrame, placed);
       stk.x = pos.x;
       stk.y = pos.y;
+      stk.rotation = pos.rotation;
+      placed.push({ x: pos.x, y: pos.y });
     });
 
     setSelectedId(null);

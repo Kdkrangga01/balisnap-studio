@@ -602,10 +602,10 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const baseH = stImg.naturalHeight || stImg.height || 100;
             const aspectRatio = baseH / baseW;
 
-            // Target ukuran ideal stiker: sekitar 10.5% dari lebar bingkai (~105px - 115px)
-            // pas di pojok-pojok bingkai tanpa menutupi area utama foto
-            const defaultTargetW = Math.round(frameWidth * 0.105);
-            const targetW = st.width || (baseW > defaultTargetW ? defaultTargetW : baseW);
+            // Target ukuran ideal stiker: sekitar 12.5% dari lebar bingkai
+            // Pas manis di sudut bingkai foto tanpa menutupi area wajah foto
+            const defaultTargetW = Math.round(frameWidth * 0.125);
+            const targetW = st.width || defaultTargetW;
             const targetH = st.height || Math.round(targetW * aspectRatio);
 
             const scaleFactor = st.scale || st.scaleX || 1;

@@ -4,7 +4,7 @@ import type { FrameTemplate } from '../data/frames';
 import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/frameDb';
 import { stickerPacks } from '../data/stickers';
 import { fetchCloudTransactions, saveCloudTransaction, deleteCloudTransaction, isSupabaseConfigured } from '../lib/supabase';
-import { getStickerCornerPosition } from '../lib/stickerPlacement';
+import { findNextBestStickerPosition } from '../lib/stickerPlacement';
 
 // Konstanta zoom foto, dipakai bareng oleh context & kanvas biar konsisten.
 export const DEFAULT_PHOTO_ZOOM = 1.0; // level zoom awal (contain-fit otomatis: seluruh foto kelihatan pas di slot bingkai, kiri-kanan-atas-bawah tidak terpotong)
@@ -846,20 +846,22 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   };
 
-  // TAMBAH 1 STIKER MANUAL (OTOMATIS JATUH DI ANCHOR PRESISI BINGKAI, GARANSI TIDAK MENUTUPI FOTO)
-  const addSticker = (stickerId: string, overridePosition?: { x: number; y: number }) => {
+  // TAMBAH 1 STIKER MANUAL (OTOMATIS CARI POSISI PAS & RAPI KHAS PHOTOBOOTH, TIDAK TUMPUK & TIDAK TUTUP WAJAH)
+  const addSticker = (stickerId: string, overridePosition?: { x: number; y: number; rotation?: number }) => {
     const id = `sticker-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     let posX = 30;
     let posY = 30;
+    let rot = 0;
 
     if (overridePosition) {
       posX = overridePosition.x;
       posY = overridePosition.y;
+      rot = overridePosition.rotation ?? 0;
     } else if (selectedFrame) {
-      const renderCanvasW = 400; // standard display canvas width
-      const nextPos = getStickerCornerPosition(selectedFrame, renderCanvasW, stickers.length, 44, 44);
-      posX = nextPos.x;
-      posY = nextPos.y;
+      const smartPos = findNextBestStickerPosition(selectedFrame, stickers);
+      posX = smartPos.x;
+      posY = smartPos.y;
+      rot = smartPos.rotation;
     }
 
     const newSticker: CanvasSticker = {
@@ -869,14 +871,14 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       y: posY,
       scaleX: 1.0,
       scaleY: 1.0,
-      rotation: (stickers.length % 2 === 0 ? -3 : 3)
+      rotation: rot
     };
 
     setStickers(prev => [...prev, newSticker]);
     setSelectedId(id);
   };
 
-  // AUTO-SPREAD PAKET STIKER (KLIK 1x PASANG, KLIK 2x / KLIK LAGI OTOMATIS HAPUS DARI FRAME)
+  // AUTO-SPREAD PAKET STIKER (KLIK 1x PASANG SEIMBANG & RAPI, KLIK 2x / KLIK LAGI OTOMATIS HAPUS DARI FRAME)
   const applyStickerPack = (packId: string) => {
     const pack = stickerPacks.find(p => p.id === packId);
     if (!pack || !selectedFrame) return;
@@ -896,27 +898,24 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     const availableStickers = [...pack.stickers];
     const newStickers: CanvasSticker[] = [];
-    const renderCanvasW = 400; 
 
-    // Jumlah stiker otomatis menyesuaikan jumlah slot foto bingkai!
-    const slotCount = selectedFrame.slots || selectedFrame.slotCoords.length || 4;
-    const totalStickersToPlace = slotCount <= 3 ? slotCount * 2 : slotCount;
+    // Jumlah stiker otomatis menyesuaikan slot bingkai (2 stiker per slot untuk seimbang zig-zag)
+    const slotCount = selectedFrame.slots || selectedFrame.slotCoords.length || 3;
+    const totalStickersToPlace = slotCount <= 3 ? slotCount * 2 : Math.min(8, slotCount + 2);
 
     for (let i = 0; i < totalStickersToPlace; i++) {
-      const pos = getStickerCornerPosition(selectedFrame, renderCanvasW, i, 44, 44);
+      const smartPos = findNextBestStickerPosition(selectedFrame, newStickers);
       const stickerSrc = availableStickers[i % availableStickers.length];
       const id = `auto-sticker-${Date.now()}-${i}`;
-      const rotations = [-4, 3, -3, 4, 0, -2, 2, -3];
-      const rot = rotations[i % rotations.length];
 
       newStickers.push({
         id,
         stickerId: stickerSrc,
-        x: pos.x,
-        y: pos.y,
+        x: smartPos.x,
+        y: smartPos.y,
         scaleX: 1.0,
         scaleY: 1.0,
-        rotation: rot
+        rotation: smartPos.rotation
       });
     }
 
