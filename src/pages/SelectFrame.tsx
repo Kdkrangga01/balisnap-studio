@@ -342,82 +342,82 @@ const FrameCard: React.FC<{
       whileHover={{ y: -8, scale: 1.015 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="group relative bg-white/90 hover:bg-white backdrop-blur-xl border border-zinc-200/80 hover:border-zinc-300 rounded-[28px] p-4 flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.07)] transition-all duration-300 cursor-pointer overflow-hidden text-left select-none h-full"
+      className="group relative bg-white/90 hover:bg-white backdrop-blur-xl border border-zinc-200/80 hover:border-zinc-300 rounded-[22px] sm:rounded-[28px] p-3 sm:p-4 flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.07)] transition-all duration-300 cursor-pointer overflow-hidden text-left select-none h-full"
     >
-      <div className="absolute -inset-1 bg-zinc-100/50 rounded-[30px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <div className="absolute -inset-1 bg-zinc-100/50 rounded-[26px] sm:rounded-[30px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-      <div className="flex justify-between items-start w-full mb-3 z-10">
+      <div className="flex justify-between items-start w-full mb-2 sm:mb-3 z-10">
         <div className="flex flex-col gap-1 items-start">
-          <div className="w-8 h-8 rounded-xl bg-zinc-50 border border-zinc-200/60 flex items-center justify-center text-zinc-700 shadow-sm group-hover:scale-105 transition-transform duration-300">
-            {categoryStyle.icon && React.createElement(categoryStyle.icon, { className: "w-4 h-4" })}
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-zinc-50 border border-zinc-200/60 flex items-center justify-center text-zinc-700 shadow-sm group-hover:scale-105 transition-transform duration-300">
+            {categoryStyle.icon && React.createElement(categoryStyle.icon, { className: "w-3.5 h-3.5 sm:w-4 sm:h-4" })}
           </div>
           {isTrending && (
-            <span className="flex items-center gap-1 bg-zinc-900 text-white text-[9px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full shadow-xs">
+            <span className="flex items-center gap-1 bg-zinc-900 text-white text-[8px] sm:text-[9px] font-bold tracking-wider uppercase px-2 sm:px-2.5 py-0.5 rounded-full shadow-xs">
               Hot
-            </span>
+            </span> 
           )}
         </div>
 
         <div className="flex gap-1.5 z-20">
           <button
             onClick={(e) => { e.stopPropagation(); onFavorite(e); }}
-            className="w-8 h-8 rounded-xl bg-white/90 border border-zinc-200 flex items-center justify-center hover:bg-zinc-50 shadow-xs transition-all active:scale-90 cursor-pointer"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/90 border border-zinc-200 flex items-center justify-center hover:bg-zinc-50 shadow-xs transition-all active:scale-90 cursor-pointer"
             title="Favorit"
           >
-            <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'fill-rose-500 text-rose-500' : 'text-zinc-400 hover:text-zinc-600'}`} />
+            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${isFavorite ? 'fill-rose-500 text-rose-500' : 'text-zinc-400 hover:text-zinc-600'}`} />
           </button>
         </div>
       </div>
 
-      <div className={`relative aspect-[3/4] w-full ${getCategoryBgGradient(frame.category)} rounded-2xl p-3 flex items-center justify-center border shadow-inner overflow-hidden mb-3.5 transition-all duration-300 z-10`}>
-        <div className="relative w-full h-full bg-white/95 rounded-xl shadow-lg border border-white/90 p-2.5 flex items-center justify-center overflow-hidden">
+      <div className={`relative aspect-[3/4] w-full ${getCategoryBgGradient(frame.category)} rounded-xl sm:rounded-2xl p-2 sm:p-3 flex items-center justify-center border shadow-inner overflow-hidden mb-2.5 sm:mb-3.5 transition-all duration-300 z-10`}>
+        <div className="relative w-full h-full bg-white/95 rounded-lg sm:rounded-xl shadow-lg border border-white/90 p-1.5 sm:p-2.5 flex items-center justify-center overflow-hidden">
           <img src={frame.src} alt={frame.name} className="max-w-full max-h-full object-contain filter drop-shadow-lg group-hover:scale-105 transition-transform duration-500 ease-out" loading="lazy" />
         </div>
 
         {/* Lock Overlay Badge for Locked Frames */}
         {isLocked ? (
-          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center p-3 text-center z-30 transition-all">
-            <div className={`p-2 rounded-xl mb-1.5 border shadow-sm ${requiredTier === 'premium' ? 'bg-zinc-900 border-amber-500/50 text-amber-300' : 'bg-zinc-900 border-zinc-700 text-white'}`}>
-              {requiredTier === 'premium' ? <Crown className="w-4 h-4 text-amber-300" /> : <Lock className="w-4 h-4 text-zinc-200" />}
+          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-[2px] rounded-xl sm:rounded-2xl flex flex-col items-center justify-center p-2 sm:p-3 text-center z-30 transition-all">
+            <div className={`p-1.5 sm:p-2 rounded-xl mb-1 sm:mb-1.5 border shadow-sm ${requiredTier === 'premium' ? 'bg-zinc-900 border-amber-500/50 text-amber-300' : 'bg-zinc-900 border-zinc-700 text-white'}`}>
+              {requiredTier === 'premium' ? <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" /> : <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-200" />}
             </div>
-            <span className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm border flex items-center gap-1 ${requiredTier === 'premium' ? 'bg-amber-900/80 text-amber-200 border-amber-600/50' : 'bg-zinc-900/90 text-zinc-200 border-zinc-700'}`}>
+            <span className={`text-[8px] sm:text-[9px] font-bold uppercase tracking-wider px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow-sm border flex items-center gap-1 ${requiredTier === 'premium' ? 'bg-amber-900/80 text-amber-200 border-amber-600/50' : 'bg-zinc-900/90 text-zinc-200 border-zinc-700'}`}>
               {currentTier === 'free' && completedTrialSessions >= 2 ? (
                 <>
-                  <Lock className="w-3 h-3 text-zinc-400" />
-                  <span>KUOTA 2 SESI TERPAKAI</span>
-                </>
+                  <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-zinc-400" />
+                  <span>KUOTA TERPAKAI</span>
+                </> 
               ) : requiredTier === 'premium' ? (
                 <>
-                  <Crown className="w-3 h-3 text-amber-300" />
-                  <span>VIP PREMIUM (135k)</span>
+                  <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-300" />
+                  <span>VIP (135k)</span>
                 </>
               ) : (
                 <>
-                  <Lock className="w-3 h-3 text-zinc-400" />
-                  <span>BASIC PASS (25k)</span>
+                  <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-zinc-400" />
+                  <span>BASIC (25k)</span>
                 </>
-              )}
+              )} 
             </span>
-            <span className="text-[9px] text-zinc-300 font-medium mt-1 flex items-center justify-center gap-1">
-              <LockOpen className="w-2.5 h-2.5" /> Klik Untuk Buka
+            <span className="text-[8px] sm:text-[9px] text-zinc-300 font-medium mt-1 flex items-center justify-center gap-1">
+              <LockOpen className="w-2 h-2 sm:w-2.5 sm:h-2.5" /> Buka
             </span>
-          </div>
+          </div> 
         ) : (
           <div className="absolute inset-0 bg-zinc-950/20 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-10">
-            <span className="px-3.5 py-1.5 rounded-full bg-white text-zinc-900 font-bold text-[10px] tracking-wider uppercase shadow-md flex items-center gap-1.5 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-              <Eye className="w-3.5 h-3.5 text-zinc-700" /> Pilih Frame
+            <span className="px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-white text-zinc-900 font-bold text-[9px] sm:text-[10px] tracking-wider uppercase shadow-md flex items-center gap-1.5 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+              <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-zinc-700" /> Pilih Frame
             </span>
           </div>
         )}
       </div>
 
-      <div className="w-full pt-2.5 border-t border-zinc-200/80 z-10">
-        <h3 className="font-sans font-bold text-zinc-800 text-sm line-clamp-1 group-hover:text-zinc-950 transition-colors">{frame.name}</h3>
-        <div className="flex items-center justify-between mt-2 text-[10px] font-semibold text-zinc-500">
-          <span className="flex items-center gap-1 text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md border border-zinc-200/80">
-            <Images className="w-3 h-3 text-zinc-500" /> {frame.slots} Slot
+      <div className="w-full pt-2 sm:pt-2.5 border-t border-zinc-200/80 z-10">
+        <h3 className="font-sans font-bold text-zinc-800 text-xs sm:text-sm line-clamp-1 group-hover:text-zinc-950 transition-colors">{frame.name}</h3>
+        <div className="flex items-center justify-between mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] font-semibold text-zinc-500">
+          <span className="flex items-center gap-1 text-zinc-700 bg-zinc-100 px-1.5 sm:px-2 py-0.5 rounded-md border border-zinc-200/80 shrink-0">
+            <Images className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-zinc-500" /> {frame.slots} Slot
           </span>
-          <span className="bg-zinc-100 text-zinc-600 border border-zinc-200/80 px-2 py-0.5 rounded-md capitalize">
+          <span className="bg-zinc-100 text-zinc-600 border border-zinc-200/80 px-1.5 sm:px-2 py-0.5 rounded-md capitalize truncate max-w-[80px] sm:max-w-none text-right">
             {frame.category}
           </span>
         </div>
@@ -927,7 +927,7 @@ export const SelectFrame: React.FC = () => {
 
       <div
         onMouseMove={handleKawaiiMouseMove}
-        className="min-h-screen bg-[#F8F9FA] text-zinc-800 selection:bg-rose-100 selection:text-rose-900 py-6 px-4 sm:px-6 lg:px-12 relative overflow-x-hidden antialiased font-sans flex flex-col items-center w-full"
+        className="min-h-screen bg-[#F8F9FA] text-zinc-800 selection:bg-rose-100 selection:text-rose-900 py-4 sm:py-6 px-3 sm:px-6 lg:px-12 relative overflow-x-hidden antialiased font-sans flex flex-col items-center w-full"
       >
         <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-rose-100/35 via-amber-50/20 to-transparent pointer-events-none z-0" />
         <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-indigo-100/25 via-slate-50/20 to-transparent pointer-events-none z-0" />
@@ -938,14 +938,14 @@ export const SelectFrame: React.FC = () => {
           style={{ background: spotlightBackground }}
         />
 
-        <div className="max-w-7xl w-full relative z-10 flex flex-col gap-6">
+        <div className="max-w-7xl w-full relative z-10 flex flex-col gap-4 sm:gap-6">
 
           {/* Header Banner Utama */}
-          <header className="flex flex-col md:flex-row justify-between items-center text-center md:text-left bg-white/95 backdrop-blur-2xl border border-zinc-200/90 p-6 md:p-8 rounded-[32px] shadow-[0_4px_24px_rgba(0,0,0,0.04)] gap-6 w-full relative overflow-hidden">
+          <header className="flex flex-col md:flex-row justify-between items-center text-center md:text-left bg-white/95 backdrop-blur-2xl border border-zinc-200/90 p-4 sm:p-6 md:p-8 rounded-[24px] sm:rounded-[32px] shadow-[0_4px_24px_rgba(0,0,0,0.04)] gap-5 sm:gap-6 w-full relative overflow-hidden">
             <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-rose-100/40 via-amber-100/20 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-            <div className="flex flex-col items-center md:items-start z-10">
-              <div className="flex flex-wrap items-center gap-2 mb-3">
+            <div className="flex flex-col items-center md:items-start z-10 w-full md:w-auto">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2 sm:mb-3">
                 <button
                   onClick={() => setStep('landing')}
                   className="inline-flex items-center gap-2 text-zinc-700 hover:text-zinc-900 font-bold text-xs tracking-wider uppercase transition-all group px-3.5 py-1.5 bg-zinc-100/80 hover:bg-zinc-200/80 rounded-full border border-zinc-200 shadow-xs cursor-pointer"
@@ -988,14 +988,14 @@ export const SelectFrame: React.FC = () => {
                 </button>
               </div>
 
-              <h1 className="font-sans text-3xl sm:text-4xl lg:text-5xl font-black text-zinc-900 tracking-tight leading-tight">
+              <h1 className="font-sans text-2xl sm:text-4xl lg:text-5xl font-black text-zinc-900 tracking-tight leading-tight">
                 Pilih{' '}
                 <span className="bg-gradient-to-r from-rose-600 via-rose-500 to-indigo-600 bg-clip-text text-transparent">
                   Bingkai Foto
                 </span>{' '}
                 Favorit Kamu
               </h1>
-              <p className="text-zinc-500 text-xs sm:text-sm mt-2 font-medium max-w-xl">
+              <p className="text-zinc-500 text-xs sm:text-sm mt-1.5 sm:mt-2 font-medium max-w-xl">
                 Temukan <span className="font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200/60 shadow-xs">{allFrames.length}</span> koleksi layout foto studio siap pakai.
               </p>
             </div>
@@ -1128,7 +1128,7 @@ export const SelectFrame: React.FC = () => {
                   <button
                     key={sf.value}
                     onClick={() => setSlotFilter(sf.value)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${slotFilter === sf.value
+                    className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap shrink-0 ${slotFilter === sf.value
                       ? 'bg-rose-600 text-white shadow-sm shadow-rose-600/25 scale-[1.02]'
                       : 'bg-white text-zinc-700 border border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
                       }`}
@@ -1152,7 +1152,7 @@ export const SelectFrame: React.FC = () => {
                     <button
                       key={cf.value}
                       onClick={() => setCategoryFilter(cf.value)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all duration-200 border cursor-pointer ${isActive
+                      className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all duration-200 border cursor-pointer whitespace-nowrap shrink-0 ${isActive
                         ? 'bg-gradient-to-r from-rose-600 to-rose-700 text-white border-rose-600 shadow-md shadow-rose-600/25 scale-[1.02]'
                         : 'bg-white text-zinc-700 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'
                         }`}
@@ -1162,7 +1162,7 @@ export const SelectFrame: React.FC = () => {
                       <span className={`text-[10px] px-2 py-0.2 rounded-md font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-600'}`}>
                         {count}
                       </span>
-                    </button>
+                    </button> 
                   );
                 })}
               </div>
@@ -1521,7 +1521,7 @@ export const SelectFrame: React.FC = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
             onClick={closePreview}
           >
             <motion.div
@@ -1529,27 +1529,27 @@ export const SelectFrame: React.FC = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="relative max-w-sm w-full bg-white/95 backdrop-blur-2xl border-2 border-white rounded-[36px] shadow-2xl overflow-hidden flex flex-col text-center"
+              className="relative max-w-sm w-full bg-white/95 backdrop-blur-2xl border-2 border-white rounded-[28px] sm:rounded-[36px] shadow-2xl overflow-hidden flex flex-col text-center max-h-[92vh] my-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={closePreview} className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-pink-600 hover:bg-rose-200 transition-colors cursor-pointer">
+              <button onClick={closePreview} className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-pink-600 hover:bg-rose-200 transition-colors cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="p-6 pt-8 overflow-y-auto">
-                <span className="text-[10px] font-black tracking-widest text-pink-500 uppercase mb-3 block">Pratinjau Bingkai</span>
+              <div className="p-4 sm:p-6 pt-6 sm:pt-8 overflow-y-auto flex-1">
+                <span className="text-[10px] font-black tracking-widest text-pink-500 uppercase mb-2 sm:mb-3 block">Pratinjau Bingkai</span>
 
-                <div className={`relative rounded-3xl border-2 ${getCategoryBgGradient(previewFrame.category)} p-4 aspect-[3/4] flex items-center justify-center shadow-inner overflow-hidden`}>
-                  <div className="relative w-full h-full bg-white rounded-2xl shadow-xl border border-white/90 p-3 flex items-center justify-center overflow-hidden">
+                <div className={`relative rounded-2xl sm:rounded-3xl border-2 ${getCategoryBgGradient(previewFrame.category)} p-3 sm:p-4 aspect-[3/4] max-h-[40vh] mx-auto flex items-center justify-center shadow-inner overflow-hidden`}>
+                  <div className="relative w-full h-full bg-white rounded-xl sm:rounded-2xl shadow-xl border border-white/90 p-2 sm:p-3 flex items-center justify-center overflow-hidden">
                     <img src={previewFrame.src} alt={previewFrame.name} className="max-w-full max-h-full object-contain filter drop-shadow-md" />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  <h3 className="font-extrabold text-xl text-zinc-900 leading-tight">{previewFrame.name}</h3>
+                <div className="flex items-center justify-center gap-2 mt-3 sm:mt-4">
+                  <h3 className="font-extrabold text-lg sm:text-xl text-zinc-900 leading-tight">{previewFrame.name}</h3>
                 </div>
 
-                <div className="flex items-center justify-center gap-2 mt-2 text-xs font-black uppercase tracking-wider text-zinc-400">
+                <div className="flex items-center justify-center gap-2 mt-1.5 sm:mt-2 text-xs font-black uppercase tracking-wider text-zinc-400">
                   <span className="bg-pink-100/80 border border-pink-200 px-3 py-0.5 rounded-full text-[10px] text-pink-600 capitalize">
                     {previewFrame.category}
                   </span>
@@ -1557,7 +1557,7 @@ export const SelectFrame: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-5 border-t border-rose-100 bg-rose-50/50 flex gap-3 relative">
+              <div className="p-4 sm:p-5 border-t border-rose-100 bg-rose-50/50 flex gap-2.5 sm:gap-3 relative shrink-0">
                 <button
                   onClick={closePreview}
                   disabled={isConfirmingSelection}
@@ -1611,22 +1611,22 @@ export const SelectFrame: React.FC = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 z-[60] bg-zinc-950/60 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-[60] bg-zinc-950/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
             onClick={() => setIsUploadModalOpen(false)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-white/95 backdrop-blur-2xl border-2 border-white rounded-[36px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col text-left"
+              className="relative w-full max-w-lg bg-white/95 backdrop-blur-2xl border-2 border-white rounded-[28px] sm:rounded-[36px] shadow-2xl overflow-hidden max-h-[92vh] flex flex-col text-left my-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={() => setIsUploadModalOpen(false)} className="absolute top-5 right-5 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-pink-600 cursor-pointer hover:bg-rose-200 transition-colors">
+              <button onClick={() => setIsUploadModalOpen(false)} className="absolute top-4 right-4 sm:top-5 sm:right-5 z-20 w-8 h-8 rounded-full bg-rose-100/80 border border-rose-200 flex items-center justify-center text-pink-600 cursor-pointer hover:bg-rose-200 transition-colors">
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="overflow-y-auto p-6 md:p-8 flex-1 custom-scroll">
-                <div className="flex items-center gap-3.5 mb-6 pb-4 border-b border-rose-100">
+              <div className="overflow-y-auto p-4 sm:p-6 md:p-8 flex-1 custom-scroll">
+                <div className="flex items-center gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-rose-100">
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 flex items-center justify-center text-white shadow-md">
                     <Upload className="w-4 h-4 text-white" />
                   </div>

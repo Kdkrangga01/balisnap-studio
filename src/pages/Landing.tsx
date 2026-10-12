@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePhotobooth, type PackageTier } from '../context/PhotoboothContext';
 import { CheckoutModal } from '../components/CheckoutModal';
-import { TestimonialSection } from '../components/TestimonialSection';
-import { FeedbackModal } from '../components/FeedbackModal';
+
 import {
   Camera, Image as ImageIcon, ArrowRight, Maximize2, Menu, X, Star, Check,
   Crown, Wand2, UploadCloud, Download, CheckCircle2, Palette, Film, HelpCircle,
@@ -101,7 +100,6 @@ export const Landing: React.FC = () => {
 
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutModalTier, setCheckoutModalTier] = useState<PackageTier>('basic');
-  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [guideModalOpen, setGuideModalOpen] = useState(false);
   const [activeTutorialStep, setActiveTutorialStep] = useState(0);
 
@@ -254,15 +252,6 @@ export const Landing: React.FC = () => {
           >
             <span>Paket Harga</span>
           </motion.a>
-
-          <motion.button
-            onClick={() => setFeedbackModalOpen(true)}
-            whileHover={{ y: -2, scale: 1.05, color: '#db2777' }}
-            whileTap={{ scale: 0.95 }}
-            className="transition-colors py-1 flex items-center gap-1 relative select-none cursor-pointer"
-          >
-            <span>Ulasan & Saran</span>
-          </motion.button>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
@@ -887,21 +876,12 @@ export const Landing: React.FC = () => {
         </div>
       </section>
 
-      {/* Testimonials, Reviews & Suggestions Section */}
-      <TestimonialSection onOpenFeedbackModal={() => setFeedbackModalOpen(true)} />
-
       {/* Checkout Simulator Modal */}
       <CheckoutModal
         isOpen={checkoutModalOpen}
         onClose={() => setCheckoutModalOpen(false)}
         targetTier={checkoutModalTier}
         onSuccess={() => setStep('select-frame')}
-      />
-
-      {/* Feedback & Review Modal */}
-      <FeedbackModal
-        isOpen={feedbackModalOpen}
-        onClose={() => setFeedbackModalOpen(false)}
       />
 
       {/* Interactive Tutorial Guide Modal */}
