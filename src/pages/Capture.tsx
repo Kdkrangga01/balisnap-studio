@@ -5,36 +5,32 @@ import { generateDemoPhoto } from '../lib/utils';
 import {
   ArrowLeft,
   Upload,
-  RefreshCw,
   Check,
   Camera,
   Zap,
   ChevronRight,
   AlertCircle,
-  CheckCircle,
+  CheckCircle2,
   Image as ImageIcon,
   Grid,
-  Layers,
-  Settings,
-  Activity,
   Smile,
   Volume2,
   VolumeX,
   Wand2,
   Sun,
   Users,
-  User
+  User,
+  RotateCw
 } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const CAMERA_FILTERS = [
   { id: 'none', label: 'Natural', filterCss: 'contrast(100%) saturate(100%)' },
-  { id: 'soft-glow', label: 'Korea Soft Glow', filterCss: 'contrast(98%) brightness(108%) saturate(110%) blur(0.3px)' },
-  { id: 'y2k-gloss', label: 'Y2K Glossy', filterCss: 'contrast(112%) brightness(105%) saturate(130%) hue-rotate(-5deg)' },
-  { id: 'indie-vibes', label: 'Indie Film', filterCss: 'contrast(92%) brightness(102%) sepia(20%) saturate(95%)' },
-  { id: 'moody-cyber', label: 'Moody Cyber', filterCss: 'contrast(115%) brightness(98%) saturate(125%) hue-rotate(15deg)' },
-  { id: 'sweet-pink', label: 'Sweet Pink', filterCss: 'contrast(102%) saturate(115%) sepia(8%) hue-rotate(-10deg)' },
-  { id: 'bw-elegant', label: 'B&W Vintage', filterCss: 'grayscale(100%) contrast(118%) brightness(102%)' }
+  { id: 'soft-glow', label: 'Korea Soft', filterCss: 'contrast(98%) brightness(106%) saturate(108%) blur(0.2px)' },
+  { id: 'y2k-gloss', label: 'Glossy Vintage', filterCss: 'contrast(108%) brightness(104%) saturate(120%) hue-rotate(-4deg)' },
+  { id: 'indie-vibes', label: 'Warm Film', filterCss: 'contrast(95%) brightness(102%) sepia(18%) saturate(100%)' },
+  { id: 'sweet-pink', label: 'Soft Blush', filterCss: 'contrast(102%) saturate(112%) sepia(6%) hue-rotate(-8deg)' },
+  { id: 'bw-elegant', label: 'Classic B&W', filterCss: 'grayscale(100%) contrast(115%) brightness(102%)' }
 ];
 
 // Helper Audio Synth
@@ -82,33 +78,8 @@ const playShutterSound = () => {
   }
 };
 
-// Anchor vertikal sama persis kayak di PhotoCanvas.tsx (cover-fit di editor):
-// kalau bagian atas/bawah yang harus dipotong, titik jangkarnya digeser ke
-// 25% dari atas (bukan 50% / center), supaya wajah (biasanya ada di
-// 1/3-1/2 atas foto) tidak ikut kepotong. Konstanta ini SENGAJA disamakan
-// dengan PhotoCanvas.tsx (verticalAnchor) supaya crop yang dilakukan di
-// sini (saat capture) dan crop yang dilakukan di editor selalu konsisten.
 const VERTICAL_CROP_ANCHOR = 0.25;
 
-/**
- * Crop + resize sebuah dataURL foto supaya PERSIS sesuai rasio target
- * (mis. rasio slot bingkai yang aktif), lalu apply filter/brightness.
- *
- * Kenapa perlu crop di sini (bukan cuma resize)?
- * Kamera web biasanya punya rasio landscape (mis. 16:9 / 4:3), sedangkan
- * slot bingkai bisa portrait, square, dst. Kalau foto disimpan apa adanya
- * (rasio kamera) lalu dipasang ke slot yang beda rasio, PhotoCanvas
- * (editor) akan otomatis cover-fit + crop foto itu sendiri -- tapi crop
- * itu jadi TIDAK TERDUGA buat user karena terjadi belakangan, di luar apa
- * yang mereka lihat di viewfinder. Dengan crop-ke-rasio-slot SEJAK
- * capture (sesuai apa yang kelihatan di viewfinder, karena kotak
- * viewfinder-nya juga di-set ke rasio slot yang sama), hasil akhirnya
- * WYSIWYG: foto yang tersimpan sudah pas dengan bentuk slot, dan
- * cover-fit di editor jadi nyaris tidak melakukan crop tambahan lagi.
- *
- * targetAspect: w/h rasio target. Kalau null/undefined -> tidak ada crop,
- * cuma resize (perilaku lama, dipakai sbg fallback).
- */
 function fitDataUrlToSlotAspect(
   dataUrl: string,
   maxLongSide: number,
@@ -137,17 +108,14 @@ function fitDataUrlToSlotAspect(
       // Pada MODE SOLO: potong sisi foto agar pas dengan bentuk rasio slot bingkai (close-up).
       // Pada MODE GRUP: JANGAN POTONG KIRI-KANAN SAMA SEKALI, agar foto ber-3 atau ber-4
       // tetap utuh seluruh wajah dan badannya tanpa ada yang terpotong di pinggir.
-      if (cameraMode === 'solo' && targetAspect && targetAspect > 0) {
+      if (cameraMode === 'solo' && targetAspect && targetAspect > 0) { 
         const srcAspect = srcW / srcH;
         if (srcAspect > targetAspect) {
-          // Foto lebih "lebar" dari slot -> potong kiri-kanan, center-crop.
           cropW = srcH * targetAspect;
           cropH = srcH;
           cropX = (srcW - cropW) / 2;
           cropY = 0;
         } else {
-          // Foto lebih "sempit/tinggi" dari slot -> potong atas-bawah,
-          // anchor ke 25% dari atas biar wajah gak kepotong.
           cropW = srcW;
           cropH = srcW / targetAspect;
           cropX = 0;
@@ -178,7 +146,7 @@ function fitDataUrlToSlotAspect(
 
       const currentFilterObj = CAMERA_FILTERS.find((f) => f.id === filterId);
       const filterCss = currentFilterObj ? currentFilterObj.filterCss : 'none';
-      const beautyCss = isBeautyMode ? 'blur(0.5px) contrast(98%)' : '';
+      const beautyCss = isBeautyMode ? 'blur(0.4px) contrast(98%)' : '';
 
       ctx.filter = `brightness(${brightnessLevel}%) ${filterCss === 'none' ? '' : filterCss} ${beautyCss}`.trim();
 
@@ -212,17 +180,17 @@ export const Capture: React.FC = () => {
   const [isRetryingCamera, setIsRetryingCamera] = useState<boolean>(false);
   const [isAutoShooting, setIsAutoShooting] = useState<boolean>(false);
 
+  // Filter, Tone & Mirroring
   const [activeFilter, setActiveFilter] = useState<string>('none');
-  const [brightness, setBrightness] = useState<number>(105);
+  const [brightness, setBrightness] = useState<number>(104);
   const [isBeautyMode, setIsBeautyMode] = useState<boolean>(false);
   const [isMirrorMode, setIsMirrorMode] = useState<boolean>(true);
   const [timerInterval, setTimerInterval] = useState<number>(3);
   const [cameraMode, setCameraMode] = useState<'group' | 'solo'>('group');
 
-  // States Opsi Tampilan & Fitur Pendukung
+  // Fitur Pendukung Kamera
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [showWatermark, setShowWatermark] = useState<boolean>(true);
-  const [gridOverlay, setGridOverlay] = useState<boolean>(true);
+  const [gridOverlay, setGridOverlay] = useState<boolean>(false);
 
   const [isPortraitView, setIsPortraitView] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
@@ -250,15 +218,6 @@ export const Capture: React.FC = () => {
     photosStateRef.current = photos;
   }, [photos]);
 
-  const bX = useMotionValue(0);
-  const bY = useMotionValue(0);
-
-  function handleKawaiiMouseMove({ clientX, clientY, currentTarget }: React.MouseEvent) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    bX.set(clientX - left);
-    bY.set(clientY - top);
-  }
-
   const getSlotAspectRatio = useCallback((slotIndex: number): number => {
     const coords = selectedFrame?.slotCoords?.[slotIndex];
     if (coords && coords.w > 0 && coords.h > 0) {
@@ -268,8 +227,8 @@ export const Capture: React.FC = () => {
   }, [selectedFrame]);
 
   const getThumbnailBoxSize = useCallback((slotAspect: number) => {
-    const maxW = 64;
-    const maxH = 46;
+    const maxW = 54;
+    const maxH = 40;
     let w = Math.round(maxH * slotAspect);
     let h = maxH;
     if (w > maxW) {
@@ -329,13 +288,13 @@ export const Capture: React.FC = () => {
     if (error) {
       const errName = error.name || (typeof error === 'string' ? error : '');
       if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
-        detail = 'Izin kamera diblokir browser. Klik ikon gembok/setelan di sebelah kiri URL localhost, lalu ubah Kamera menjadi "Izinkan" (Allow).';
+        detail = 'Izin kamera diblokir browser. Klik ikon setelan di sebelah kiri URL, lalu ubah Kamera menjadi "Izinkan" (Allow).';
       } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
-        detail = 'Tidak ada webcam yang terhubung ke komputer/laptop ini.';
+        detail = 'Tidak ada webcam yang terhubung ke perangkat ini.';
       } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
-        detail = 'Kamera sedang digunakan oleh aplikasi lain (seperti Zoom, Meet, OBS, atau tab browser lain).';
+        detail = 'Kamera sedang digunakan oleh aplikasi lain (seperti Zoom, Meet, atau tab lain).';
       } else if (errName === 'OverconstrainedError') {
-        detail = 'Resolusi yang diminta tidak didukung webcam Anda. Mencoba resolusi standar...';
+        detail = 'Resolusi yang diminta tidak didukung webcam Anda.';
         if (cameraRetryCount === 0) {
           setCameraRetryCount(1);
           setHasCamera(true);
@@ -446,8 +405,6 @@ export const Capture: React.FC = () => {
   if (!selectedFrame) return null;
 
   const { slots: totalSlots, name: frameName } = selectedFrame;
-
-  // Rasio slot yang sedang dibidik
   const activeSlotAspect = getSlotAspectRatio(activeSlot);
 
   const getVideoConstraints = () => {
@@ -470,9 +427,6 @@ export const Capture: React.FC = () => {
       ? actualResolution.width / actualResolution.height
       : fallbackAspect;
 
-  // Pada mode grup: gunakan rasio sudut lebar kamera (cameraAspect, mis. 16:9 atau 4:3)
-  // agar seluruh bidang pandang kamera muat tanpa terpotong sisi kiri/kanan.
-  // Pada mode solo: gunakan rasio slot bingkai (activeSlotAspect) untuk close-up pas slot.
   const viewfinderAspect = cameraMode === 'group' ? cameraAspect : (activeSlotAspect || cameraAspect);
 
   const startSingleClickMultiShoot = () => {
@@ -561,31 +515,16 @@ export const Capture: React.FC = () => {
 
   const selectedFilterObj = CAMERA_FILTERS.find(f => f.id === activeFilter);
   const activeFilterCss = selectedFilterObj ? selectedFilterObj.filterCss : '';
-  const beautyCss = isBeautyMode ? 'blur(0.5px) contrast(98%)' : '';
+  const beautyCss = isBeautyMode ? 'blur(0.4px) contrast(98%)' : '';
   const combinedFilterStyle = `brightness(${brightness}%) ${activeFilterCss} ${beautyCss}`.trim();
 
   return (
     <>
-      <div
-        onMouseMove={handleKawaiiMouseMove}
-        className="min-h-screen w-full bg-[#F8F9FA] text-zinc-800 py-3 px-3 sm:px-6 lg:px-12 relative overflow-hidden antialiased font-sans flex flex-col items-center justify-between group/canvas select-none"
-      >
+      <div className="min-h-screen w-full bg-[#FAF7F2] text-stone-800 py-3 px-3 sm:px-6 lg:px-8 relative antialiased font-sans flex flex-col justify-between select-none">
+        
         {/* Soft Background Mesh */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-slate-100/70 via-zinc-50/40 to-transparent pointer-events-none z-0" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.025)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0" />
-
-        <motion.div
-          className="pointer-events-none absolute -inset-px opacity-0 group-hover/canvas:opacity-100 transition duration-500 hidden md:block z-0"
-          style={{
-            background: useMotionTemplate`
-              radial-gradient(
-                600px circle at ${bX}px ${bY}px,
-                rgba(148, 163, 184, 0.08),
-                transparent 80%
-              )
-            `,
-          }}
-        />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-50/40 via-amber-50/20 to-transparent pointer-events-none z-0" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(120,113,108,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(120,113,108,0.03)_1px,transparent_1px)] bg-[size:28px_28px] pointer-events-none z-0" />
 
         {/* Flash Layer */}
         <AnimatePresence>
@@ -596,13 +535,11 @@ export const Capture: React.FC = () => {
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-white z-[100] pointer-events-none flex items-center justify-center"
               transition={{ duration: 0.1 }}
-            >
-              <div className="w-full h-full bg-pink-100/30 backdrop-blur-3xl" />
-            </motion.div>
+            />
           )}
         </AnimatePresence>
 
-        {/* Celebration Pop Modal */}
+        {/* Celebration Modal */}
         <AnimatePresence>
           {showCelebration && (
             <motion.div
@@ -610,123 +547,129 @@ export const Capture: React.FC = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="fixed inset-0 z-[90] flex items-center justify-center bg-zinc-950/20 backdrop-blur-md px-4"
+              className="fixed inset-0 z-[90] flex items-center justify-center bg-stone-900/30 backdrop-blur-sm px-4"
             >
-              <motion.div variants={popupVariants} initial="hidden" animate="visible" exit="exit" className="bg-white/90 backdrop-blur-xl border-4 border-purple-200 rounded-[36px] p-8 text-center shadow-[0_20px_50px_rgba(168,85,247,0.3)] max-w-sm w-full mx-4 relative overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-28 h-28 bg-purple-200/50 rounded-full blur-xl pointer-events-none" />
-                <motion.div animate={{ rotate: [0, 15, -15, 15, 0], scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 1.2 }} className="w-16 h-16 mx-auto mb-4 bg-gradient-to-tr from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-purple-300 relative z-10">
-                  <Check className="w-8 h-8" />
-                </motion.div>
-                <h2 className="font-serif text-2xl font-black text-zinc-900 leading-tight">Sesi Selesai!</h2>
-                <p className="text-zinc-500 text-xs mt-2 font-light">Semua foto lengkap! Klik <strong className="text-purple-600 font-bold">Lanjut ke Editor</strong> untuk berkreasi.</p>
+              <motion.div
+                variants={popupVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="bg-white rounded-3xl p-7 text-center shadow-2xl border border-stone-200 max-w-sm w-full mx-4 relative overflow-hidden"
+              >
+                <div className="w-14 h-14 mx-auto mb-3.5 bg-rose-100 rounded-full flex items-center justify-center text-rose-600 shadow-sm">
+                  <Check className="w-7 h-7 stroke-[2.5]" />
+                </div>
+                <h2 className="font-serif text-2xl font-black text-stone-800 tracking-tight">Sesi Selesai!</h2>
+                <p className="text-stone-500 text-xs mt-1.5 font-normal">Semua slot foto telah lengkap terisi. Siap untuk beralih ke editor.</p>
+                <button
+                  onClick={() => setStep('editor')}
+                  className="mt-5 w-full py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+                >
+                  Lanjut ke Editor Foto
+                </button>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* WORKSPACE CONTENT CONTAINER */}
-        <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col justify-between relative z-10 gap-2 overflow-hidden py-1">
+        <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col justify-between relative z-10 gap-3 py-1">
 
-          {/* Header Row */}
-          <div className="flex flex-col sm:flex-row justify-between items-center border-b-4 border-dashed border-purple-200/70 pb-3 gap-2 w-full flex-shrink-0">
-            <div className="text-center sm:text-left">
+          {/* TOP BAR / HEADER */}
+          <header className="flex flex-col sm:flex-row justify-between items-center bg-white/80 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-stone-200/70 shadow-sm gap-2.5 w-full flex-shrink-0">
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
               <button
                 onClick={() => { setIsAutoShooting(false); setStep('select-frame'); }}
-                className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-black text-[10px] tracking-[0.25em] uppercase mb-1 transition-all group px-3 py-1 bg-purple-50 hover:bg-purple-100 rounded-full border border-purple-200/80 shadow-sm"
+                className="inline-flex items-center gap-1.5 text-stone-600 hover:text-stone-900 font-bold text-xs transition-colors px-3 py-1.5 bg-stone-100/80 hover:bg-stone-200/70 rounded-xl cursor-pointer"
               >
-                <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
-                Kembali
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Pilih Bingkai</span>
               </button>
-              <h1 className="font-serif text-xl sm:text-2xl md:text-3xl font-black text-zinc-900 tracking-tight leading-normal flex items-center gap-2 justify-center sm:justify-start">
-                <span>Studio</span>
-                <span className="font-sans font-black italic bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-500 text-transparent bg-clip-text pr-2 py-0.5 inline-block">
-                  Foto Digital
+              
+              <div className="flex items-center gap-2">
+                <span className="font-serif text-base sm:text-lg font-black text-stone-800 tracking-tight">
+                  BaliSnap Studio
                 </span>
-              </h1>
-              <p className="text-zinc-400 text-[10px] sm:text-[11px] font-normal flex items-center justify-center sm:justify-start gap-2 mt-1 flex-wrap">
-                <Layers className="w-3.5 h-3.5 text-purple-400" />
-                <span>Katalog Bingkai: <strong className="font-bold text-zinc-700">"{frameName}"</strong></span>
-                <span className="text-purple-200">•</span>
-                <span className="bg-purple-100/80 text-purple-700 font-black px-2 py-0.5 rounded-full text-[10px] shadow-sm">{totalSlots} Slot Foto</span>
-              </p>
+                <span className="text-stone-300">•</span>
+                <span className="text-xs font-medium text-stone-500 truncate max-w-[140px] sm:max-w-[200px]">
+                  {frameName}
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap justify-center">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <button
                 onClick={() => { setIsAutoShooting(false); clearPhotos(); }}
-                className="px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/80 backdrop-blur-sm border border-purple-100 text-purple-500 hover:bg-purple-50 shadow-sm transition-all active:scale-95"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer"
               >
-                Ulangi Sesi
+                Reset Foto
               </button>
+              
               <button
                 onClick={() => { setIsAutoShooting(false); setStep('editor'); }}
                 disabled={!isAllFilled}
-                className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md flex items-center gap-1.5 ${isAllFilled ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-rose-400 text-white hover:opacity-95 active:scale-95 shadow-purple-200' : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'}`}
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer ${
+                  isAllFilled
+                    ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-200'
+                    : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                }`}
               >
                 <span>Lanjut ke Editor</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
-          </div>
+          </header>
 
           {captureError && (
-            <div className="flex items-center gap-2 p-2 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs font-semibold flex-shrink-0 shadow-sm">
-              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            <div className="flex items-center gap-2 p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium shadow-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{captureError}</span>
             </div>
           )}
 
-          {/* TWO-COLUMN CONTENT GRID */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-center w-full flex-1 overflow-hidden min-h-0">
+          {/* TWO-COLUMN WORKSPACE */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 items-stretch w-full flex-1 overflow-hidden min-h-0">
 
-            {/* LEFT COLUMN: WEBCAM VIEWFINDER */}
-            <div className="lg:col-span-8 flex flex-col justify-center gap-2 sm:gap-2.5 h-full w-full min-h-0 overflow-hidden relative pt-3">
-
-              {/* Badge Washi Tape (Dinaikkan sedikit ke atas melayang di luar border frame agar tidak menutupi tombol) */}
-              <div className="absolute -top-1.5 sm:top-0 left-1/2 -translate-x-1/2 px-3.5 h-5 sm:h-6 bg-purple-300/90 backdrop-blur-md border border-white/90 skew-x-[-12deg] z-30 shadow-md pointer-events-none flex items-center justify-center text-[8px] sm:text-[9px] text-purple-950 font-black tracking-widest uppercase rounded-sm">
-                BALISNAP FX STUDIO
-              </div>
-
-              {/* TOGGLE MODE KAMERA: GRUP WIDE vs SOLO CLOSE-UP */}
-              <div className="w-full max-w-xl mx-auto flex items-center justify-center mb-1 z-20">
-                <div className="bg-white/95 backdrop-blur-md p-1 sm:p-1.5 rounded-2xl border-2 border-purple-200 shadow-md flex items-center w-full gap-1.5">
+            {/* LEFT COLUMN: CAMERA VIEWFINDER & CONTROLS */}
+            <div className="lg:col-span-8 flex flex-col justify-between gap-2.5 h-full w-full min-h-0 overflow-hidden">
+              
+              {/* SEGMENTED TOGGLE: MODE FOTO RAME-RAME vs SOLO */}
+              <div className="flex items-center justify-center w-full flex-shrink-0">
+                <div className="bg-stone-200/70 p-1 rounded-2xl flex items-center gap-1 w-full max-w-sm sm:max-w-md shadow-inner">
                   <button
                     type="button"
                     onClick={() => setCameraMode('group')}
-                    className={`flex-1 py-1.5 sm:py-2 px-3 rounded-xl font-black text-[10px] sm:text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+                    className={`flex-1 py-1.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                       cameraMode === 'group'
-                        ? 'bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 text-white shadow-md shadow-purple-300 scale-[1.01]'
-                        : 'text-zinc-600 hover:text-purple-600 hover:bg-purple-50/70'
+                        ? 'bg-white text-stone-900 shadow-sm'
+                        : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
-                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <span className="font-extrabold">👥 Mode Rame-Rame (Ber 3 - 4)</span>
-                    <span className="hidden xs:inline-block bg-white/20 text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider">
-                      Sudut Lebar
-                    </span>
+                    <Users className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Mode Rame-Rame (Wide)</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setCameraMode('solo')}
-                    className={`flex-1 py-1.5 sm:py-2 px-3 rounded-xl font-black text-[10px] sm:text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+                    className={`flex-1 py-1.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                       cameraMode === 'solo'
-                        ? 'bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 text-white shadow-md shadow-purple-300 scale-[1.01]'
-                        : 'text-zinc-600 hover:text-purple-600 hover:bg-purple-50/70'
+                        ? 'bg-white text-stone-900 shadow-sm'
+                        : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
-                    <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <span className="font-extrabold">👤 Mode Solo / Close-up</span>
+                    <User className="w-3.5 h-3.5 text-stone-500" />
+                    <span>Mode Solo (Close-up)</span>
                   </button>
                 </div>
               </div>
 
-              {/* Viewfinder Frame (Ditambahkan padding-top pt-5 sm:pt-4 agar HUD tidak sesak) */}
+              {/* VIEWFINDER FRAME */}
               <div
-                className="relative bg-zinc-950 border-4 border-purple-200/80 shadow-[0_20px_50px_rgba(216,180,254,0.4)] rounded-[20px] sm:rounded-[28px] overflow-hidden mx-auto w-full max-w-4xl flex-1 min-h-0 group pt-5 sm:pt-4"
+                className="relative bg-stone-950 border-2 border-stone-300/80 rounded-2xl sm:rounded-3xl overflow-hidden mx-auto w-full flex-1 min-h-0 group shadow-md"
                 style={{
                   aspectRatio: viewfinderAspect,
-                  maxHeight: isPortraitView ? '62vh' : '78vh',
+                  maxHeight: isPortraitView ? '58vh' : '65vh',
                 }}
               >
                 {hasCamera ? (
@@ -743,168 +686,136 @@ export const Capture: React.FC = () => {
                     style={{ filter: combinedFilterStyle }}
                   />
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-300 p-6 bg-zinc-950 text-center z-10 overflow-y-auto">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-amber-400 mb-3 shadow-lg">
-                      <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-300 p-6 bg-stone-900 text-center z-10 overflow-y-auto">
+                    <div className="w-12 h-12 rounded-2xl bg-stone-800 border border-stone-700 flex items-center justify-center text-amber-400 mb-3">
+                      <AlertCircle className="w-6 h-6" />
                     </div>
-                    <h3 className="font-serif font-bold text-base sm:text-lg text-white mb-1.5">
+                    <h3 className="font-serif font-bold text-base text-white mb-1">
                       Kamera Belum Terdeteksi
                     </h3>
-                    <p className="text-xs text-zinc-400 max-w-md mx-auto mb-5 leading-relaxed">
-                      {cameraErrorDetail || 'Browser belum dapat mengakses webcam Anda. Pastikan izin kamera aktif dan tidak sedang digunakan aplikasi lain.'}
+                    <p className="text-xs text-stone-400 max-w-sm mb-4 leading-relaxed">
+                      {cameraErrorDetail || 'Pastikan izin kamera browser aktif.'}
                     </p>
-
-                    <div className="flex flex-wrap items-center justify-center gap-2.5 max-w-lg">
+                    <div className="flex gap-2">
                       <button
                         onClick={retryCamera}
                         disabled={isRetryingCamera}
-                        className="px-4 py-2.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                        className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
                       >
-                        <RefreshCw className={`w-3.5 h-3.5 ${isRetryingCamera ? 'animate-spin' : ''}`} />
-                        <span>{isRetryingCamera ? 'Mencoba...' : 'Coba Sambungkan Lagi'}</span>
+                        {isRetryingCamera ? 'Mencoba...' : 'Coba Sambungkan'}
                       </button>
-
-                      <button
-                        onClick={() => { setIsAutoShooting(false); fileInputRef.current?.click(); }}
-                        className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 cursor-pointer active:scale-95"
-                      >
-                        <Upload className="w-3.5 h-3.5 text-zinc-400" />
-                        <span>Upload Foto dari File</span>
-                      </button>
-
                       <button
                         onClick={handleDemoPhoto}
-                        className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-zinc-200 border border-zinc-800 font-semibold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 font-semibold text-xs rounded-xl transition-all cursor-pointer"
                       >
-                        <Camera className="w-3.5 h-3.5" />
-                        <span>Gunakan Foto Demo</span>
+                        Foto Demo
                       </button>
-                    </div>
-
-                    <div className="mt-5 p-2.5 bg-zinc-900/90 rounded-xl border border-zinc-800 text-[10.5px] text-zinc-400 max-w-sm flex items-center gap-2 text-left">
-                      <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-                      <span><strong>Tips:</strong> Klik ikon setelan / gembok di sebelah kiri URL browser untuk memastikan Kamera diatur ke <strong>Izinkan (Allow)</strong>.</span>
                     </div>
                   </div>
                 )}
 
-                {/* Grid Lines Overlay */}
+                {/* Grid Overlay */}
                 {gridOverlay && (
-                  <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-[0.22] border border-white/30 transition-opacity">
+                  <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-20 border border-white/20">
                     <div className="border-r border-b border-white" /><div className="border-r border-b border-white" /><div className="border-b border-white" />
                     <div className="border-r border-b border-white" /><div className="border-r border-b border-white" /><div className="border-b border-white" />
                     <div className="border-r border-white" /><div className="border-r border-white" /><div />
                   </div>
                 )}
 
-                {/* Panduan Batas Berdiri Grup (Group Safe Zone Overlay) */}
+                {/* Panduan Batas Aman Grup (Group Safe Framing Guide) */}
                 {cameraMode === 'group' && (
-                  <div className="absolute inset-0 pointer-events-none z-15 flex flex-col justify-between p-3 sm:p-5">
-                    {/* Garis Batas Kiri & Kanan */}
-                    <div className="absolute inset-y-12 left-2 sm:left-5 border-l-2 border-dashed border-purple-400/80 shadow-[0_0_12px_rgba(168,85,247,0.7)] flex items-center">
-                      <span className="hidden sm:inline-block -rotate-90 text-[8px] font-black tracking-widest text-purple-200 uppercase whitespace-nowrap -ml-7 bg-zinc-950/85 px-2 py-0.5 rounded-full border border-purple-400/40">
+                  <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-3 sm:p-4">
+                    {/* Garis Batas Kiri & Kanan Lembut */}
+                    <div className="absolute inset-y-6 left-3 sm:left-5 border-l border-dashed border-white/40 flex items-center">
+                      <span className="hidden sm:inline-block -rotate-90 text-[8px] font-bold tracking-widest text-white/60 uppercase whitespace-nowrap -ml-6 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
                         Batas Kiri
                       </span>
                     </div>
-                    <div className="absolute inset-y-12 right-2 sm:right-5 border-r-2 border-dashed border-purple-400/80 shadow-[0_0_12px_rgba(168,85,247,0.7)] flex items-center justify-end">
-                      <span className="hidden sm:inline-block rotate-90 text-[8px] font-black tracking-widest text-purple-200 uppercase whitespace-nowrap -mr-7 bg-zinc-950/85 px-2 py-0.5 rounded-full border border-purple-400/40">
+                    <div className="absolute inset-y-6 right-3 sm:right-5 border-r border-dashed border-white/40 flex items-center justify-end">
+                      <span className="hidden sm:inline-block rotate-90 text-[8px] font-bold tracking-widest text-white/60 uppercase whitespace-nowrap -mr-6 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
                         Batas Kanan
                       </span>
                     </div>
 
-                    {/* Badge Panduan Berdiri */}
-                    <div className="self-center mt-7 sm:mt-6 bg-zinc-950/85 backdrop-blur-md px-3 sm:px-4 py-1 rounded-full border border-purple-400/50 text-white text-[8px] sm:text-[9.5px] font-black tracking-wider uppercase flex items-center gap-1.5 shadow-lg">
-                      <Users className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
-                      <span>Area Berdiri Ber-3 / Ber-4 • Wajah &amp; Badan Utuh</span>
-                    </div>
-
-                    {/* Hint Bawah */}
-                    <div className="self-center mb-6 bg-zinc-950/75 backdrop-blur-md px-3 py-0.5 rounded-full border border-white/10 text-zinc-300 text-[8px] font-bold flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                      <span>Berdiri sejajar di dalam garis batas putus-putus</span>
+                    {/* Hint Rame-Rame Minimalis Atas */}
+                    <div className="self-center mt-7 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/15 text-white/90 text-[9px] font-bold tracking-wide flex items-center gap-1.5 shadow-sm">
+                      <Users className="w-3 h-3 text-rose-300" />
+                      <span>Area Foto Rame-Rame • Muat 3 – 5 Orang</span>
                     </div>
                   </div>
                 )}
 
-                {/* Watermark Overlay */}
-                {showWatermark && (
-                  <div className="absolute bottom-6 left-5 z-20 pointer-events-none flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-white/90 font-mono text-[9px] uppercase tracking-wider shadow-lg">
-                    <Camera className="w-3 h-3 text-zinc-300" />
-                    <span>BALISNAP • BOOTH LIVE</span>
-                  </div>
-                )}
-
-                {/* HUD Overlay Top */}
-                <div className="absolute top-2 sm:top-3 left-2 sm:left-3 right-2 sm:right-3 flex items-center justify-between gap-1.5 z-20 pointer-events-none">
-                  <div className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[9px] font-black tracking-widest uppercase px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-white/10 pointer-events-auto max-w-[45%] xs:max-w-[55%]">
-                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isAutoShooting ? 'bg-red-500 animate-ping' : 'bg-purple-400'}`} />
-                    <span className="truncate">{isAutoShooting ? 'AUTO...' : `SLOT #${activeSlot + 1}`}</span>
+                {/* HUD Top Bar Minimalis */}
+                <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5 z-20 pointer-events-none">
+                  {/* Slot Active Badge */}
+                  <div className="bg-black/50 backdrop-blur-md text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-white/10 pointer-events-auto">
+                    <span className={`w-1.5 h-1.5 rounded-full ${isAutoShooting ? 'bg-rose-400 animate-ping' : 'bg-emerald-400'}`} />
+                    <span>{isAutoShooting ? 'Foto Otomatis...' : `Slot #${activeSlot + 1}`}</span>
                   </div>
 
-                  <div className="flex items-center gap-1 sm:gap-1.5 pointer-events-auto flex-shrink-0">
+                  {/* Camera Controls Group */}
+                  <div className="flex items-center gap-1 pointer-events-auto">
                     <button
                       onClick={() => setIsBeautyMode(!isBeautyMode)}
-                      className={`bg-zinc-950/80 backdrop-blur-md text-[7px] sm:text-[8px] font-black uppercase px-2 py-1.5 rounded-full shadow-md border border-white/10 transition-all active:scale-95 flex items-center gap-1 ${isBeautyMode ? 'text-pink-300 border-pink-400/50' : 'text-zinc-400'}`}
-                      title="Toggle Beauty Cam Blur"
+                      className={`h-7 px-2 rounded-full text-[9px] font-bold transition-all flex items-center gap-1 border backdrop-blur-md cursor-pointer ${
+                        isBeautyMode 
+                          ? 'bg-rose-500/90 text-white border-rose-400' 
+                          : 'bg-black/40 text-stone-300 border-white/10 hover:bg-black/60'
+                      }`}
+                      title="Mode Halus (Beauty)"
                     >
-                      <Wand2 className="w-3 h-3 flex-shrink-0" />
-                      <span>{isBeautyMode ? 'Beauty: ON' : 'Beauty: OFF'}</span>
+                      <Wand2 className="w-3 h-3" />
+                      <span className="hidden xs:inline">Beauty</span>
                     </button>
 
                     <button
                       onClick={() => setSoundEnabled(!soundEnabled)}
-                      className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[8px] font-black uppercase p-1.5 sm:p-2 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 flex items-center justify-center"
-                      title="Toggle Sound"
+                      className="w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 text-white/90 backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer"
+                      title={soundEnabled ? 'Matikan Suara' : 'Nyalakan Suara'}
                     >
                       {soundEnabled ? <Volume2 className="w-3 h-3 text-emerald-400" /> : <VolumeX className="w-3 h-3 text-rose-400" />}
                     </button>
 
                     <button
                       onClick={() => setGridOverlay(!gridOverlay)}
-                      className={`bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[8px] font-black uppercase p-1.5 sm:p-2 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 ${gridOverlay ? 'text-purple-300' : 'text-zinc-500'}`}
-                      title="Toggle Grid"
+                      className={`w-7 h-7 rounded-full border border-white/10 backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer ${
+                        gridOverlay ? 'bg-white/30 text-white' : 'bg-black/40 text-stone-300 hover:bg-black/60'
+                      }`}
+                      title="Garis Kisi (Grid)"
                     >
                       <Grid className="w-3 h-3" />
                     </button>
 
                     <button
-                      onClick={() => setShowWatermark(!showWatermark)}
-                      className={`bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[8px] font-black uppercase p-1.5 sm:p-2 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 ${showWatermark ? 'text-amber-300' : 'text-zinc-500'}`}
-                      title="Toggle Watermark Stamp"
-                    >
-                      <Wand2 className="w-3 h-3" />
-                    </button>
-
-                    <button
                       onClick={() => setIsMirrorMode(!isMirrorMode)}
-                      className="bg-zinc-950/80 backdrop-blur-md text-white text-[7px] sm:text-[8px] font-black tracking-widest uppercase p-1.5 sm:px-2.5 sm:py-1.5 rounded-full shadow-md border border-white/10 transition-transform active:scale-95 flex items-center gap-1 whitespace-nowrap"
+                      className="w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 text-white/90 backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer"
+                      title="Mirroring Kamera"
                     >
-                      <RefreshCw className="w-2.5 h-2.5 text-purple-300 flex-shrink-0" />
-                      <span className="hidden xs:inline">{isMirrorMode ? 'Mirror: On' : 'Mirror: Off'}</span>
+                      <RotateCw className="w-3 h-3" />
                     </button>
 
-                    <div className="hidden sm:flex bg-zinc-950/80 backdrop-blur-md text-zinc-300 text-[8px] font-black px-2.5 py-1.5 rounded-full border border-white/10 items-center gap-1 whitespace-nowrap">
-                      <Settings className="w-2.5 h-2.5 text-purple-300 animate-spin-slow" />
-                      <span>{actualResolution ? `${actualResolution.width}×${actualResolution.height}` : 'Full HD'}</span>
+                    <div className="hidden sm:flex bg-black/40 backdrop-blur-md text-stone-300 text-[8px] font-mono font-bold px-2 h-7 rounded-full border border-white/10 items-center">
+                      <span>{actualResolution ? `${actualResolution.width}p` : 'HD'}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Countdown Display */}
+                {/* Countdown Overlay */}
                 <AnimatePresence>
                   {countdown !== null && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="absolute inset-0 flex items-center justify-center bg-zinc-950/40 backdrop-blur-[2px] z-30"
+                      className="absolute inset-0 flex items-center justify-center bg-black/35 backdrop-blur-[2px] z-30"
                     >
                       <motion.span
                         key={countdown}
-                        initial={{ scale: 0.3, rotate: -20, opacity: 0 }}
-                        animate={{ scale: 1.3, rotate: 0, opacity: 1 }}
-                        exit={{ scale: 0.7, rotate: 20, opacity: 0 }}
-                        className="font-sans font-black text-white text-7xl sm:text-9xl tracking-tighter drop-shadow-[0_10px_25px_rgba(168,85,247,0.6)] select-none"
+                        initial={{ scale: 0.4, opacity: 0 }}
+                        animate={{ scale: 1.2, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        className="font-sans font-black text-white text-8xl sm:text-9xl tracking-tight drop-shadow-md select-none"
                       >
                         {countdown}
                       </motion.span>
@@ -919,135 +830,144 @@ export const Capture: React.FC = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-950/60 backdrop-blur-sm z-30 gap-2"
+                      className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-30 gap-2 text-white"
                     >
-                      <div className="w-8 h-8 border-3 border-purple-400 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-white text-[10px] font-black uppercase tracking-widest animate-pulse">Menyimpan Foto...</span>
+                      <div className="w-7 h-7 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-[10px] font-bold tracking-wider uppercase">Menyimpan Foto...</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                {/* Slot Indicator Bars */}
-                <div className="absolute bottom-3 left-3 right-3 flex gap-1 z-20">
+                {/* Slot Indicator Pills Bawah */}
+                <div className="absolute bottom-2.5 left-4 right-4 flex gap-1.5 z-20">
                   {Array.from({ length: totalSlots }).map((_, idx) => (
                     <div
                       key={idx}
-                      className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${photos[idx] ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : idx === activeSlot ? 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]' : 'bg-white/20'}`}
+                      className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                        photos[idx] 
+                          ? 'bg-rose-400' 
+                          : idx === activeSlot 
+                            ? 'bg-white' 
+                            : 'bg-white/25'
+                      }`}
                     />
                   ))}
                 </div>
               </div>
 
-              {/* Filter IG-Style Bar & Brightness Adjustment */}
-              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2 flex-shrink-0">
-                {/* Aesthetic IG Filters */}
-                <div className="bg-white/90 backdrop-blur-md border border-purple-100 px-3 py-2 rounded-2xl shadow-sm flex items-center gap-1.5 overflow-x-auto max-w-full custom-scroll flex-1">
-                  <span className="text-[8px] font-black tracking-wider uppercase text-zinc-400 mr-1 flex items-center gap-0.5 flex-shrink-0"><Smile className="w-3.5 h-3.5 text-purple-400" /> Filter IG:</span>
+              {/* FILTER BAR & KECERAHAN */}
+              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2 bg-white/90 backdrop-blur-md border border-stone-200/80 px-3 py-2 rounded-2xl shadow-sm flex-shrink-0">
+                {/* Filter Selector */}
+                <div className="flex items-center gap-1.5 overflow-x-auto max-w-full custom-scroll flex-1 py-0.5">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-stone-400 mr-1 flex items-center gap-1 flex-shrink-0">
+                    <Smile className="w-3 h-3 text-stone-500" /> Filter:
+                  </span>
                   {CAMERA_FILTERS.map((fStr) => (
                     <button
                       key={fStr.id}
                       onClick={() => setActiveFilter(fStr.id)}
-                      className={`px-3 py-1 text-[9px] font-black rounded-xl transition-all border whitespace-nowrap flex-shrink-0 active:scale-95 ${activeFilter === fStr.id
-                        ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-rose-400 text-white border-transparent shadow-sm'
-                        : 'bg-zinc-50 text-zinc-500 border-purple-100/60 hover:bg-purple-50/40'}`}
+                      className={`px-2.5 py-1 text-[10px] font-bold rounded-xl transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
+                        activeFilter === fStr.id
+                          ? 'bg-stone-900 text-white shadow-sm'
+                          : 'bg-stone-100 text-stone-600 hover:bg-stone-200/60'
+                      }`}
                     >
                       {fStr.label}
                     </button>
                   ))}
                 </div>
 
-                {/* Brightness Adjustment Slider */}
-                <div className="bg-white/90 backdrop-blur-md border border-purple-100 px-3 py-2 rounded-2xl shadow-sm flex items-center gap-2 flex-shrink-0">
-                  <Sun className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                {/* Brightness Slider */}
+                <div className="flex items-center gap-2 pl-2 sm:border-l border-stone-200 flex-shrink-0">
+                  <Sun className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                   <input
                     type="range"
                     min="80"
                     max="140"
                     value={brightness}
                     onChange={(e) => setBrightness(Number(e.target.value))}
-                    className="w-16 sm:w-24 accent-purple-500 cursor-pointer h-1.5 bg-purple-100 rounded-lg"
+                    className="w-16 sm:w-20 accent-stone-800 cursor-pointer h-1.5 bg-stone-200 rounded-lg"
                     title="Atur Kecerahan"
                   />
-                  <span className="text-[9px] font-mono font-bold text-purple-600 w-7">{brightness}%</span>
+                  <span className="text-[9px] font-mono font-bold text-stone-600 w-6">{brightness}%</span>
                 </div>
               </div>
 
-              {/* Lower Deck Operational Buttons */}
-              <div className="bg-white/90 backdrop-blur-md border-2 border-purple-100 p-3 sm:p-3.5 rounded-[22px] shadow-[0_8px_30px_rgba(216,180,254,0.3)] flex flex-col sm:flex-row items-center justify-between gap-3 w-full flex-shrink-0">
-                <div className="flex gap-2 w-full sm:w-auto relative">
+              {/* LOWER DECK CONTROLS */}
+              <div className="bg-white/90 backdrop-blur-md border border-stone-200/80 p-2.5 sm:p-3 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2.5 w-full flex-shrink-0">
+                {/* Main Shutter & Upload Buttons */}
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button
                     onClick={startSingleClickMultiShoot}
                     disabled={countdown !== null || !hasCamera || isProcessingPhoto || isAutoShooting}
-                    className="px-4 sm:px-5 py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-400 text-white rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none disabled:opacity-40 shadow-[0_4px_15px_rgba(168,85,247,0.3)] hover:shadow-purple-300 active:scale-95"
+                    className="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none shadow-sm disabled:opacity-40 cursor-pointer"
                   >
-                    <Zap className="w-3.5 h-3.5 text-yellow-200 fill-current flex-shrink-0" />
-                    <span className="truncate">{isAutoShooting ? 'Rentetan...' : 'Mulai Foto Otomatis'}</span>
+                    <Camera className="w-4 h-4" />
+                    <span>{isAutoShooting ? 'Sedang Memotret...' : 'Mulai Foto Otomatis'}</span>
                   </button>
+
                   <button
                     onClick={() => { setIsAutoShooting(false); fileInputRef.current?.click(); }}
                     disabled={isProcessingPhoto || isAutoShooting}
-                    className="px-4 py-3 bg-white border-2 border-purple-100 text-purple-600 hover:bg-purple-50/50 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-sm flex-1 sm:flex-none disabled:opacity-30 active:scale-95"
+                    className="px-3.5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 disabled:opacity-30 cursor-pointer"
                   >
-                    <Upload className="w-3.5 h-3.5 text-purple-400" />
-                    Upload
+                    <Upload className="w-3.5 h-3.5" />
+                    <span className="hidden xs:inline">Upload</span>
                   </button>
                   <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
                 </div>
 
-                {/* Timer Deck */}
-                <div className="flex bg-[#FBF7FF] border-2 border-purple-100/70 rounded-xl p-1 shadow-inner items-center flex-shrink-0">
-                  <span className="text-[7px] font-black font-mono text-zinc-400 px-1.5 uppercase border-r border-purple-100 mr-0.5">Timer:</span>
-                  {[3, 5, 7].map((sec) => (
-                    <button
-                      key={sec}
-                      disabled={isAutoShooting || countdown !== null}
-                      onClick={() => setTimerInterval(sec)}
-                      className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black font-mono transition-all disabled:opacity-40 active:scale-95 ${timerInterval === sec ? 'bg-zinc-950 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-600'}`}
-                    >
-                      {sec}s
-                    </button>
-                  ))}
-                </div>
-
-                {/* Audio pulse graphic */}
-                <div className="hidden md:flex items-center gap-1 border-2 border-purple-50 bg-[#FBF7FF] py-1.5 px-2.5 rounded-xl shadow-inner text-[8px] font-black text-purple-300 uppercase select-none font-mono flex-shrink-0">
-                  <Activity className="w-3 h-3 text-purple-500 animate-pulse" />
-                  <div className="flex items-end gap-0.5 h-3 w-12">
-                    {[0.6, 0.9, 0.4, 0.8, 0.5, 0.9, 0.3].map((bVal, i) => (
-                      <motion.div
-                        key={i}
-                        animate={{ scaleY: [bVal, bVal * 0.2, bVal * 1.3, bVal] }}
-                        transition={{ repeat: Infinity, duration: 0.7 + (i % 2) * 0.2, ease: 'easeInOut' }}
-                        className="w-full h-full bg-purple-400/40 rounded-t origin-bottom"
-                      />
+                {/* Timer Deck & Demo Button */}
+                <div className="flex items-center gap-2 justify-between w-full sm:w-auto">
+                  {/* Timer Selector */}
+                  <div className="flex bg-stone-100 rounded-xl p-0.5 items-center">
+                    <span className="text-[8px] font-bold text-stone-400 px-1.5 uppercase">Jeda:</span>
+                    {[3, 5, 7].map((sec) => (
+                      <button
+                        key={sec}
+                        disabled={isAutoShooting || countdown !== null}
+                        onClick={() => setTimerInterval(sec)}
+                        className={`px-2 py-0.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
+                          timerInterval === sec 
+                            ? 'bg-white text-stone-900 shadow-sm' 
+                            : 'text-stone-500 hover:text-stone-800'
+                        }`}
+                      >
+                        {sec}s
+                      </button>
                     ))}
                   </div>
-                </div>
 
-                <button
-                  onClick={handleDemoPhoto}
-                  disabled={isAutoShooting}
-                  className="px-4 py-3 bg-pink-50 text-pink-600 border border-pink-100 rounded-xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all disabled:opacity-30 flex-shrink-0 hover:bg-pink-100 active:scale-95"
-                >
-                  Demo
-                </button>
+                  <button
+                    onClick={handleDemoPhoto}
+                    disabled={isAutoShooting}
+                    className="px-3 py-1.5 text-stone-500 hover:text-stone-800 hover:bg-stone-100 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+                  >
+                    Foto Demo
+                  </button>
+                </div>
               </div>
+
             </div>
 
-            {/* RIGHT COLUMN: PROGRESS SLOT TRACKER SIDEBAR */}
-            <div className="lg:col-span-4 w-full h-full flex flex-col justify-center min-h-0 overflow-hidden">
-              <div className="bg-white/90 backdrop-blur-md border-4 border-purple-100/60 p-4 sm:p-5 rounded-[22px] sm:rounded-[28px] shadow-[0_12px_35px_rgba(216,180,254,0.25)] flex flex-col max-h-full overflow-hidden">
-
-                <div className="flex items-center justify-between mb-4 border-b-2 border-dashed border-purple-100 pb-2 flex-shrink-0">
-                  <h3 className="font-serif text-sm sm:text-base font-black text-zinc-900 flex items-center gap-1.5">
-                    <Grid className="w-3.5 h-3.5 text-purple-500" />
-                    Progres Slot
-                  </h3>
-                  <span className="text-[9px] font-black tracking-wider text-purple-600 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full shadow-sm">
+            {/* RIGHT COLUMN: PROGRESS SLOT TRACKER */}
+            <div className="lg:col-span-4 w-full h-full flex flex-col justify-start min-h-0">
+              <div className="bg-white/90 backdrop-blur-md border border-stone-200/80 p-4 rounded-3xl shadow-sm flex flex-col h-full max-h-full">
+                
+                {/* Sidebar Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-3 flex-shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <Grid className="w-4 h-4 text-rose-500" />
+                    <h3 className="font-serif text-sm font-black text-stone-800">
+                      Progres Slot Foto
+                    </h3>
+                  </div>
+                  <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
                     {filledCount} / {totalSlots} Terisi
                   </span>
                 </div>
 
+                {/* Slot Item Cards */}
                 <div className="flex flex-col gap-2 overflow-y-auto pr-0.5 custom-scroll flex-1 min-h-0">
                   {Array.from({ length: totalSlots }).map((_, index) => {
                     const photo = photos[index] || null;
@@ -1060,37 +980,47 @@ export const Capture: React.FC = () => {
                       <div
                         key={index}
                         onClick={() => { if (!isAutoShooting) setActiveSlot(index); }}
-                        className={`flex items-center gap-3 p-2 rounded-xl border-2 transition-all duration-300 ${isAutoShooting ? 'cursor-not-allowed' : 'cursor-pointer'} ${isActive
-                          ? 'border-purple-400 bg-purple-50/40 shadow-sm ring-1 ring-purple-300'
-                          : hasPhoto
-                            ? 'border-emerald-100 bg-emerald-50/20'
-                            : 'border-purple-50 bg-transparent hover:border-purple-200'
-                          }`}
+                        className={`flex items-center gap-3 p-2.5 rounded-2xl border transition-all ${
+                          isAutoShooting ? 'cursor-not-allowed' : 'cursor-pointer'
+                        } ${
+                          isActive
+                            ? 'border-rose-400 bg-rose-50/40 shadow-sm ring-1 ring-rose-200'
+                            : hasPhoto
+                              ? 'border-stone-200 bg-stone-50/60 hover:bg-stone-100/50'
+                              : 'border-stone-200/60 bg-transparent hover:border-stone-300'
+                        }`}
                       >
+                        {/* Thumbnail Box */}
                         <div
-                          className="rounded-lg overflow-hidden flex items-center justify-center bg-[#FAF6FF] border border-purple-100 flex-shrink-0 relative shadow-sm"
+                          className="rounded-xl overflow-hidden flex items-center justify-center bg-stone-100 border border-stone-200 flex-shrink-0 relative"
                           style={{
                             height: `${thumbBox.height}px`,
                             width: `${thumbBox.width}px`,
                           }}
                         >
                           {hasPhoto ? (
-                            <img src={photo} alt={`Slot ${index + 1}`} className="w-full h-full object-cover" style={{ objectPosition: '50% 25%' }} />
+                            <img 
+                              src={photo} 
+                              alt={`Slot ${index + 1}`} 
+                              className="w-full h-full object-cover" 
+                              style={{ objectPosition: '50% 25%' }} 
+                            />
                           ) : (
-                            <ImageIcon className="w-3.5 h-3.5 text-purple-200" />
+                            <ImageIcon className="w-3.5 h-3.5 text-stone-300" />
                           )}
                           {isActive && !hasPhoto && (
-                            <div className="absolute inset-0 bg-purple-400/10 border border-purple-400 rounded-lg animate-pulse" />
+                            <div className="absolute inset-0 border border-rose-400 rounded-xl bg-rose-400/10 animate-pulse" />
                           )}
                         </div>
 
+                        {/* Slot Information */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-black text-zinc-800">Slot # {index + 1}</span>
-                            {hasPhoto && <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />}
+                            <span className="text-xs font-bold text-stone-800">Foto #{index + 1}</span>
+                            {hasPhoto && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />}
                           </div>
-                          <p className="text-[9px] font-black uppercase tracking-wider text-purple-500 mt-0.5">
-                            {hasPhoto ? '✦ Tersimpan' : isActive ? '● Dibidik' : '✦ Antrean'}
+                          <p className="text-[9px] font-semibold text-stone-400 mt-0.5">
+                            {hasPhoto ? 'Tersimpan dengan baik' : isActive ? 'Sedang dibidik kamera' : 'Menunggu antrean foto'}
                           </p>
                         </div>
                       </div>
@@ -1098,21 +1028,22 @@ export const Capture: React.FC = () => {
                   })}
                 </div>
 
-                <div className="mt-4 pt-2 border-t-2 border-dashed border-purple-100 flex-shrink-0">
+                {/* Bottom Status Box */}
+                <div className="mt-3 pt-3 border-t border-stone-100 flex-shrink-0">
                   {isAutoShooting ? (
-                    <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-700 text-[10px] font-bold flex items-center gap-1.5 shadow-sm animate-pulse">
-                      <Zap className="w-3.5 h-3.5 flex-shrink-0 text-indigo-500" />
-                      <span>Mode berantai aktif dengan jeda {timerInterval}s!</span> 
+                    <div className="p-2.5 bg-rose-50 border border-rose-100 rounded-xl text-rose-800 text-[10px] font-semibold flex items-center gap-1.5 animate-pulse">
+                      <Zap className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                      <span>Rentetan foto otomatis aktif ({timerInterval}s per foto)...</span>
                     </div>
                   ) : !isAllFilled ? (
-                    <div className="flex items-start gap-2 p-2 bg-amber-50/70 border border-amber-100 rounded-xl text-amber-800 text-[10px] font-medium leading-tight">
-                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-500" /> 
-                      <span>Lengkapi matriks slot foto untuk lanjut hias.</span>
+                    <div className="flex items-start gap-1.5 p-2 bg-stone-50 border border-stone-200/80 rounded-xl text-stone-600 text-[10px] font-medium leading-tight">
+                      <AlertCircle className="w-3.5 h-3.5 text-stone-400 shrink-0 mt-0.5" />
+                      <span>Ambil foto hingga semua slot terisi untuk lanjut ke editor.</span>
                     </div>
                   ) : (
-                    <div className="p-2 bg-emerald-50/80 border border-emerald-100 rounded-xl text-emerald-800 text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
-                      <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 text-emerald-500" /> 
-                      <span>Komposisi rampung! Siap beralih.</span>
+                    <div className="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-800 text-[10px] font-bold flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Semua foto siap! Klik tombol 'Lanjut ke Editor' di atas.</span>
                     </div>
                   )}
                 </div>
@@ -1128,10 +1059,8 @@ export const Capture: React.FC = () => {
       <style>{`
         .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #E9D5FF; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #D6D3D1; border-radius: 10px; }
         .camera-mirror { transform: scaleX(${isMirrorMode ? '-1' : '1'}); }
-        .animate-spin-slow { animation: spin 8s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
     </>
   );
