@@ -9,7 +9,7 @@ export interface GifOptions {
   progressCallback?: (pct: number) => void;
 }
 
-export type BoomerangMode = 'bounce' | 'flash' | 'sway';
+export type BoomerangMode = 'sequence' | 'pop' | 'flash';
 
 /**
  * Menghasilkan frame-frame animasi dinamis dari 1 snapshot photostrip
@@ -18,7 +18,7 @@ export type BoomerangMode = 'bounce' | 'flash' | 'sway';
  */
 export async function createBoomerangFrames(
   baseImageUri: string,
-  mode: BoomerangMode = 'bounce',
+  mode: BoomerangMode = 'sequence',
   targetWidth = 450
 ): Promise<{ frames: string[]; width: number; height: number }> {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -71,23 +71,24 @@ export async function createBoomerangFrames(
       ctx.restore();
       frames.push(canvas.toDataURL('image/jpeg', 0.92));
     }
-  } else if (mode === 'sway') {
-    // 5 frames: Dynamic Sway & Tilt motion khas photostrip
-    const swaySteps = [
-      { rot: -2.8, scale: 1.015, dy: 0 },
-      { rot: -1.3, scale: 1.03, dy: -3 },
-      { rot: 0, scale: 1.045, dy: -5 },
-      { rot: 1.3, scale: 1.03, dy: -3 },
-      { rot: 2.8, scale: 1.015, dy: 0 },
+  } else if (mode === 'pop') {
+    // 5 frames: Dynamic Pop Pulse khas photostrip
+    const popSteps = [
+      { scale: 1.00, dy: 0, brightness: 1.00 },
+      { scale: 1.03, dy: -2, brightness: 1.02 },
+      { scale: 1.06, dy: -5, brightness: 1.05 },
+      { scale: 1.03, dy: -2, brightness: 1.02 },
+      { scale: 1.00, dy: 0, brightness: 1.00 },
     ];
 
-    for (const step of swaySteps) {
+    for (const step of popSteps) {
       ctx.clearRect(0, 0, targetW, targetH);
       ctx.save();
       ctx.translate(targetW / 2, targetH / 2 + step.dy);
-      ctx.rotate((step.rot * Math.PI) / 180);
       ctx.scale(step.scale, step.scale);
+      ctx.filter = `brightness(${Math.round(step.brightness * 100)}%)`;
       ctx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
+      ctx.filter = 'none';
       ctx.restore();
       frames.push(canvas.toDataURL('image/jpeg', 0.92));
     }

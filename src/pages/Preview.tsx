@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import Konva from 'konva';
 import { usePhotobooth } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { exportHighResCanvas, saveOrShareImage, dataURItoBlob } from '../lib/exportImage';
@@ -18,7 +19,6 @@ export const Preview: React.FC = () => {
     selectedFrame, 
     setStep,
     resetAll,
-    photoBurstFrames,
     packageTier,
     incrementCompletedTrialSession
   } = usePhotobooth();
@@ -39,8 +39,8 @@ export const Preview: React.FC = () => {
   const [isGeneratingGif, setIsGeneratingGif] = useState<boolean>(false); 
   const [gifProgress, setGifProgress] = useState<number>(0);
   const [gifResult, setGifResult] = useState<{ dataUrl: string; blob: Blob } | null>(null);
-  const [gifInterval, setGifInterval] = useState<number>(0.28);
-  const [gifMode, setGifMode] = useState<BoomerangMode>('bounce'); 
+  const [gifInterval, setGifInterval] = useState<number>(0.35);
+  const [gifMode, setGifMode] = useState<BoomerangMode>('sequence'); 
 
   // DIGITAL ENVELOPE GIFT STATE 
   const [showEnvelopeModal, setShowEnvelopeModal] = useState<boolean>(false);
@@ -147,15 +147,6 @@ export const Preview: React.FC = () => {
 
       setGifProgress(20);
 
-      const loadImg = (src: string): Promise<HTMLImageElement> =>
-        new Promise((resolve) => {
-          const img = new Image();
-          img.crossOrigin = 'Anonymous';
-          img.onload = () => resolve(img);
-          img.onerror = () => resolve(img);
-          img.src = src;
-        });
-
       // Layer 1 adalah layer foto dalam Konva Stage (Layer 0=bg, Layer 1=photos, Layer 2=frame overlay, Layer 3=stickers)
       const layers = stage.getLayers();
       const photosLayer = layers[1];
@@ -163,7 +154,6 @@ export const Preview: React.FC = () => {
 
       const slotNodes: any[] = [];
       const slotOriginals: any[] = [];
-      const burstForSlot: HTMLImageElement[][] = [];
 
       const slotCount = selectedFrame.slotCoords.length;
 
@@ -173,6 +163,7 @@ export const Preview: React.FC = () => {
         if (konvaImg) {
           slotNodes[idx] = konvaImg;
           slotOriginals[idx] = {
+            group: group,
             image: konvaImg.image(),
             x: konvaImg.x(),
             y: konvaImg.y(),
@@ -180,47 +171,88 @@ export const Preview: React.FC = () => {
             scaleY: konvaImg.scaleY(),
             width: konvaImg.width(),
             height: konvaImg.height(),
+            visible: konvaImg.visible(),
           };
-
-          const rawBurst = photoBurstFrames && photoBurstFrames[idx];
-          if (rawBurst && rawBurst.length > 1) {
-            // Mode Boomerang Burst: load 5 foto gerakan yang diambil kamera
-            const loaded = await Promise.all(rawBurst.map(loadImg));
-            burstForSlot[idx] = loaded;
-          } else {
-            // Foto biasa/upload: gunakan gambar asli untuk micro-motion slot
-            burstForSlot[idx] = [konvaImg.image()];
-          }
         }
       }
 
-      setGifProgress(35);
+      setGifProgress(30);
 
-      // Urutan Boomerang 5 frame: 0 -> 1 -> 2 -> 3 -> 4
-      const BURST_STEPS = 5;
       const generatedFrames: string[] = [];
+      let isPreLooped = false;
 
       try {
-        for (let s = 0; s < BURST_STEPS; s++) {
-          for (let idx = 0; idx < slotCount; idx++) {
-            const konvaImg = slotNodes[idx];
-            const orig = slotOriginals[idx];
-            const burst = burstForSlot[idx];
-            if (!konvaImg || !orig || !burst || burst.length === 0) continue;
+        if (targetMode === 'sequence') {
+          // GAYA 1: SLOT STORY (Khas Photobooth Offline Korea/Life4Cuts)
+          // Foto muncul satu per satu per slot dari atas ke bawah, lalu hold strip utuh!
+          isPreLooped = true;
+          const totalFrames = slotCount + 2;
 
-            if (burst.length > 1) {
-              // Jika ada burst frames hasil foto boomerang kamera: pasang frame ke-s
-              const frameImg = burst[s % burst.length];
-              konvaImg.image(frameImg);
-            } else {
-              // Jika foto tunggal: beri gerakan hidup lembut HANYA di dalam slot (frame tetap 100% diam)
-              if (targetMode === 'sway') {
-                const swayOffsets = [0, 4, 8, 4, 0];
-                konvaImg.x(orig.x + swayOffsets[s]);
+          for (let step = 0; step < totalFrames; step++) {
+            for (let idx = 0; idx < slotCount; idx++) {
+              const konvaImg = slotNodes[idx];
+              const orig = slotOriginals[idx];
+              if (!konvaImg || !orig) continue;
+
+              if (step < slotCount) {
+                // Tampilkan foto jika slot <= step saat ini
+                konvaImg.visible(idx <= step);
+                konvaImg.scaleX(orig.scaleX);
+                konvaImg.scaleY(orig.scaleY);
+                konvaImg.x(orig.x);
+                konvaImg.y(orig.y);
+              } else if (step === slotCount) {
+                // Step selebrasi: semua foto tampil dengan sedikit bounce pop (1.05x)
+                konvaImg.visible(true);
+                const popScale = 1.05;
+                konvaImg.scaleX(orig.scaleX * popScale);
+                konvaImg.scaleY(orig.scaleY * popScale);
+                const dw = (orig.width * orig.scaleX * (popScale - 1)) / 2;
+                const dh = (orig.height * orig.scaleY * (popScale - 1)) / 2;
+                konvaImg.x(orig.x - dw);
+                konvaImg.y(orig.y - dh);
               } else {
-                // Living pulse di dalam batas slot
-                const pulseScales = [1.0, 1.018, 1.036, 1.02, 1.0];
-                const sc = pulseScales[s];
+                // Step jeda: strip lengkap normal sebelum looping kembali
+                konvaImg.visible(true);
+                konvaImg.scaleX(orig.scaleX);
+                konvaImg.scaleY(orig.scaleY);
+                konvaImg.x(orig.x);
+                konvaImg.y(orig.y);
+              }
+            }
+
+            stage.batchDraw();
+            const snap = exportHighResCanvas(stage, 450);
+            if (snap) generatedFrames.push(snap);
+            setGifProgress(30 + Math.round(((step + 1) / totalFrames) * 35));
+          }
+        } else if (targetMode === 'pop') {
+          // GAYA 2: POP BOOMERANG (Zoom Pop Bergantian per Slot)
+          // Setiap slot foto berdenyut maju (1.16x) bergantian secara ritmis
+          isPreLooped = false;
+          const popSteps = slotCount + 1;
+
+          for (let step = 0; step < popSteps; step++) {
+            for (let idx = 0; idx < slotCount; idx++) {
+              const konvaImg = slotNodes[idx];
+              const orig = slotOriginals[idx];
+              if (!konvaImg || !orig) continue;
+
+              konvaImg.visible(true);
+
+              if (step < slotCount) {
+                // Hanya slot yang dituju yang pop maju 1.16x
+                const isTarget = idx === step;
+                const sc = isTarget ? 1.16 : 1.0;
+                konvaImg.scaleX(orig.scaleX * sc);
+                konvaImg.scaleY(orig.scaleY * sc);
+                const dw = (orig.width * orig.scaleX * (sc - 1)) / 2;
+                const dh = (orig.height * orig.scaleY * (sc - 1)) / 2;
+                konvaImg.x(orig.x - dw);
+                konvaImg.y(orig.y - dh);
+              } else {
+                // Step serempak: semua foto berdenyut pop 1.08x
+                const sc = 1.08;
                 konvaImg.scaleX(orig.scaleX * sc);
                 konvaImg.scaleY(orig.scaleY * sc);
                 const dw = (orig.width * orig.scaleX * (sc - 1)) / 2;
@@ -229,19 +261,80 @@ export const Preview: React.FC = () => {
                 konvaImg.y(orig.y - dh);
               }
             }
+
+            stage.batchDraw();
+            const snap = exportHighResCanvas(stage, 450);
+            if (snap) generatedFrames.push(snap);
+            setGifProgress(30 + Math.round(((step + 1) / popSteps) * 35));
+          }
+        } else {
+          // GAYA 3: STUDIO STROBE BLITZ (Kilatan Lampu Studio Photobooth)
+          // Efek kilatan blitz photobooth yang nyata dan dramatis pada foto
+          isPreLooped = false;
+
+          // Buat flash overlay rect di setiap slot group
+          const flashRects: Konva.Rect[] = [];
+          for (let idx = 0; idx < slotCount; idx++) {
+            const group = slotGroups[idx];
+            const coords = selectedFrame.slotCoords[idx];
+            if (group && coords) {
+              const rect = new Konva.Rect({
+                x: 0,
+                y: 0,
+                width: coords.w,
+                height: coords.h,
+                fill: '#FFFFFF',
+                opacity: 0,
+                listening: false,
+              });
+              group.add(rect);
+              flashRects[idx] = rect;
+            }
           }
 
-          stage.batchDraw();
+          // 5 frame blitz: Normal -> Pre-flash glow -> Peak Blitz -> Warm Afterglow -> Return
+          const blitzSteps = [
+            { opacity: 0, scale: 1.00 },
+            { opacity: 0.25, scale: 1.02 },
+            { opacity: 0.75, scale: 1.04 },
+            { opacity: 0.20, scale: 1.01 },
+            { opacity: 0, scale: 1.00 },
+          ];
 
-          // Snapshot resolusi stabil (450px) dengan BINGKAI, STIKER, & TEKS TETAP 100% DIAM
-          const snap = exportHighResCanvas(stage, 450);
-          if (snap) {
-            generatedFrames.push(snap);
+          try {
+            for (let step = 0; step < blitzSteps.length; step++) {
+              const b = blitzSteps[step];
+              for (let idx = 0; idx < slotCount; idx++) {
+                const konvaImg = slotNodes[idx];
+                const orig = slotOriginals[idx];
+                const fRect = flashRects[idx];
+                if (!konvaImg || !orig) continue;
+
+                konvaImg.visible(true);
+                konvaImg.scaleX(orig.scaleX * b.scale);
+                konvaImg.scaleY(orig.scaleY * b.scale);
+                const dw = (orig.width * orig.scaleX * (b.scale - 1)) / 2;
+                const dh = (orig.height * orig.scaleY * (b.scale - 1)) / 2;
+                konvaImg.x(orig.x - dw);
+                konvaImg.y(orig.y - dh);
+
+                if (fRect) {
+                  fRect.opacity(b.opacity);
+                }
+              }
+
+              stage.batchDraw();
+              const snap = exportHighResCanvas(stage, 450);
+              if (snap) generatedFrames.push(snap);
+              setGifProgress(30 + Math.round(((step + 1) / blitzSteps.length) * 35));
+            }
+          } finally {
+            // Hapus flashRects
+            flashRects.forEach((r) => r && r.destroy());
           }
-          setGifProgress(35 + Math.round(((s + 1) / BURST_STEPS) * 30));
         }
       } finally {
-        // SELALU kembalikan gambar & posisi asli setiap slot
+        // SELALU kembalikan kondisi asli seluruh node
         for (let idx = 0; idx < slotCount; idx++) {
           const konvaImg = slotNodes[idx];
           const orig = slotOriginals[idx];
@@ -251,19 +344,20 @@ export const Preview: React.FC = () => {
             konvaImg.y(orig.y);
             konvaImg.scaleX(orig.scaleX);
             konvaImg.scaleY(orig.scaleY);
+            konvaImg.visible(orig.visible !== false);
           }
         }
         stage.batchDraw();
       }
 
-      setGifProgress(68);
+      setGifProgress(70);
 
-      // Encode menjadi file Boomerang GIF: generateBoomerangGif otomatis melakukan loop maju-mundur (0->1->2->3->4->3->2->1)
       const res = await generateBoomerangGif({
         photos: generatedFrames,
         interval: targetInterval,
         gifWidth: 420,
-        progressCallback: (pct) => setGifProgress(68 + Math.round((pct / 100) * 30)),
+        isPreLooped: isPreLooped,
+        progressCallback: (pct) => setGifProgress(70 + Math.round((pct / 100) * 28)),
       });
 
       setGifResult(res);
@@ -745,9 +839,9 @@ export const Preview: React.FC = () => {
                   </span>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: 'bounce', label: 'Bounce Pop', desc: 'Denyut Ceria' },
-                      { id: 'flash', label: 'Shutter Flash', desc: 'Kilatan Studio' },
-                      { id: 'sway', label: 'Sway & Tilt', desc: 'Goyang Dinamis' },
+                      { id: 'sequence', label: 'Slot Story', desc: 'Muncul Bergantian' },
+                      { id: 'pop', label: 'Slot Pop', desc: 'Denyut Bergantian' },
+                      { id: 'flash', label: 'Studio Blitz', desc: 'Kilatan Blitz Lampu' },
                     ].map((m) => (
                       <button
                         key={m.id}
@@ -777,9 +871,9 @@ export const Preview: React.FC = () => {
                   </span>
                   <div className="grid grid-cols-3 gap-2"> 
                     {[
-                      { label: '⚡ Cepat (0.15s)', value: 0.15 },
-                      { label: '✨ Normal (0.28s)', value: 0.28 }, 
-                      { label: '🍃 Santai (0.45s)', value: 0.45 }, 
+                      { label: '⚡ Cepat (0.20s)', value: 0.20 },
+                      { label: '✨ Normal (0.35s)', value: 0.35 }, 
+                      { label: '🍃 Santai (0.55s)', value: 0.55 }, 
                     ].map((s) => ( 
                       <button
                         key={s.value}
