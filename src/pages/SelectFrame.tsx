@@ -1054,30 +1054,32 @@ export const SelectFrame: React.FC = () => {
 
           {/* Banner Kuota Mode Coba Gratis */}
           {packageTier === 'free' && (
-            <div className="w-full bg-gradient-to-r from-blue-50/70 via-indigo-50/20 to-white border border-blue-200/70 rounded-2xl p-4 sm:p-5 mb-1 flex flex-col sm:flex-row items-center justify-between gap-4 text-left shadow-xs">
+            <div className="w-full bg-gradient-to-r from-blue-50/60 to-white border border-blue-200/80 rounded-2xl p-4 sm:p-5 mb-1 flex flex-col sm:flex-row items-center justify-between gap-4 text-left shadow-xs">
               <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-xl bg-[#1D63FF] text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/25">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#1D63FF] text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
                   <Gift className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm sm:text-base text-zinc-900 flex flex-wrap items-center gap-2">
-                    Mode Coba Gratis (Free Trial)
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${hasCompletedAllTrialSessions() ? 'bg-zinc-100 text-zinc-500 border-zinc-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
-                      Kuota: {getRemainingTrialSessions()}/2 Sesi Foto Tersisa 
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-sans font-bold text-sm sm:text-base text-zinc-900 tracking-tight">
+                      Mode Coba Gratis (Free Trial)
                     </span>
-                  </h4>
-                  <p className="text-xs text-zinc-600 font-normal mt-0.5">
-                    Nikmati <strong>2 sesi foto gratis (proses foto + unduh HD 2x)</strong> lengkap dengan 100% fitur studio!
+                    <span className={`text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${hasCompletedAllTrialSessions() ? 'bg-zinc-100 text-zinc-500 border-zinc-200' : 'bg-blue-100/90 text-[#1D63FF] border-blue-200'}`}>
+                      Kuota: {getRemainingTrialSessions()}/2 Sesi Foto Tersisa
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-500 font-normal mt-1 leading-normal">
+                    Nikmati <strong className="font-semibold text-zinc-700">2 sesi foto gratis (proses foto + unduh HD 2x)</strong> lengkap dengan 100% fitur studio!
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => handleOpenCheckoutModal('basic')}
-                className="px-5 py-3 bg-[#1D63FF] hover:bg-[#1550D6] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md shadow-blue-600/20 active:scale-95 transition-all shrink-0 cursor-pointer w-full sm:w-auto text-center flex items-center justify-center gap-2"
+                className="px-5 py-2.5 sm:py-3 bg-[#1D63FF] hover:bg-[#1550D6] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-sm shadow-blue-600/20 active:scale-95 transition-all shrink-0 cursor-pointer w-full sm:w-auto text-center flex items-center justify-center gap-2"
               >
                 <LockOpen className="w-3.5 h-3.5" />
-                <span>Unlock All Frame (25k)</span> 
-              </button> 
+                <span>Unlock All Frame (25k)</span>
+              </button>
             </div>
           )}
 
