@@ -413,7 +413,8 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const imgW = photoImg.naturalWidth || photoImg.width;
             const imgH = photoImg.naturalHeight || photoImg.height;
 
-            const baseScale = Math.min(slot.w / imgW, slot.h / imgH);
+            // Menggunakan Math.max (cover fit) agar foto langsung ngepas 100% penuh mengisi slot di semua bingkai tanpa celah putih
+            const baseScale = Math.max(slot.w / imgW, slot.h / imgH);
             const finalZoom = baseScale * transform.zoom;
 
             const scaledW = imgW * finalZoom;

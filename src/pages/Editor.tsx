@@ -162,37 +162,10 @@ export const Editor: React.FC = () => {
     updatePhotoTransform(selectedPhotoIndex, { zoom: nextZoom });
   };
 
-  // Fit foto agar PAS 100% PENUH dalam slot bingkai (tanpa celah)
+  // Fit foto agar PAS 100% PENUH dalam slot bingkai (tanpa celah & terpusat)
   const handlePhotoFitToFrame = () => {
-    if (selectedPhotoIndex === null || !selectedFrame) return;
-
-    const slot = selectedFrame.slotCoords[selectedPhotoIndex % selectedFrame.slotCoords.length];
-    if (!slot) return;
-
-    const photoSrc = photos[selectedPhotoIndex];
-    if (!photoSrc) {
-      updatePhotoTransform(selectedPhotoIndex, { zoom: DEFAULT_PHOTO_ZOOM, x: 0, y: 0 });
-      return;
-    }
-
-    const img = new window.Image();
-    img.crossOrigin = 'Anonymous';
-    img.src = photoSrc;
-    img.onload = () => {
-      const imgW = img.naturalWidth || img.width || 800;
-      const imgH = img.naturalHeight || img.height || 800;
-
-      const containScale = Math.min(slot.w / imgW, slot.h / imgH);
-      const coverScale = Math.max(slot.w / imgW, slot.h / imgH);
-      const idealCoverZoom = Math.max(1.0, Number((coverScale / containScale).toFixed(2)));
-
-      updatePhotoTransform(selectedPhotoIndex, { zoom: idealCoverZoom, x: 0, y: 0 });
-    };
-
-    const containScale = Math.min(slot.w / 800, slot.h / 800);
-    const coverScale = Math.max(slot.w / 800, slot.h / 800);
-    const fallbackZoom = Math.max(1.0, Number((coverScale / containScale).toFixed(2)));
-    updatePhotoTransform(selectedPhotoIndex, { zoom: fallbackZoom, x: 0, y: 0 });
+    if (selectedPhotoIndex === null) return;
+    updatePhotoTransform(selectedPhotoIndex, { zoom: DEFAULT_PHOTO_ZOOM, x: 0, y: 0 });
   };
 
   const handlePhotoZoomReset = () => {
@@ -254,7 +227,7 @@ export const Editor: React.FC = () => {
         className="absolute bottom-[-80px] right-[-80px] w-[550px] h-[550px] rounded-full pointer-events-none z-0 blur-[130px] opacity-25 bg-zinc-200"
       />
 
-      {/* Architectural Micro-Grid Pattern */}
+      {/* Architectural Micro-Grid Pattern */} 
       <div
         className="absolute inset-0 pointer-events-none z-0"
         style={{

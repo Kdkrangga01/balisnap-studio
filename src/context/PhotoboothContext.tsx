@@ -7,7 +7,7 @@ import { fetchCloudTransactions, saveCloudTransaction, deleteCloudTransaction, i
 import { findNextBestStickerPosition } from '../lib/stickerPlacement';
 
 // Konstanta zoom foto, dipakai bareng oleh context & kanvas biar konsisten.
-export const DEFAULT_PHOTO_ZOOM = 1.0; // level zoom awal (contain-fit otomatis: seluruh foto kelihatan pas di slot bingkai, kiri-kanan-atas-bawah tidak terpotong)
+export const DEFAULT_PHOTO_ZOOM = 1.0; // level zoom awal (cover-fit otomatis: seluruh foto langsung pas penuh 100% di slot bingkai tanpa celah putih)
 export const MIN_PHOTO_ZOOM = 0.5;     // paling kecil, foto jadi 50% dari slot
 export const MAX_PHOTO_ZOOM = 2.5;     // paling besar, foto di-zoom in 250%
 // Batas zoom terkecil "custom" (dipakai bareng oleh tombol Zoom Out & scroll-zoom
