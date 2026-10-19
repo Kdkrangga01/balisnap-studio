@@ -120,6 +120,10 @@ interface PhotoboothContextProps {
   setPhotos: (photos: (string | null)[]) => void;
   setPhotoAtSlot: (index: number, dataUrl: string | null) => void;
   clearPhotos: () => void;
+  captureType: 'still' | 'boomerang';
+  setCaptureType: (type: 'still' | 'boomerang') => void;
+  photoBurstFrames: (string[] | null)[];
+  setPhotoBurstAtSlot: (index: number, frames: string[] | null) => void;
   photoTransforms: PhotoTransform[];
   updatePhotoTransform: (index: number, transform: Partial<PhotoTransform>) => void;
   resetPhotoTransform: (index: number) => void;
@@ -349,6 +353,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       : Array(5).fill('')
   );
   const [photos, setPhotos] = useState<(string | null)[]>(savedSession?.photos || []);
+  const [captureType, setCaptureType] = useState<'still' | 'boomerang'>('boomerang');
+  const [photoBurstFrames, setPhotoBurstFrames] = useState<(string[] | null)[]>([]);
   const [photoTransforms, setPhotoTransforms] = useState<PhotoTransform[]>(savedSession?.photoTransforms || []);
   const [stickers, setStickers] = useState<CanvasSticker[]>(savedSession?.stickers || []);
   const [activeStickerPackId, setActiveStickerPackId] = useState<string | null>(null);
@@ -778,6 +784,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const selectFrame = (frame: FrameTemplate) => {
     setSelectedFrame(frame);
     setPhotos(new Array(frame.slots).fill(null));
+    setPhotoBurstFrames(new Array(frame.slots).fill(null));
     setPhotoTransforms(new Array(frame.slots).fill(null).map(() => ({ x: 0, y: 0, zoom: DEFAULT_PHOTO_ZOOM })));
     setStickers([]);
     setTexts([]);
@@ -819,9 +826,18 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   };
 
+  const setPhotoBurstAtSlot = (index: number, burst: string[] | null) => {
+    setPhotoBurstFrames(prev => {
+      const next = [...prev];
+      next[index] = burst;
+      return next;
+    });
+  };
+
   const clearPhotos = () => {
     if (selectedFrame) {
       setPhotos(new Array(selectedFrame.slots).fill(null));
+      setPhotoBurstFrames(new Array(selectedFrame.slots).fill(null));
       setPhotoTransforms(new Array(selectedFrame.slots).fill(null).map(() => ({ x: 0, y: 0, zoom: DEFAULT_PHOTO_ZOOM })));
     }
   };
@@ -1030,6 +1046,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       packageTier, setPackageTier,
       completedTrialSessions, incrementCompletedTrialSession, getRemainingTrialSessions, hasCompletedAllTrialSessions,
       step, setStep, selectedFrame, selectFrame, photos, setPhotos, setPhotoAtSlot, clearPhotos,
+      captureType, setCaptureType, photoBurstFrames, setPhotoBurstAtSlot,
       photoTransforms, updatePhotoTransform, resetPhotoTransform,
       stickers, activeStickerPackId, addSticker, applyStickerPack, updateSticker, removeSticker, texts, addText, updateText, removeText,
       selectedId, setSelectedId, appliedFilter, setAppliedFilter, particleEffect, setParticleEffect, fineTuning, setFineTuning, resetFineTuning, frameColor, setFrameColor,

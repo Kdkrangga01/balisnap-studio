@@ -5,6 +5,7 @@ export interface GifOptions {
   interval?: number; // detik per frame (misal 0.3s)
   gifWidth?: number;
   gifHeight?: number;
+  isPreLooped?: boolean;
   progressCallback?: (pct: number) => void;
 }
 
@@ -127,17 +128,21 @@ export function generateBoomerangGif(options: GifOptions): Promise<{ dataUrl: st
       return;
     }
 
-    // Buat urutan Boomerang (Maju lalu Mundur: 0 -> 1 -> 2 -> 3 -> 4 -> 3 -> 2 -> 1)
+    // Buat urutan Boomerang
     const boomerangSequence: string[] = [];
     
-    // Urutan maju
-    for (let i = 0; i < validPhotos.length; i++) {
-      boomerangSequence.push(validPhotos[i]);
-    }
-    
-    // Urutan mundur (tanpa mengulang elemen ujung)
-    for (let i = validPhotos.length - 2; i > 0; i--) {
-      boomerangSequence.push(validPhotos[i]);
+    if (options.isPreLooped) {
+      boomerangSequence.push(...validPhotos);
+    } else {
+      // Urutan maju
+      for (let i = 0; i < validPhotos.length; i++) {
+        boomerangSequence.push(validPhotos[i]);
+      }
+      
+      // Urutan mundur (tanpa mengulang elemen ujung)
+      for (let i = validPhotos.length - 2; i > 0; i--) {
+        boomerangSequence.push(validPhotos[i]);
+      }
     }
 
     // Jika hanya 1 foto, duplikat agar membentuk animasi

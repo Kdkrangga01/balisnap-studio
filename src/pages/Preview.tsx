@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { usePhotobooth } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { exportHighResCanvas, saveOrShareImage, dataURItoBlob } from '../lib/exportImage';
-import { generateBoomerangGif, createBoomerangFrames, type BoomerangMode } from '../lib/gifExport';
+import { generateBoomerangGif, type BoomerangMode } from '../lib/gifExport';
 import { DigitalEnvelopeModal } from '../components/DigitalEnvelopeModal';
 import { UpgradeModal } from '../components/UpgradeModal'; 
 import {
@@ -18,6 +18,7 @@ export const Preview: React.FC = () => {
     selectedFrame, 
     setStep,
     resetAll,
+    photoBurstFrames,
     packageTier,
     incrementCompletedTrialSession
   } = usePhotobooth();
@@ -34,14 +35,14 @@ export const Preview: React.FC = () => {
   const [exportQuality, setExportQuality] = useState<'standard' | 'high' | 'print'>('high'); 
 
   // BOOMERANG GIF STATE
-  const [showGifModal, setShowGifModal] = useState<boolean>(false);
-  const [isGeneratingGif, setIsGeneratingGif] = useState<boolean>(false);
+  const [showGifModal, setShowGifModal] = useState<boolean>(false); 
+  const [isGeneratingGif, setIsGeneratingGif] = useState<boolean>(false); 
   const [gifProgress, setGifProgress] = useState<number>(0);
   const [gifResult, setGifResult] = useState<{ dataUrl: string; blob: Blob } | null>(null);
   const [gifInterval, setGifInterval] = useState<number>(0.28);
-  const [gifMode, setGifMode] = useState<BoomerangMode>('bounce');
+  const [gifMode, setGifMode] = useState<BoomerangMode>('bounce'); 
 
-  // DIGITAL ENVELOPE GIFT STATE
+  // DIGITAL ENVELOPE GIFT STATE 
   const [showEnvelopeModal, setShowEnvelopeModal] = useState<boolean>(false);
   const [activePresetFilter, setActivePresetFilter] = useState<'none' | 'vintage' | 'vivid' | 'bw'>('none');
 
@@ -127,11 +128,11 @@ export const Preview: React.FC = () => {
     }
   };
 
-  // GIF Boomerang Generator Handler - FULL PHOTO FRAME STRIP SNAPSHOTS DENGAN GERAKAN NYATA
+  // GIF Boomerang Generator Handler - BINGKAI TETAP DIAM, FOTO DALAM SLOT BERGERAK HIDUP KHAS PHOTOBOOTH
   const handleOpenGifModal = async (customInterval?: number, customMode?: BoomerangMode) => {
     setShowGifModal(true);
     setIsGeneratingGif(true);
-    setGifProgress(15);
+    setGifProgress(10);
 
     const targetInterval = customInterval !== undefined ? customInterval : gifInterval;
     const targetMode = customMode !== undefined ? customMode : gifMode;
@@ -139,27 +140,134 @@ export const Preview: React.FC = () => {
     setGifMode(targetMode);
 
     try {
-      // 1. Ambil snapshot HD strip photobooth saat ini dari canvas
-      const baseSnap = (stageRef.current ? exportHighResCanvas(stageRef.current, 600) : null) || downloadedImageUri;
-      if (!baseSnap) {
-        throw new Error('Gagal mengambil snapshot bingkai foto.');
+      const stage = stageRef.current;
+      if (!stage) {
+        throw new Error('Canvas photobooth belum siap.');
       }
-      setGifProgress(30);
 
-      // 2. Generate frame animasi dinamis (bounce, flash, atau sway)
-      const { frames, width, height } = await createBoomerangFrames(baseSnap, targetMode, 420);
-      setGifProgress(50);
+      setGifProgress(20);
 
-      // 3. Encode menjadi Boomerang GIF
+      const loadImg = (src: string): Promise<HTMLImageElement> =>
+        new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'Anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(img);
+          img.src = src;
+        });
+
+      // Layer 1 adalah layer foto dalam Konva Stage (Layer 0=bg, Layer 1=photos, Layer 2=frame overlay, Layer 3=stickers)
+      const layers = stage.getLayers();
+      const photosLayer = layers[1];
+      const slotGroups = photosLayer ? photosLayer.getChildren() : [];
+
+      const slotNodes: any[] = [];
+      const slotOriginals: any[] = [];
+      const burstForSlot: HTMLImageElement[][] = [];
+
+      const slotCount = selectedFrame.slotCoords.length;
+
+      for (let idx = 0; idx < slotCount; idx++) {
+        const group = slotGroups[idx];
+        const konvaImg = group ? group.findOne('Image') : null;
+        if (konvaImg) {
+          slotNodes[idx] = konvaImg;
+          slotOriginals[idx] = {
+            image: konvaImg.image(),
+            x: konvaImg.x(),
+            y: konvaImg.y(),
+            scaleX: konvaImg.scaleX(),
+            scaleY: konvaImg.scaleY(),
+            width: konvaImg.width(),
+            height: konvaImg.height(),
+          };
+
+          const rawBurst = photoBurstFrames && photoBurstFrames[idx];
+          if (rawBurst && rawBurst.length > 1) {
+            // Mode Boomerang Burst: load 5 foto gerakan yang diambil kamera
+            const loaded = await Promise.all(rawBurst.map(loadImg));
+            burstForSlot[idx] = loaded;
+          } else {
+            // Foto biasa/upload: gunakan gambar asli untuk micro-motion slot
+            burstForSlot[idx] = [konvaImg.image()];
+          }
+        }
+      }
+
+      setGifProgress(35);
+
+      // Urutan Boomerang 5 frame: 0 -> 1 -> 2 -> 3 -> 4
+      const BURST_STEPS = 5;
+      const generatedFrames: string[] = [];
+
+      try {
+        for (let s = 0; s < BURST_STEPS; s++) {
+          for (let idx = 0; idx < slotCount; idx++) {
+            const konvaImg = slotNodes[idx];
+            const orig = slotOriginals[idx];
+            const burst = burstForSlot[idx];
+            if (!konvaImg || !orig || !burst || burst.length === 0) continue;
+
+            if (burst.length > 1) {
+              // Jika ada burst frames hasil foto boomerang kamera: pasang frame ke-s
+              const frameImg = burst[s % burst.length];
+              konvaImg.image(frameImg);
+            } else {
+              // Jika foto tunggal: beri gerakan hidup lembut HANYA di dalam slot (frame tetap 100% diam)
+              if (targetMode === 'sway') {
+                const swayOffsets = [0, 4, 8, 4, 0];
+                konvaImg.x(orig.x + swayOffsets[s]);
+              } else {
+                // Living pulse di dalam batas slot
+                const pulseScales = [1.0, 1.018, 1.036, 1.02, 1.0];
+                const sc = pulseScales[s];
+                konvaImg.scaleX(orig.scaleX * sc);
+                konvaImg.scaleY(orig.scaleY * sc);
+                const dw = (orig.width * orig.scaleX * (sc - 1)) / 2;
+                const dh = (orig.height * orig.scaleY * (sc - 1)) / 2;
+                konvaImg.x(orig.x - dw);
+                konvaImg.y(orig.y - dh);
+              }
+            }
+          }
+
+          stage.batchDraw();
+
+          // Snapshot resolusi stabil (450px) dengan BINGKAI, STIKER, & TEKS TETAP 100% DIAM
+          const snap = exportHighResCanvas(stage, 450);
+          if (snap) {
+            generatedFrames.push(snap);
+          }
+          setGifProgress(35 + Math.round(((s + 1) / BURST_STEPS) * 30));
+        }
+      } finally {
+        // SELALU kembalikan gambar & posisi asli setiap slot
+        for (let idx = 0; idx < slotCount; idx++) {
+          const konvaImg = slotNodes[idx];
+          const orig = slotOriginals[idx];
+          if (konvaImg && orig) {
+            konvaImg.image(orig.image);
+            konvaImg.x(orig.x);
+            konvaImg.y(orig.y);
+            konvaImg.scaleX(orig.scaleX);
+            konvaImg.scaleY(orig.scaleY);
+          }
+        }
+        stage.batchDraw();
+      }
+
+      setGifProgress(68);
+
+      // Encode menjadi file Boomerang GIF: generateBoomerangGif otomatis melakukan loop maju-mundur (0->1->2->3->4->3->2->1)
       const res = await generateBoomerangGif({
-        photos: frames,
+        photos: generatedFrames,
         interval: targetInterval,
-        gifWidth: width,
-        gifHeight: height,
-        progressCallback: (pct) => setGifProgress(50 + Math.round((pct / 100) * 50)),
+        gifWidth: 420,
+        progressCallback: (pct) => setGifProgress(68 + Math.round((pct / 100) * 30)),
       });
 
       setGifResult(res);
+      setGifProgress(100);
     } catch (err) {
       console.error('Gagal membuat Boomerang GIF:', err);
     } finally {

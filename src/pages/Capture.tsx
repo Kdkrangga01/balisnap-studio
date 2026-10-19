@@ -161,6 +161,7 @@ export const Capture: React.FC = () => {
     setPhotoAtSlot,
     clearPhotos,
     setStep,
+    setPhotoBurstAtSlot,
   } = usePhotobooth();
 
   const [activeSlot, setActiveSlot] = useState<number>(0);
@@ -179,8 +180,8 @@ export const Capture: React.FC = () => {
   // Filter, Tone & Mirroring
   const [activeFilter, setActiveFilter] = useState<string>('none');
   const [brightness, setBrightness] = useState<number>(104);
-  const isBeautyMode = false;
-  const isMirrorMode = true;
+  const isBeautyMode = false; 
+  const isMirrorMode = true; 
   const [timerInterval, setTimerInterval] = useState<number>(3);
   const [cameraMode, setCameraMode] = useState<'group' | 'solo'>('group');
 
@@ -347,12 +348,15 @@ export const Capture: React.FC = () => {
     };
   }, [hasCamera]);
 
-  const capturePhoto = useCallback(() => {
+  const capturePhoto = useCallback(async () => {
     if (!webcamRef.current) return;
 
     const video = webcamRef.current.video;
     const actualWidth = video?.videoWidth || actualResolution?.width || 1920;
     const actualHeight = video?.videoHeight || actualResolution?.height || 1080;
+    const capturedSlot = activeSlot;
+    const targetAspect = getSlotAspectRatio(capturedSlot);
+    const maxLongSide = 2048;
 
     const imageSrc = webcamRef.current.getScreenshot({
       width: actualWidth,
@@ -371,12 +375,9 @@ export const Capture: React.FC = () => {
     setCaptureError(null);
     setIsProcessingPhoto(true);
 
-    const maxLongSide = 2048;
-    const capturedSlot = activeSlot;
-    const targetAspect = getSlotAspectRatio(capturedSlot);
-
     fitDataUrlToSlotAspect(imageSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect, cameraMode)
       .then((croppedSrc) => {
+        setPhotoBurstAtSlot(capturedSlot, [croppedSrc]);
         setPhotoAtSlot(capturedSlot, croppedSrc);
 
         const updatedPhotos = [...photosStateRef.current];
@@ -396,7 +397,22 @@ export const Capture: React.FC = () => {
         setIsProcessingPhoto(false);
         setIsAutoShooting(false);
       });
-  }, [webcamRef, activeSlot, isAutoShooting, activeFilter, brightness, isBeautyMode, timerInterval, setPhotoAtSlot, selectNextEmptySlot, actualResolution, soundEnabled, getSlotAspectRatio, cameraMode]);
+  }, [
+    webcamRef,
+    activeSlot,
+    isAutoShooting,
+    activeFilter,
+    brightness,
+    isBeautyMode,
+    timerInterval,
+    setPhotoAtSlot,
+    setPhotoBurstAtSlot,
+    selectNextEmptySlot,
+    actualResolution,
+    soundEnabled,
+    getSlotAspectRatio,
+    cameraMode,
+  ]);
 
   if (!selectedFrame) return null;
 
@@ -427,7 +443,7 @@ export const Capture: React.FC = () => {
 
   const startSingleClickMultiShoot = () => {
     const firstEmpty = photosStateRef.current.findIndex((p) => p === null);
-    if (firstEmpty === -1 || firstEmpty >= totalSlots) {
+    if (firstEmpty === -1 || firstEmpty >= totalSlots) { 
       clearPhotos();
       setActiveSlot(0);
       setTimeout(() => {
@@ -472,6 +488,7 @@ export const Capture: React.FC = () => {
       fitDataUrlToSlotAspect(rawSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect, cameraMode)
         .then((croppedSrc) => {
           setPhotoAtSlot(targetSlot, croppedSrc);
+          setPhotoBurstAtSlot(targetSlot, [croppedSrc]);
           const updatedPhotos = [...photosStateRef.current];
           updatedPhotos[targetSlot] = croppedSrc;
           setIsProcessingPhoto(false);
@@ -482,6 +499,7 @@ export const Capture: React.FC = () => {
           fitDataUrlToSlotAspect(rawSrc, 1024, 'none', 100, false, targetAspect, cameraMode)
             .then((fallbackSrc) => {
               setPhotoAtSlot(targetSlot, fallbackSrc);
+              setPhotoBurstAtSlot(targetSlot, [fallbackSrc]);
               const updatedPhotos = [...photosStateRef.current];
               updatedPhotos[targetSlot] = fallbackSrc;
               setIsProcessingPhoto(false);
@@ -501,6 +519,7 @@ export const Capture: React.FC = () => {
   const handleDemoPhoto = () => {
     const demoUrl = generateDemoPhoto(activeSlot);
     setPhotoAtSlot(activeSlot, demoUrl);
+    setPhotoBurstAtSlot(activeSlot, [demoUrl, demoUrl, demoUrl, demoUrl, demoUrl]);
     const updatedPhotos = [...photosStateRef.current];
     updatedPhotos[activeSlot] = demoUrl;
     setTimeout(() => selectNextEmptySlot(updatedPhotos), 300);
@@ -629,13 +648,13 @@ export const Capture: React.FC = () => {
             {/* LEFT COLUMN: CAMERA VIEWFINDER & CONTROLS */}
             <div className="lg:col-span-8 flex flex-col justify-between gap-2.5 h-full w-full min-h-0 overflow-hidden">
               
-              {/* SEGMENTED TOGGLE: MODE FOTO RAME-RAME vs SOLO */}
+              {/* BIDANG LENSA TOGGLE: RAME-RAME (WIDE) vs SOLO (CLOSE-UP) */}
               <div className="flex items-center justify-center w-full flex-shrink-0">
-                <div className="bg-stone-200/70 p-1 rounded-2xl flex items-center gap-1 w-full max-w-sm sm:max-w-md shadow-inner">
+                <div className="bg-stone-200/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner">
                   <button
                     type="button"
                     onClick={() => setCameraMode('group')}
-                    className={`flex-1 py-1.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    className={`py-1.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                       cameraMode === 'group'
                         ? 'bg-white text-stone-900 shadow-sm'
                         : 'text-stone-600 hover:text-stone-900'
@@ -648,7 +667,7 @@ export const Capture: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setCameraMode('solo')}
-                    className={`flex-1 py-1.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    className={`py-1.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                       cameraMode === 'solo'
                         ? 'bg-white text-stone-900 shadow-sm'
                         : 'text-stone-600 hover:text-stone-900'
@@ -725,12 +744,12 @@ export const Capture: React.FC = () => {
                     {/* Garis Batas Kiri & Kanan Lembut */}
                     <div className="absolute inset-y-6 left-3 sm:left-5 border-l border-dashed border-white/40 flex items-center">
                       <span className="hidden sm:inline-block -rotate-90 text-[8px] font-bold tracking-widest text-white/60 uppercase whitespace-nowrap -ml-6 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
-                        Batas Kiri
-                      </span>
+                        Batas Kiri 
+                      </span> 
                     </div>
                     <div className="absolute inset-y-6 right-3 sm:right-5 border-r border-dashed border-white/40 flex items-center justify-end">
                       <span className="hidden sm:inline-block rotate-90 text-[8px] font-bold tracking-widest text-white/60 uppercase whitespace-nowrap -mr-6 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
-                        Batas Kanan
+                        Batas Kanan 
                       </span>
                     </div>
                   </div>
@@ -780,7 +799,8 @@ export const Capture: React.FC = () => {
                       <span className="text-[10px] font-bold tracking-wider uppercase">Menyimpan Foto...</span>
                     </motion.div>
                   )}
-                </AnimatePresence>
+                </AnimatePresence> 
+
 
                 {/* Slot Indicator Pills Bawah */}
                 <div className="absolute bottom-2.5 left-4 right-4 flex gap-1.5 z-20">
