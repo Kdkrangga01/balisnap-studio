@@ -132,6 +132,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
     selectedId,
     setSelectedId,
     frameColor,
+    cardColor,
     lineColor,
     appliedFilter,
     fineTuning,
@@ -413,8 +414,9 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const imgW = photoImg.naturalWidth || photoImg.width;
             const imgH = photoImg.naturalHeight || photoImg.height;
 
-            // Menggunakan Math.max (cover fit) agar foto langsung ngepas 100% penuh mengisi slot di semua bingkai tanpa celah putih
-            const baseScale = Math.max(slot.w / imgW, slot.h / imgH);
+            // Skala dasar menggunakan Math.min (contain fit) agar seluruh foto (termasuk foto rame-rame / group)
+            // tampil utuh dan proporsional sesuai photobooth pada umumnya tanpa ada bagian yang terpotong.
+            const baseScale = Math.min(slot.w / imgW, slot.h / imgH);
             const finalZoom = baseScale * transform.zoom;
 
             const scaledW = imgW * finalZoom;
@@ -459,13 +461,19 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                   ctx.closePath();
                 }}
               >
-                {/* Background slot bersih agar jika foto grup lebar terpasang di slot vertikal, latar belakang tetap rapi */}
+                {/* Background slot bersih agar jika foto grup terpasang, latar belakang tetap rapi */}
                 <Rect
                   x={0}
                   y={0}
                   width={slot.w}
                   height={slot.h}
-                  fill="#ffffff"
+                  fill={
+                    cardColor && cardColor !== 'original'
+                      ? cardColor
+                      : (selectedFrame.category === 'filmstrip' || (selectedFrame.name && selectedFrame.name.toLowerCase().includes('film'))
+                          ? '#000000'
+                          : '#ffffff')
+                  }
                   listening={false}
                 />
 
