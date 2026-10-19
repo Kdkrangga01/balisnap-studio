@@ -121,7 +121,7 @@ export async function createBoomerangFrames(
  * Mengubah array foto photobooth menjadi animasi GIF Boomerang beresolusi tinggi.
  */
 export function generateBoomerangGif(options: GifOptions): Promise<{ dataUrl: string; blob: Blob }> {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const validPhotos = options.photos.filter((p): p is string => Boolean(p));
 
     if (validPhotos.length === 0) {
@@ -151,8 +151,29 @@ export function generateBoomerangGif(options: GifOptions): Promise<{ dataUrl: st
       boomerangSequence.push(validPhotos[0]);
     }
 
-    const gifWidth = options.gifWidth || 450;
-    const gifHeight = options.gifHeight || 675;
+    // Hitung aspek rasio asli dari frame pertama agar BINGKAI TIDAK PERNAH TERPOTONG
+    let autoHeight = options.gifHeight;
+    const targetWidth = options.gifWidth || 420;
+
+    if (!autoHeight && boomerangSequence[0]) {
+      try {
+        const sampleImg = await new Promise<HTMLImageElement>((res, rej) => {
+          const el = new Image();
+          el.crossOrigin = 'Anonymous';
+          el.onload = () => res(el);
+          el.onerror = rej;
+          el.src = boomerangSequence[0];
+        });
+        const w = sampleImg.naturalWidth || sampleImg.width || targetWidth;
+        const h = sampleImg.naturalHeight || sampleImg.height || targetWidth * 1.5;
+        autoHeight = Math.round(targetWidth * (h / w));
+      } catch {
+        autoHeight = Math.round(targetWidth * 1.5);
+      }
+    }
+
+    const gifWidth = targetWidth;
+    const gifHeight = autoHeight || 630;
     const interval = options.interval || 0.35; // ~350ms per frame
 
     gifshot.createGIF(

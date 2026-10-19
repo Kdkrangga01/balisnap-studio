@@ -352,10 +352,16 @@ export const Preview: React.FC = () => {
 
       setGifProgress(70);
 
+      const stageW = stage.width() || selectedFrame?.width || 1200;
+      const stageH = stage.height() || selectedFrame?.height || 1800;
+      const targetGifW = 420;
+      const targetGifH = Math.round(targetGifW * (stageH / stageW));
+
       const res = await generateBoomerangGif({
         photos: generatedFrames,
         interval: targetInterval,
-        gifWidth: 420,
+        gifWidth: targetGifW,
+        gifHeight: targetGifH,
         isPreLooped: isPreLooped,
         progressCallback: (pct) => setGifProgress(70 + Math.round((pct / 100) * 28)),
       });
