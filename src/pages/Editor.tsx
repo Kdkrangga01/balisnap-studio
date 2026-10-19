@@ -278,7 +278,7 @@ export const Editor: React.FC = () => {
               BaliSnap Studio{' '}
               <span className="text-[#1D63FF]">Editor</span>
             </h1>
-            <p className="text-zinc-500 text-xs flex items-center gap-2 mt-1.5 font-medium">
+            <p className="text-zinc-500 text-xs flex items-center gap-2 mt-1.5 font-medium"> 
               <Layers className="w-3.5 h-3.5 text-zinc-400" />
               {totalElements} elemen terpasang •{' '}
               <span className="text-[#1D63FF] font-bold">{filledSlots}/{totalSlots}</span> foto terisi
