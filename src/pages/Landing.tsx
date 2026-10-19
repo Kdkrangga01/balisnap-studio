@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { usePhotobooth, type PackageTier } from '../context/PhotoboothContext';
 import { CheckoutModal } from '../components/CheckoutModal';
+import { frames } from '../data/frames';
 import {
   Camera, ArrowRight, Menu, X, Check,
   Wand2, Download, Layers,
   ChevronRight, ChevronLeft,
-  Sparkles, Heart
+  Sparkles, Film
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -16,7 +17,7 @@ const TransparentLogo: React.FC<{ src: string; className?: string }> = ({ src, c
   useEffect(() => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
-    img.src = src;
+    img.src = src; 
     img.onload = () => {
       const canvas = document.createElement('canvas');
       const width = img.naturalWidth;
@@ -93,12 +94,174 @@ const TransparentLogo: React.FC<{ src: string; className?: string }> = ({ src, c
   );
 };
 
+// Kurasi Desain Bingkai Populer dari Studio dengan Foto Real HD BLACKPINK (Jennie, Jisoo, Rosé, Lisa, & Group)
+export interface PopularSliderItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  badge?: string;
+  badgeColor?: string;
+}
+
+const POPULAR_SLIDER_ITEMS: PopularSliderItem[] = [
+  {
+    id: 'custom-1784636333576-2jx9',
+    title: 'Vanilla Melody · 2 Photos',
+    subtitle: 'Cute Cherry & Floral Pink',
+    badge: 'POPULAR CUTE',
+    badgeColor: 'bg-[#FEF08A] text-[#9A3412] border-[#FDE047]',
+  },
+  {
+    id: 'custom-1784637773555-camr',
+    title: 'Vintage Cassette · 3 Photos',
+    subtitle: 'Newspaper Editorial Retro',
+    badge: 'RETRO EDITORIAL',
+    badgeColor: 'bg-[#FEF08A] text-[#9A3412] border-[#FDE047]', 
+  }, 
+  {
+    id: 'custom-1784637808377-sm67',
+    title: 'Frame Spiderman · 4 Photos',
+    subtitle: '35mm Filmstrip Hero Edition',
+    badge: 'NEW LAYOUT',
+    badgeColor: 'bg-[#F43F5E] text-white border-[#E11D48]',
+  },
+  {
+    id: 'custom-1784638914224-t68k',
+    title: 'Daisy Bunny · 1 Photo',
+    subtitle: 'Cozy Knit Floral Kawaii',
+    badge: 'CUTE MASCOT',
+    badgeColor: 'bg-[#FEF08A] text-[#9A3412] border-[#FDE047]',
+  },
+  {
+    id: 'custom-1784636523212-9oxx',
+    title: 'Oldschool Romance · 2 Photos',
+    subtitle: 'Vintage Camera & Scrapbook',
+    badge: 'RETRO VINTAGE',
+    badgeColor: 'bg-[#E0E7FF] text-[#3730A3] border-[#C7D2FE]',
+  },
+  {
+    id: 'custom-1784428020314-mq4y',
+    title: 'Retro Journal · 4 Photos',
+    subtitle: '4-Grid Polaroid Aesthetic',
+    badge: 'TEMPLATE LAYOUT',
+    badgeColor: 'bg-[#FEF08A] text-[#9A3412] border-[#FDE047]',
+  },
+  {
+    id: 'custom-1784544196068-ee8i',
+    title: 'Butter Kiss · 6 Photos',
+    subtitle: '6-Slot Kitten Kawaii Grid',
+    badge: 'FAVORITE CUTE',
+    badgeColor: 'bg-[#F43F5E] text-white border-[#E11D48]',
+  },
+  {
+    id: 'custom-1784638948066-87pn',
+    title: 'Frame Band · 3 Photos',
+    subtitle: 'Electric Red Filmstrip',
+    badge: 'POPULAR STRIP',
+    badgeColor: 'bg-[#E0E7FF] text-[#3730A3] border-[#C7D2FE]',
+  },
+  {
+    id: 'custom-1784424710599-i4k0',
+    title: 'Radiant Mirage · 6 Photos',
+    subtitle: 'Aesthetic Studio Grid',
+    badge: 'STUDIO EXCLUSIVE',
+    badgeColor: 'bg-[#E0E7FF] text-[#3730A3] border-[#C7D2FE]',
+  },
+  {
+    id: 'custom-1784428172316-tz5k',
+    title: 'Frame Klasik · 8 Photos',
+    subtitle: '8-Slot Korean Classic Grid',
+    badge: 'GROUP 8-SLOT',
+    badgeColor: 'bg-[#27272A] text-white border-[#3F3F46]',
+  },
+];
+
+// Komponen kartu bingkai photostrip fisik murni tanpa foto (kosong)
+const SliderFrameCard: React.FC<{
+  item: PopularSliderItem;
+  onSelect: (id: string) => void;
+}> = ({ item, onSelect }) => {
+  const template = frames.find((f) => f.id === item.id);
+  if (!template) return null;
+
+  const aspect = template.width / template.height;
+  const heightPx = 380;
+  const widthPx = Math.min(270, Math.max(140, Math.round(heightPx * aspect)));
+
+  return (
+    <div
+      onClick={() => onSelect(item.id)}
+      className="flex flex-col items-center shrink-0 cursor-pointer group select-none transition-all duration-300"
+    >
+      {/* Box Photostrip Fisik */}
+      <div
+        className="relative transition-transform duration-300 group-hover:-translate-y-3"
+        style={{ width: `${widthPx}px`, height: `${heightPx}px` }}
+      >
+        {/* Badge Washi Tape Stiker Miring */}
+        {item.badge && (
+          <div
+            className={`absolute -top-3.5 right-1 z-30 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase shadow-md border ${item.badgeColor} rotate-[4deg] group-hover:rotate-[2deg] transition-transform`}
+          >
+            {item.badge}
+          </div>
+        )}
+
+        {/* Real Photostrip Physical Paper Card (Kosong tanpa foto, menampilkan desain asli bingkai) */}
+        <div className="relative w-full h-full bg-white rounded-xl shadow-[0_12px_28px_rgba(0,0,0,0.14)] group-hover:shadow-[0_20px_42px_rgba(0,0,0,0.22)] border border-black/30 overflow-hidden flex items-center justify-center">
+          {/* Template Frame Artwork PNG */}
+          <img
+            src={template.src}
+            alt={template.name}
+            className="w-full h-full object-fill pointer-events-none select-none transition-transform duration-500 group-hover:scale-[1.02]"
+            loading="lazy"
+          />
+
+          {/* Quick Hover Select Overlay */}
+          <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 flex items-center justify-center backdrop-blur-[0.5px]">
+            <span className="px-3.5 py-1.5 rounded-full bg-white text-zinc-900 font-bold text-[10px] uppercase tracking-wider shadow-lg flex items-center gap-1.5 transform translate-y-1 group-hover:translate-y-0 transition-transform">
+              <Camera className="w-3.5 h-3.5 text-rose-600" />
+              <span>Gunakan Frame Ini</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Title & Subtitle Below the Strip */}
+      <div className="text-center mt-3.5 max-w-[220px]">
+        <h4 className="font-bold text-[13px] sm:text-sm text-zinc-900 group-hover:text-rose-600 transition-colors leading-tight">
+          {item.title}
+        </h4>
+        <p className="text-[11px] text-zinc-500 font-medium mt-0.5 leading-tight">
+          {item.subtitle}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 export const Landing: React.FC = () => {
-  const { setStep, setPackageTier } = usePhotobooth();
+  const { setStep, setPackageTier, selectFrame } = usePhotobooth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutModalTier, setCheckoutModalTier] = useState<PackageTier>('basic');
   const [activeTutorialStep, setActiveTutorialStep] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = direction === 'left' ? -360 : 360;
+      carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const handleUsePopularFrame = (frameId: string) => {
+    const target = frames.find((f) => f.id === frameId);
+    if (target) {
+      selectFrame(target);
+      setStep('capture');
+    }
+  };
 
   // Panduan terpadu satu tempat yang mencakup seluruh alur tanpa pengulangan
   const tutorialSteps = [
@@ -196,14 +359,20 @@ export const Landing: React.FC = () => {
         {/* Desktop Navigation Links (Satu kesatuan rapi tanpa duplikasi) */}
         <nav className="hidden md:flex items-center gap-8 text-[12px] font-medium tracking-wider text-[#52525B]">
           <a
-            href="#panduan-berfoto"
+            href="#koleksi-bingkai"
             className="hover:text-[#18181B] transition-colors py-1"
+          >
+            Koleksi Bingkai
+          </a>
+          <a
+            href="#panduan-berfoto"
+            className="hover:text-[#18181B] transition-colors py-1" 
           >
             Cara Berfoto
           </a>
           <a
             href="#paket-harga"
-            className="hover:text-[#18181B] transition-colors py-1"
+            className="hover:text-[#18181B] transition-colors py-1" 
           >
             Pilihan Paket
           </a>
@@ -240,6 +409,14 @@ export const Landing: React.FC = () => {
             className="md:hidden bg-white border-b border-[#F1F3F5] px-6 py-4 flex flex-col gap-3.5 font-medium text-sm text-[#3F3F46] relative z-40 text-left shadow-sm"
           >
             <a
+              href="#koleksi-bingkai"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2 border-b border-[#F4F4F5] hover:text-[#18181B] flex items-center justify-between"
+            >
+              <span>Koleksi Bingkai</span>
+              <Film className="w-4 h-4 text-[#71717A]" />
+            </a>
+            <a
               href="#panduan-berfoto"
               onClick={() => setMobileMenuOpen(false)}
               className="py-2 border-b border-[#F4F4F5] hover:text-[#18181B] flex items-center justify-between"
@@ -269,127 +446,245 @@ export const Landing: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* ===== HERO SECTION ===== */}
-      <main className="relative max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-12 sm:pt-18 pb-16 sm:pb-24 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center bg-white">
+      {/* ===== HERO SECTION DENGAN 2 FRAME MELAYANG (SISI KIRI & SISI KANAN PERSIS REFERENSI) ===== */}
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-14 pb-16 sm:pb-22 bg-white overflow-hidden">
         
-        {/* Left Column: Heading & Information */}
-        <div className="lg:col-span-7 text-left flex flex-col items-start w-full">
-          
-          {/* Subtle Tag */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F4F4F5] border border-[#E4E4E7] text-[#52525B] text-[11px] font-medium tracking-wide mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#9A6A38]" />
-            <span>Studio Photobooth Digital • Akses Langsung Browser</span>
-          </div>
-
-          {/* Main Headline */}
-          <h1 className="font-serif font-bold text-3xl sm:text-5xl md:text-6xl text-[#18181B] tracking-tight leading-[1.18] mb-6">
-            Abadikan Momen Manis <br />
-            <span className="font-normal italic text-[#9A6A38]">Dalam Setiap Bingkai.</span>
-          </h1>
-
-          {/* Subtitle bahasa proporsional tanpa istilah AI */}
-          <p className="text-[#52525B] text-sm sm:text-base font-normal max-w-xl mb-8 leading-relaxed">
-            Nikmati kemudahan membuat foto strip estetik langsung dari ponsel atau laptop Anda. Lengkap dengan beragam template bingkai, pilihan filter warna, dan stiker dekoratif berkualitas tinggi.
-          </p>
-
-          {/* Action Button & Micro-Info */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto mb-10">
-            <motion.button
-              onClick={() => setStep('select-frame')}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-8 py-3.5 bg-[#18181B] hover:bg-[#27272A] text-white rounded-xl font-medium tracking-wide text-sm shadow-sm transition-colors flex items-center justify-center gap-2.5 cursor-pointer select-none"
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 items-center">
+          {/* SISI KIRI: Frame Oldschool Romance (Kosong Tanpa Foto) Melayang Halus */}
+          <div className="hidden lg:flex lg:col-span-3 justify-end items-center">
+            <motion.div
+              onClick={() => handleUsePopularFrame('custom-1784636523212-9oxx')}
+              animate={{
+                y: [-7, 7, -7],
+                rotate: [-6, -4, -6],
+              }}
+              transition={{
+                duration: 5.5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              whileHover={{ scale: 1.05, rotate: -2, y: 0, transition: { duration: 0.3 } }}
+              className="w-[195px] xl:w-[210px] aspect-[736/1308] rounded-xl bg-white p-1 shadow-[0_14px_34px_rgba(0,0,0,0.12)] border border-black/15 flex items-center justify-center select-none cursor-pointer group transition-shadow hover:shadow-[0_22px_45px_rgba(0,0,0,0.18)]"
+              title="Oldschool Romance · Klik untuk gunakan bingkai ini"
             >
-              <span>Mulai Sesi Foto</span>
-              <ArrowRight className="w-4 h-4 text-[#D4D4D8]" />
-            </motion.button>
+              <div className="w-full h-full bg-white rounded-lg overflow-hidden flex items-center justify-center">
+                <img
+                  src="/templates/custom-1784636523212-9oxx.png"
+                  alt="Oldschool Romance"
+                  className="w-full h-full object-fill pointer-events-none select-none transition-transform duration-500 group-hover:scale-[1.02]"
+                  loading="lazy"
+                />
+              </div>
+            </motion.div>
+          </div>
 
-            <a
-              href="#panduan-berfoto"
-              className="px-6 py-3.5 bg-white hover:bg-[#F8F9FA] text-[#3F3F46] border border-[#E4E4E7] rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+          {/* SISI TENGAH: Heading, Subtitle & Tombol Navigasi Utama */}
+          <div className="lg:col-span-6 flex flex-col items-center text-center w-full px-2 sm:px-4">
+            
+            {/* Subtle Tag */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F4F4F5] border border-[#E4E4E7] text-[#52525B] text-[11px] font-medium tracking-wide mb-4 sm:mb-5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#9A6A38]" />
+              <span>Studio Photobooth Digital • Akses Langsung Browser</span>
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="font-serif font-bold text-3xl sm:text-4xl md:text-[44px] xl:text-[48px] text-[#18181B] tracking-tight leading-[1.16] mb-4">
+              Abadikan Momen Manis
+              <span className="block font-normal italic text-[#9A6A38] mt-1 sm:mt-1.5">
+                Dalam Setiap Bingkai.
+              </span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-[#52525B] text-xs sm:text-sm md:text-[14.5px] font-normal max-w-md xl:max-w-[480px] mb-7 leading-relaxed text-balance">
+              Nikmati kemudahan membuat foto strip estetik langsung dari ponsel atau laptop Anda, lengkap dengan beragam pilihan template bingkai, filter warna studio, dan stiker dekoratif berkualitas.
+            </p>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto mb-8">
+              <motion.button
+                onClick={() => setStep('select-frame')} 
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full sm:w-auto px-8 py-3.5 bg-[#18181B] hover:bg-[#27272A] text-white rounded-xl font-medium tracking-wide text-sm shadow-sm transition-colors flex items-center justify-center gap-2.5 cursor-pointer select-none"
+              >
+                <span>Mulai Sesi Foto</span>
+                <ArrowRight className="w-4 h-4 text-[#D4D4D8]" />
+              </motion.button>
+
+              <a
+                href="#panduan-berfoto"
+                className="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-[#F8F9FA] text-[#3F3F46] border border-[#E4E4E7] rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Lihat Cara Berfoto</span> 
+              </a> 
+            </div>
+
+            {/* Data Highlight Nyata */}
+            <div className="grid grid-cols-3 gap-4 pt-5 border-t border-[#F1F3F5] w-full max-w-sm text-center">
+              <div>
+                <p className="font-serif font-bold text-base sm:text-lg text-[#18181B]">100+</p>
+                <p className="text-[10px] sm:text-[11px] text-[#71717A] font-normal leading-tight mt-0.5">Template Bingkai</p>
+              </div>
+              <div>
+                <p className="font-serif font-bold text-base sm:text-lg text-[#18181B]">Gratis</p>
+                <p className="text-[10px] sm:text-[11px] text-[#71717A] font-normal leading-tight mt-0.5">2 Sesi Percobaan</p>
+              </div>
+              <div>
+                <p className="font-serif font-bold text-base sm:text-lg text-[#18181B]">Format HD</p>
+                <p className="text-[10px] sm:text-[11px] text-[#71717A] font-normal leading-tight mt-0.5">Berkas Siap Cetak</p>
+              </div>
+            </div>
+
+            {/* Duo Frame Tampilan Khusus Layar Tablet / Mobile (Kosong Tanpa Foto) */}
+            <div className="lg:hidden flex items-center justify-center gap-4 sm:gap-6 pt-7 w-full">
+              {/* Left Frame Mobile Preview */}
+              <motion.div
+                onClick={() => handleUsePopularFrame('custom-1784636523212-9oxx')}
+                animate={{
+                  y: [-4, 4, -4],
+                  rotate: [-4, -2, -4],
+                }}
+                transition={{
+                  duration: 4.5,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                className="w-[125px] sm:w-[150px] aspect-[736/1308] rounded-lg bg-white p-0.5 shadow-md border border-black/15 flex items-center justify-center cursor-pointer overflow-hidden"
+                title="Oldschool Romance"
+              >
+                <img
+                  src="/templates/custom-1784636523212-9oxx.png"
+                  alt="Oldschool Romance"
+                  className="w-full h-full object-fill pointer-events-none"
+                  loading="lazy"
+                />
+              </motion.div>
+
+              {/* Right Frame Mobile Preview */}
+              <motion.div
+                onClick={() => handleUsePopularFrame('custom-1784637808377-sm67')}
+                animate={{
+                  y: [4, -4, 4],
+                  rotate: [4, 2, 4],
+                }}
+                transition={{
+                  duration: 4.5,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                className="w-[125px] sm:w-[150px] aspect-[736/1308] rounded-lg bg-white p-0.5 shadow-md border border-black/15 flex items-center justify-center cursor-pointer overflow-hidden"
+                title="Frame Spiderman"
+              >
+                <img
+                  src="/templates/custom-1784637808377-sm67.png"
+                  alt="Frame Spiderman"
+                  className="w-full h-full object-fill pointer-events-none"
+                  loading="lazy"
+                />
+              </motion.div>
+            </div>
+
+          </div>
+
+          {/* SISI KANAN: Frame Spiderman (Kosong Tanpa Foto) Melayang Halus */}
+          <div className="hidden lg:flex lg:col-span-3 justify-start items-center">
+            <motion.div
+              onClick={() => handleUsePopularFrame('custom-1784637808377-sm67')}
+              animate={{
+                y: [7, -7, 7],
+                rotate: [6, 4, 6],
+              }}
+              transition={{
+                duration: 5.5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              whileHover={{ scale: 1.05, rotate: 2, y: 0, transition: { duration: 0.3 } }}
+              className="w-[195px] xl:w-[210px] aspect-[736/1308] rounded-xl bg-white p-1 shadow-[0_14px_34px_rgba(0,0,0,0.12)] border border-black/15 flex items-center justify-center select-none cursor-pointer group transition-shadow hover:shadow-[0_22px_45px_rgba(0,0,0,0.18)]"
+              title="Frame Spiderman · Klik untuk gunakan bingkai ini"
             >
-              <span>Lihat Cara Berfoto</span>
-            </a>
+              <div className="w-full h-full bg-white rounded-lg overflow-hidden flex items-center justify-center">
+                <img
+                  src="/templates/custom-1784637808377-sm67.png"
+                  alt="Frame Spiderman"
+                  className="w-full h-full object-fill pointer-events-none select-none transition-transform duration-500 group-hover:scale-[1.02]"
+                  loading="lazy"
+                />
+              </div>
+            </motion.div>
           </div>
 
-          {/* Data Highlight Nyata */}
-          <div className="grid grid-cols-3 gap-4 pt-6 border-t border-[#F1F3F5] w-full max-w-md text-left">
-            <div>
-              <p className="font-serif font-bold text-lg text-[#18181B]">100+</p>
-              <p className="text-[11px] text-[#71717A] font-normal leading-tight mt-0.5">Template Bingkai</p>
-            </div>
-            <div>
-              <p className="font-serif font-bold text-lg text-[#18181B]">Gratis</p>
-              <p className="text-[11px] text-[#71717A] font-normal leading-tight mt-0.5">2 Sesi Percobaan</p>
-            </div>
-            <div>
-              <p className="font-serif font-bold text-lg text-[#18181B]">Format HD</p>
-              <p className="text-[11px] text-[#71717A] font-normal leading-tight mt-0.5">Berkas Siap Cetak</p>
-            </div>
-          </div>
         </div>
 
-        {/* Right Column: Physical Studio Photostrip Mockup */}
-        <div className="lg:col-span-5 flex justify-center items-center w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            whileHover={{ y: -4, rotate: 0.5 }}
-            className="w-full max-w-[270px] sm:max-w-[290px] rounded-2xl bg-[#18181B] p-3.5 sm:p-4 shadow-xl border border-[#27272A] flex flex-col justify-between text-center select-none"
+      </main> 
+
+      {/* ===== SECTION KOLEKSI BINGKAI POPULER (HORIZONTAL SLIDER PERSIS REFERENSI) ===== */}
+      <section id="koleksi-bingkai" className="py-14 sm:py-20 bg-white border-t border-b border-[#F1F3F5] relative overflow-hidden select-none">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto px-5 mb-8 sm:mb-10"> 
+          <span className="text-[10px] font-bold tracking-widest text-[#52525B] uppercase bg-[#F4F4F5] px-3.5 py-1 rounded-full border border-[#E4E4E7] shadow-2xs">
+            Pilihan Layout Terpopuler
+          </span>
+          <h2 className="font-serif font-bold text-2xl sm:text-4xl text-[#18181B] mt-2.5 mb-2 tracking-tight">
+            Pilih Layout Bingkai Favorit
+          </h2>
+          <p className="text-xs sm:text-sm text-[#52525B] leading-relaxed font-normal">
+            Geser untuk melihat beragam layout estetik studio. Klik layout bingkai favorit untuk langsung memulai sesi foto.
+          </p> 
+        </div> 
+
+        {/* Carousel Container with Left & Right Arrows */} 
+        <div className="relative max-w-7xl mx-auto px-2 sm:px-6"> 
+          {/* Tombol Panah Kiri */}
+          <button 
+            onClick={() => scrollCarousel('left')} 
+            aria-label="Geser ke kiri"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-md hover:bg-zinc-50 hover:text-zinc-950 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer absolute left-1 sm:left-4 top-[45%] -translate-y-1/2 z-30"
           >
-            {/* Strip Header */}
-            <div className="flex justify-between items-center pb-2.5 border-b border-[#27272A]">
-              <span className="text-[10px] font-medium tracking-wider text-[#A1A1AA] uppercase flex items-center gap-1.5">
-                <Heart className="w-3 h-3 text-[#E08A7C] fill-[#E08A7C]" />
-                BALISNAP STUDIO
-              </span>
-              <span className="text-[9px] font-mono text-[#71717A] bg-[#27272A] px-2 py-0.5 rounded">
-                CLASSIC STRIP
-              </span>
-            </div>
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" /> 
+          </button>
 
-            {/* Photo Slots */}
-            <div className="flex flex-col gap-2.5 my-3">
-              <div className="w-full aspect-[4/3] bg-[#27272A] rounded-lg overflow-hidden relative group">
-                <img
-                  src="/cat1.png"
-                  alt="Momen Foto 1"
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-              <div className="w-full aspect-[4/3] bg-[#27272A] rounded-lg overflow-hidden relative group">
-                <img
-                  src="/cat2.jpg"
-                  alt="Momen Foto 2"
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-              <div className="w-full aspect-[4/3] bg-[#27272A] rounded-lg overflow-hidden relative group">
-                <img
-                  src="/cat3.png"
-                  alt="Momen Foto 3"
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              </div>
-            </div>
+          {/* Tombol Panah Kanan */} 
+          <button
+            onClick={() => scrollCarousel('right')} 
+            aria-label="Geser ke kanan"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-md hover:bg-zinc-50 hover:text-zinc-950 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer absolute right-1 sm:right-4 top-[45%] -translate-y-1/2 z-30"
+          >
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" /> 
+          </button>
 
-            {/* Strip Footer Details */}
-            <div className="pt-2 border-t border-[#27272A] flex flex-col gap-1 text-[9.5px] text-[#A1A1AA]">
-              <p className="font-serif tracking-widest text-[#F4F4F5] font-medium">MEMORIES IN FRAMES</p>
-              <div className="flex justify-between items-center text-[8.5px] text-[#71717A] pt-1">
-                <span>Bali, Indonesia</span>
-                <span>Matte Finish HD</span>
-              </div>
-            </div>
-          </motion.div>
+          {/* Horizontal Scroll Track */}
+          <div 
+            ref={carouselRef}
+            className="flex items-end gap-8 sm:gap-12 overflow-x-auto scroll-smooth py-6 px-12 sm:px-20 scrollbar-none snap-x"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {POPULAR_SLIDER_ITEMS.map((item) => ( 
+              <div key={item.id} className="snap-center shrink-0">
+                <SliderFrameCard item={item} onSelect={handleUsePopularFrame} />
+              </div> 
+            ))}
+          </div>
         </div>
 
-      </main>
+        {/* Action Link di Bawah Slider */}
+        <div className="text-center mt-6 sm:mt-8"> 
+          <button
+            onClick={() => setStep('select-frame')}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white text-zinc-800 hover:text-zinc-950 font-bold text-xs border border-zinc-200 shadow-xs hover:shadow transition-all cursor-pointer"
+          >
+            <span>Buka Seluruh 100+ Koleksi Bingkai Studio</span>
+            <ArrowRight className="w-3.5 h-3.5 text-zinc-700" />
+          </button>
+        </div> 
+
+      </section> 
 
       {/* ===== SECTION CARA BERFOTO (PANDUAN LENGKAP SATU KESATUAN) ===== */}
       <section id="panduan-berfoto" className="border-t border-[#F1F3F5] bg-[#F8F9FA] py-16 sm:py-24 px-5 sm:px-8 lg:px-12">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto"> 
           
           {/* Section Header */}
           <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
@@ -513,15 +808,15 @@ export const Landing: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Bullet List Details */}
-                    <div className="space-y-2 mb-6">
+                    {/* Bullet List Details */} 
+                    <div className="space-y-2 mb-6"> 
                       {tutorialSteps[activeTutorialStep].details.map((detail, index) => {
                         const [label, ...rest] = detail.split(':');
                         return (
                           <div key={index} className="flex items-start gap-2.5 text-xs text-[#3F3F46]">
                             <Check className="w-3.5 h-3.5 text-[#9A6A38] shrink-0 mt-0.5" />
                             <span>
-                              <strong>{label}:</strong> {rest.join(':')}
+                              <strong>{label}:</strong> {rest.join(':')} 
                             </span>
                           </div>
                         );
@@ -567,13 +862,13 @@ export const Landing: React.FC = () => {
           </div>
 
           {/* 3 Pricing Cards Grid (Exact Match to User Reference Design) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch pt-4 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch pt-4 max-w-6xl mx-auto">
             
             {/* 1. Basic / Paket Gratis */}
             <motion.div
               whileHover={{ y: -4 }}
               transition={{ duration: 0.2 }}
-              className="bg-white border border-gray-200 rounded-3xl p-7 sm:p-8 flex flex-col justify-between shadow-xs hover:shadow-md transition-all text-center"
+              className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-7 flex flex-col justify-between shadow-xs hover:shadow-md transition-all text-center"
             >
               <div>
                 {/* Title */}
@@ -582,7 +877,7 @@ export const Landing: React.FC = () => {
                 </h3>
 
                 {/* Price & Period */}
-                <div className="pb-6 mb-6 border-b border-gray-100">
+                <div className="pb-5 mb-5 border-b border-gray-100">
                   <div className="flex items-center justify-center">
                     <span className="!font-sans font-bold text-4xl sm:text-5xl text-gray-900 tracking-tight">
                       Rp 0
@@ -594,30 +889,48 @@ export const Landing: React.FC = () => {
                 </div>
 
                 {/* Features List with Blue Circled Checkmarks */}
-                <div className="space-y-4 mb-8 text-left">
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                <div className="space-y-3 mb-8 text-left">
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Dua Sesi Foto Lengkap</span>
+                    <span>Akses coba 2 sesi foto lengkap (foto, edit, dan unduh)</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Unduh Berkas Kualitas HD</span>
+                    <span>Buka seluruh filter warna foto (Normal, B&W, Vintage, Cool, Vivid, Sepia)</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Seluruh Filter Warna Dasar</span>
+                    <span>Koleksi stiker dekorasi studio lengkap (Panda, Cute, Y2K, dsb.)</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Hitung Mundur &amp; Foto Ulang</span>
+                    <span>Fitur hitung mundur otomatis dan foto ulang (retake) per slot</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span>Tambah teks estetik dengan beragam pilihan gaya font studio</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span>Unduh hasil foto jernih format HD (tersedia 2 kali)</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span>Menyertakan tanda air (watermark) halus studio</span>
                   </div>
                 </div>
               </div>
@@ -642,7 +955,7 @@ export const Landing: React.FC = () => {
                 PALING POPULER
               </div>
 
-              <div className="p-7 sm:p-8 flex flex-col justify-between flex-1">
+              <div className="p-6 sm:p-7 flex flex-col justify-between flex-1">
                 <div>
                   {/* Title */}
                   <h3 className="!font-sans font-bold text-2xl text-gray-900 mb-3 tracking-tight">
@@ -650,7 +963,7 @@ export const Landing: React.FC = () => {
                   </h3>
 
                   {/* Price & Period (Blue Price) */}
-                  <div className="pb-6 mb-6 border-b border-gray-100">
+                  <div className="pb-5 mb-5 border-b border-gray-100">
                     <div className="flex items-center justify-center">
                       <span className="!font-sans font-bold text-4xl sm:text-5xl text-[#2563EB] tracking-tight">
                         Rp 25.000
@@ -662,36 +975,54 @@ export const Landing: React.FC = () => {
                   </div>
 
                   {/* Features List with Blue Circled Checkmarks */}
-                  <div className="space-y-4 mb-8 text-left">
-                    <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <div className="space-y-3 mb-8 text-left">
+                    <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
-                      <span>Bebas Foto &amp; Unduh Sepuasnya</span>
+                      <span>Akses penuh bebas foto &amp; unduh sepuasnya selama 24 jam</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                    <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
-                      <span>Hasil Bersih Tanpa Watermark</span>
+                      <span>100% hasil foto bersih tanpa watermark studio</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                    <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
-                      <span>Bebas Foto Ulang Tiap Slot</span>
+                      <span>Buka seluruh koleksi bingkai studio (Korean, Polaroid, Filmstrip, Retro)</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                    <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
-                      <span>Buka Seluruh Bingkai Standar</span>
+                      <span>Bebas foto ulang (retake) per slot tanpa batasan sesi</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                    <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
-                      <span>Unduh Kualitas Cetak HD &amp; Scan QR</span>
+                      <span>Buka seluruh filter warna foto &amp; semua paket stiker studio</span>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span>Bebas atur posisi foto (geser posisi, perbesar / zoom) sesuai keinginan</span>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span>Unduh hasil foto kualitas tinggi format HD</span>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                      <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span>Fitur scan QR code untuk simpan foto langsung ke smartphone</span>
                     </div>
                   </div>
                 </div>
@@ -710,7 +1041,7 @@ export const Landing: React.FC = () => {
             <motion.div
               whileHover={{ y: -4 }}
               transition={{ duration: 0.2 }}
-              className="bg-white border border-gray-200 rounded-3xl p-7 sm:p-8 flex flex-col justify-between shadow-xs hover:shadow-md transition-all text-center"
+              className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-7 flex flex-col justify-between shadow-xs hover:shadow-md transition-all text-center"
             >
               <div>
                 {/* Title */}
@@ -719,7 +1050,7 @@ export const Landing: React.FC = () => {
                 </h3>
 
                 {/* Price & Period */}
-                <div className="pb-6 mb-6 border-b border-gray-100">
+                <div className="pb-5 mb-5 border-b border-gray-100">
                   <div className="flex items-center justify-center">
                     <span className="!font-sans font-bold text-4xl sm:text-5xl text-gray-900 tracking-tight">
                       Rp 135.000
@@ -730,37 +1061,79 @@ export const Landing: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Features List with Blue Circled Checkmarks */}
-                <div className="space-y-4 mb-8 text-left">
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                {/* Features List with Blue Circled Checkmarks - COMPLETE SYSTEM LIST */}
+                <div className="space-y-3 mb-8 text-left">
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Seluruh Akses Paket Basic 60 Hari</span>
+                    <span><strong>Masa aktif panjang 60 hari penuh (2 bulan)</strong> bebas foto kapan saja</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Unggah Bingkai Sendiri (Canva PNG)</span>
+                    <span>Termasuk seluruh fitur Paket Basic (bebas watermark &amp; unduh sepuasnya)</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Bingkai Rombongan (6 &amp; 8 Slot)</span>
+                    <span><strong>Unggah bingkai sendiri tanpa batas</strong> (desain Canva / Photoshop PNG &amp; SVG)</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Ekspor Animasi Boomerang GIF</span>
+                    <span>Deteksi otomatis area foto transparan saat unggah bingkai kustom</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Kustom Warna Studio &amp; Retouch Pro</span>
+                    <span><strong>Buka bingkai rombongan (grid 6 &amp; 8 slot)</strong> khusus foto ramai-ramai</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span>Atur warna bebas (Color Picker HEX, ketebalan border, radius, &amp; bayangan)</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span>Pilihan koleksi wallpaper latar belakang eksklusif untuk bingkai foto</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span>Pengaturan detail foto (Brightness, Contrast, Saturation, &amp; Soft Focus)</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span>Ekspor animasi bergerak Boomerang GIF dengan pengaturan kecepatan</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span>Kirim kado amplop digital 3D interaktif &amp; rekaman suara via WhatsApp</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span>Efek partikel estetik foto (kilau cahaya, kelopak sakura, hati, &amp; glitter emas)</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span>Pilihan ekspor kualitas Ultra HD fisik siap cetak standar percetakan</span>
                   </div>
                 </div>
               </div>
@@ -794,6 +1167,7 @@ export const Landing: React.FC = () => {
             &copy; {new Date().getFullYear()} BaliSnap Studio. Seluruh hak cipta dilindungi.
           </p>
           <div className="flex items-center gap-6 text-[11px]">
+            <a href="#koleksi-bingkai" className="hover:text-[#18181B] transition-colors">Koleksi Bingkai</a>
             <a href="#panduan-berfoto" className="hover:text-[#18181B] transition-colors">Cara Berfoto</a>
             <a href="#paket-harga" className="hover:text-[#18181B] transition-colors">Pilihan Paket</a>
           </div>

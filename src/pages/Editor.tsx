@@ -269,35 +269,28 @@ export const Editor: React.FC = () => {
           <div>
             <button
               onClick={() => setStep('capture')}
-              className="flex items-center gap-2 font-semibold text-xs tracking-wider uppercase mb-2 text-rose-500 hover:text-rose-700 transition-all group cursor-pointer"
+              className="flex items-center gap-1.5 font-semibold text-xs tracking-wider uppercase mb-2 text-stone-500 hover:text-[#1D63FF] transition-all group cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
               Kembali ke Kamera
             </button>
-            <h1 className="font-serif text-3xl md:text-4xl font-black tracking-tight text-slate-800 flex items-center gap-2.5">
-              <span className="bg-gradient-to-r from-rose-500 via-purple-600 to-pink-500 bg-clip-text text-transparent">
-                BaliSnap Studio
-              </span>{' '}
-              Editor
-              <Wand2 className="w-5 h-5 text-rose-400 animate-spin" style={{ animationDuration: '10s' }} />
+            <h1 className="font-serif text-3xl md:text-4xl font-black tracking-tight text-zinc-900">
+              BaliSnap Studio{' '}
+              <span className="text-[#1D63FF]">Editor</span>
             </h1>
-            <p className="text-slate-500 text-xs flex items-center gap-2 mt-1 font-medium">
-              <Layers className="w-4 h-4 text-rose-400" />
+            <p className="text-zinc-500 text-xs flex items-center gap-2 mt-1.5 font-medium">
+              <Layers className="w-3.5 h-3.5 text-zinc-400" />
               {totalElements} elemen terpasang •{' '}
-              <span className="text-rose-600 font-bold">{filledSlots}/{totalSlots}</span> foto terisi
+              <span className="text-[#1D63FF] font-bold">{filledSlots}/{totalSlots}</span> foto terisi
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setStep('preview')}
-              className="relative px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-rose-200 hover:shadow-xl hover:shadow-rose-300 transition-all flex items-center gap-2 overflow-hidden group border border-white/50 cursor-pointer"
-              style={{
-                background: 'linear-gradient(135deg, #FB7185 0%, #E11D48 100%)',
-              }}
+              className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-[#1D63FF] hover:bg-[#1550D6] shadow-sm shadow-blue-500/25 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
             >
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-              <Eye className="w-4 h-4" />
+              <Eye className="w-4 h-4 text-white" />
               <span>Pratinjau</span>
             </button>
           </div>
@@ -317,13 +310,9 @@ export const Editor: React.FC = () => {
             >
               {/* Aesthetic Header Ribbon */}
               <div
-                className="absolute top-[2px] left-1/2 -translate-x-1/2 px-4 h-6 rounded-full border z-20 pointer-events-none flex items-center justify-center gap-1.5 text-[9px] font-bold tracking-widest uppercase text-rose-600 shadow-sm"
-                style={{
-                  background: 'linear-gradient(90deg, #FFE4E6, #F3E8FF)',
-                  borderColor: '#FECDD3',
-                }}
+                className="absolute top-[2px] left-1/2 -translate-x-1/2 px-4 h-6 rounded-full border z-20 pointer-events-none flex items-center justify-center gap-1.5 text-[9px] font-bold tracking-widest uppercase text-blue-700 bg-blue-50/90 border-blue-200/80 shadow-xs"
               >
-                <Camera className="w-3 h-3 text-rose-500 inline" />
+                <Camera className="w-3 h-3 text-[#1D63FF] inline" />
                 <span>BALISNAP STUDIO</span>
               </div>
 
@@ -364,7 +353,7 @@ export const Editor: React.FC = () => {
               <div className="bg-stone-50/90 border border-stone-200/70 p-3 rounded-2xl flex flex-col gap-2">
                 <div className="flex items-center justify-between text-[11px] font-bold tracking-wider uppercase text-stone-500">
                   <span className="flex items-center gap-1.5 text-stone-700">
-                    <Scan className="w-3.5 h-3.5 text-[#E15A6E]" />
+                    <Scan className="w-3.5 h-3.5 text-[#1D63FF]" />
                     Pilih Foto Untuk Disesuaikan:
                   </span>
                   <span className="text-[10px] bg-stone-200/60 text-stone-600 px-2 py-0.5 rounded-full font-bold">
@@ -375,12 +364,12 @@ export const Editor: React.FC = () => {
                   {Array.from({ length: totalSlots }).map((_, idx) => { 
                     const isSelected = selectedPhotoIndex === idx; 
                     return ( 
-                      <button 
+                       <button 
                         key={idx} 
                         onClick={() => setSelectedId(`photo-${idx}`)}
                         className={`px-3 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer active:scale-95 ${
                           isSelected
-                            ? 'bg-[#E15A6E] text-white shadow-xs font-bold ring-2 ring-rose-200/70' 
+                            ? 'bg-[#1D63FF] text-white shadow-xs font-bold ring-2 ring-blue-200/70' 
                             : 'bg-white text-stone-600 border border-stone-200/80 hover:bg-stone-100/80 hover:text-stone-900 font-semibold' 
                         }`}
                       >
@@ -392,8 +381,8 @@ export const Editor: React.FC = () => {
                 </div>
               </div>
 
-              {/* Tool Tabs - Clean Segmented Control with Soft Active State */}
-              <div className="grid grid-cols-5 gap-1.5 p-1.5 rounded-2xl bg-stone-100/90 border border-stone-200/70">
+              {/* Tool Tabs - Clean Segmented Control with Royal Blue Theme */}
+              <div className="grid grid-cols-5 gap-1 p-1 rounded-2xl bg-stone-100/90 border border-stone-200/70 shadow-xs">
                 {[
                   { key: 'filter', icon: Sliders, label: 'Filter' },
                   { key: 'retouch', icon: Wand2, label: 'Retouch', isPremium: true },
@@ -411,15 +400,15 @@ export const Editor: React.FC = () => {
                         setActiveTab(tab.key as typeof activeTab);
                         setSelectedId(null);
                       }}
-                      className={`relative py-2.5 rounded-xl text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 ${
+                      className={`relative py-2 px-0.5 rounded-xl text-[10.5px] tracking-tight uppercase transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95 ${
                         isActive
-                          ? 'bg-white text-stone-900 shadow-xs border border-stone-200/80 font-bold'
-                          : 'text-stone-500 hover:text-stone-800 hover:bg-white/50 font-semibold'
+                          ? 'bg-[#1D63FF] text-white shadow-sm shadow-blue-500/25 font-bold'
+                          : 'text-stone-600 hover:text-[#1D63FF] hover:bg-white/60 font-semibold'
                       }`}
                     >
-                      {isLocked && <Lock className="w-3 h-3 text-[#E15A6E] shrink-0" />}
-                      <tab.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#E15A6E]' : 'text-stone-400'}`} />
-                      <span className="hidden sm:inline">{tab.label}</span>
+                      {isLocked && <Lock className="w-3 h-3 text-white shrink-0" />}
+                      <tab.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-stone-400'}`} />
+                      <span className="whitespace-nowrap">{tab.label}</span>
                     </button>
                   );
                 })}
@@ -625,7 +614,7 @@ export const Editor: React.FC = () => {
                   >
                     <div className="flex items-center justify-between p-3.5 rounded-2xl border border-stone-200/80 bg-stone-50/90 shadow-2xs transition-all">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center border border-stone-200/80 shadow-2xs text-[#E15A6E]">
+                        <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center border border-stone-200/80 shadow-2xs text-[#1D63FF]">
                           <ImageIcon className="w-4 h-4" />
                         </div>
                         <div className="text-left">
@@ -635,8 +624,8 @@ export const Editor: React.FC = () => {
                           <p className="text-[10px] text-stone-500 font-medium mt-0.5">
                             Zoom {Math.round(selectedPhotoZoom * 100)}% • Geser Foto
                           </p>
-                        </div>
-                      </div>
+                        </div> 
+                      </div> 
 
                       {/* Tombol Kontrol Zoom Perkecil, Perbesar, Fit Frame & Reset */}
                       <div className="flex items-center gap-1.5">
@@ -658,7 +647,7 @@ export const Editor: React.FC = () => {
                         </button>
                         <button
                           onClick={handlePhotoFitToFrame}
-                          className="px-3 py-2 bg-[#E15A6E] hover:bg-[#d04b5f] active:scale-95 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-xs flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
+                          className="px-3 py-2 bg-[#1D63FF] hover:bg-[#1550D6] active:scale-95 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-xs flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
                           title="Otomatis paskan foto 100% penuh dalam bingkai"
                         >
                           <Maximize className="w-3 h-3 shrink-0" />
