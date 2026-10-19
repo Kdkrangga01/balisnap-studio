@@ -2,45 +2,44 @@ import React, { useRef, useState, useEffect } from 'react';
 import { usePhotobooth } from '../context/PhotoboothContext';
 import { PhotoCanvas } from '../components/editor/PhotoCanvas';
 import { exportHighResCanvas, saveOrShareImage, dataURItoBlob } from '../lib/exportImage';
-import { generateBoomerangGif } from '../lib/gifExport';
+import { generateBoomerangGif, createBoomerangFrames, type BoomerangMode } from '../lib/gifExport';
 import { DigitalEnvelopeModal } from '../components/DigitalEnvelopeModal';
-import { UpgradeModal } from '../components/UpgradeModal';
+import { UpgradeModal } from '../components/UpgradeModal'; 
 import {
-  ArrowLeft, Download, RotateCcw, Check, Share2, Camera, X,
-  ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown,
+  ArrowLeft, Download, RotateCcw, Check, Share2, Camera, X, 
+  ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown, 
   Film, Loader2, Mail, Smartphone 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion'; 
 
 export const Preview: React.FC = () => {
   const {
-    selectedFrame,
+    selectedFrame, 
     setStep,
     resetAll,
     packageTier,
-    photos,
-    setPhotos,
     incrementCompletedTrialSession
   } = usePhotobooth();
 
   const stageRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState<number>(450);
-  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
-  const [downloadedImageUri, setDownloadedImageUri] = useState<string | null>(null);
-  const [copiedLink, setCopiedLink] = useState<boolean>(false);
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false); 
+  const [downloadedImageUri, setDownloadedImageUri] = useState<string | null>(null); 
+  const [copiedLink, setCopiedLink] = useState<boolean>(false); 
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false); 
 
-  // NEW FEATURES STATE
-  const [exportQuality, setExportQuality] = useState<'standard' | 'high' | 'print'>('high');
+  // NEW FEATURES STATE 
+  const [exportQuality, setExportQuality] = useState<'standard' | 'high' | 'print'>('high'); 
 
   // BOOMERANG GIF STATE
   const [showGifModal, setShowGifModal] = useState<boolean>(false);
   const [isGeneratingGif, setIsGeneratingGif] = useState<boolean>(false);
   const [gifProgress, setGifProgress] = useState<number>(0);
   const [gifResult, setGifResult] = useState<{ dataUrl: string; blob: Blob } | null>(null);
-  const [gifInterval, setGifInterval] = useState<number>(0.35);
+  const [gifInterval, setGifInterval] = useState<number>(0.28);
+  const [gifMode, setGifMode] = useState<BoomerangMode>('bounce');
 
   // DIGITAL ENVELOPE GIFT STATE
   const [showEnvelopeModal, setShowEnvelopeModal] = useState<boolean>(false);
@@ -128,91 +127,41 @@ export const Preview: React.FC = () => {
     }
   };
 
-  // GIF Boomerang Generator Handler - FULL PHOTO FRAME STRIP SNAPSHOTS
-  const handleOpenGifModal = async (customInterval?: number) => {
+  // GIF Boomerang Generator Handler - FULL PHOTO FRAME STRIP SNAPSHOTS DENGAN GERAKAN NYATA
+  const handleOpenGifModal = async (customInterval?: number, customMode?: BoomerangMode) => {
     setShowGifModal(true);
     setIsGeneratingGif(true);
-    setGifProgress(10);
+    setGifProgress(15);
 
     const targetInterval = customInterval !== undefined ? customInterval : gifInterval;
+    const targetMode = customMode !== undefined ? customMode : gifMode;
     setGifInterval(targetInterval);
-
-    // Simpan susunan foto asli pengguna
-    const originalPhotos = [...photos];
-    const validPhotos = photos.filter((p): p is string => Boolean(p));
+    setGifMode(targetMode);
 
     try {
-      const fullStripSnapshots: string[] = [];
-      const totalSlots = selectedFrame ? selectedFrame.slots : (validPhotos.length || 1);
-
-      if (validPhotos.length === 0) {
-        // Fallback jika tidak ada foto
-        const snap = stageRef.current ? exportHighResCanvas(stageRef.current, 600) : null;
-        if (snap) fullStripSnapshots.push(snap);
-      } else {
-        // Urutan animasi Boomerang bergeser (1 -> 2 -> 3 -> 4 -> 3 -> 2)
-        const sequenceIndexes: number[] = [];
-        const n = validPhotos.length;
-        for (let i = 0; i < n; i++) sequenceIndexes.push(i);
-        for (let i = n - 2; i > 0; i--) sequenceIndexes.push(i);
-        if (sequenceIndexes.length === 1) sequenceIndexes.push(0);
-
-        const totalSteps = sequenceIndexes.length;
-
-        for (let s = 0; s < totalSteps; s++) {
-          const shiftOffset = sequenceIndexes[s];
-
-          // Geser foto di setiap slot bingkai untuk membentuk efek animasi bergerak
-          const shiftedPhotos = Array.from({ length: Math.max(totalSlots, n) }).map((_, slotIdx) => {
-            const photoIdx = (slotIdx + shiftOffset) % n;
-            return validPhotos[photoIdx];
-          });
-
-          // Terapkan ke Stage Konva
-          setPhotos(shiftedPhotos);
-
-          // Tunggu sebentar (45ms) agar Konva menggambar ulang seluruh bingkai foto strip
-          await new Promise((resolve) => setTimeout(resolve, 45));
-
-          // Tangkap snapshot SELURUH BINGKAI FOTO STRIP (HD 600px)
-          if (stageRef.current) {
-            const stripSnap = exportHighResCanvas(stageRef.current, 600);
-            if (stripSnap) {
-              fullStripSnapshots.push(stripSnap);
-            }
-          }
-
-          setGifProgress(Math.round(((s + 1) / totalSteps) * 45));
-        }
-      }
-
-      // Kembalikan susunan foto asli di Konva Stage
-      setPhotos(originalPhotos);
-      await new Promise((resolve) => setTimeout(resolve, 30));
-
-      if (fullStripSnapshots.length === 0) {
+      // 1. Ambil snapshot HD strip photobooth saat ini dari canvas
+      const baseSnap = (stageRef.current ? exportHighResCanvas(stageRef.current, 600) : null) || downloadedImageUri;
+      if (!baseSnap) {
         throw new Error('Gagal mengambil snapshot bingkai foto.');
       }
+      setGifProgress(30);
 
-      // Tentukan ukuran GIF ber-aspek-rasio SAMA PERSIS dengan bingkai foto asli
-      const frameW = selectedFrame ? selectedFrame.width : 450;
-      const frameH = selectedFrame ? selectedFrame.height : 675;
-      const targetGifW = 450;
-      const targetGifH = Math.round(targetGifW * (frameH / frameW));
+      // 2. Generate frame animasi dinamis (bounce, flash, atau sway)
+      const { frames, width, height } = await createBoomerangFrames(baseSnap, targetMode, 420);
+      setGifProgress(50);
 
-      // Hasilkan file GIF Animasi dari kumpulan snapshot Full Frame Strip
+      // 3. Encode menjadi Boomerang GIF
       const res = await generateBoomerangGif({
-        photos: fullStripSnapshots,
+        photos: frames,
         interval: targetInterval,
-        gifWidth: targetGifW,
-        gifHeight: targetGifH,
-        progressCallback: (pct) => setGifProgress(45 + Math.round((pct / 100) * 55)),
+        gifWidth: width,
+        gifHeight: height,
+        progressCallback: (pct) => setGifProgress(50 + Math.round((pct / 100) * 50)),
       });
 
       setGifResult(res);
     } catch (err) {
-      console.error('Gagal membuat GIF Full Frame:', err);
-      setPhotos(originalPhotos);
+      console.error('Gagal membuat Boomerang GIF:', err);
     } finally {
       setIsGeneratingGif(false);
     }
@@ -679,26 +628,58 @@ export const Preview: React.FC = () => {
                 )}
               </div>
 
+              {/* ANIMATION STYLE CONTROLS */}
+              {!isGeneratingGif && (
+                <div className="w-full flex flex-col gap-1.5 mt-1">
+                  <span className="text-[10px] font-bold uppercase text-stone-600 tracking-wider text-left flex items-center gap-1.5 px-0.5">
+                    <Sliders className="w-3.5 h-3.5 text-purple-600 inline" />
+                    Pilihan Gaya Efek Boomerang:
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'bounce', label: 'Bounce Pop', desc: 'Denyut Ceria' },
+                      { id: 'flash', label: 'Shutter Flash', desc: 'Kilatan Studio' },
+                      { id: 'sway', label: 'Sway & Tilt', desc: 'Goyang Dinamis' },
+                    ].map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => handleOpenGifModal(undefined, m.id as BoomerangMode)}
+                        className={`py-2 px-1 text-center rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center ${
+                          gifMode === m.id
+                            ? 'bg-[#1D63FF] text-white border-[#1D63FF] shadow-xs font-bold'
+                            : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 font-medium'
+                        }`}
+                      >
+                        <span className="text-[11px] font-bold leading-tight">{m.label}</span>
+                        <span className={`text-[9px] mt-0.5 ${gifMode === m.id ? 'text-blue-100' : 'text-stone-400'}`}>
+                          {m.desc}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* SPEED CONTROLS */}
               {!isGeneratingGif && (
-                <div className="w-full flex flex-col gap-1.5">
+                <div className="w-full flex flex-col gap-1.5 mt-1">
                   <span className="text-[10px] font-bold uppercase text-stone-600 tracking-wider text-left flex items-center gap-1.5 px-0.5">
                     <Zap className="w-3.5 h-3.5 text-amber-500 inline" />
                     Kecepatan Animasi Boomerang:
                   </span>
                   <div className="grid grid-cols-3 gap-2"> 
                     {[
-                      { label: 'Cepat (0.2s)', value: 0.2 },
-                      { label: 'Normal (0.35s)', value: 0.35 }, 
-                      { label: 'Santai (0.5s)', value: 0.5 }, 
+                      { label: '⚡ Cepat (0.15s)', value: 0.15 },
+                      { label: '✨ Normal (0.28s)', value: 0.28 }, 
+                      { label: '🍃 Santai (0.45s)', value: 0.45 }, 
                     ].map((s) => ( 
                       <button
                         key={s.value}
-                        onClick={() => handleOpenGifModal(s.value)}
+                        onClick={() => handleOpenGifModal(s.value, undefined)}
                         className={`py-2 px-1 text-[11px] rounded-xl border transition-all cursor-pointer font-semibold ${
                           gifInterval === s.value
-                            ? 'bg-[#E15A6E] text-white border-[#E15A6E] shadow-2xs font-bold'
-                            : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
+                            ? 'bg-[#1D63FF] text-white border-[#1D63FF] shadow-xs font-bold'
+                            : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 font-medium'
                         }`}
                       >
                         {s.label}
@@ -712,7 +693,7 @@ export const Preview: React.FC = () => {
               {!isGeneratingGif && gifResult && ( 
                 <button
                   onClick={handleDownloadGif}
-                  className="w-full py-3.5 bg-[#E15A6E] hover:bg-[#D4485D] text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+                  className="w-full py-3.5 bg-[#1D63FF] hover:bg-[#1550D6] text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md shadow-blue-500/20 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] mt-1"
                 >
                   <Download className="w-4 h-4" />
                   UNDUH FILE ANIMASI .GIF
