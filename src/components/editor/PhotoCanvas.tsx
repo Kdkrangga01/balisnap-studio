@@ -477,26 +477,10 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                   fill={
                     cardColor && cardColor !== 'original'
                       ? cardColor
-                      : (selectedFrame.category === 'filmstrip' || (selectedFrame.name && selectedFrame.name.toLowerCase().includes('film'))
-                          ? '#000000'
-                          : '#27272a')
+                      : '#000000'
                   }
                   listening={false}
                 />
-
-                {/* Ambient photo fill di latar belakang jika foto tidak 100% memenuhi slot, 
-                    sehingga slot selalu penuh secara estetik tanpa ada ruang putih kosong */}
-                {(scaledW < slot.w || scaledH < slot.h) && (
-                  <KonvaImage
-                    image={photoImg}
-                    x={(slot.w - imgW * coverScale) / 2}
-                    y={(slot.h - imgH * coverScale) / 2}
-                    width={imgW * coverScale}
-                    height={imgH * coverScale}
-                    opacity={0.35}
-                    listening={false}
-                  />
-                )}
 
                 <KonvaImage
                   image={photoImg}
