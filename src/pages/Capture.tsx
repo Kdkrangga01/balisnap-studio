@@ -15,8 +15,6 @@ import {
   Grid,
   Smile,
   Sun,
-  Users,
-  User,
   Maximize2,
   X
 } from 'lucide-react';
@@ -82,8 +80,7 @@ function fitDataUrlToSlotAspect(
   filterId: string, 
   brightnessLevel: number,
   isBeautyMode: boolean, 
-  _targetAspect?: number | null,
-  _cameraMode: 'group' | 'solo' = 'group'
+  _targetAspect?: number | null
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
@@ -168,7 +165,6 @@ export const Capture: React.FC = () => {
   const isBeautyMode = false; 
   const isMirrorMode = true; 
   const [timerInterval, setTimerInterval] = useState<number>(3);
-  const [cameraMode, setCameraMode] = useState<'group' | 'solo'>('group');
   const [photoAspects, setPhotoAspects] = useState<Record<number, number>>({});
   const [previewModalPhoto, setPreviewModalPhoto] = useState<string | null>(null);
 
@@ -391,7 +387,7 @@ export const Capture: React.FC = () => {
     setCaptureError(null);
     setIsProcessingPhoto(true);
 
-    fitDataUrlToSlotAspect(imageSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect, cameraMode)
+    fitDataUrlToSlotAspect(imageSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect)
       .then((croppedSrc) => {
         setPhotoBurstAtSlot(capturedSlot, [croppedSrc]);
         setPhotoAtSlot(capturedSlot, croppedSrc);
@@ -427,7 +423,6 @@ export const Capture: React.FC = () => {
     actualResolution,
     soundEnabled,
     getSlotAspectRatio,
-    cameraMode,
   ]);
 
   if (!selectedFrame) return null;
@@ -502,7 +497,7 @@ export const Capture: React.FC = () => {
       setIsProcessingPhoto(true);
       setCaptureError(null);
 
-      fitDataUrlToSlotAspect(rawSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect, cameraMode)
+      fitDataUrlToSlotAspect(rawSrc, maxLongSide, activeFilter, brightness, isBeautyMode, targetAspect)
         .then((croppedSrc) => {
           setPhotoAtSlot(targetSlot, croppedSrc);
           setPhotoBurstAtSlot(targetSlot, [croppedSrc]);
@@ -513,7 +508,7 @@ export const Capture: React.FC = () => {
         })
         .catch((err) => {
           console.error("Gagal memproses foto upload, mencoba fallback...", err);
-          fitDataUrlToSlotAspect(rawSrc, 1024, 'none', 100, false, targetAspect, cameraMode)
+          fitDataUrlToSlotAspect(rawSrc, 1024, 'none', 100, false, targetAspect)
             .then((fallbackSrc) => {
               setPhotoAtSlot(targetSlot, fallbackSrc);
               setPhotoBurstAtSlot(targetSlot, [fallbackSrc]);
@@ -665,39 +660,6 @@ export const Capture: React.FC = () => {
             {/* LEFT COLUMN: CAMERA VIEWFINDER & CONTROLS */}
             <div className="lg:col-span-8 flex flex-col justify-between gap-2.5 h-full w-full min-h-0 overflow-hidden">
               
-              {/* BIDANG LENSA TOGGLE: RAME-RAME (WIDE 1.0x) vs SOLO (CLOSE-UP 1.35x) */}
-              <div className="flex items-center justify-center w-full flex-shrink-0">
-                <div className="bg-stone-200/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner">
-                  <button
-                    type="button"
-                    onClick={() => setCameraMode('group')}
-                    className={`py-1.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      cameraMode === 'group'
-                        ? 'bg-white text-stone-900 shadow-sm' 
-                        : 'text-stone-600 hover:text-stone-900' 
-                    }`}
-                    title="Sudut Lensa Lebar Penuh (1.0x): Cocok untuk 2-6 orang tanpa terpotong di pinggir"
-                  >
-                    <Users className="w-3.5 h-3.5 text-rose-500" />
-                    <span>Mode Rame-Rame (Wide)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCameraMode('solo')}
-                    className={`py-1.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      cameraMode === 'solo'
-                        ? 'bg-white text-stone-900 shadow-sm'
-                        : 'text-stone-600 hover:text-stone-900'
-                    }`}
-                    title="Mode Potret Solo: Bidikan proporsional yang menampilkan muka dan badan utuh tanpa bagian terpotong"
-                  >
-                    <User className="w-3.5 h-3.5 text-blue-500" />
-                    <span>Mode Solo (Muka & Badan)</span>
-                  </button>
-                </div>
-              </div>
-
               {/* VIEWFINDER FRAME */}
               <div
                 className="relative bg-stone-950 border-2 border-stone-300/80 rounded-2xl sm:rounded-3xl overflow-hidden mx-auto w-full flex-1 min-h-0 group shadow-md"
@@ -757,37 +719,12 @@ export const Capture: React.FC = () => {
                   </div>
                 )}
 
-                {/* Panduan Batas Aman Grup (Group Safe Framing Guide) */}
-                {cameraMode === 'group' && (
-                  <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-3 sm:p-4">
-                    {/* Garis Batas Kiri & Kanan Lembut */}
-                    <div className="absolute inset-y-6 left-3 sm:left-5 border-l border-dashed border-white/40 flex items-center">
-                      <span className="hidden sm:inline-block -rotate-90 text-[8px] font-bold tracking-widest text-white/60 uppercase whitespace-nowrap -ml-6 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
-                        Batas Kiri 
-                      </span> 
-                    </div>
-                    <div className="absolute inset-y-6 right-3 sm:right-5 border-r border-dashed border-white/40 flex items-center justify-end">
-                      <span className="hidden sm:inline-block rotate-90 text-[8px] font-bold tracking-widest text-white/60 uppercase whitespace-nowrap -mr-6 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
-                        Batas Kanan 
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-
-
                 {/* HUD Top Bar Minimalis */}
                 <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5 z-20 pointer-events-none">
                   {/* Slot Active Badge */}
                   <div className="bg-black/50 backdrop-blur-md text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-white/10 pointer-events-auto">
                     <span className={`w-1.5 h-1.5 rounded-full ${isAutoShooting ? 'bg-rose-400 animate-ping' : 'bg-emerald-400'}`} />
                     <span>{isAutoShooting ? 'Foto Otomatis...' : `Slot #${activeSlot + 1}`}</span>
-                  </div>
-
-                  {/* Mode Lensa Badge */}
-                  <div className="bg-black/50 backdrop-blur-md text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-white/10 pointer-events-auto">
-                    <span className={`w-1.5 h-1.5 rounded-full ${cameraMode === 'solo' ? 'bg-blue-400' : 'bg-rose-400'}`} />
-                    <span>{cameraMode === 'solo' ? 'Solo (Muka & Badan)' : 'Wide Rame-Rame'}</span>
                   </div>
                 </div>
 
