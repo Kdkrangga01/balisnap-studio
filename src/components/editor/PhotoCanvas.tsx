@@ -414,18 +414,23 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const imgW = photoImg.naturalWidth || photoImg.width;
             const imgH = photoImg.naturalHeight || photoImg.height;
 
-            // Full slot edge-to-edge fitting:
-            // Foto selalu masuk full mengisi bingkai 100% tanpa area kosong di kiri maupun di kanan.
-            // Jika foto lebih tinggi dari slot (scaledH > slot.h), jangkar posisi di bagian atas (offsetY = 0)
-            // agar ruang kosong di atas / headroom foto tetap utuh terlihat, dan subjek foto langsung berada pas di tengah.
-            const baseScale = Math.max(slot.w / imgW, slot.h / imgH);
+            const containScale = Math.min(slot.w / imgW, slot.h / imgH);
+            const coverScale = Math.max(slot.w / imgW, slot.h / imgH);
+
+            // Adaptif Otomatis Antara Foto & Ukuran Bingkai:
+            // Jika dipaksa cover akan memotong lebih dari 15% foto (misalnya foto vertikal di slot horizontal
+            // yang memotong badan/kepala anggota grup): otomatis gunakan containScale agar SELURUH foto
+            // dan SEMUA orang terlihat utuh tanpa ada yang kepotong.
+            // Jika perbedaannya kecil (<= 15%), gunakan coverScale agar pas penuh tepi-ke-tepi.
+            const cropRatio = coverScale / containScale;
+            const baseScale = cropRatio > 1.15 ? containScale : coverScale;
             const finalZoom = baseScale * transform.zoom;
 
             const scaledW = imgW * finalZoom;
             const scaledH = imgH * finalZoom;
 
             const offsetX = (slot.w - scaledW) / 2;
-            const offsetY = scaledH > slot.h ? 0 : (slot.h - scaledH) / 2;
+            const offsetY = (slot.h - scaledH) / 2;
 
             const centeredX = offsetX + transform.x;
             const centeredY = offsetY + transform.y;
@@ -463,7 +468,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                   ctx.closePath();
                 }}
               >
-                {/* Background slot bersih agar jika foto grup terpasang, latar belakang tetap rapi */}
+                {/* Background slot bersih */}
                 <Rect
                   x={0}
                   y={0}
@@ -474,10 +479,24 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                       ? cardColor
                       : (selectedFrame.category === 'filmstrip' || (selectedFrame.name && selectedFrame.name.toLowerCase().includes('film'))
                           ? '#000000'
-                          : '#ffffff')
+                          : '#27272a')
                   }
                   listening={false}
                 />
+
+                {/* Ambient photo fill di latar belakang jika foto tidak 100% memenuhi slot, 
+                    sehingga slot selalu penuh secara estetik tanpa ada ruang putih kosong */}
+                {(scaledW < slot.w || scaledH < slot.h) && (
+                  <KonvaImage
+                    image={photoImg}
+                    x={(slot.w - imgW * coverScale) / 2}
+                    y={(slot.h - imgH * coverScale) / 2}
+                    width={imgW * coverScale}
+                    height={imgH * coverScale}
+                    opacity={0.35}
+                    listening={false}
+                  />
+                )}
 
                 <KonvaImage
                   image={photoImg}
