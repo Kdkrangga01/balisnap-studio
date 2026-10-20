@@ -414,16 +414,9 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const imgW = photoImg.naturalWidth || photoImg.width;
             const imgH = photoImg.naturalHeight || photoImg.height;
 
-            const containScale = Math.min(slot.w / imgW, slot.h / imgH);
-            const coverScale = Math.max(slot.w / imgW, slot.h / imgH);
-
-            // Adaptif Otomatis Antara Foto & Ukuran Bingkai:
-            // Jika dipaksa cover akan memotong lebih dari 15% foto (misalnya foto vertikal di slot horizontal
-            // yang memotong badan/kepala anggota grup): otomatis gunakan containScale agar SELURUH foto
-            // dan SEMUA orang terlihat utuh tanpa ada yang kepotong.
-            // Jika perbedaannya kecil (<= 15%), gunakan coverScale agar pas penuh tepi-ke-tepi.
-            const cropRatio = coverScale / containScale;
-            const baseScale = cropRatio > 1.15 ? containScale : coverScale;
+            // Foto selalu dibuat MAKSIMAL memenuhi 100% slot bingkai (edge-to-edge)
+            // tanpa ada area kosong di sisi kiri maupun di sisi kanan.
+            const baseScale = Math.max(slot.w / imgW, slot.h / imgH);
             const finalZoom = baseScale * transform.zoom;
 
             const scaledW = imgW * finalZoom;
