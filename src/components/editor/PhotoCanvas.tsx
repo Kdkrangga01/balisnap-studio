@@ -423,7 +423,11 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const scaledH = imgH * finalZoom;
 
             const offsetX = (slot.w - scaledW) / 2;
-            const offsetY = (slot.h - scaledH) / 2;
+            // Jika foto lebih tinggi dari slot (scaledH > slot.h):
+            // Sisi kiri & kanan tetap 100% penuh masuk bingkai tanpa area kosong.
+            // Posisi vertikal dijangkar dari bagian atas (offsetY = 0) agar area kosong di atas kepala
+            // (headroom khas photobooth) tetap utuh terlihat dan tidak terdorong ke atas/terpotong.
+            const offsetY = scaledH > slot.h ? 0 : (slot.h - scaledH) / 2;
 
             const centeredX = offsetX + transform.x;
             const centeredY = offsetY + transform.y;
