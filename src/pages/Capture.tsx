@@ -61,15 +61,15 @@ const playShutterSound = () => {
     }
     const noise = ctx.createBufferSource();
     noise.buffer = buffer;
-    const filter = ctx.createBiquadFilter();
+    const filter = ctx.createBiquadFilter(); 
     filter.type = 'highpass';
     filter.frequency.value = 1000;
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.3, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
+    noise.connect(filter); 
+    filter.connect(gain); 
+    gain.connect(ctx.destination); 
     noise.start();
   } catch (e) {
     console.error(e);
@@ -83,15 +83,15 @@ function fitDataUrlToSlotAspect(
   brightnessLevel: number,
   isBeautyMode: boolean, 
   targetAspect?: number | null,
-  cameraMode: 'group' | 'solo' = 'group'
+  _cameraMode: 'group' | 'solo' = 'group'
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     img.onload = () => {
-      const srcW = img.naturalWidth;
-      const srcH = img.naturalHeight;
+      const srcW = img.naturalWidth; 
+      const srcH = img.naturalHeight; 
       if (!srcW || !srcH) { 
-        reject(new Error('Gambar tidak valid (dimensi 0).'));
+        reject(new Error('Gambar tidak valid (dimensi 0).')); 
         return;
       }
 
@@ -102,45 +102,20 @@ function fitDataUrlToSlotAspect(
       let cropW = srcW;
       let cropH = srcH;
 
-      // Pada MODE SOLO: Potret proporsional muka & badan (bukan close-up ekstrim wajah saja).
-      // Memastikan kepala, muka, bahu, dan badan tetap terlihat lengkap tanpa ada bagian yang terpotong.
-      if (cameraMode === 'solo') { 
-        const SOLO_ZOOM = 1.08;
-        const baseCropW = srcW / SOLO_ZOOM;
-        const baseCropH = srcH / SOLO_ZOOM;
-
-        if (targetAspect && targetAspect > 0) { 
-          const baseAspect = baseCropW / baseCropH;
-          if (baseAspect > targetAspect) { 
-            cropW = baseCropH * targetAspect;  
-            cropH = baseCropH;  
-          } else { 
-            cropW = baseCropW; 
-            cropH = baseCropW / targetAspect;
-          }
+      // Menyesuaikan rasio slot bingkai secara proporsional dengan mempertahankan sudut pandang penuh 100% (Full 1.0x Wide FOV)
+      // tanpa digital zoom buatan sehingga pose tangan, 2 jari, dan gestur tubuh tidak akan terpotong.
+      if (targetAspect && targetAspect > 0) {
+        const srcAspect = srcW / srcH;
+        if (srcAspect > targetAspect) {
+          cropW = srcH * targetAspect;
+          cropH = srcH;
+          cropX = Math.max(0, (srcW - cropW) / 2);
+          cropY = 0;
         } else {
-          cropW = baseCropW;
-          cropH = baseCropH;
-        }
-
-        cropX = Math.max(0, (srcW - cropW) / 2);
-        // Anchor 5% dari atas (headroom natural) sehingga muka dan badan ke bawah terlihat utuh jelas
-        cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) * 0.05));
-      } else {
-        // Mode Rame-Rame (Wide): Pertahankan bidang pandang terlebar dan sesuaikan rasio slot bingkai otomatis
-        if (targetAspect && targetAspect > 0) {
-          const srcAspect = srcW / srcH;
-          if (srcAspect > targetAspect) {
-            cropW = srcH * targetAspect;
-            cropH = srcH;
-            cropX = Math.max(0, (srcW - cropW) / 2);
-            cropY = 0;
-          } else {
-            cropW = srcW;
-            cropH = srcW / targetAspect;
-            cropX = 0;
-            cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) * 0.05));
-          }
+          cropW = srcW;
+          cropH = srcW / targetAspect;
+          cropX = 0;
+          cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) * 0.05));
         }
       }
 
@@ -1164,19 +1139,17 @@ export const Capture: React.FC = () => {
               <p className="text-[10px] text-stone-400 mt-2 text-center">
                 Foto tampil 100% utuh sesuai bentuk aslinya tanpa ada bagian yang terpotong.
               </p>
-            </motion.div>
-          </motion.div>
+            </motion.div> 
+          </motion.div> 
         )}
-      </AnimatePresence>
+      </AnimatePresence> 
 
       <style>{`
         .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #D6D3D1; border-radius: 10px; }
         .camera-mirror {
-          transform: scaleX(${isMirrorMode ? '-1' : '1'}) scale(${cameraMode === 'solo' ? '1.08' : '1'});
-          transform-origin: center 10%;
-          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          transform: scaleX(${isMirrorMode ? '-1' : '1'});
         }
       `}</style>
     </>
@@ -1186,11 +1159,11 @@ export const Capture: React.FC = () => {
 const popupVariants = {
   hidden: { opacity: 0, scale: 0.95, y: 15 },
   visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, stiffness: 350, damping: 22 } },
-  exit: { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15 } },
-};
+  exit: { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15 } }, 
+}; 
 
 const overlayVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.2 } },
-  exit: { opacity: 0, transition: { duration: 0.15 } },
+  visible: { opacity: 1, transition: { duration: 0.2 } }, 
+  exit: { opacity: 0, transition: { duration: 0.15 } }, 
 };
