@@ -16,7 +16,9 @@ import {
   Smile,
   Sun,
   Users,
-  User
+  User,
+  Maximize2,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -124,6 +126,22 @@ function fitDataUrlToSlotAspect(
         cropX = Math.max(0, (srcW - cropW) / 2);
         // Anchor 5% dari atas (headroom natural) sehingga muka dan badan ke bawah terlihat utuh jelas
         cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) * 0.05));
+      } else {
+        // Mode Rame-Rame (Wide): Pertahankan bidang pandang terlebar dan sesuaikan rasio slot bingkai otomatis
+        if (targetAspect && targetAspect > 0) {
+          const srcAspect = srcW / srcH;
+          if (srcAspect > targetAspect) {
+            cropW = srcH * targetAspect;
+            cropH = srcH;
+            cropX = Math.max(0, (srcW - cropW) / 2);
+            cropY = 0;
+          } else {
+            cropW = srcW;
+            cropH = srcW / targetAspect;
+            cropX = 0;
+            cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) * 0.05));
+          }
+        }
       }
 
       let outW = cropW; 
@@ -191,9 +209,11 @@ export const Capture: React.FC = () => {
   const isMirrorMode = true; 
   const [timerInterval, setTimerInterval] = useState<number>(3);
   const [cameraMode, setCameraMode] = useState<'group' | 'solo'>('group');
+  const [photoAspects, setPhotoAspects] = useState<Record<number, number>>({});
+  const [previewModalPhoto, setPreviewModalPhoto] = useState<string | null>(null);
 
   // Fitur Pendukung Kamera
-  const soundEnabled = true;
+  const soundEnabled = true; 
   const gridOverlay = false;
 
   const [isPortraitView, setIsPortraitView] = useState<boolean>(() => {
@@ -222,6 +242,24 @@ export const Capture: React.FC = () => {
     photosStateRef.current = photos;
   }, [photos]);
 
+  // Pantau dan ukur aspect ratio asli dari foto yang masuk secara otomatis
+  useEffect(() => {
+    photos.forEach((src, idx) => {
+      if (src && !photoAspects[idx]) {
+        const img = new window.Image();
+        img.onload = () => {
+          if (img.naturalWidth && img.naturalHeight) {
+            setPhotoAspects((prev) => ({
+              ...prev,
+              [idx]: img.naturalWidth / img.naturalHeight,
+            }));
+          }
+        };
+        img.src = src;
+      }
+    });
+  }, [photos, photoAspects]);
+
   const getSlotAspectRatio = useCallback((slotIndex: number): number => {
     const coords = selectedFrame?.slotCoords?.[slotIndex];
     if (coords && coords.w > 0 && coords.h > 0) {
@@ -230,15 +268,26 @@ export const Capture: React.FC = () => {
     return 16 / 9;
   }, [selectedFrame]);
 
-  const getThumbnailBoxSize = useCallback((slotAspect: number) => {
-    const maxW = 54;
-    const maxH = 40;
-    let w = Math.round(maxH * slotAspect);
-    let h = maxH;
-    if (w > maxW) {
+  // Ukuran kotak preview pas otomatis menyesuaikan bentuk foto/slot bingkai secara maksimal
+  const getThumbnailBoxSize = useCallback((aspect: number) => {
+    const baseH = 68;
+    const minW = 48;
+    const maxW = 96;
+    let w = Math.round(baseH * aspect);
+    let h = baseH;
+
+    if (w < minW) {
+      w = minW;
+      h = Math.round(minW / aspect);
+    } else if (w > maxW) {
       w = maxW;
-      h = Math.round(maxW / slotAspect);
+      h = Math.round(maxW / aspect);
     }
+
+    h = Math.min(Math.max(h, 56), 78);
+    w = Math.round(h * aspect);
+    w = Math.min(Math.max(w, 46), 98);
+
     return { width: w, height: h };
   }, []);
 
@@ -446,7 +495,7 @@ export const Capture: React.FC = () => {
       ? actualResolution.width / actualResolution.height
       : fallbackAspect;
 
-  const viewfinderAspect = cameraMode === 'group' ? cameraAspect : (activeSlotAspect || cameraAspect);
+  const viewfinderAspect = activeSlotAspect || cameraAspect;
 
   const startSingleClickMultiShoot = () => {
     const firstEmpty = photosStateRef.current.findIndex((p) => p === null);
@@ -950,19 +999,20 @@ export const Capture: React.FC = () => {
                 </div>
 
                 {/* Slot Item Cards */}
-                <div className="flex flex-col gap-2 overflow-y-auto pr-0.5 custom-scroll flex-1 min-h-0">
+                <div className="flex flex-col gap-2.5 overflow-y-auto pr-0.5 custom-scroll flex-1 min-h-0">
                   {Array.from({ length: totalSlots }).map((_, index) => {
                     const photo = photos[index] || null;
                     const hasPhoto = photo !== null;
                     const isActive = index === activeSlot;
                     const slotAspect = getSlotAspectRatio(index);
-                    const thumbBox = getThumbnailBoxSize(slotAspect);
+                    const actualAspect = photoAspects[index] || slotAspect;
+                    const thumbBox = getThumbnailBoxSize(actualAspect);
 
                     return (
                       <div
                         key={index}
                         onClick={() => { if (!isAutoShooting) setActiveSlot(index); }}
-                        className={`flex items-center gap-3 p-2.5 rounded-2xl border transition-all ${
+                        className={`flex items-center gap-3 p-2.5 sm:p-3 rounded-2xl border transition-all ${
                           isAutoShooting ? 'cursor-not-allowed' : 'cursor-pointer'
                         } ${
                           isActive
@@ -972,37 +1022,76 @@ export const Capture: React.FC = () => {
                               : 'border-stone-200/60 bg-transparent hover:border-stone-300'
                         }`}
                       >
-                        {/* Thumbnail Box */}
+                        {/* Thumbnail Box: Ukuran Pas Otomatis Menyesuaikan Bentuk Foto */}
                         <div
-                          className="rounded-xl overflow-hidden flex items-center justify-center bg-stone-100 border border-stone-200 flex-shrink-0 relative"
+                          className="rounded-xl overflow-hidden flex items-center justify-center bg-stone-100 border border-stone-200/90 flex-shrink-0 relative shadow-2xs group/box transition-all"
                           style={{
                             height: `${thumbBox.height}px`,
                             width: `${thumbBox.width}px`,
                           }}
                         >
                           {hasPhoto ? (
-                            <img 
-                              src={photo} 
-                              alt={`Slot ${index + 1}`} 
-                              className="w-full h-full object-cover" 
-                              style={{ objectPosition: '50% 25%' }} 
-                            />
+                            <div className="relative w-full h-full flex items-center justify-center">
+                              <img 
+                                src={photo} 
+                                alt={`Slot ${index + 1}`} 
+                                className="w-full h-full object-cover rounded-lg" 
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPreviewModalPhoto(photo);
+                                }}
+                                className="absolute inset-0 bg-black/45 opacity-0 group-hover/box:opacity-100 transition-opacity rounded-xl flex flex-col items-center justify-center gap-0.5 text-white cursor-pointer backdrop-blur-[1px]"
+                                title="Klik untuk Lihat Preview Foto Utuh"
+                              >
+                                <Maximize2 className="w-3.5 h-3.5 text-white drop-shadow" />
+                                <span className="text-[7px] font-bold tracking-tight">Lihat</span>
+                              </button>
+                            </div>
                           ) : (
-                            <ImageIcon className="w-3.5 h-3.5 text-stone-300" />
+                            <div className="flex flex-col items-center justify-center gap-1 text-stone-300 p-1.5 text-center">
+                              <ImageIcon className="w-4 h-4 text-stone-400/80" />
+                              <span className="text-[8px] font-bold text-stone-400 uppercase tracking-wider">
+                                {slotAspect > 1.15 ? 'Wide' : slotAspect < 0.85 ? 'Tegak' : 'Kotak'}
+                              </span>
+                            </div>
                           )}
                           {isActive && !hasPhoto && (
-                            <div className="absolute inset-0 border border-rose-400 rounded-xl bg-rose-400/10 animate-pulse" />
+                            <div className="absolute inset-0 border-2 border-rose-400 rounded-xl bg-rose-400/10 animate-pulse pointer-events-none" />
                           )}
                         </div>
 
                         {/* Slot Information */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center justify-between gap-1.5">
                             <span className="text-xs font-bold text-stone-800">Foto #{index + 1}</span>
-                            {hasPhoto && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />}
+                            {hasPhoto && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPreviewModalPhoto(photo);
+                                }}
+                                className="text-[9px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50 hover:bg-blue-100/80 px-2 py-0.5 rounded-full border border-blue-100 transition-all cursor-pointer"
+                              >
+                                <Maximize2 className="w-2.5 h-2.5" />
+                                <span>Preview</span>
+                              </button>
+                            )}
                           </div>
-                          <p className="text-[9px] font-semibold text-stone-400 mt-0.5">
-                            {hasPhoto ? 'Tersimpan dengan baik' : isActive ? 'Sedang dibidik kamera' : 'Menunggu antrean foto'}
+                          <p className="text-[10px] font-medium text-stone-400 mt-1 flex items-center gap-1">
+                            {hasPhoto ? (
+                              <>
+                                <CheckCircle2 className="w-3 h-3 text-emerald-500 inline flex-shrink-0" />
+                                <span className="text-emerald-700 font-semibold">Pas & tersimpan</span>
+                              </>
+                            ) : isActive ? (
+                              <span className="text-rose-600 font-semibold">Sedang dibidik kamera</span>
+                            ) : (
+                              <span>Menunggu antrean foto</span>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -1037,6 +1126,48 @@ export const Capture: React.FC = () => {
 
         </div>
       </div>
+
+      {/* Lightbox Modal: Preview Foto Penuh Utuh */}
+      <AnimatePresence>
+        {previewModalPhoto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewModalPhoto(null)}
+            className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-lg w-full bg-stone-900 border border-stone-800 rounded-3xl p-3.5 shadow-2xl flex flex-col items-center"
+            >
+              <div className="w-full flex items-center justify-between pb-2 px-1">
+                <span className="text-xs font-bold text-white">Preview Foto Penuh (Utuh Tanpa Terpotong)</span>
+                <button
+                  type="button"
+                  onClick={() => setPreviewModalPhoto(null)}
+                  className="p-1 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition-all cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="w-full max-h-[70vh] flex items-center justify-center overflow-hidden rounded-2xl bg-black/60 p-1">
+                <img
+                  src={previewModalPhoto}
+                  alt="Preview Penuh"
+                  className="max-w-full max-h-[68vh] object-contain rounded-xl"
+                />
+              </div>
+              <p className="text-[10px] text-stone-400 mt-2 text-center">
+                Foto tampil 100% utuh sesuai bentuk aslinya tanpa ada bagian yang terpotong.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style>{`
         .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
