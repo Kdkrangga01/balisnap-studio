@@ -74,9 +74,6 @@ const playShutterSound = () => {
   }
 };
 
-// Anchor pemotongan vertikal kamera: 0.05 menjaga agar area kepala dan ruang atas (headroom) selalu utuh tidak terpotong
-const VERTICAL_CROP_ANCHOR = 0.05;
-
 function fitDataUrlToSlotAspect(
   dataUrl: string,
   maxLongSide: number,
@@ -91,38 +88,47 @@ function fitDataUrlToSlotAspect(
     img.onload = () => {
       const srcW = img.naturalWidth;
       const srcH = img.naturalHeight;
-      if (!srcW || !srcH) {
+      if (!srcW || !srcH) { 
         reject(new Error('Gambar tidak valid (dimensi 0).'));
         return;
       }
 
-      // Default: pertahankan gambar penuh (Full Field of View)
-      let cropX = 0;
-      let cropY = 0;
+      // Default Mode Rame-Rame: pertahankan sudut pandang lebar penuh (Wide 1.0x Full Field of View)
+      // agar foto ber-3, ber-4, atau grup ramai tetap utuh tanpa terpotong di pinggir kiri-kanan.
+      let cropX = 0; 
+      let cropY = 0; 
       let cropW = srcW;
       let cropH = srcH;
 
-      // Pada MODE SOLO: potong sisi foto agar pas dengan bentuk rasio slot bingkai (close-up).
-      // Pada MODE GRUP: JANGAN POTONG KIRI-KANAN SAMA SEKALI, agar foto ber-3 atau ber-4
-      // tetap utuh seluruh wajah dan badannya tanpa ada yang terpotong di pinggir.
-      if (cameraMode === 'solo' && targetAspect && targetAspect > 0) { 
-        const srcAspect = srcW / srcH;
-        if (srcAspect > targetAspect) {
-          cropW = srcH * targetAspect;
-          cropH = srcH;
-          cropX = (srcW - cropW) / 2;
-          cropY = 0;
+      // Pada MODE SOLO: Kamera melakukan zoom digital close-up 1.35x terfokus ke area potret wajah & dada
+      // sehingga perbedaannya sangat signifikan dibanding mode rame-rame.
+      if (cameraMode === 'solo') { 
+        const SOLO_ZOOM = 1.35;
+        const baseCropW = srcW / SOLO_ZOOM;
+        const baseCropH = srcH / SOLO_ZOOM;
+
+        if (targetAspect && targetAspect > 0) { 
+          const baseAspect = baseCropW / baseCropH;
+          if (baseAspect > targetAspect) { 
+            cropW = baseCropH * targetAspect;  
+            cropH = baseCropH;  
+          } else { 
+            cropW = baseCropW; 
+            cropH = baseCropW / targetAspect;
+          }
         } else {
-          cropW = srcW;
-          cropH = srcW / targetAspect;
-          cropX = 0;
-          cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) * VERTICAL_CROP_ANCHOR));
+          cropW = baseCropW;
+          cropH = baseCropH;
         }
+
+        cropX = Math.max(0, (srcW - cropW) / 2);
+        // Anchor 15% dari atas agar kepala dan mata berada tepat di proporsi potret close-up ideal
+        cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) * 0.15));
       }
 
-      let outW = cropW;
+      let outW = cropW; 
       let outH = cropH;
-      const longSide = Math.max(outW, outH);
+      const longSide = Math.max(outW, outH); 
       if (longSide > maxLongSide) {
         const scale = maxLongSide / longSide;
         outW = Math.max(1, Math.round(outW * scale));
@@ -143,18 +149,18 @@ function fitDataUrlToSlotAspect(
 
       const currentFilterObj = CAMERA_FILTERS.find((f) => f.id === filterId);
       const filterCss = currentFilterObj ? currentFilterObj.filterCss : 'none';
-      const beautyCss = isBeautyMode ? 'blur(0.4px) contrast(98%)' : '';
+      const beautyCss = isBeautyMode ? 'blur(0.4px) contrast(98%)' : ''; 
 
       ctx.filter = `brightness(${brightnessLevel}%) ${filterCss === 'none' ? '' : filterCss} ${beautyCss}`.trim();
 
-      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, outW, outH);
+      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, outW, outH);    
       resolve(canvas.toDataURL('image/jpeg', 0.98));
-    };
-    img.onerror = () => reject(new Error('Gagal memuat gambar.'));
+    }; 
+    img.onerror = () => reject(new Error('Gagal memuat gambar.')); 
     img.src = dataUrl;
   });
 }
-
+ 
 export const Capture: React.FC = () => {
   const {
     selectedFrame,
@@ -559,15 +565,15 @@ export const Capture: React.FC = () => {
         <AnimatePresence>
           {showCelebration && (
             <motion.div
-              variants={overlayVariants}
-              initial="hidden"
-              animate="visible"
+              variants={overlayVariants} 
+              initial="hidden" 
+              animate="visible" 
               exit="exit"
               className="fixed inset-0 z-[90] flex items-center justify-center bg-stone-900/30 backdrop-blur-sm px-4"
             >
               <motion.div
-                variants={popupVariants}
-                initial="hidden"
+                variants={popupVariants} 
+                initial="hidden" 
                 animate="visible"
                 exit="exit"
                 className="bg-white rounded-3xl p-7 text-center shadow-2xl border border-stone-200 max-w-sm w-full mx-4 relative overflow-hidden"
@@ -632,15 +638,15 @@ export const Capture: React.FC = () => {
               >
                 <span>Lanjut ke Editor</span>
                 <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </header>
+              </button> 
+            </div> 
+          </header> 
 
           {captureError && (
             <div className="flex items-center gap-2 p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium shadow-sm">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{captureError}</span>
-            </div>
+              <span>{captureError}</span> 
+            </div> 
           )}
 
           {/* TWO-COLUMN WORKSPACE */}
@@ -649,7 +655,7 @@ export const Capture: React.FC = () => {
             {/* LEFT COLUMN: CAMERA VIEWFINDER & CONTROLS */}
             <div className="lg:col-span-8 flex flex-col justify-between gap-2.5 h-full w-full min-h-0 overflow-hidden">
               
-              {/* BIDANG LENSA TOGGLE: RAME-RAME (WIDE) vs SOLO (CLOSE-UP) */}
+              {/* BIDANG LENSA TOGGLE: RAME-RAME (WIDE 1.0x) vs SOLO (CLOSE-UP 1.35x) */}
               <div className="flex items-center justify-center w-full flex-shrink-0">
                 <div className="bg-stone-200/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner">
                   <button
@@ -657,12 +663,13 @@ export const Capture: React.FC = () => {
                     onClick={() => setCameraMode('group')}
                     className={`py-1.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                       cameraMode === 'group'
-                        ? 'bg-white text-stone-900 shadow-sm'
-                        : 'text-stone-600 hover:text-stone-900'
+                        ? 'bg-white text-stone-900 shadow-sm' 
+                        : 'text-stone-600 hover:text-stone-900' 
                     }`}
+                    title="Sudut Lensa Lebar Penuh (1.0x): Cocok untuk foto 2-6 orang tanpa terpotong di pinggir"
                   >
                     <Users className="w-3.5 h-3.5 text-rose-500" />
-                    <span>Mode Rame-Rame (Wide)</span>
+                    <span>Mode Rame-Rame (Wide 1.0x)</span>
                   </button>
 
                   <button
@@ -673,9 +680,10 @@ export const Capture: React.FC = () => {
                         ? 'bg-white text-stone-900 shadow-sm'
                         : 'text-stone-600 hover:text-stone-900'
                     }`}
+                    title="Zoom Potret Close-up (1.35x): Kamera membesar dan berfokus tajam ke area wajah/selfie"
                   >
-                    <User className="w-3.5 h-3.5 text-stone-500" />
-                    <span>Mode Solo (Close-up)</span>
+                    <User className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Mode Solo (Close-up 1.35x)</span>
                   </button>
                 </div>
               </div>
@@ -756,12 +764,34 @@ export const Capture: React.FC = () => {
                   </div>
                 )}
 
+                {/* Panduan Fokus Portrait Solo (Solo Portrait Framing) */}
+                {cameraMode === 'solo' && (
+                  <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center p-6">
+                    <div className="w-48 sm:w-56 h-60 sm:h-72 border border-dashed border-blue-400/40 rounded-3xl relative flex flex-col justify-between items-center py-3">
+                      <span className="text-[9px] font-bold text-blue-200 bg-black/60 px-2.5 py-0.5 rounded-full backdrop-blur-sm tracking-wide">
+                        🎯 Fokus Close-up Wajah
+                      </span>
+                      {/* Corner markers */}
+                      <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-blue-400 rounded-tl-lg" />
+                      <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-blue-400 rounded-tr-lg" />
+                      <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-blue-400 rounded-bl-lg" />
+                      <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-blue-400 rounded-br-lg" />
+                    </div>
+                  </div>
+                )}
+
                 {/* HUD Top Bar Minimalis */}
                 <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5 z-20 pointer-events-none">
                   {/* Slot Active Badge */}
                   <div className="bg-black/50 backdrop-blur-md text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-white/10 pointer-events-auto">
                     <span className={`w-1.5 h-1.5 rounded-full ${isAutoShooting ? 'bg-rose-400 animate-ping' : 'bg-emerald-400'}`} />
                     <span>{isAutoShooting ? 'Foto Otomatis...' : `Slot #${activeSlot + 1}`}</span>
+                  </div>
+
+                  {/* Mode Lensa Badge */}
+                  <div className="bg-black/50 backdrop-blur-md text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-white/10 pointer-events-auto">
+                    <span className={`w-1.5 h-1.5 rounded-full ${cameraMode === 'solo' ? 'bg-blue-400' : 'bg-rose-400'}`} />
+                    <span>{cameraMode === 'solo' ? '1.35x Close-Up Solo' : '1.0x Wide Rame-Rame'}</span>
                   </div>
                 </div>
 
@@ -1026,7 +1056,11 @@ export const Capture: React.FC = () => {
         .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #D6D3D1; border-radius: 10px; }
-        .camera-mirror { transform: scaleX(${isMirrorMode ? '-1' : '1'}); }
+        .camera-mirror {
+          transform: scaleX(${isMirrorMode ? '-1' : '1'}) scale(${cameraMode === 'solo' ? '1.35' : '1'});
+          transform-origin: center 25%;
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
       `}</style>
     </>
   );
