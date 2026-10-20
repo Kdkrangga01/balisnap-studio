@@ -100,10 +100,10 @@ function fitDataUrlToSlotAspect(
       let cropW = srcW;
       let cropH = srcH;
 
-      // Pada MODE SOLO: Kamera melakukan zoom digital close-up 1.35x terfokus ke area potret wajah & dada
-      // sehingga perbedaannya sangat signifikan dibanding mode rame-rame.
+      // Pada MODE SOLO: Potret proporsional muka & badan (bukan close-up ekstrim wajah saja).
+      // Memastikan kepala, muka, bahu, dan badan tetap terlihat lengkap tanpa ada bagian yang terpotong.
       if (cameraMode === 'solo') { 
-        const SOLO_ZOOM = 1.35;
+        const SOLO_ZOOM = 1.08;
         const baseCropW = srcW / SOLO_ZOOM;
         const baseCropH = srcH / SOLO_ZOOM;
 
@@ -122,8 +122,8 @@ function fitDataUrlToSlotAspect(
         }
 
         cropX = Math.max(0, (srcW - cropW) / 2);
-        // Anchor 15% dari atas agar kepala dan mata berada tepat di proporsi potret close-up ideal
-        cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) * 0.15));
+        // Anchor 5% dari atas (headroom natural) sehingga muka dan badan ke bawah terlihat utuh jelas
+        cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) * 0.05));
       }
 
       let outW = cropW; 
@@ -666,10 +666,10 @@ export const Capture: React.FC = () => {
                         ? 'bg-white text-stone-900 shadow-sm' 
                         : 'text-stone-600 hover:text-stone-900' 
                     }`}
-                    title="Sudut Lensa Lebar Penuh (1.0x): Cocok untuk foto 2-6 orang tanpa terpotong di pinggir"
+                    title="Sudut Lensa Lebar Penuh (1.0x): Cocok untuk 2-6 orang tanpa terpotong di pinggir"
                   >
                     <Users className="w-3.5 h-3.5 text-rose-500" />
-                    <span>Mode Rame-Rame (Wide 1.0x)</span>
+                    <span>Mode Rame-Rame (Wide)</span>
                   </button>
 
                   <button
@@ -680,10 +680,10 @@ export const Capture: React.FC = () => {
                         ? 'bg-white text-stone-900 shadow-sm'
                         : 'text-stone-600 hover:text-stone-900'
                     }`}
-                    title="Zoom Potret Close-up (1.35x): Kamera membesar dan berfokus tajam ke area wajah/selfie"
+                    title="Mode Potret Solo: Bidikan proporsional yang menampilkan muka dan badan utuh tanpa bagian terpotong"
                   >
                     <User className="w-3.5 h-3.5 text-blue-500" />
-                    <span>Mode Solo (Close-up 1.35x)</span>
+                    <span>Mode Solo (Muka & Badan)</span>
                   </button>
                 </div>
               </div>
@@ -766,16 +766,19 @@ export const Capture: React.FC = () => {
 
                 {/* Panduan Fokus Portrait Solo (Solo Portrait Framing) */}
                 {cameraMode === 'solo' && (
-                  <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center p-6">
-                    <div className="w-48 sm:w-56 h-60 sm:h-72 border border-dashed border-blue-400/40 rounded-3xl relative flex flex-col justify-between items-center py-3">
+                  <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center p-4">
+                    <div className="w-60 sm:w-72 h-[86%] border border-dashed border-blue-400/50 rounded-3xl relative flex flex-col justify-between items-center py-2.5">
                       <span className="text-[9px] font-bold text-blue-200 bg-black/60 px-2.5 py-0.5 rounded-full backdrop-blur-sm tracking-wide">
-                        🎯 Fokus Close-up Wajah
+                        👤 Panduan Potret (Muka & Badan)
                       </span>
                       {/* Corner markers */}
                       <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-blue-400 rounded-tl-lg" />
                       <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-blue-400 rounded-tr-lg" />
                       <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-blue-400 rounded-bl-lg" />
                       <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-blue-400 rounded-br-lg" />
+                      <span className="text-[8px] font-medium text-white/60 bg-black/40 px-2 py-0.5 rounded backdrop-blur-sm">
+                        Area Badan Masuk Utuh
+                      </span>
                     </div>
                   </div>
                 )}
@@ -791,7 +794,7 @@ export const Capture: React.FC = () => {
                   {/* Mode Lensa Badge */}
                   <div className="bg-black/50 backdrop-blur-md text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-white/10 pointer-events-auto">
                     <span className={`w-1.5 h-1.5 rounded-full ${cameraMode === 'solo' ? 'bg-blue-400' : 'bg-rose-400'}`} />
-                    <span>{cameraMode === 'solo' ? '1.35x Close-Up Solo' : '1.0x Wide Rame-Rame'}</span>
+                    <span>{cameraMode === 'solo' ? 'Solo (Muka & Badan)' : 'Wide Rame-Rame'}</span>
                   </div>
                 </div>
 
@@ -1057,8 +1060,8 @@ export const Capture: React.FC = () => {
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #D6D3D1; border-radius: 10px; }
         .camera-mirror {
-          transform: scaleX(${isMirrorMode ? '-1' : '1'}) scale(${cameraMode === 'solo' ? '1.35' : '1'});
-          transform-origin: center 25%;
+          transform: scaleX(${isMirrorMode ? '-1' : '1'}) scale(${cameraMode === 'solo' ? '1.08' : '1'});
+          transform-origin: center 10%;
           transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
       `}</style>
