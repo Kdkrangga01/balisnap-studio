@@ -162,10 +162,26 @@ export const Editor: React.FC = () => {
     updatePhotoTransform(selectedPhotoIndex, { zoom: nextZoom }); 
   };
 
-  // Fit foto agar PAS proporsional sesuai ukuran photobooth ideal (tengah & ruang kosong atas/headroom aman)
+  // Mode Cerdas: 1-Klik toggle antara Utuh (Fit tanpa kepotong) dan Penuh (Fill mengisi seluruh bingkai)
   const handlePhotoFitToFrame = () => {
-    if (selectedPhotoIndex === null) return;
-    updatePhotoTransform(selectedPhotoIndex, { zoom: DEFAULT_PHOTO_ZOOM, x: 0, y: 0 });
+    if (selectedPhotoIndex === null || !selectedFrame) return;
+    const slot = selectedFrame.slotCoords[selectedPhotoIndex];
+    const photoUrl = photos[selectedPhotoIndex];
+
+    // Jika saat ini sedang di mode Utuh (zoom <= 1.08), ubah ke mode Penuh (Fill)
+    if (selectedPhotoZoom <= 1.08 && slot && photoUrl) {
+      const img = new Image();
+      img.src = photoUrl;
+      const imgW = img.naturalWidth || img.width || slot.w;
+      const imgH = img.naturalHeight || img.height || slot.h;
+      const contain = Math.min(slot.w / imgW, slot.h / imgH);
+      const cover = Math.max(slot.w / imgW, slot.h / imgH);
+      const fillRatio = Math.max(1.15, Math.min(MAX_PHOTO_ZOOM, cover / contain));
+      updatePhotoTransform(selectedPhotoIndex, { zoom: Number(fillRatio.toFixed(2)), x: 0, y: 0 });
+    } else {
+      // Jika sedang Penuh (Fill) atau zoom lain, kembalikan ke Utuh (Fit 100%)
+      updatePhotoTransform(selectedPhotoIndex, { zoom: DEFAULT_PHOTO_ZOOM, x: 0, y: 0 });
+    }
   };
 
   const handlePhotoZoomReset = () => { 
@@ -621,11 +637,13 @@ export const Editor: React.FC = () => {
                         <button
                           onClick={handlePhotoFitToFrame}
                           className="px-3 py-2 bg-[#1D63FF] hover:bg-[#1550D6] active:scale-95 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-xs flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
-                          title="Otomatis paskan foto sesuai ukuran photobooth ideal (tengah & headroom aman)"
+                          title={selectedPhotoZoom > 1.08 ? "Kembalikan ke Mode Utuh (tanpa kepotong)" : "Beralih ke Mode Penuh (Fill Bingkai)"}
                           aria-label="Pas Bingkai"
                         >
                           <Maximize className="w-3 h-3 shrink-0" />
-                          <span className="whitespace-nowrap">Pas Bingkai</span>
+                          <span className="whitespace-nowrap">
+                            {selectedPhotoZoom > 1.08 ? 'Mode Utuh' : 'Pas Bingkai'}
+                          </span>
                         </button>
                         <button
                           onClick={handlePhotoZoomReset}

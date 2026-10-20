@@ -414,9 +414,10 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const imgW = photoImg.naturalWidth || photoImg.width;
             const imgH = photoImg.naturalHeight || photoImg.height;
 
-            // Foto selalu dibuat MAKSIMAL memenuhi 100% slot bingkai (edge-to-edge)
-            // tanpa ada area kosong di sisi kiri maupun di sisi kanan.
-            const baseScale = Math.max(slot.w / imgW, slot.h / imgH);
+            // Mode Cerdas: Foto otomatis tampil utuh 100% (containScale)
+            // agar wajah, kepala, dan semua orang di foto terlihat utuh tanpa ada yang terpotong.
+            // Pengguna dapat 1-klik tombol "Pas Bingkai" untuk beralih ke mode Penuh (Fill) kapan saja.
+            const baseScale = Math.min(slot.w / imgW, slot.h / imgH);
             const finalZoom = baseScale * transform.zoom;
 
             const scaledW = imgW * finalZoom;
