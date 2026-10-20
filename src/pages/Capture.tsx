@@ -66,12 +66,12 @@ const playShutterSound = () => {
     filter.frequency.value = 1000;
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08); 
     noise.connect(filter); 
     filter.connect(gain); 
     gain.connect(ctx.destination); 
     noise.start();
-  } catch (e) {
+  } catch (e) { 
     console.error(e);
   }
 };
@@ -82,7 +82,7 @@ function fitDataUrlToSlotAspect(
   filterId: string, 
   brightnessLevel: number,
   isBeautyMode: boolean, 
-  targetAspect?: number | null,
+  _targetAspect?: number | null,
   _cameraMode: 'group' | 'solo' = 'group'
 ): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -95,29 +95,14 @@ function fitDataUrlToSlotAspect(
         return;
       }
 
-      // Default Mode Rame-Rame: pertahankan sudut pandang lebar penuh (Wide 1.0x Full Field of View)
-      // agar foto ber-3, ber-4, atau grup ramai tetap utuh tanpa terpotong di pinggir kiri-kanan.
-      let cropX = 0; 
-      let cropY = 0; 
-      let cropW = srcW;
-      let cropH = srcH;
-
-      // Menyesuaikan rasio slot bingkai secara proporsional dengan mempertahankan sudut pandang penuh 100% (Full 1.0x Wide FOV)
-      // tanpa digital zoom buatan sehingga pose tangan, 2 jari, dan gestur tubuh tidak akan terpotong.
-      if (targetAspect && targetAspect > 0) {
-        const srcAspect = srcW / srcH;
-        if (srcAspect > targetAspect) {
-          cropW = srcH * targetAspect;
-          cropH = srcH;
-          cropX = Math.max(0, (srcW - cropW) / 2);
-          cropY = 0;
-        } else {
-          cropW = srcW;
-          cropH = srcW / targetAspect;
-          cropX = 0;
-          cropY = Math.max(0, Math.min(srcH - cropH, (srcH - cropH) * 0.05));
-        }
-      }
+      // Pertahankan 100% foto utuh asli tanpa crop sama sekali (Full Optical FOV)
+      // JANGAN PERNAH potong/crop foto saat capture atau upload!
+      // Semua bagian (pose 2 jari, tangan, kepala, gestur tubuh, dan orang di samping)
+      // tetap tersimpan 100% utuh tanpa ada yang terpotong permanen.
+      const cropX = 0; 
+      const cropY = 0; 
+      const cropW = srcW;
+      const cropH = srcH;
 
       let outW = cropW; 
       let outH = cropH;
@@ -448,7 +433,6 @@ export const Capture: React.FC = () => {
   if (!selectedFrame) return null;
 
   const { slots: totalSlots, name: frameName } = selectedFrame;
-  const activeSlotAspect = getSlotAspectRatio(activeSlot);
 
   const getVideoConstraints = () => {
     if (cameraRetryCount > 0) {
@@ -470,7 +454,9 @@ export const Capture: React.FC = () => {
       ? actualResolution.width / actualResolution.height
       : fallbackAspect;
 
-  const viewfinderAspect = activeSlotAspect || cameraAspect;
+  // Viewfinder kamera menampilkan 100% bidang pandang lensa asli (cameraAspect)
+  // agar seluruh pose (termasuk pose 2 jari di samping) terlihat utuh di preview live kamera
+  const viewfinderAspect = cameraAspect;
 
   const startSingleClickMultiShoot = () => {
     const firstEmpty = photosStateRef.current.findIndex((p) => p === null);

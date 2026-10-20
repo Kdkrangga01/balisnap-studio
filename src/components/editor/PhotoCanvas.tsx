@@ -414,20 +414,26 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const imgW = photoImg.naturalWidth || photoImg.width;
             const imgH = photoImg.naturalHeight || photoImg.height;
 
-            // Foto selalu otomatis masuk PENUH (coverScale) mengisi slot bingkai edge-to-edge
-            // tanpa ada area kosong di sisi kiri maupun kanan ("seharusnya gada yang kosong").
-            const baseScale = Math.max(slot.w / imgW, slot.h / imgH);
+            // Skala foto pas bingkai maksimal:
+            // Pastikan sisi lebar (kiri-kanan) 100% masuk penuh ke slot (slot.w / imgW)
+            // tanpa ada area kiri-kanan yang terpotong sama sekali (sehingga pose 2 jari / tangan utuh sempurna)
+            // dan tanpa ada celah kosong di sisi kiri-kanan ("seharusnya gada yang kosong").
+            const widthScale = slot.w / imgW;
+            const heightScale = slot.h / imgH;
+            const baseScale = (imgW / imgH > slot.w / slot.h)
+              ? widthScale
+              : Math.max(widthScale, heightScale);
             const finalZoom = baseScale * transform.zoom;
 
             const scaledW = imgW * finalZoom;
             const scaledH = imgH * finalZoom;
 
             const offsetX = (slot.w - scaledW) / 2;
-            // Jika foto lebih tinggi dari slot (scaledH > slot.h):
-            // Sisi kiri & kanan tetap 100% penuh masuk bingkai tanpa area kosong.
-            // Posisi vertikal dijangkar dari bagian atas (offsetY = 0) agar area kosong di atas kepala
-            // (headroom khas photobooth) tetap utuh terlihat dan tidak terdorong ke atas/terpotong.
-            const offsetY = scaledH > slot.h ? 0 : (slot.h - scaledH) / 2;
+            // Jika tinggi foto lebih kecil dari tinggi slot (misal foto wide/webcam di slot potret/kotak),
+            // posisikan foto di bagian bawah slot (offsetY = slot.h - scaledH)
+            // sehingga menyisakan ruang kosong (headroom) bernapas khas photobooth di bagian atas
+            // dan pose tangan/kepala tidak terdorong mepet ke border atas.
+            const offsetY = scaledH < slot.h ? (slot.h - scaledH) : (scaledH > slot.h ? 0 : (slot.h - scaledH) / 2);
 
             const centeredX = offsetX + transform.x;
             const centeredY = offsetY + transform.y;
