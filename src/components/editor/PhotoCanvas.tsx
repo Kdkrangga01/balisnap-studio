@@ -424,11 +424,11 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const scaledW = imgW * finalZoom;
             const scaledH = imgH * finalZoom;
 
+            // Foto selalu otomatis terpusat pas sempurna di tengah slot bingkai (Center Cover Fit)
+            // baik secara horizontal maupun vertikal, sehingga wajah dan badan subjek otomatis
+            // berada pas di tengah bingkai tanpa perlu digeser-geser manual oleh pengguna.
             const offsetX = (slot.w - scaledW) / 2;
-            // Jika foto lebih tinggi dari slot (scaledH > slot.h):
-            // Posisi vertikal dijangkar dari bagian atas (offsetY = 0) agar area kosong di atas kepala
-            // (headroom khas photobooth) tetap utuh terlihat dan tidak terdorong ke atas/terpotong.
-            const offsetY = scaledH > slot.h ? 0 : (slot.h - scaledH) / 2;
+            const offsetY = (slot.h - scaledH) / 2;
 
             const centeredX = offsetX + transform.x;
             const centeredY = offsetY + transform.y;
