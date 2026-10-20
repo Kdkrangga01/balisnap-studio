@@ -1439,12 +1439,6 @@ export const SelectFrame: React.FC = () => {
                           </div>
                           <span>Unduh hasil foto kualitas tinggi format HD</span>
                         </div>
-                        <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
-                          <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                            <Check className="w-3.5 h-3.5 stroke-[3]" />
-                          </div>
-                          <span>Fitur scan QR code untuk simpan foto langsung ke smartphone</span>
-                        </div>
                       </div>
                     </div>
 
