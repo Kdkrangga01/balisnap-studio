@@ -764,24 +764,7 @@ export const Capture: React.FC = () => {
                   </div>
                 )}
 
-                {/* Panduan Fokus Portrait Solo (Solo Portrait Framing) */}
-                {cameraMode === 'solo' && (
-                  <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center p-4">
-                    <div className="w-60 sm:w-72 h-[86%] border border-dashed border-blue-400/50 rounded-3xl relative flex flex-col justify-between items-center py-2.5">
-                      <span className="text-[9px] font-bold text-blue-200 bg-black/60 px-2.5 py-0.5 rounded-full backdrop-blur-sm tracking-wide">
-                        👤 Panduan Potret (Muka & Badan)
-                      </span>
-                      {/* Corner markers */}
-                      <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-blue-400 rounded-tl-lg" />
-                      <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-blue-400 rounded-tr-lg" />
-                      <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-blue-400 rounded-bl-lg" />
-                      <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-blue-400 rounded-br-lg" />
-                      <span className="text-[8px] font-medium text-white/60 bg-black/40 px-2 py-0.5 rounded backdrop-blur-sm">
-                        Area Badan Masuk Utuh
-                      </span>
-                    </div>
-                  </div>
-                )}
+
 
                 {/* HUD Top Bar Minimalis */}
                 <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5 z-20 pointer-events-none">
