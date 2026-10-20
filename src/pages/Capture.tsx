@@ -226,9 +226,9 @@ export const Capture: React.FC = () => {
 
   // Ukuran kotak preview pas otomatis menyesuaikan bentuk foto/slot bingkai secara maksimal
   const getThumbnailBoxSize = useCallback((aspect: number) => {
-    const baseH = 68;
-    const minW = 48;
-    const maxW = 96;
+    const baseH = 52;
+    const minW = 42;
+    const maxW = 82;
     let w = Math.round(baseH * aspect);
     let h = baseH;
 
@@ -240,9 +240,9 @@ export const Capture: React.FC = () => {
       h = Math.round(maxW / aspect);
     }
 
-    h = Math.min(Math.max(h, 56), 78);
+    h = Math.min(Math.max(h, 46), 62);
     w = Math.round(h * aspect);
-    w = Math.min(Math.max(w, 46), 98);
+    w = Math.min(Math.max(w, 40), 84);
 
     return { width: w, height: h };
   }, []);
@@ -547,7 +547,7 @@ export const Capture: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen w-full bg-[#FAF7F2] text-stone-800 py-3 px-3 sm:px-6 lg:px-8 relative antialiased font-sans flex flex-col justify-between select-none">
+      <div className="min-h-screen lg:h-screen lg:max-h-screen w-full bg-[#FAF7F2] text-stone-800 p-2 sm:p-3 lg:p-3.5 relative antialiased font-sans flex flex-col justify-start lg:overflow-hidden select-none">
         
         {/* Soft Background Mesh */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-50/40 via-amber-50/20 to-transparent pointer-events-none z-0" />
@@ -579,7 +579,7 @@ export const Capture: React.FC = () => {
               <motion.div
                 variants={popupVariants} 
                 initial="hidden" 
-                animate="visible"
+                animate="visible" 
                 exit="exit"
                 className="bg-white rounded-3xl p-7 text-center shadow-2xl border border-stone-200 max-w-sm w-full mx-4 relative overflow-hidden"
               >
@@ -600,10 +600,10 @@ export const Capture: React.FC = () => {
         </AnimatePresence>
 
         {/* WORKSPACE CONTENT CONTAINER */}
-        <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col justify-between relative z-10 gap-3 py-1">
+        <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col justify-start relative z-10 gap-2 sm:gap-2.5 min-h-0 overflow-hidden">
 
           {/* TOP BAR / HEADER */}
-          <header className="flex flex-col sm:flex-row justify-between items-center bg-white/80 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-stone-200/70 shadow-sm gap-2.5 w-full flex-shrink-0">
+          <header className="sticky top-0 z-40 flex flex-col sm:flex-row justify-between items-center bg-white/95 backdrop-blur-md px-3.5 sm:px-4 py-2 rounded-2xl border border-stone-200/80 shadow-xs gap-2 w-full flex-shrink-0">
             <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
               <button
                 onClick={() => { setIsAutoShooting(false); setStep('select-frame'); }}
@@ -655,17 +655,17 @@ export const Capture: React.FC = () => {
           )}
 
           {/* TWO-COLUMN WORKSPACE */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 items-stretch w-full flex-1 overflow-hidden min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-4 items-stretch w-full flex-1 min-h-0 overflow-hidden">
 
             {/* LEFT COLUMN: CAMERA VIEWFINDER & CONTROLS */}
-            <div className="lg:col-span-8 flex flex-col justify-between gap-2.5 h-full w-full min-h-0 overflow-hidden">
+            <div className="lg:col-span-8 flex flex-col justify-start gap-2 sm:gap-2.5 h-full w-full min-h-0">
               
               {/* VIEWFINDER FRAME */}
               <div
-                className="relative bg-stone-950 border-2 border-stone-300/80 rounded-2xl sm:rounded-3xl overflow-hidden mx-auto w-full flex-1 min-h-0 group shadow-md"
+                className="relative bg-stone-950 border-2 border-stone-300/80 rounded-2xl sm:rounded-3xl overflow-hidden mx-auto w-full flex-1 min-h-0 group shadow-md flex items-center justify-center"
                 style={{
                   aspectRatio: viewfinderAspect,
-                  maxHeight: isPortraitView ? '58vh' : '65vh',
+                  maxHeight: isPortraitView ? '48vh' : '54vh',
                 }}
               >
                 {hasCamera ? (
@@ -880,11 +880,11 @@ export const Capture: React.FC = () => {
             </div>
 
             {/* RIGHT COLUMN: PROGRESS SLOT TRACKER */}
-            <div className="lg:col-span-4 w-full h-full flex flex-col justify-start min-h-0">
-              <div className="bg-white/90 backdrop-blur-md border border-stone-200/80 p-4 rounded-3xl shadow-sm flex flex-col h-full max-h-full">
+            <div className="lg:col-span-4 w-full h-full flex flex-col justify-start min-h-0 overflow-hidden">
+              <div className="bg-white/90 backdrop-blur-md border border-stone-200/80 p-3 sm:p-3.5 rounded-3xl shadow-sm flex flex-col h-full max-h-full min-h-0">
                 
                 {/* Sidebar Header */}
-                <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-3 flex-shrink-0">
+                <div className="flex items-center justify-between pb-2.5 border-b border-stone-100 mb-2.5 flex-shrink-0">
                   <div className="flex items-center gap-1.5">
                     <Grid className="w-4 h-4 text-rose-500" />
                     <h3 className="font-serif text-sm font-black text-stone-800">
@@ -897,7 +897,7 @@ export const Capture: React.FC = () => {
                 </div>
 
                 {/* Slot Item Cards */}
-                <div className="flex flex-col gap-2.5 overflow-y-auto pr-0.5 custom-scroll flex-1 min-h-0">
+                <div className="flex flex-col gap-2 overflow-y-auto pr-1 custom-scroll flex-1 min-h-0">
                   {Array.from({ length: totalSlots }).map((_, index) => {
                     const photo = photos[index] || null;
                     const hasPhoto = photo !== null;
@@ -910,7 +910,7 @@ export const Capture: React.FC = () => {
                       <div
                         key={index}
                         onClick={() => { if (!isAutoShooting) setActiveSlot(index); }}
-                        className={`flex items-center gap-3 p-2.5 sm:p-3 rounded-2xl border transition-all ${
+                        className={`flex items-center gap-2.5 p-2 rounded-2xl border transition-all ${
                           isAutoShooting ? 'cursor-not-allowed' : 'cursor-pointer'
                         } ${
                           isActive
@@ -979,7 +979,7 @@ export const Capture: React.FC = () => {
                               </button>
                             )}
                           </div>
-                          <p className="text-[10px] font-medium text-stone-400 mt-1 flex items-center gap-1">
+                          <p className="text-[10px] font-medium text-stone-400 mt-0.5 flex items-center gap-1">
                             {hasPhoto ? (
                               <>
                                 <CheckCircle2 className="w-3 h-3 text-emerald-500 inline flex-shrink-0" />
@@ -998,21 +998,30 @@ export const Capture: React.FC = () => {
                 </div>
 
                 {/* Bottom Status Box */}
-                <div className="mt-3 pt-3 border-t border-stone-100 flex-shrink-0">
+                <div className="mt-2.5 pt-2.5 border-t border-stone-100 flex-shrink-0">
                   {isAutoShooting ? (
-                    <div className="p-2.5 bg-rose-50 border border-rose-100 rounded-xl text-rose-800 text-[10px] font-semibold flex items-center gap-1.5 animate-pulse">
+                    <div className="p-2 bg-rose-50 border border-rose-100 rounded-xl text-rose-800 text-[10px] font-semibold flex items-center gap-1.5 animate-pulse">
                       <Zap className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                       <span>Rentetan foto otomatis aktif ({timerInterval}s per foto)...</span>
                     </div>
                   ) : !isAllFilled ? (
                     <div className="flex items-start gap-1.5 p-2 bg-stone-50 border border-stone-200/80 rounded-xl text-stone-600 text-[10px] font-medium leading-tight">
                       <AlertCircle className="w-3.5 h-3.5 text-stone-400 shrink-0 mt-0.5" />
-                      <span>Ambil foto hingga semua slot terisi untuk lanjut ke editor.</span>
+                      <span>Ambil foto hingga semua slot terisi ({filledCount}/{totalSlots}).</span>
                     </div>
                   ) : (
-                    <div className="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-800 text-[10px] font-bold flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>Semua foto siap! Klik tombol 'Lanjut ke Editor' di atas.</span>
+                    <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 flex items-center justify-between gap-2 shadow-2xs">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>Semua Foto Siap ({filledCount}/{totalSlots})!</span>
+                      </div>
+                      <button
+                        onClick={() => { setIsAutoShooting(false); setStep('editor'); }}
+                        className="py-1 px-3 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Ke Editor</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   )}
                 </div>
