@@ -74,14 +74,15 @@ const playShutterSound = () => {
   }
 };
 
-const VERTICAL_CROP_ANCHOR = 0.25;
+// Anchor pemotongan vertikal kamera: 0.05 menjaga agar area kepala dan ruang atas (headroom) selalu utuh tidak terpotong
+const VERTICAL_CROP_ANCHOR = 0.05;
 
 function fitDataUrlToSlotAspect(
   dataUrl: string,
   maxLongSide: number,
-  filterId: string,
+  filterId: string, 
   brightnessLevel: number,
-  isBeautyMode: boolean,
+  isBeautyMode: boolean, 
   targetAspect?: number | null,
   cameraMode: 'group' | 'solo' = 'group'
 ): Promise<string> {

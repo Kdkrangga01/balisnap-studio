@@ -414,8 +414,13 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const imgW = photoImg.naturalWidth || photoImg.width;
             const imgH = photoImg.naturalHeight || photoImg.height;
 
-            // Menggunakan Math.max (cover fit) agar foto langsung ngepas 100% penuh mengisi slot di semua bingkai tanpa celah putih
-            const baseScale = Math.max(slot.w / imgW, slot.h / imgH);
+            // Photobooth natural fitting:
+            // Sesuai standar photobooth offline (Pinterest & Life4Cuts), foto tidak dipaksa full 100%
+            // mepet ke bingkai atas. Bagian atas slot memiliki ruang kosong (headroom) bernapas yang rapi,
+            // dan foto langsung berada tepat di tengah (center) tanpa ada bagian kepala atau anggota grup yang terpotong.
+            const containScale = Math.min(slot.w / imgW, slot.h / imgH);
+            const PHOTOBOOTH_FIT_FACTOR = 0.90; // 90% contain scale memberikan headroom bernapas di atas dan posisi tengah presisi
+            const baseScale = containScale * PHOTOBOOTH_FIT_FACTOR;
             const finalZoom = baseScale * transform.zoom;
 
             const scaledW = imgW * finalZoom;

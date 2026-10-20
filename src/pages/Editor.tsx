@@ -162,7 +162,7 @@ export const Editor: React.FC = () => {
     updatePhotoTransform(selectedPhotoIndex, { zoom: nextZoom }); 
   };
 
-  // Fit foto agar PAS 100% PENUH dalam slot bingkai (tanpa celah & terpusat)
+  // Fit foto agar PAS proporsional sesuai ukuran photobooth ideal (tengah & ruang kosong atas/headroom aman)
   const handlePhotoFitToFrame = () => {
     if (selectedPhotoIndex === null) return;
     updatePhotoTransform(selectedPhotoIndex, { zoom: DEFAULT_PHOTO_ZOOM, x: 0, y: 0 });
@@ -621,7 +621,8 @@ export const Editor: React.FC = () => {
                         <button
                           onClick={handlePhotoFitToFrame}
                           className="px-3 py-2 bg-[#1D63FF] hover:bg-[#1550D6] active:scale-95 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-xs flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
-                          title="Otomatis paskan foto 100% penuh dalam bingkai"
+                          title="Otomatis paskan foto sesuai ukuran photobooth ideal (tengah & headroom aman)"
+                          aria-label="Pas Bingkai"
                         >
                           <Maximize className="w-3 h-3 shrink-0" />
                           <span className="whitespace-nowrap">Pas Bingkai</span>

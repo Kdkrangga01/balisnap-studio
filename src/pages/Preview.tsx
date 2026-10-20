@@ -130,6 +130,7 @@ export const Preview: React.FC = () => {
 
   // GIF Boomerang Generator Handler - BINGKAI TETAP DIAM, FOTO DALAM SLOT BERGERAK HIDUP KHAS PHOTOBOOTH
   const handleOpenGifModal = async (customInterval?: number, customMode?: BoomerangMode) => {
+    setGifResult(null);
     setShowGifModal(true);
     setIsGeneratingGif(true);
     setGifProgress(10);
@@ -352,10 +353,10 @@ export const Preview: React.FC = () => {
 
       setGifProgress(70);
 
-      const stageW = stage.width() || selectedFrame?.width || 1200;
-      const stageH = stage.height() || selectedFrame?.height || 1800;
+      const fW = selectedFrame?.width || stage.width() || 1200;
+      const fH = selectedFrame?.height || stage.height() || 1800;
       const targetGifW = 420;
-      const targetGifH = Math.round(targetGifW * (stageH / stageW));
+      const targetGifH = Math.round(targetGifW * (fH / fW));
 
       const res = await generateBoomerangGif({
         photos: generatedFrames,
