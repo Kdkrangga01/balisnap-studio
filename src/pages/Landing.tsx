@@ -184,31 +184,30 @@ const SliderFrameCard: React.FC<{
   const template = frames.find((f) => f.id === item.id);
   if (!template) return null;
 
-  const aspect = template.width / template.height;
-  const heightPx = 380;
-  const widthPx = Math.min(270, Math.max(140, Math.round(heightPx * aspect)));
-
   return (
     <div
       onClick={() => onSelect(item.id)}
       className="flex flex-col items-center shrink-0 cursor-pointer group select-none transition-all duration-300"
     >
-      {/* Box Photostrip Fisik */}
+      {/* Box Photostrip Fisik Responsif di Semua Device */}
       <div
-        className="relative transition-transform duration-300 group-hover:-translate-y-3"
-        style={{ width: `${widthPx}px`, height: `${heightPx}px` }}
+        className="relative transition-transform duration-300 group-hover:-translate-y-2 h-[230px] xs:h-[250px] sm:h-[300px] md:h-[340px] lg:h-[370px]"
+        style={{
+          aspectRatio: `${template.width} / ${template.height}`,
+          maxWidth: '82vw',
+        }}
       >
         {/* Badge Washi Tape Stiker Miring */}
         {item.badge && (
           <div
-            className={`absolute -top-3.5 right-1 z-30 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase shadow-md border ${item.badgeColor} rotate-[4deg] group-hover:rotate-[2deg] transition-transform`}
+            className={`absolute -top-2.5 sm:-top-3.5 right-1 z-30 px-2 sm:px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black tracking-wider uppercase shadow-md border ${item.badgeColor} rotate-[4deg] group-hover:rotate-[2deg] transition-transform`}
           >
             {item.badge}
           </div>
         )}
 
         {/* Real Photostrip Physical Paper Card (Kosong tanpa foto, menampilkan desain asli bingkai) */}
-        <div className="relative w-full h-full bg-white rounded-xl shadow-[0_12px_28px_rgba(0,0,0,0.14)] group-hover:shadow-[0_20px_42px_rgba(0,0,0,0.22)] border border-black/30 overflow-hidden flex items-center justify-center">
+        <div className="relative w-full h-full bg-white rounded-lg sm:rounded-xl shadow-[0_8px_20px_rgba(0,0,0,0.12)] sm:shadow-[0_12px_28px_rgba(0,0,0,0.14)] group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.2)] border border-black/25 overflow-hidden flex items-center justify-center">
           {/* Template Frame Artwork PNG */}
           <img
             src={template.src}
@@ -219,8 +218,8 @@ const SliderFrameCard: React.FC<{
 
           {/* Quick Hover Select Overlay */}
           <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 flex items-center justify-center backdrop-blur-[0.5px]">
-            <span className="px-3.5 py-1.5 rounded-full bg-white text-zinc-900 font-bold text-[10px] uppercase tracking-wider shadow-lg flex items-center gap-1.5 transform translate-y-1 group-hover:translate-y-0 transition-transform">
-              <Camera className="w-3.5 h-3.5 text-rose-600" />
+            <span className="px-3 py-1.5 rounded-full bg-white text-zinc-900 font-bold text-[9px] sm:text-[10px] uppercase tracking-wider shadow-lg flex items-center gap-1.5 transform translate-y-1 group-hover:translate-y-0 transition-transform">
+              <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-rose-600" />
               <span>Gunakan Frame Ini</span>
             </span>
           </div>
@@ -228,11 +227,11 @@ const SliderFrameCard: React.FC<{
       </div>
 
       {/* Title & Subtitle Below the Strip */}
-      <div className="text-center mt-3.5 max-w-[220px]">
-        <h4 className="font-bold text-[13px] sm:text-sm text-zinc-900 group-hover:text-rose-600 transition-colors leading-tight">
+      <div className="text-center mt-2.5 sm:mt-3.5 max-w-[170px] sm:max-w-[220px]">
+        <h4 className="font-bold text-xs sm:text-sm text-zinc-900 group-hover:text-rose-600 transition-colors leading-tight">
           {item.title}
         </h4>
-        <p className="text-[11px] text-zinc-500 font-medium mt-0.5 leading-tight">
+        <p className="text-[10px] sm:text-[11px] text-zinc-500 font-medium mt-0.5 leading-tight">
           {item.subtitle}
         </p>
       </div>
@@ -620,45 +619,45 @@ export const Landing: React.FC = () => {
       </main> 
 
       {/* ===== SECTION KOLEKSI BINGKAI POPULER (HORIZONTAL SLIDER PERSIS REFERENSI) ===== */}
-      <section id="koleksi-bingkai" className="py-14 sm:py-20 bg-white border-t border-b border-[#F1F3F5] relative overflow-hidden select-none">
+      <section id="koleksi-bingkai" className="py-10 sm:py-16 md:py-20 bg-white border-t border-b border-[#F1F3F5] relative overflow-hidden select-none">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto px-5 mb-8 sm:mb-10"> 
-          <span className="text-[10px] font-bold tracking-widest text-[#52525B] uppercase bg-[#F4F4F5] px-3.5 py-1 rounded-full border border-[#E4E4E7] shadow-2xs">
+        <div className="text-center max-w-2xl mx-auto px-4 sm:px-5 mb-5 sm:mb-8"> 
+          <span className="text-[9.5px] sm:text-[10px] font-bold tracking-widest text-[#52525B] uppercase bg-[#F4F4F5] px-3 sm:px-3.5 py-1 rounded-full border border-[#E4E4E7] shadow-2xs">
             Pilihan Layout Terpopuler
           </span>
-          <h2 className="font-serif font-bold text-2xl sm:text-4xl text-[#18181B] mt-2.5 mb-2 tracking-tight">
+          <h2 className="font-serif font-bold text-xl sm:text-3xl md:text-4xl text-[#18181B] mt-2 mb-1.5 sm:mb-2 tracking-tight">
             Pilih Layout Bingkai Favorit
           </h2>
-          <p className="text-xs sm:text-sm text-[#52525B] leading-relaxed font-normal">
+          <p className="text-[11.5px] sm:text-sm text-[#52525B] leading-relaxed font-normal max-w-lg mx-auto">
             Geser untuk melihat beragam layout estetik studio. Klik layout bingkai favorit untuk langsung memulai sesi foto.
           </p> 
         </div> 
 
         {/* Carousel Container with Left & Right Arrows */} 
-        <div className="relative max-w-7xl mx-auto px-2 sm:px-6"> 
+        <div className="relative max-w-7xl mx-auto px-1 sm:px-4 md:px-6"> 
           {/* Tombol Panah Kiri */}
           <button 
             onClick={() => scrollCarousel('left')} 
             aria-label="Geser ke kiri"
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-md hover:bg-zinc-50 hover:text-zinc-950 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer absolute left-1 sm:left-4 top-[45%] -translate-y-1/2 z-30"
+            className="w-8 h-8 sm:w-11 sm:h-11 rounded-full border border-zinc-200/90 bg-white/95 backdrop-blur-sm text-zinc-700 shadow-md hover:bg-zinc-50 hover:text-zinc-950 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer absolute left-1 sm:left-2 md:left-4 top-[38%] sm:top-[42%] -translate-y-1/2 z-30"
           >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" /> 
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" /> 
           </button>
 
           {/* Tombol Panah Kanan */} 
           <button
             onClick={() => scrollCarousel('right')} 
             aria-label="Geser ke kanan"
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-zinc-200 bg-white text-zinc-700 shadow-md hover:bg-zinc-50 hover:text-zinc-950 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer absolute right-1 sm:right-4 top-[45%] -translate-y-1/2 z-30"
+            className="w-8 h-8 sm:w-11 sm:h-11 rounded-full border border-zinc-200/90 bg-white/95 backdrop-blur-sm text-zinc-700 shadow-md hover:bg-zinc-50 hover:text-zinc-950 hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer absolute right-1 sm:right-2 md:right-4 top-[38%] sm:top-[42%] -translate-y-1/2 z-30"
           >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" /> 
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" /> 
           </button>
 
           {/* Horizontal Scroll Track */}
           <div 
             ref={carouselRef}
-            className="flex items-end gap-8 sm:gap-12 overflow-x-auto scroll-smooth py-6 px-12 sm:px-20 scrollbar-none snap-x"
+            className="flex items-end gap-3.5 sm:gap-7 md:gap-10 overflow-x-auto scroll-smooth py-3 sm:py-6 px-6 sm:px-14 md:px-20 scrollbar-none snap-x"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {POPULAR_SLIDER_ITEMS.map((item) => ( 
@@ -670,10 +669,10 @@ export const Landing: React.FC = () => {
         </div>
 
         {/* Action Link di Bawah Slider */}
-        <div className="text-center mt-6 sm:mt-8"> 
+        <div className="text-center mt-5 sm:mt-8 px-4"> 
           <button
             onClick={() => setStep('select-frame')}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white text-zinc-800 hover:text-zinc-950 font-bold text-xs border border-zinc-200 shadow-xs hover:shadow transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-white text-zinc-800 hover:text-zinc-950 font-bold text-[11px] sm:text-xs border border-zinc-200 shadow-xs hover:shadow transition-all cursor-pointer"
           >
             <span>Buka Seluruh 100+ Koleksi Bingkai Studio</span>
             <ArrowRight className="w-3.5 h-3.5 text-zinc-700" />
