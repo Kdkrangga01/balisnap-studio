@@ -1057,7 +1057,7 @@ export const Landing: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Features List with Blue Circled Checkmarks - COMPLETE SYSTEM LIST */}
+                {/* Features List with Blue Circled Checkmarks - BALANCED & COMPLETE */}
                 <div className="space-y-3 mb-8 text-left">
                   <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
                     <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
@@ -1075,13 +1075,7 @@ export const Landing: React.FC = () => {
                     <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span><strong>Unggah bingkai sendiri tanpa batas</strong> (desain Canva / Photoshop PNG &amp; SVG)</span>
-                  </div>
-                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </div>
-                    <span>Deteksi otomatis area foto transparan saat unggah bingkai kustom</span>
+                    <span><strong>Unggah bingkai sendiri tanpa batas</strong> (desain Canva / PNG / SVG &amp; auto-deteksi)</span>
                   </div>
                   <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
                     <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
@@ -1093,43 +1087,19 @@ export const Landing: React.FC = () => {
                     <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Atur warna bebas (Color Picker HEX, ketebalan border, radius, &amp; bayangan)</span>
+                    <span>Kustomisasi penuh: Color picker HEX, wallpaper latar, &amp; fine-tuning foto</span>
                   </div>
                   <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
                     <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Pilihan koleksi wallpaper latar belakang eksklusif untuk bingkai foto</span>
+                    <span>Ekspor Boomerang GIF bergerak &amp; efek partikel kilau / sakura estetik</span>
                   </div>
                   <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
                     <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                    <span>Pengaturan detail foto (Brightness, Contrast, Saturation, &amp; Soft Focus)</span>
-                  </div>
-                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </div>
-                    <span>Ekspor animasi bergerak Boomerang GIF dengan pengaturan kecepatan</span>
-                  </div>
-                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </div>
-                    <span>Kirim kado amplop digital 3D interaktif &amp; rekaman suara via WhatsApp</span>
-                  </div>
-                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </div>
-                    <span>Efek partikel estetik foto (kilau cahaya, kelopak sakura, hati, &amp; glitter emas)</span>
-                  </div>
-                  <div className="flex items-start gap-2.5 text-xs sm:text-[13px] text-gray-700 leading-snug">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </div>
-                    <span>Pilihan ekspor kualitas Ultra HD fisik siap cetak standar percetakan</span>
+                    <span>Kado amplop digital 3D via WhatsApp &amp; ekspor Ultra HD siap cetak</span>
                   </div>
                 </div>
               </div>
