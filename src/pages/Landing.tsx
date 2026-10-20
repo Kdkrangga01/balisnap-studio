@@ -795,27 +795,18 @@ export const Landing: React.FC = () => {
                       {tutorialSteps[activeTutorialStep].shortDesc}
                     </p>
 
-                    {/* Preview Image Box (Utuh 100% Bebas Terpotong) */}
-                    <div className="relative w-full h-56 sm:h-64 md:h-72 rounded-2xl overflow-hidden bg-gradient-to-b from-[#F4F4F5] to-[#E4E4E7]/60 mb-5 border border-[#E4E4E7] flex items-center justify-center p-2.5 sm:p-3 group shadow-inner">
-                      {/* Ambient soft blurred background agar serasi dengan warna gambar */}
-                      <img
-                        src={tutorialSteps[activeTutorialStep].previewImg}
-                        alt=""
-                        aria-hidden="true"
-                        className="absolute inset-0 w-full h-full object-cover blur-xl opacity-30 scale-110 pointer-events-none"
-                      />
-                      
-                      {/* Foto Utama Tampil Penuh 100% Tanpa Ada Bagian Terpotong */}
-                      <img
-                        src={tutorialSteps[activeTutorialStep].previewImg}
-                        alt={tutorialSteps[activeTutorialStep].title}
-                        className="relative z-10 max-h-full max-w-full object-contain rounded-xl drop-shadow-sm transition-transform duration-300 group-hover:scale-[1.02]"
-                      />
-
-                      {/* Tag Badge */}
-                      <div className="absolute bottom-2.5 sm:bottom-3 left-2.5 sm:left-3 z-20 bg-[#18181B]/85 backdrop-blur-md px-3 py-1 rounded-full text-[10px] text-white font-medium border border-white/10 shadow-sm flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#9A6A38]" />
-                        <span>{tutorialSteps[activeTutorialStep].previewTag}</span>
+                    {/* Visual Preview: Transparan Menyatu Bersih Tanpa Kotak Inner */}
+                    <div className="w-full flex flex-col items-center justify-center my-2 sm:my-3.5">
+                      <div className="relative flex flex-col items-center justify-center group">
+                        <img
+                          src={tutorialSteps[activeTutorialStep].previewImg}
+                          alt={tutorialSteps[activeTutorialStep].title}
+                          className="max-h-[200px] sm:max-h-[235px] w-auto max-w-full object-contain rounded-2xl drop-shadow-[0_8px_20px_rgba(0,0,0,0.08)] transition-transform duration-300 group-hover:scale-[1.02]"
+                        />
+                        <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F4F4F5] text-[#52525B] text-[10px] font-semibold border border-[#E4E4E7] shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#9A6A38]" />
+                          <span>{tutorialSteps[activeTutorialStep].previewTag}</span>
+                        </div>
                       </div>
                     </div>
 
