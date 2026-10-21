@@ -1003,21 +1003,21 @@ export const Capture: React.FC = () => {
                 {/* Timer Selector */}
                 <div className="h-9 flex items-center bg-blue-50/90 border border-blue-200/90 rounded-xl p-1 gap-1 shadow-2xs">
                   <span className="text-[10px] font-bold text-blue-600 pl-2 pr-1 uppercase tracking-wider select-none">
-                    Jeda:
-                  </span>
-                  {[3, 5, 7, 10].map((sec) => (
-                    <button
-                      key={sec}
+                    Jeda: 
+                  </span> 
+                  {[3, 5, 7, 10].map((sec) => ( 
+                    <button 
+                      key={sec} 
                       disabled={isAutoShooting || countdown !== null} 
-                      onClick={() => setTimerInterval(sec)}
+                      onClick={() => setTimerInterval(sec)}     
                       className={`min-w-[32px] h-7 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
                         timerInterval === sec 
                           ? 'bg-[#1D63FF] text-white shadow-xs scale-102' 
                           : 'text-blue-900/70 hover:text-[#1D63FF] hover:bg-blue-100/60'
-                      }`}
-                    >
-                      {sec}s
-                    </button>
+                      }`} 
+                    > 
+                      {sec} 
+                    </button> 
                   ))}
                 </div>
 

@@ -389,19 +389,21 @@ export const Editor: React.FC = () => {
 
               {/* BAR TOMBOL AUTO SPREAD / OTOMATIS PAS SUDUT BINGKAI */}
               {canvasStickers.length > 0 && (
-                <div className="bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-purple-500/10 border border-amber-300/60 p-2.5 rounded-2xl flex items-center justify-between gap-2 shadow-sm">
+                <div className="bg-stone-50 border border-stone-200/90 p-2 sm:px-3 rounded-2xl flex items-center justify-between gap-2 shadow-2xs transition-all">
                   <div className="flex items-center gap-2">
-                    <LayoutGrid className="w-4 h-4 text-amber-600" />
-                    <span className="text-[11px] font-black uppercase tracking-wider text-amber-900">
+                    <div className="w-6 h-6 rounded-lg bg-stone-200/60 flex items-center justify-center text-stone-600">
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-[11px] font-bold text-stone-700 tracking-tight">
                       Ratakan Otomatis
                     </span>
                   </div>
                   <button
                     onClick={autoSpreadStickersEqually}
-                    className="px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-black text-[10px] uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 active:scale-95 text-white font-semibold text-[10.5px] rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                    Pas Ke Sudut Bingkai
+                    <LayoutGrid className="w-3 h-3 text-stone-300" />
+                    <span>Pas Ke Sudut Bingkai</span>
                   </button>
                 </div>
               )}
