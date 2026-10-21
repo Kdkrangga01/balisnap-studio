@@ -228,6 +228,11 @@ interface PhotoboothContextProps {
 
   ownerPasscode: string;
   setOwnerPasscode: (newPass: string) => void;
+
+  // ===== FRAME DELETION & MANAGEMENT (OWNER ONLY) =====
+  deletedFrameIds: string[];
+  deleteFrame: (id: string) => boolean;
+  restoreFrame: (id: string) => void;
 }
 
 
@@ -413,7 +418,68 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
-  const [isOwnerAuthenticated, setIsOwnerAuthenticated] = useState<boolean>(false); 
+  const [isOwnerAuthenticated, setIsOwnerAuthenticatedState] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('balisnap_owner_authenticated') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const setIsOwnerAuthenticated = (auth: boolean) => {
+    setIsOwnerAuthenticatedState(auth);
+    try {
+      if (auth) {
+        sessionStorage.setItem('balisnap_owner_authenticated', 'true');
+      } else {
+        sessionStorage.removeItem('balisnap_owner_authenticated');
+      }
+    } catch {}
+  };
+
+  // Deleted frame IDs stored in localStorage (Owner feature)
+  const [deletedFrameIds, setDeletedFrameIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('balisnap_deleted_frame_ids');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+
+  const deleteFrame = (id: string): boolean => {
+    if (!isOwnerAuthenticated) {
+      return false;
+    }
+
+    setDeletedFrameIds((prev) => {
+      if (prev.includes(id)) return prev;
+      const updated = [...prev, id];
+      try {
+        localStorage.setItem('balisnap_deleted_frame_ids', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Jika custom frame, hapus juga dari memory & IndexedDB
+    setCustomFrames((prev) => prev.filter((f) => f.id !== id));
+    removeCustomFrame(id).catch(() => {});
+
+    return true;
+  };
+
+  const restoreFrame = (id: string) => {
+    if (!isOwnerAuthenticated) return;
+    setDeletedFrameIds((prev) => {
+      const updated = prev.filter((item) => item !== id);
+      try {
+        localStorage.setItem('balisnap_deleted_frame_ids', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }; 
 
   // Initial transactions from localStorage / Cloud
   const [transactions, setTransactions] = useState<TransactionRecord[]>(() => { 
@@ -1064,7 +1130,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       customLocations, setCustomLocationLine, resetCustomLocations,
       transactions, addTransaction, clearTransactions, deleteTransaction, refreshTransactions,
       isAdminOpen, setIsAdminOpen, verifyOwnerPasscode, isOwnerAuthenticated, setIsOwnerAuthenticated,
-      ownerPasscode, setOwnerPasscode
+      ownerPasscode, setOwnerPasscode,
+      deletedFrameIds, deleteFrame, restoreFrame
     }}>
       {children}
     </PhotoboothContext.Provider>

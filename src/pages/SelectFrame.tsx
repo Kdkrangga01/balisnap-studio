@@ -7,7 +7,7 @@ import type { FrameTemplate } from '../data/frames';
 import { removeCustomFrame } from '../lib/frameDb';
 import {
   ArrowLeft, Search, X, Images, Clock, Heart, Upload, CheckCircle2, ScanSearch, Eye, SlidersHorizontal, LayoutGrid, Grid2X2, BookmarkCheck, Sliders,
-  Camera, Check, Crown, UploadCloud, Lock, Film, Gift, LockOpen, ShieldCheck, Ticket, Layers, Smile
+  Camera, Check, Crown, UploadCloud, Lock, Film, Gift, LockOpen, ShieldCheck, Ticket, Layers, Smile, Trash2, Key
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
 
@@ -354,7 +354,9 @@ const FrameCard: React.FC<{
   completedTrialSessions: number;
   onFavorite: (e: React.MouseEvent) => void;
   onClick: () => void;
-}> = ({ frame, idx: _idx, isTrending, isFavorite, isCustom: _isCustom, categoryStyle: _categoryStyle, currentTier, completedTrialSessions, onFavorite, onClick }) => {
+  isOwner?: boolean;
+  onDelete?: (e: React.MouseEvent) => void;
+}> = ({ frame, idx: _idx, isTrending, isFavorite, isCustom: _isCustom, categoryStyle: _categoryStyle, currentTier, completedTrialSessions, onFavorite, onClick, isOwner, onDelete }) => {
   const requiredTier = frame.id.startsWith('custom-') || frame.slots > 4 ? 'premium' : 'basic';
   const isLocked = isFrameLocked(frame, currentTier, completedTrialSessions);
 
@@ -380,7 +382,20 @@ const FrameCard: React.FC<{
           )} 
         </div> 
 
-        <div className="flex gap-1.5 z-20">
+        <div className="flex items-center gap-1.5 z-20">
+          {isOwner && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(e);
+              }}
+              className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-600 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+              title="Hapus Frame Ini (Khusus Owner)"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+
           <button
             onClick={(e) => { e.stopPropagation(); onFavorite(e); }}
             className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors cursor-pointer"
@@ -453,13 +468,65 @@ export const SelectFrame: React.FC = () => {
   if (!context) {
     throw new Error('SelectFrame must be used within a PhotoboothProvider');
   }
-  const { selectFrame, setStep, customFrames, addCustomFrame, packageTier, setPackageTier, completedTrialSessions, getRemainingTrialSessions, hasCompletedAllTrialSessions } = context;
+  const {
+    selectFrame,
+    setStep,
+    customFrames,
+    addCustomFrame,
+    deleteFrame,
+    deletedFrameIds,
+    isOwnerAuthenticated,
+    verifyOwnerPasscode,
+    packageTier,
+    setPackageTier,
+    completedTrialSessions,
+    getRemainingTrialSessions,
+    hasCompletedAllTrialSessions
+  } = context;
 
   // Upgrade & Checkout Modal State
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeModalTier, setUpgradeModalTier] = useState<PackageTier>('basic');
   const [upgradeModalFrame, setUpgradeModalFrame] = useState<FrameTemplate | null>(null);
   const [upgradeModalFeature, setUpgradeModalFeature] = useState<string | undefined>(undefined);
+
+  // OWNER FRAME DELETE STATES
+  const [ownerDeleteMode, setOwnerDeleteMode] = useState(false);
+  const [frameToDelete, setFrameToDelete] = useState<FrameTemplate | null>(null);
+  const [showOwnerAuthPrompt, setShowOwnerAuthPrompt] = useState(false);
+  const [ownerPassInput, setOwnerPassInput] = useState('');
+  const [ownerPassError, setOwnerPassError] = useState('');
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<string | null>(null);
+
+  const handleRequestDelete = (frame: FrameTemplate) => {
+    if (!isOwnerAuthenticated) {
+      setShowOwnerAuthPrompt(true);
+      return;
+    }
+    setFrameToDelete(frame);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!frameToDelete) return;
+    const success = deleteFrame(frameToDelete.id);
+    if (success) {
+      setDeleteSuccessMessage(`Frame "${frameToDelete.name}" berhasil dihapus.`);
+      setTimeout(() => setDeleteSuccessMessage(null), 3000);
+    }
+    setFrameToDelete(null);
+  };
+
+  const handleVerifyOwner = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (verifyOwnerPasscode(ownerPassInput)) {
+      setOwnerDeleteMode(true);
+      setShowOwnerAuthPrompt(false);
+      setOwnerPassInput('');
+      setOwnerPassError('');
+    } else {
+      setOwnerPassError('Passcode Owner salah! Silakan coba lagi.');
+    }
+  };
 
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutModalTier, setCheckoutModalTier] = useState<PackageTier>('basic');
@@ -540,8 +607,10 @@ export const SelectFrame: React.FC = () => {
     const seenSrcs = new Set<string>();
     const result: FrameTemplate[] = [];
 
+    const deletedSet = new Set([...REMOVED_FRAME_IDS, ...deletedFrameIds]);
+
     for (const f of [...customFrames, ...frames]) {
-      if (REMOVED_FRAME_IDS.has(f.id)) continue;
+      if (deletedSet.has(f.id)) continue;
       if (seenIds.has(f.id)) continue;
 
       const normalizedSrc = (f.src || '').toLowerCase().trim();
@@ -552,7 +621,7 @@ export const SelectFrame: React.FC = () => {
       result.push(f);
     }
     return result;
-  }, [customFrames]);
+  }, [customFrames, deletedFrameIds]);
 
   const allFrames = useMemo(
     () => rawAllFrames.map((f) => (frameNameOverrides[f.id] ? { ...f, name: frameNameOverrides[f.id] } : f)),
@@ -1035,7 +1104,32 @@ export const SelectFrame: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto z-10">
+            <div className="flex flex-wrap items-center justify-center gap-2.5 w-full sm:w-auto z-10">
+              {/* Tombol Khusus Owner untuk Mode Hapus Frame */}
+              {isOwnerAuthenticated ? (
+                <button
+                  onClick={() => setOwnerDeleteMode((prev) => !prev)}
+                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
+                    ownerDeleteMode
+                      ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/25 ring-2 ring-rose-300'
+                      : 'bg-zinc-900 hover:bg-zinc-800 text-white'
+                  }`}
+                  title="Aktifkan atau matikan tombol hapus pada setiap bingkai"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>{ownerDeleteMode ? 'Tutup Mode Hapus' : 'Mode Hapus (Owner)'}</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowOwnerAuthPrompt(true)}
+                  className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer border border-zinc-200/80"
+                  title="Verifikasi passcode untuk mengakses fitur hapus frame"
+                >
+                  <Key className="w-4 h-4 text-zinc-500" />
+                  <span>Hapus Frame (Owner)</span>
+                </button>
+              )}
+
               <button
                 onClick={() => {
                   if (packageTier === 'free' || packageTier === 'basic') {
@@ -1230,6 +1324,8 @@ export const SelectFrame: React.FC = () => {
                       completedTrialSessions={completedTrialSessions}
                       onFavorite={(e) => toggleFavorite(frame.id, e)}
                       onClick={() => handleFrameClick(frame)}
+                      isOwner={isOwnerAuthenticated && ownerDeleteMode}
+                      onDelete={() => handleRequestDelete(frame)}
                     />
                   );
                 })}
@@ -1860,6 +1956,117 @@ export const SelectFrame: React.FC = () => {
               )}
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* NOTIFIKASI BERHASIL HAPUS FRAME */}
+      <AnimatePresence>
+        {deleteSuccessMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 right-6 z-[100] bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border border-emerald-500"
+          >
+            <CheckCircle2 className="w-4 h-4 text-white" />
+            <span>{deleteSuccessMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL KONFIRMASI HAPUS FRAME (KHUSUS OWNER) */}
+      <AnimatePresence>
+        {frameToDelete && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              className="bg-white rounded-3xl p-6 max-w-sm w-full border border-zinc-200 shadow-2xl text-center"
+            >
+              <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 mx-auto flex items-center justify-center mb-3">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="font-serif font-black text-lg text-zinc-900 mb-1">Hapus Frame?</h3>
+              <p className="text-xs text-zinc-600 mb-2">
+                Apakah Anda yakin ingin menghapus frame berikut?
+              </p>
+              <div className="bg-zinc-50 border border-zinc-200 p-2.5 rounded-xl mb-3 text-xs font-bold text-zinc-800 truncate">
+                {frameToDelete.name}
+              </div>
+              <p className="text-[11px] text-zinc-400 mb-5 leading-relaxed">
+                Frame ini akan disembunyikan permanen dari katalog pilihan pelanggan.
+              </p>
+              <div className="flex gap-2.5">
+                <button
+                  onClick={() => setFrameToDelete(null)}
+                  className="flex-1 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all cursor-pointer shadow-sm shadow-rose-500/20"
+                >
+                  Ya, Hapus Frame
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL INPUT PASSCODE OWNER UNTUK HAPUS FRAME */}
+      <AnimatePresence>
+        {showOwnerAuthPrompt && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              className="bg-white rounded-3xl p-6 max-w-sm w-full border border-zinc-200 shadow-2xl text-center"
+            >
+              <div className="w-12 h-12 rounded-full bg-blue-100 text-[#1D63FF] mx-auto flex items-center justify-center mb-3">
+                <Key className="w-6 h-6" />
+              </div>
+              <h3 className="font-serif font-black text-lg text-zinc-900 mb-1">Verifikasi Akses Owner</h3>
+              <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
+                Fitur hapus frame hanya dapat diakses oleh Owner. Silakan masukkan Passcode Owner Anda:
+              </p>
+              <form onSubmit={handleVerifyOwner} className="space-y-3">
+                <input
+                  type="password"
+                  value={ownerPassInput}
+                  onChange={(e) => setOwnerPassInput(e.target.value)}
+                  placeholder="Masukkan Passcode Owner..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-300 text-xs text-zinc-800 font-mono text-center focus:outline-none focus:border-[#1D63FF]"
+                  autoFocus
+                />
+                {ownerPassError && (
+                  <p className="text-[11px] text-rose-500 font-semibold">{ownerPassError}</p>
+                )}
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowOwnerAuthPrompt(false);
+                      setOwnerPassInput('');
+                      setOwnerPassError('');
+                    }}
+                    className="flex-1 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 rounded-xl bg-[#1D63FF] hover:bg-[#1550D6] text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
+                  >
+                    Aktifkan
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </>

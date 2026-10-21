@@ -21,13 +21,15 @@ import {
   Save,
   PlusCircle,
   KeyRound,
-  ArrowRight
+  ArrowRight,
+  Search,
+  RotateCcw,
+  AlertCircle
 } from 'lucide-react';
 
 import { usePhotobooth, type PackageTier } from '../context/PhotoboothContext';
-
+import { frames, type FrameTemplate } from '../data/frames';
 import { exportTransactionsToExcel } from '../lib/excelExport';
-
 
 interface AdminFinanceModalProps {
   isOpen: boolean;
@@ -47,13 +49,43 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
     isOwnerAuthenticated,
     packageTier,
     setPackageTier,
+    customFrames,
+    deletedFrameIds,
+    deleteFrame,
+    restoreFrame
   } = usePhotobooth();
 
   const [inputUser, setInputUser] = useState('admin');
   const [inputPasscode, setInputPasscode] = useState('');
   const [passError, setPassError] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'addManual' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'addManual' | 'manageFrames' | 'settings'>('overview');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [frameSearch, setFrameSearch] = useState('');
+  const [frameToDelete, setFrameToDelete] = useState<FrameTemplate | null>(null);
+
+  const allAvailableFrames = React.useMemo(() => {
+    const combined = [...customFrames, ...frames];
+    const seen = new Set<string>();
+    return combined.filter(f => {
+      if (seen.has(f.id)) return false;
+      seen.add(f.id);
+      return true;
+    });
+  }, [customFrames]);
+
+  const activeFrames = React.useMemo(() => {
+    return allAvailableFrames.filter(f => !deletedFrameIds.includes(f.id));
+  }, [allAvailableFrames, deletedFrameIds]);
+
+  const deletedFramesList = React.useMemo(() => {
+    return allAvailableFrames.filter(f => deletedFrameIds.includes(f.id));
+  }, [allAvailableFrames, deletedFrameIds]);
+
+  const filteredActiveFrames = React.useMemo(() => {
+    if (!frameSearch.trim()) return activeFrames;
+    const q = frameSearch.toLowerCase();
+    return activeFrames.filter(f => f.name.toLowerCase().includes(q) || f.category.toLowerCase().includes(q));
+  }, [activeFrames, frameSearch]);
 
   React.useEffect(() => {
     if (isOpen && refreshTransactions) {
@@ -266,6 +298,17 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Catat Transaksi Manual</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('manageFrames')}
+                    className={`px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer transition-colors flex items-center gap-1.5 ${
+                      activeTab === 'manageFrames'
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                        : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>Kelola &amp; Hapus Frame ({activeFrames.length})</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('settings')}
@@ -628,7 +671,187 @@ export const AdminFinanceModal: React.FC<AdminFinanceModalProps> = ({ isOpen, on
                 </div>
               )}
 
-              {/* Tab 3: Passcode Settings */}
+              {/* Tab 3: Kelola & Hapus Frame (Khusus Owner) */}
+              {activeTab === 'manageFrames' && (
+                <div className="space-y-6">
+                  {/* Metric & Summary Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between">
+                      <div>
+                        <span className="text-[11px] font-bold uppercase text-zinc-400">Total Frame Aktif</span>
+                        <h4 className="text-2xl font-black text-white font-mono mt-0.5">{activeFrames.length} Frame</h4>
+                        <p className="text-[10px] text-zinc-500 mt-0.5">Tersedia di katalog pemilihan pelanggan</p>
+                      </div>
+                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                        <ImageIcon className="w-5 h-5" />
+                      </div>
+                    </div>
+
+                    <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between">
+                      <div>
+                        <span className="text-[11px] font-bold uppercase text-zinc-400">Frame Dihapus / Disembunyikan</span>
+                        <h4 className="text-2xl font-black text-rose-400 font-mono mt-0.5">{deletedFramesList.length} Frame</h4>
+                        <p className="text-[10px] text-zinc-500 mt-0.5">Dapat dipulihkan kapan saja oleh Owner</p>
+                      </div>
+                      <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                        <Trash2 className="w-5 h-5" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="flex items-center justify-between gap-3 bg-zinc-950 p-3 rounded-2xl border border-zinc-800">
+                    <div className="flex items-center gap-2 flex-1 px-3 py-2 bg-zinc-900 rounded-xl border border-zinc-800">
+                      <Search className="w-4 h-4 text-zinc-500" />
+                      <input
+                        type="text"
+                        value={frameSearch}
+                        onChange={(e) => setFrameSearch(e.target.value)}
+                        placeholder="Cari frame berdasarkan nama atau kategori..."
+                        className="bg-transparent border-none text-xs text-white placeholder:text-zinc-500 focus:outline-none w-full"
+                      />
+                      {frameSearch && (
+                        <button onClick={() => setFrameSearch('')} className="text-zinc-500 hover:text-white cursor-pointer">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Grid Frame Aktif */}
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3 flex items-center gap-2">
+                      <span>Daftar Frame Aktif ({filteredActiveFrames.length})</span>
+                    </h4>
+
+                    {filteredActiveFrames.length === 0 ? (
+                      <div className="text-center py-10 bg-zinc-950 rounded-2xl border border-zinc-800 text-zinc-500 text-xs">
+                        Tidak ada frame yang sesuai dengan pencarian "{frameSearch}".
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        {filteredActiveFrames.map((frame) => (
+                          <div
+                            key={frame.id}
+                            className="bg-zinc-950 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-2.5 flex flex-col justify-between transition-all group"
+                          >
+                            <div className="relative aspect-[3/4] w-full bg-zinc-900 rounded-xl p-2 mb-2 flex items-center justify-center overflow-hidden border border-zinc-800/80">
+                              <img
+                                src={frame.src}
+                                alt={frame.name}
+                                className="max-w-full max-h-full object-contain"
+                                loading="lazy"
+                              />
+                              <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/60 text-[9px] font-bold text-white uppercase backdrop-blur-xs">
+                                {frame.slots} Slot
+                              </span>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <h5 className="font-bold text-xs text-white line-clamp-1" title={frame.name}>
+                                {frame.name}
+                              </h5>
+                              <div className="flex items-center justify-between text-[10px] text-zinc-500">
+                                <span className="capitalize">{frame.category}</span>
+                              </div>
+
+                              <button
+                                onClick={() => setFrameToDelete(frame)}
+                                className="w-full mt-1 py-1.5 bg-rose-600/10 hover:bg-rose-600 text-rose-400 hover:text-white rounded-xl text-[10px] font-bold transition-all flex items-center justify-center gap-1.5 border border-rose-500/20 cursor-pointer"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>Hapus Frame</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section Frame yang Dihapus (Bisa Dipulihkan) */}
+                  {deletedFramesList.length > 0 && (
+                    <div className="pt-4 border-t border-zinc-800">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-rose-400 mb-3 flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Frame yang Telah Dihapus ({deletedFramesList.length})</span>
+                      </h4>
+                      <p className="text-[11px] text-zinc-400 mb-3">
+                        Frame di bawah ini disembunyikan dari katalog pelanggan. Klik "Pulihkan" untuk mengembalikannya ke katalog.
+                      </p>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        {deletedFramesList.map((frame) => (
+                          <div
+                            key={frame.id}
+                            className="bg-zinc-950/60 border border-rose-950/50 rounded-2xl p-2.5 flex flex-col justify-between opacity-80 hover:opacity-100 transition-all"
+                          >
+                            <div className="relative aspect-[3/4] w-full bg-zinc-900/60 rounded-xl p-2 mb-2 flex items-center justify-center overflow-hidden border border-zinc-800">
+                              <img
+                                src={frame.src}
+                                alt={frame.name}
+                                className="max-w-full max-h-full object-contain grayscale"
+                                loading="lazy"
+                              />
+                              <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-rose-950/80 text-[8px] font-bold text-rose-300 uppercase">
+                                Terhapus
+                              </span>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <h5 className="font-bold text-xs text-zinc-300 line-clamp-1" title={frame.name}>
+                                {frame.name}
+                              </h5>
+
+                              <button
+                                onClick={() => restoreFrame(frame.id)}
+                                className="w-full mt-1 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white rounded-xl text-[10px] font-bold transition-all flex items-center justify-center gap-1.5 border border-emerald-500/30 cursor-pointer"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                                <span>Pulihkan Frame</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Modal Konfirmasi Hapus Frame di Dashboard */}
+                  {frameToDelete && (
+                    <div className="fixed inset-0 z-[170] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
+                        <div className="w-12 h-12 rounded-full bg-rose-500/20 text-rose-400 mx-auto flex items-center justify-center mb-3">
+                          <Trash2 className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-base font-bold text-white mb-1">Hapus Frame Ini?</h4>
+                        <p className="text-xs text-zinc-400 mb-3">
+                          Frame <strong className="text-white font-semibold">"{frameToDelete.name}"</strong> akan disembunyikan dari katalog pelanggan.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setFrameToDelete(null)}
+                            className="flex-1 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold transition-colors cursor-pointer"
+                          >
+                            Batal
+                          </button>
+                          <button
+                            onClick={() => {
+                              deleteFrame(frameToDelete.id);
+                              setFrameToDelete(null);
+                            }}
+                            className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-sm shadow-rose-600/30"
+                          >
+                            Ya, Hapus
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Tab 4: Passcode Settings */}
               {activeTab === 'settings' && (
                 <div className="bg-zinc-950 p-6 rounded-2xl border border-zinc-800 max-w-xl mx-auto space-y-4">
                   <div className="border-b border-zinc-800 pb-3">
