@@ -16,6 +16,7 @@ import {
   Smile,
   Sun,
   Maximize2,
+  Clock,
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -177,6 +178,21 @@ export const Capture: React.FC = () => {
     return window.innerHeight >= window.innerWidth;
   });
 
+  // Fullscreen state 
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  useEffect(() => { 
+    const handleFullscreenChange = () => { 
+      setIsFullscreen(!!document.fullscreenElement); 
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   useEffect(() => {
     const handleResize = () => {
       setIsPortraitView(window.innerHeight >= window.innerWidth);
@@ -191,6 +207,7 @@ export const Capture: React.FC = () => {
   }, []);
 
   const webcamRef = useRef<Webcam>(null);
+  const cameraContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const photosStateRef = useRef<(string | null)[]>(photos);
@@ -258,6 +275,11 @@ export const Capture: React.FC = () => {
       } else {
         setIsAutoShooting(false);
         setShowCelebration(true);
+        if (document.fullscreenElement && document.exitFullscreen) {
+          setTimeout(() => {
+            document.exitFullscreen().catch(() => {});
+          }, 1200);
+        }
         setTimeout(() => setShowCelebration(false), 3000);
         const fallbackIndex = totalSlots - 1;
         setActiveSlot(fallbackIndex >= 0 ? fallbackIndex : 0);
@@ -443,15 +465,8 @@ export const Capture: React.FC = () => {
     };
   };
 
-  const fallbackAspect = isPortraitView ? 3 / 4 : 4 / 3;
-  const cameraAspect =
-    actualResolution && actualResolution.width > 0 && actualResolution.height > 0
-      ? actualResolution.width / actualResolution.height
-      : fallbackAspect;
-
-  // Viewfinder kamera menampilkan 100% bidang pandang lensa asli (cameraAspect)
-  // agar seluruh pose (termasuk pose 2 jari di samping) terlihat utuh di preview live kamera
-  const viewfinderAspect = cameraAspect;
+  // Ukuran kamera foto proporsional 4:3 persis seperti model foto referensi photobooth
+  const viewfinderAspect = isPortraitView ? 3 / 4 : 4 / 3;
 
   const startSingleClickMultiShoot = () => {
     const firstEmpty = photosStateRef.current.findIndex((p) => p === null);
@@ -468,6 +483,54 @@ export const Capture: React.FC = () => {
       setCountdown(timerInterval);
     }
   };
+
+  // Toggle Fullscreen Layar Penuh
+  const toggleFullscreen = useCallback(() => {
+    const el = cameraContainerRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
+      } else if ((el as any).webkitRequestFullscreen) {
+        (el as any).webkitRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      }
+    }
+  }, []);
+
+  // Handler klik / tap pada kamera untuk memulai countdown otomatis sesuai timer yang dipilih
+  const handleCameraContainerClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    // Abaikan jika yang diklik tombol fullscreen atau kontrol lainnya
+    if ((e.target as HTMLElement).closest('button')) return;
+    if (!hasCamera || isProcessingPhoto || countdown !== null || isAutoShooting) return;
+    startSingleClickMultiShoot();
+  }, [hasCamera, isProcessingPhoto, countdown, isAutoShooting, startSingleClickMultiShoot]);
+
+  // Dukungan tombol SPACE & TAB untuk memulai sesi pemotretan otomatis
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.code === 'Space' || e.code === 'Tab' || e.key === 'Tab' || e.key === ' ') && !e.repeat) {
+        const activeEl = document.activeElement;
+        if (
+          activeEl &&
+          (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')
+        ) {
+          return;
+        }
+        e.preventDefault();
+        if (!isAutoShooting && countdown === null && hasCamera && !isProcessingPhoto) {
+          startSingleClickMultiShoot();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAutoShooting, countdown, hasCamera, isProcessingPhoto, startSingleClickMultiShoot]);
 
   useEffect(() => {
     if (countdown === null) return;
@@ -660,14 +723,44 @@ export const Capture: React.FC = () => {
             {/* LEFT COLUMN: CAMERA VIEWFINDER & CONTROLS */}
             <div className="lg:col-span-8 flex flex-col justify-start gap-2 sm:gap-2.5 h-full w-full min-h-0">
               
-              {/* VIEWFINDER FRAME */}
-              <div
-                className="relative bg-stone-950 border-2 border-stone-300/80 rounded-2xl sm:rounded-3xl overflow-hidden mx-auto w-full flex-1 min-h-0 group shadow-md flex items-center justify-center"
-                style={{
-                  aspectRatio: viewfinderAspect,
-                  maxHeight: isPortraitView ? '48vh' : '54vh',
-                }}
-              >
+              {/* VIEWFINDER FRAME WRAPPER - Centered, Large 4:3 Camera Frame */}
+              <div className="w-full flex items-center justify-center flex-1 min-h-0 py-0.5">
+                <div
+                  ref={cameraContainerRef}
+                  onClick={handleCameraContainerClick}
+                  onTouchEnd={(e) => {
+                    if ((e.target as HTMLElement).closest('button')) return;
+                    if (!hasCamera || isProcessingPhoto || countdown !== null || isAutoShooting) return;
+                    startSingleClickMultiShoot();
+                  }}
+                  className={`relative bg-stone-950 border-[3px] border-black rounded-[24px] sm:rounded-[28px] overflow-hidden shadow-lg flex items-center justify-center mx-auto transition-all ${
+                    isFullscreen ? 'cursor-pointer ring-4 ring-black/40' : 'cursor-pointer'
+                  }`}
+                  style={{
+                    aspectRatio: viewfinderAspect,
+                    height: '100%',
+                    maxHeight: isFullscreen ? '100vh' : (isPortraitView ? '56vh' : 'calc(100vh - 180px)'),
+                    maxWidth: isFullscreen ? '100vw' : (isPortraitView ? '100%' : 'min(100%, calc((100vh - 180px) * 4 / 3))'),
+                    width: '100%',
+                  }}
+                  title={isFullscreen ? `Tap layar atau tekan SPACE / TAB untuk mulai timer ${timerInterval}s` : 'Tap / Klik layar untuk mulai foto'}
+                >
+                {/* Petunjuk Tap saat Layar Penuh (Fullscreen) */}
+                {isFullscreen && countdown === null && !isAutoShooting && !isProcessingPhoto && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute top-14 sm:top-6 px-4 py-2 bg-black/70 backdrop-blur-md border border-white/20 text-white rounded-full text-xs font-semibold tracking-wide flex items-center gap-2 pointer-events-none z-30 shadow-lg"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping" />
+                    <span>Tap / Klik layar atau tekan SPACE / TAB untuk mulai ({timerInterval}s)</span>
+                  </motion.div>
+                )}
+
+                {/* Kilatan Flash di dalam container (tampak jelas di mode fullscreen) */}
+                {showFlash && (
+                  <div className="absolute inset-0 bg-white z-[50] pointer-events-none" />
+                )}
                 {hasCamera ? (
                   <Webcam
                     audio={false}
@@ -726,6 +819,33 @@ export const Capture: React.FC = () => {
                     <span className={`w-1.5 h-1.5 rounded-full ${isAutoShooting ? 'bg-rose-400 animate-ping' : 'bg-emerald-400'}`} />
                     <span>{isAutoShooting ? 'Foto Otomatis...' : `Slot #${activeSlot + 1}`}</span>
                   </div>
+
+                  {/* Quick Timer Selector saat Layar Penuh (Fullscreen) */}
+                  {isFullscreen && (
+                    <div className="bg-black/60 backdrop-blur-md border border-white/20 rounded-full p-1 flex items-center gap-1 pointer-events-auto shadow-md">
+                      <span className="text-[9px] font-bold text-white/80 px-2 uppercase tracking-wider flex items-center gap-1 select-none">
+                        <Clock className="w-2.5 h-2.5 text-rose-400" /> Jeda:
+                      </span>
+                      {[3, 5, 7, 10].map((sec) => (
+                        <button
+                          key={sec}
+                          type="button"
+                          disabled={isAutoShooting || countdown !== null}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTimerInterval(sec);
+                          }}
+                          className={`min-w-[28px] h-6 px-2 rounded-full text-[10px] font-bold transition-all flex items-center justify-center cursor-pointer ${
+                            timerInterval === sec
+                              ? 'bg-rose-500 text-white shadow-xs scale-102'
+                              : 'text-white/80 hover:bg-white/20'
+                          }`} 
+                        >
+                          {sec}s 
+                        </button>
+                      ))} 
+                    </div>
+                  )}
                 </div>
 
                 {/* Countdown Overlay */}
@@ -766,8 +886,32 @@ export const Capture: React.FC = () => {
                 </AnimatePresence> 
 
 
+                {/* Tombol Fullscreen / Expand di pojok kanan bawah persis seperti referensi */}
+                <button
+                  type="button"
+                  onClick={toggleFullscreen}
+                  className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-30 bg-white hover:bg-stone-50 active:scale-95 transition-all text-[#18181b] border border-black/80 rounded-xl px-2.5 py-1.5 shadow-sm flex items-center justify-center cursor-pointer pointer-events-auto"
+                  title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M15 3h6v6" />
+                    <path d="M9 21H3v-6" />
+                    <path d="M21 15v6h-6" />
+                    <path d="M3 9V3h6" />
+                  </svg>
+                </button>
+
                 {/* Slot Indicator Pills Bawah */}
-                <div className="absolute bottom-2.5 left-4 right-4 flex gap-1.5 z-20">
+                <div className="absolute bottom-2.5 left-4 right-14 sm:right-16 flex gap-1.5 z-20 pointer-events-none">
                   {Array.from({ length: totalSlots }).map((_, idx) => (
                     <div
                       key={idx}
@@ -782,99 +926,109 @@ export const Capture: React.FC = () => {
                   ))}
                 </div>
               </div>
+            </div>
 
-              {/* FILTER BAR & KECERAHAN */}
-              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2 bg-white/90 backdrop-blur-md border border-stone-200/80 px-3 py-2 rounded-2xl shadow-sm flex-shrink-0">
-                {/* Filter Selector */}
-                <div className="flex items-center gap-1.5 overflow-x-auto max-w-full custom-scroll flex-1 py-0.5">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-stone-400 mr-1 flex items-center gap-1 flex-shrink-0">
-                    <Smile className="w-3 h-3 text-stone-500" /> Filter:
+            {/* FILTER BAR & KECERAHAN - Aligned to exact camera width */}
+            <div className="w-full max-w-[min(100%,_calc((100vh_-_180px)_*_4_/_3))] mx-auto flex items-center justify-between gap-3 bg-white/95 backdrop-blur-md border border-stone-200/90 px-3 py-1.5 rounded-2xl shadow-xs flex-shrink-0">
+              {/* Filter Selector */}
+              <div className="flex items-center gap-1.5 overflow-x-auto max-w-full custom-scroll flex-1 py-0.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 mr-1 flex items-center gap-1 flex-shrink-0">
+                  <Smile className="w-3.5 h-3.5 text-stone-500" /> Filter:
+                </span>
+                {CAMERA_FILTERS.map((fStr) => (
+                  <button
+                    key={fStr.id}
+                    onClick={() => setActiveFilter(fStr.id)}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-xl transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
+                      activeFilter === fStr.id
+                        ? 'bg-stone-900 text-white shadow-xs'
+                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200/70'
+                    }`}
+                  >
+                    {fStr.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Brightness Slider */}
+              <div className="flex items-center gap-2 pl-3 border-l border-stone-200 flex-shrink-0">
+                <Sun className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                <input
+                  type="range"
+                  min="80"
+                  max="140"
+                  value={brightness}
+                  onChange={(e) => setBrightness(Number(e.target.value))}
+                  className="w-16 sm:w-20 accent-stone-800 cursor-pointer h-1.5 bg-stone-200 rounded-lg"
+                  title="Atur Kecerahan"
+                />
+                <span className="text-[10px] font-mono font-bold text-stone-600 w-7 text-right">{brightness}%</span>
+              </div>
+            </div>
+
+            {/* LOWER DECK CONTROLS - Aligned to exact camera width with balanced spacing */}
+            <div className="w-full max-w-[min(100%,_calc((100vh_-_180px)_*_4_/_3))] mx-auto bg-white/95 backdrop-blur-md border border-stone-200/90 p-2 sm:p-2.5 rounded-2xl shadow-xs flex items-center justify-between gap-2.5 flex-shrink-0">
+              {/* Main Shutter & Upload Buttons */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={startSingleClickMultiShoot}
+                  disabled={countdown !== null || !hasCamera || isProcessingPhoto || isAutoShooting}
+                  className="h-9 px-4.5 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-40 cursor-pointer"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>{isAutoShooting ? 'Sedang Memotret...' : 'Mulai Foto Otomatis'}</span>
+                </button>
+
+                <button
+                  onClick={() => { setIsAutoShooting(false); fileInputRef.current?.click(); }}
+                  disabled={isProcessingPhoto || isAutoShooting}
+                  className="h-9 px-3.5 bg-[#1D63FF] hover:bg-[#1550D6] active:scale-95 text-white rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs shadow-blue-500/20 disabled:opacity-40 cursor-pointer"
+                  title="Unggah Foto dari Perangkat"
+                >
+                  <Upload className="w-3.5 h-3.5 text-white" />
+                  <span>Upload</span>
+                </button>
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+              </div>
+
+              {/* Center Spacebar Shortcut Hint */}
+              <span className="hidden md:inline-flex items-center gap-1.5 text-[11px] text-stone-400 font-medium">
+                <span>Tips: Tekan</span>
+                <kbd className="px-1.5 py-0.5 bg-stone-100 border border-stone-200 rounded text-[9px] font-mono text-stone-600 font-bold">SPACE</kbd>
+                <span>untuk mulai</span>
+              </span>
+
+              {/* Timer Deck & Demo Button */}
+              <div className="flex items-center gap-2">
+                {/* Timer Selector */}
+                <div className="h-9 flex items-center bg-blue-50/90 border border-blue-200/90 rounded-xl p-1 gap-1 shadow-2xs">
+                  <span className="text-[10px] font-bold text-blue-600 pl-2 pr-1 uppercase tracking-wider select-none">
+                    Jeda:
                   </span>
-                  {CAMERA_FILTERS.map((fStr) => (
+                  {[3, 5, 7, 10].map((sec) => (
                     <button
-                      key={fStr.id}
-                      onClick={() => setActiveFilter(fStr.id)}
-                      className={`px-2.5 py-1 text-[10px] font-bold rounded-xl transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
-                        activeFilter === fStr.id
-                          ? 'bg-stone-900 text-white shadow-sm'
-                          : 'bg-stone-100 text-stone-600 hover:bg-stone-200/60'
+                      key={sec}
+                      disabled={isAutoShooting || countdown !== null} 
+                      onClick={() => setTimerInterval(sec)}
+                      className={`min-w-[32px] h-7 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
+                        timerInterval === sec 
+                          ? 'bg-[#1D63FF] text-white shadow-xs scale-102' 
+                          : 'text-blue-900/70 hover:text-[#1D63FF] hover:bg-blue-100/60'
                       }`}
                     >
-                      {fStr.label}
+                      {sec}s
                     </button>
                   ))}
                 </div>
 
-                {/* Brightness Slider */}
-                <div className="flex items-center gap-2 pl-2 sm:border-l border-stone-200 flex-shrink-0">
-                  <Sun className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                  <input
-                    type="range"
-                    min="80"
-                    max="140"
-                    value={brightness}
-                    onChange={(e) => setBrightness(Number(e.target.value))}
-                    className="w-16 sm:w-20 accent-stone-800 cursor-pointer h-1.5 bg-stone-200 rounded-lg"
-                    title="Atur Kecerahan"
-                  />
-                  <span className="text-[9px] font-mono font-bold text-stone-600 w-6">{brightness}%</span>
-                </div>
+                <button
+                  onClick={handleDemoPhoto}
+                  disabled={isAutoShooting}
+                  className="h-9 px-3.5 bg-[#1D63FF] hover:bg-[#1550D6] active:scale-95 text-white rounded-xl font-semibold text-xs shadow-xs shadow-blue-500/20 transition-all cursor-pointer flex items-center justify-center whitespace-nowrap"
+                >
+                  Foto Demo
+                </button>
               </div>
-
-              {/* LOWER DECK CONTROLS */}
-              <div className="bg-white/90 backdrop-blur-md border border-stone-200/80 p-2 sm:p-2.5 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2.5 w-full flex-shrink-0">
-                {/* Main Shutter & Upload Buttons */}
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <button
-                    onClick={startSingleClickMultiShoot}
-                    disabled={countdown !== null || !hasCamera || isProcessingPhoto || isAutoShooting}
-                    className="h-9 px-4 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5 flex-1 sm:flex-none shadow-xs disabled:opacity-40 cursor-pointer"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>{isAutoShooting ? 'Sedang Memotret...' : 'Mulai Foto Otomatis'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => { setIsAutoShooting(false); fileInputRef.current?.click(); }}
-                    disabled={isProcessingPhoto || isAutoShooting}
-                    className="h-9 px-3.5 bg-[#1D63FF] hover:bg-[#1550D6] active:scale-95 text-white rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs shadow-blue-500/20 disabled:opacity-40 cursor-pointer"
-                    title="Unggah Foto dari Perangkat"
-                  >
-                    <Upload className="w-3.5 h-3.5 text-white" />
-                    <span>Upload</span>
-                  </button>
-                  <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
-                </div>
-
-                {/* Timer Deck & Demo Button */}
-                <div className="flex items-center gap-2 justify-between w-full sm:w-auto">
-                  {/* Timer Selector */}
-                  <div className="h-9 flex bg-blue-50/80 border border-blue-200/90 rounded-xl p-0.5 items-center gap-0.5 shadow-xs">
-                    <span className="text-[10px] font-bold text-blue-600 px-2 uppercase tracking-wider">Jeda:</span>
-                    {[3, 5, 7].map((sec) => (
-                      <button
-                        key={sec}
-                        disabled={isAutoShooting || countdown !== null}
-                        onClick={() => setTimerInterval(sec)}
-                        className={`h-7 px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                          timerInterval === sec 
-                            ? 'bg-[#1D63FF] text-white shadow-xs' 
-                            : 'text-blue-900/70 hover:text-[#1D63FF] hover:bg-blue-100/50'
-                        }`}
-                      >
-                        {sec}s
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={handleDemoPhoto}
-                    disabled={isAutoShooting}
-                    className="h-9 px-3.5 bg-[#1D63FF] hover:bg-[#1550D6] active:scale-95 text-white rounded-xl font-semibold text-xs shadow-xs shadow-blue-500/20 transition-all cursor-pointer flex items-center justify-center whitespace-nowrap"
-                  >
-                    Foto Demo
-                  </button>
-                </div>
               </div>
 
             </div>
