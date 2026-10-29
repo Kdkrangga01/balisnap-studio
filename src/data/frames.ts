@@ -1004,4 +1004,200 @@ export const frames: FrameTemplate[] = [
       { x: 493, y: 1149, w: 426, h: 342, rx: 10 }
     ]
   }
+,
+  // ============================================
+  // BINGKAI KUSTOM STUDIO TAMBAHAN (11 KOLEKSI EKSKLUSIF)
+  // ============================================
+  {
+    id: "custom-1792565017332-u2ti",
+    name: "Monochrome Negatives",
+    slots: 8,
+    category: "custom",
+    src: "/templates/custom-monochrome-negatives.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 47, y: 122, w: 423, h: 271, rx: 8 },
+      { x: 46, y: 448, w: 424, h: 279, rx: 8 },
+      { x: 46, y: 786, w: 424, h: 283, rx: 8 },
+      { x: 46, y: 1127, w: 424, h: 254, rx: 8 },
+      { x: 554, y: 123, w: 422, h: 270, rx: 8 },
+      { x: 554, y: 448, w: 423, h: 279, rx: 8 },
+      { x: 555, y: 786, w: 422, h: 283, rx: 8 },
+      { x: 556, y: 1127, w: 422, h: 254, rx: 8 }
+    ]
+  },
+
+  {
+    id: "custom-1792565968410-fgxz",
+    name: "Grainy Exposition",
+    slots: 8,
+    category: "custom",
+    src: "/templates/custom-grainy-exposition.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 30, y: 107, w: 465, h: 322, rx: 10 },
+      { x: 31, y: 449, w: 463, h: 327, rx: 10 },
+      { x: 32, y: 798, w: 461, h: 300, rx: 9 },
+      { x: 34, y: 1118, w: 458, h: 303, rx: 9 },
+      { x: 530, y: 107, w: 465, h: 322, rx: 10 },
+      { x: 531, y: 449, w: 463, h: 327, rx: 10 },
+      { x: 532, y: 798, w: 460, h: 300, rx: 9 },
+      { x: 533, y: 1118, w: 458, h: 303, rx: 9 }
+    ]
+  },
+
+  {
+    id: "custom-1792566109388-zou0",
+    name: "Classic Groove",
+    slots: 8,
+    category: "custom",
+    src: "/templates/custom-classic-groove.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 44, y: 27, w: 430, h: 312, rx: 9 },
+      { x: 44, y: 363, w: 430, h: 305, rx: 9 },
+      { x: 44, y: 693, w: 430, h: 314, rx: 9 },
+      { x: 44, y: 1029, w: 430, h: 325, rx: 10 },
+      { x: 560, y: 27, w: 428, h: 312, rx: 9 },
+      { x: 560, y: 363, w: 428, h: 305, rx: 9 },
+      { x: 560, y: 693, w: 428, h: 314, rx: 9 },
+      { x: 560, y: 1029, w: 428, h: 324, rx: 10 }
+    ]
+  },
+
+  {
+    id: "custom-1792566949017-r2da",
+    name: "Cine Negatives",
+    slots: 6,
+    category: "custom",
+    src: "/templates/custom-cine-negatives.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 70, y: 156, w: 374, h: 377, rx: 11 },
+      { x: 70, y: 559, w: 374, h: 373, rx: 11 },
+      { x: 70, y: 958, w: 374, h: 374, rx: 11 },
+      { x: 532, y: 108, w: 430, h: 432, rx: 9 },
+      { x: 532, y: 567, w: 430, h: 432, rx: 9 },
+      { x: 532, y: 1027, w: 430, h: 432, rx: 9 }
+    ]
+  },
+
+  {
+    id: "custom-1792567156600-0qm5",
+    name: "Analog Motion",
+    slots: 6,
+    category: "custom",
+    src: "/templates/custom-analog-motion.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 36, y: 70, w: 450, h: 302, rx: 9 },
+      { x: 36, y: 395, w: 450, h: 301, rx: 9 },
+      { x: 36, y: 719, w: 450, h: 300, rx: 9 },
+      { x: 538, y: 70, w: 450, h: 301, rx: 9 },
+      { x: 538, y: 395, w: 450, h: 301, rx: 9 },
+      { x: 538, y: 719, w: 450, h: 299, rx: 9 }
+    ]
+  },
+
+  {
+    id: "custom-1792567320462-cc4j",
+    name: "Silver Echo",
+    slots: 6,
+    category: "custom",
+    src: "/templates/custom-silver-echo.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 27, y: 61, w: 464, h: 374, rx: 11 },
+      { x: 26, y: 459, w: 465, h: 366, rx: 11 },
+      { x: 27, y: 844, w: 463, h: 350, rx: 11 },
+      { x: 555, y: 90, w: 426, h: 314, rx: 9 },
+      { x: 554, y: 479, w: 427, h: 319, rx: 10 },
+      { x: 555, y: 869, w: 426, h: 300, rx: 9 }
+    ]
+  },
+
+  {
+    id: "custom-1792976230249-ncfd",
+    name: "Oldschool Melody",
+    slots: 4,
+    category: "custom",
+    src: "/templates/custom-oldschool-melody.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 86, y: 288, w: 387, h: 442, rx: 12 },
+      { x: 86, y: 814, w: 387, h: 441, rx: 12 },
+      { x: 552, y: 288, w: 386, h: 442, rx: 12 },
+      { x: 552, y: 814, w: 386, h: 441, rx: 12 }
+    ]
+  },
+
+  {
+    id: "custom-1792977665659-xjkf",
+    name: "Fluffy Blossom",
+    slots: 8,
+    category: "custom",
+    src: "/templates/custom-fluffy-blossom.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 47, y: 98, w: 437, h: 274, rx: 8 },
+      { x: 47, y: 402, w: 437, h: 271, rx: 8 },
+      { x: 47, y: 706, w: 437, h: 272, rx: 8 },
+      { x: 47, y: 1009, w: 437, h: 256, rx: 8 },
+      { x: 542, y: 98, w: 435, h: 274, rx: 8 },
+      { x: 542, y: 402, w: 435, h: 271, rx: 8 },
+      { x: 542, y: 706, w: 435, h: 272, rx: 8 },
+      { x: 542, y: 1009, w: 435, h: 256, rx: 8 }
+    ]
+  },
+
+  {
+    id: "custom-1792995483519-qp17",
+    name: "Retro Symphony",
+    slots: 6,
+    category: "custom",
+    src: "/templates/custom-retro-symphony.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 59, y: 153, w: 429, h: 306, rx: 9 },
+      { x: 61, y: 538, w: 425, h: 294, rx: 9 },
+      { x: 61, y: 912, w: 425, h: 293, rx: 9 },
+      { x: 537, y: 153, w: 425, h: 306, rx: 9 },
+      { x: 538, y: 538, w: 424, h: 294, rx: 9 },
+      { x: 539, y: 912, w: 423, h: 293, rx: 9 }
+    ]
+  },
+
+  {
+    id: "custom-1792995725916-metb",
+    name: "Analogue Symphony",
+    slots: 6,
+    category: "custom",
+    src: "/templates/custom-analogue-symphony.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 62, y: 310, w: 408, h: 289, rx: 9 },
+      { x: 62, y: 658, w: 408, h: 291, rx: 9 },
+      { x: 62, y: 1011, w: 407, h: 288, rx: 9 },
+      { x: 556, y: 310, w: 407, h: 289, rx: 9 },
+      { x: 556, y: 658, w: 407, h: 291, rx: 9 },
+      { x: 556, y: 1011, w: 407, h: 288, rx: 9 }
+    ]
+  },
+
+  {
+    id: "custom-1792996162831-7osd",
+    name: "Sunset Jukebox",
+    slots: 6,
+    category: "custom",
+    src: "/templates/custom-sunset-jukebox.png",
+    width: 1024, height: 1536,
+    slotCoords: [
+      { x: 93, y: 197, w: 380, h: 302, rx: 9 },
+      { x: 93, y: 572, w: 380, h: 303, rx: 9 },
+      { x: 94, y: 948, w: 378, h: 303, rx: 9 },
+      { x: 555, y: 197, w: 378, h: 302, rx: 9 },
+      { x: 555, y: 572, w: 377, h: 303, rx: 9 },
+      { x: 555, y: 948, w: 377, h: 303, rx: 9 }
+    ]
+  }
 ];

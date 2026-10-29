@@ -1066,22 +1066,28 @@ export const SelectFrame: React.FC = () => {
                     const el = document.getElementById('paket-harga');
                     if (el) el.scrollIntoView({ behavior: 'smooth' }); 
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-colors cursor-pointer bg-zinc-900 text-white border-zinc-800 hover:bg-zinc-800"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-colors cursor-pointer shadow-2xs ${
+                    packageTier === 'premium'
+                      ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100/80'
+                      : packageTier === 'basic'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100/80'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100/80'
+                  }`}
                   title="Klik untuk lihat rincian paket" 
                 >
                   {packageTier === 'premium' ? (
                     <>
-                      <Crown className="w-3 h-3 text-amber-300" />
+                      <Crown className="w-3 h-3 text-amber-500" />
                       <span>VIP Premium Pass</span>
                     </>
                   ) : packageTier === 'basic' ? (
                     <>
-                      <ShieldCheck className="w-3 h-3 text-blue-300" />
+                      <ShieldCheck className="w-3 h-3 text-blue-500" />
                       <span>Basic Pass</span>
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
                       <span>Free Pass</span>
                     </>
                   )}
@@ -1121,30 +1127,6 @@ export const SelectFrame: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-2.5 w-full sm:w-auto z-10">
-              {/* Tombol Khusus Owner untuk Mode Hapus Frame */}
-              {isOwnerAuthenticated ? (
-                <button
-                  onClick={() => setOwnerDeleteMode((prev) => !prev)}
-                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
-                    ownerDeleteMode
-                      ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/25 ring-2 ring-rose-300'
-                      : 'bg-zinc-900 hover:bg-zinc-800 text-white'
-                  }`}
-                  title="Aktifkan atau matikan tombol hapus pada setiap bingkai"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>{ownerDeleteMode ? 'Tutup Mode Hapus' : 'Mode Hapus (Owner)'}</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => setShowOwnerAuthPrompt(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer border border-zinc-200/80"
-                  title="Verifikasi passcode untuk mengakses fitur hapus frame"
-                >
-                  <Key className="w-4 h-4 text-zinc-500" />
-                  <span>Hapus Frame (Owner)</span>
-                </button>
-              )}
 
               <button
                 onClick={() => {
