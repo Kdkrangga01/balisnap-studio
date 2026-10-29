@@ -124,3 +124,41 @@ CREATE POLICY "Allow public select access on sigap_reports"
 ON public.sigap_reports FOR SELECT USING (true);
 
 CREATE INDEX IF NOT EXISTS idx_sigap_reports_created_at ON public.sigap_reports(created_at DESC);
+
+-- ===============================================================
+-- 11. Buat Tabel `custom_frames` (Sinkronisasi Otomatis Bingkai Cloud)
+-- ===============================================================
+CREATE TABLE IF NOT EXISTS public.custom_frames (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    slots INT NOT NULL DEFAULT 4,
+    category TEXT NOT NULL DEFAULT 'custom',
+    src TEXT NOT NULL,
+    width INT NOT NULL DEFAULT 1024,
+    height INT NOT NULL DEFAULT 1536,
+    slot_coords JSONB NOT NULL DEFAULT '[]'::jsonb,
+    has_brand_name BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.custom_frames ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read access on custom_frames" ON public.custom_frames;
+DROP POLICY IF EXISTS "Allow public insert access on custom_frames" ON public.custom_frames;
+DROP POLICY IF EXISTS "Allow public update access on custom_frames" ON public.custom_frames;
+DROP POLICY IF EXISTS "Allow public delete access on custom_frames" ON public.custom_frames;
+
+CREATE POLICY "Allow public read access on custom_frames"
+ON public.custom_frames FOR SELECT USING (true);
+
+CREATE POLICY "Allow public insert access on custom_frames"
+ON public.custom_frames FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public update access on custom_frames"
+ON public.custom_frames FOR UPDATE USING (true);
+
+CREATE POLICY "Allow public delete access on custom_frames"
+ON public.custom_frames FOR DELETE USING (true);
+
+CREATE INDEX IF NOT EXISTS idx_custom_frames_created_at ON public.custom_frames(created_at DESC);
+

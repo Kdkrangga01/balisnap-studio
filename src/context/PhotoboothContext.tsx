@@ -3,7 +3,7 @@ import { frames } from '../data/frames';
 import type { FrameTemplate } from '../data/frames';
 import { saveCustomFrame, loadCustomFrames, removeCustomFrame } from '../lib/frameDb';
 import { stickerPacks } from '../data/stickers';
-import { fetchCloudTransactions, saveCloudTransaction, deleteCloudTransaction, isSupabaseConfigured } from '../lib/supabase';
+import { fetchCloudTransactions, saveCloudTransaction, deleteCloudTransaction, isSupabaseConfigured, fetchCloudFrames, saveCloudFrame, deleteCloudFrame } from '../lib/supabase';
 import { findNextBestStickerPosition } from '../lib/stickerPlacement';
 
 // Konstanta zoom foto, dipakai bareng oleh context & kanvas biar konsisten.
@@ -842,6 +842,28 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           }
         }
         setCustomFrames(dbFrames);
+
+        // Sinkronisasi otomatis dari Supabase Cloud (jika tabel custom_frames sudah ada)
+        if (isSupabaseConfigured()) {
+          try {
+            const cloudFrames = await fetchCloudFrames();
+            if (cloudFrames && cloudFrames.length > 0) {
+              setCustomFrames(prev => {
+                const combined = [...prev];
+                for (const cf of cloudFrames) {
+                  if (!presetIds.has(cf.id) && !combined.some(f => f.id === cf.id)) {
+                    combined.push(cf);
+                    // Simpan juga ke IndexedDB lokal sebagai cache instan
+                    saveCustomFrame(cf).catch(() => {});
+                  }
+                }
+                return combined;
+              });
+            }
+          } catch (cloudErr) {
+            console.warn("Supabase cloud frames sync warning:", cloudErr);
+          }
+        }
       } catch (err) {
         console.error("Failed to load custom frames:", err);
       }
@@ -1053,12 +1075,18 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (prev.some(f => f.id === frame.id)) return prev;
       return [...prev, frame];
     });
+    // Simpan ke IndexedDB lokal
     saveCustomFrame(frame).catch(err => console.error("Error saving frame DB:", err));
+    // Sinkronkan ke Supabase Cloud otomatis secara real-time
+    saveCloudFrame(frame).catch(err => console.warn("Error syncing frame to cloud:", err));
   };
 
   const deleteCustomFrame = (id: string) => {
     setCustomFrames(prev => prev.filter(f => f.id !== id));
+    // Hapus dari IndexedDB lokal
     removeCustomFrame(id).catch(err => console.error("Error deleting frame DB:", err));
+    // Hapus juga dari Supabase Cloud
+    deleteCloudFrame(id).catch(err => console.warn("Error deleting frame from cloud:", err));
   };
 
   // Ubah 1 baris tertentu (index 0-4) pada daftar custom lokasi.

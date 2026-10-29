@@ -229,3 +229,93 @@ export async function saveCloudFeedback(item: CloudFeedbackItem): Promise<boolea
 
   return false;
 }
+
+/**
+ * Mengambil daftar bingkai kustom dari tabel `custom_frames` di Supabase Cloud.
+ */
+export async function fetchCloudFrames(): Promise<any[] | null> {
+  if (!isSupabaseConfigured()) return null;
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/custom_frames?select=*&order=created_at.desc`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+
+    if (!response.ok) {
+      // Jika tabel belum dibuat oleh user, jangan throw error (graceful fallback)
+      return null;
+    }
+
+    const data = await response.json();
+    if (!Array.isArray(data)) return null;
+
+    return data.map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      slots: Number(item.slots) || (item.slot_coords ? item.slot_coords.length : 4),
+      category: item.category || 'custom',
+      src: item.src || item.image_url,
+      width: Number(item.width) || 1024,
+      height: Number(item.height) || 1536,
+      slotCoords: item.slot_coords || item.slotCoords || [],
+      hasBrandName: item.has_brand_name ?? false,
+    }));
+  } catch (error) {
+    console.warn('Supabase fetch custom_frames warning (offline/not created):', error);
+    return null;
+  }
+}
+
+/**
+ * Menyimpan bingkai kustom baru ke Supabase Cloud secara real-time.
+ */
+export async function saveCloudFrame(frame: any): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  const payload = {
+    id: frame.id,
+    name: frame.name,
+    slots: frame.slots || (frame.slotCoords ? frame.slotCoords.length : 4),
+    category: frame.category || 'custom',
+    src: frame.src,
+    width: frame.width || 1024,
+    height: frame.height || 1536,
+    slot_coords: frame.slotCoords || [],
+  };
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/custom_frames?on_conflict=id`, {
+      method: 'POST',
+      headers: {
+        ...getHeaders(),
+        'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.warn('Supabase save custom_frame error:', error);
+    return false;
+  }
+}
+
+/**
+ * Menghapus bingkai kustom dari Supabase Cloud.
+ */
+export async function deleteCloudFrame(id: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/custom_frames?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.warn('Supabase delete custom_frame error:', error);
+    return false;
+  }
+}
