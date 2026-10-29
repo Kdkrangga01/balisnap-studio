@@ -491,6 +491,20 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                   listening={false}
                 />
 
+                {/* Lapisan Latar Belakang Penuh (Ambient Cover): Menjamin 100% Slot Terisi Penuh Tanpa Kotak Kosong */}
+                {photoImg && photoFitMode === 'fit' && (
+                  <KonvaImage
+                    name={`slot-bg-ambient-${index}`}
+                    image={photoImg}
+                    x={(slot.w - imgW * Math.max(slot.w / imgW, slot.h / imgH)) / 2}
+                    y={(slot.h - imgH * Math.max(slot.w / imgW, slot.h / imgH)) / 2}
+                    width={imgW * Math.max(slot.w / imgW, slot.h / imgH)}
+                    height={imgH * Math.max(slot.w / imgW, slot.h / imgH)}
+                    opacity={0.88}
+                    listening={false}
+                  />
+                )}
+
                 <KonvaImage
                   name={`slot-photo-img-${index}`}
                   id={`slot-photo-img-${index}`}

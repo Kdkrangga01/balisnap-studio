@@ -292,7 +292,7 @@ export const Preview: React.FC = () => {
     }
   };
 
-  // Helper untuk menggambar foto mengisi slot (Mendukung mode 'fit' Badan Utuh vs 'cover' Isi Penuh)
+  // Helper untuk menggambar foto mengisi slot secara penuh 100% tanpa kotak kosong dan tanpa memotong gerakan
   const drawImageCover = (
     ctx: CanvasRenderingContext2D,
     img: HTMLImageElement,
@@ -309,18 +309,44 @@ export const Preview: React.FC = () => {
     const imgH = img.naturalHeight || img.height || 600;
     if (!imgW || !imgH) return;
 
-    const currentMode = overrideFitMode || photoFitMode;
-    // 'fit': seluruh badan terlihat utuh 100% tanpa terpotong
-    // 'cover': mengisi penuh slot
-    const baseScale = currentMode === 'fit' ? Math.min(w / imgW, h / imgH) : Math.max(w / imgW, h / imgH);
-    const finalScale = baseScale * scale;
-    const renderW = imgW * finalScale;
-    const renderH = imgH * finalScale;
+    const fitScale = Math.min(w / imgW, h / imgH) * scale;
+    const coverScale = Math.max(w / imgW, h / imgH) * scale;
 
-    const renderX = x + (w - renderW) / 2 + panX;
-    const renderY = currentMode === 'fit' ? (y + (h - renderH) / 2 + panY) : (y + Math.max(0, (h - renderH) * 0.15) + panY);
+    // Jika dipaksa cover penuh murni
+    if (overrideFitMode === 'cover') {
+      const renderW = imgW * coverScale;
+      const renderH = imgH * coverScale;
+      const renderX = x + (w - renderW) / 2 + panX;
+      const renderY = y + (h - renderH) / 2 + panY;
+      ctx.drawImage(img, renderX, renderY, renderW, renderH);
+      return;
+    }
 
-    ctx.drawImage(img, renderX, renderY, renderW, renderH);
+    // 1. LAPISAN LATAR BELAKANG: Isi 100% penuh slot edge-to-edge
+    // Mengeliminasi "kotak putih kosong" seutuhnya dengan warna & pencahayaan foto asli
+    if (Math.abs(coverScale - fitScale) > 0.005) {
+      const coverW = imgW * coverScale;
+      const coverH = imgH * coverScale;
+      const coverX = x + (w - coverW) / 2 + panX;
+      const coverY = y + (h - coverH) / 2 + panY;
+
+      ctx.save();
+      try {
+        ctx.filter = 'blur(16px) brightness(0.9) saturate(110%)';
+      } catch {}
+      ctx.drawImage(img, coverX - 6, coverY - 6, coverW + 12, coverH + 12);
+      ctx.restore();
+    }
+
+    // 2. LAPISAN UTAMA (FOREGROUND): Badan & seluruh gerakan utuh 100% tanpa ada yang terpotong
+    const fitW = imgW * fitScale;
+    const fitH = imgH * fitScale;
+    const fitX = x + (w - fitW) / 2 + panX;
+    const fitY = y + (h - fitH) / 2 + panY;
+
+    ctx.save();
+    ctx.drawImage(img, fitX, fitY, fitW, fitH);
+    ctx.restore();
   };
 
   // GIF Boomerang Generator Handler - RENDER VIA CANVAS 2D OFFSCREEN UNTUK EKSPOR FILE .GIF CEPAT & STABIL
