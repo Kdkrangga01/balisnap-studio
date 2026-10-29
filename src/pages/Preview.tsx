@@ -527,12 +527,12 @@ export const Preview: React.FC = () => {
   const handleOpenGifModal = async (customInterval?: number, customMode?: BoomerangMode) => {
     setShowGifModal(true);
     if (!gifResult || customInterval !== undefined || customMode !== undefined) {
-      await generateGif(customInterval, customMode);
+      await generateGif(customInterval, customMode); 
     }
   };
 
-  const handleDownloadGif = async () => {
-    let result = gifResult;
+  const handleDownloadGif = async () => { 
+    let result = gifResult; 
     if (!result) {
       result = await generateGif();
     }

@@ -7,7 +7,7 @@ import type { FrameTemplate } from '../data/frames';
 import { removeCustomFrame } from '../lib/frameDb';
 import {
   ArrowLeft, Search, X, Images, Clock, Heart, Upload, CheckCircle2, ScanSearch, Eye, SlidersHorizontal, LayoutGrid, Grid2X2, BookmarkCheck, Sliders,
-  Camera, Check, Crown, UploadCloud, Lock, Film, Gift, LockOpen, ShieldCheck, Ticket, Layers, Smile, Trash2, Key
+  Camera, Check, Crown, UploadCloud, Lock, Film, Gift, LockOpen, ShieldCheck, Ticket, Layers, Smile, Trash2, Key, Download
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
 
@@ -527,6 +527,22 @@ export const SelectFrame: React.FC = () => {
       setOwnerPassError('Passcode Owner salah! Silakan coba lagi.');
     }
   };
+
+  const handleExportCustomFrames = useCallback(() => {
+    if (!customFrames || customFrames.length === 0) return;
+    const jsonStr = JSON.stringify(customFrames, null, 2);
+    try {
+      navigator.clipboard.writeText(jsonStr);
+    } catch { }
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `balisnap-custom-frames-${customFrames.length}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert(`File balisnap-custom-frames-${customFrames.length}.json berhasil diunduh dan disalin ke clipboard! Silakan kirimkan datanya agar dapat digabung ke kode website secara permanen.`);
+  }, [customFrames]);
 
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutModalTier, setCheckoutModalTier] = useState<PackageTier>('basic');
@@ -1143,6 +1159,18 @@ export const SelectFrame: React.FC = () => {
                 <Upload className="w-4 h-4 text-white" />
                 <span>Upload Frame Sendiri</span>
               </button>
+
+              {/* Tombol Ekspor Frame Kustom (jika ada frame kustom lokal yang belum masuk kode) */}
+              {customFrames && customFrames.length > 0 && ( 
+                <button
+                  onClick={handleExportCustomFrames} 
+                  className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-emerald-600/20 w-full sm:w-auto"
+                  title="Ekspor frame kustom dari browser ini ke file JSON agar bisa disinkronkan permanen ke kode website"
+                >
+                  <Download className="w-4 h-4 text-white" />
+                  <span>Ekspor {customFrames.length} Frame Kustom</span>
+                </button>
+              )}
             </div>
           </header>
 
