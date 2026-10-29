@@ -46,6 +46,7 @@ export const Preview: React.FC = () => {
   const [gifResult, setGifResult] = useState<{ dataUrl: string; blob: Blob } | null>(null);
   const [gifInterval, setGifInterval] = useState<number>(captureType === 'boomerang' ? 0.08 : 0.15);
   const [gifMode, setGifMode] = useState<BoomerangMode>('sequence'); 
+  const [photoFitMode, setPhotoFitMode] = useState<'fit' | 'cover'>('fit');
 
   // DIGITAL ENVELOPE GIFT STATE 
   const [showEnvelopeModal, setShowEnvelopeModal] = useState<boolean>(false);
@@ -151,18 +152,20 @@ export const Preview: React.FC = () => {
       }
       if (isCancelled) return;
 
-      // 3. Bangun urutan ping-pong boomerang
+      // 3. Bangun urutan animasi mengalir maju yang mulus
       const pingPongSeq: number[] = [];
       if (hasBurst && maxFrames > 1) {
+        // Mainkan seluruh pose secara berurutan maju dari awal sampai akhir
         for (let i = 0; i < maxFrames; i++) pingPongSeq.push(i);
-        for (let i = maxFrames - 2; i > 0; i--) pingPongSeq.push(i);
+        // Transisi halus kembali ke awal
+        for (let i = maxFrames - 2; i > 0; i -= 2) pingPongSeq.push(i);
       } else {
         // Fallback untuk foto biasa: 12 langkah osilasi gelombang harmonis
         for (let i = 0; i < 12; i++) pingPongSeq.push(i); 
       }
 
       let step = 0;
-      const frameIntervalMs = hasBurst && maxFrames > 12 ? 70 : Math.max(70, Math.round(gifInterval * 1000));
+      const frameIntervalMs = hasBurst && maxFrames > 12 ? 85 : Math.max(70, Math.round(gifInterval * 1000));
 
       const renderFrame = () => {
         if (isCancelled) return;
@@ -234,7 +237,7 @@ export const Preview: React.FC = () => {
       isCancelled = true;
       if (animTimer) clearInterval(animTimer);
     };
-  }, [previewTab, selectedFrame, photoBurstFrames, photos, frameColor, gifInterval, gifMode]);
+  }, [previewTab, selectedFrame, photoBurstFrames, photos, frameColor, gifInterval, gifMode, photoFitMode]);
 
 
 
@@ -289,7 +292,7 @@ export const Preview: React.FC = () => {
     }
   };
 
-  // Helper untuk menggambar foto mengisi slot edge-to-edge tanpa distorsi (Center Cover Fit)
+  // Helper untuk menggambar foto mengisi slot (Mendukung mode 'fit' Badan Utuh vs 'cover' Isi Penuh)
   const drawImageCover = (
     ctx: CanvasRenderingContext2D,
     img: HTMLImageElement,
@@ -299,19 +302,23 @@ export const Preview: React.FC = () => {
     h: number,
     scale = 1.0,
     panX = 0,
-    panY = 0
+    panY = 0,
+    overrideFitMode?: 'cover' | 'fit'
   ) => {
     const imgW = img.naturalWidth || img.width || 800;
     const imgH = img.naturalHeight || img.height || 600;
     if (!imgW || !imgH) return;
 
-    const baseScale = Math.max(w / imgW, h / imgH);
+    const currentMode = overrideFitMode || photoFitMode;
+    // 'fit': seluruh badan terlihat utuh 100% tanpa terpotong
+    // 'cover': mengisi penuh slot
+    const baseScale = currentMode === 'fit' ? Math.min(w / imgW, h / imgH) : Math.max(w / imgW, h / imgH);
     const finalScale = baseScale * scale;
     const renderW = imgW * finalScale;
     const renderH = imgH * finalScale;
 
     const renderX = x + (w - renderW) / 2 + panX;
-    const renderY = y + (h - renderH) / 2 + panY;
+    const renderY = currentMode === 'fit' ? (y + (h - renderH) / 2 + panY) : (y + Math.max(0, (h - renderH) * 0.15) + panY);
 
     ctx.drawImage(img, renderX, renderY, renderW, renderH);
   };
@@ -685,16 +692,46 @@ export const Preview: React.FC = () => {
                 </button>
               </div>
 
-              {previewTab === 'boomerang' && gifResult && !isGeneratingGif && (
-                <button
-                  onClick={() => setShowGifModal(true)}
-                  className="text-[11px] font-semibold text-stone-700 hover:text-stone-900 flex items-center gap-1 cursor-pointer bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1.5 rounded-xl transition-all border border-stone-200"
-                  title="Buka Pratinjau Penuh"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  <span>Perbesar</span>
-                </button>
-              )}
+              {/* TOGGLE BADAN UTUH (FIT) VS ISI PENUH (COVER) */}
+              <div className="flex items-center gap-1.5">
+                <div className="bg-stone-100/90 backdrop-blur-md p-1 rounded-2xl flex items-center gap-1 border border-stone-200/80 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setPhotoFitMode('fit')}
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
+                      photoFitMode === 'fit'
+                        ? 'bg-white text-stone-900 shadow-xs font-bold'
+                        : 'text-stone-500 hover:text-stone-800'
+                    }`}
+                    title="Seluruh badan dan pose tampak 100% utuh tanpa terpotong"
+                  >
+                    <span>👤 Badan Utuh</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPhotoFitMode('cover')}
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
+                      photoFitMode === 'cover'
+                        ? 'bg-white text-stone-900 shadow-xs font-bold'
+                        : 'text-stone-500 hover:text-stone-800'
+                    }`}
+                    title="Isi penuh seluruh area slot bingkai"
+                  >
+                    <span>🔲 Isi Penuh</span>
+                  </button>
+                </div>
+
+                {previewTab === 'boomerang' && gifResult && !isGeneratingGif && (
+                  <button
+                    onClick={() => setShowGifModal(true)}
+                    className="text-[11px] font-semibold text-stone-700 hover:text-stone-900 flex items-center gap-1 cursor-pointer bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1.5 rounded-xl transition-all border border-stone-200"
+                    title="Buka Pratinjau Penuh"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    <span>Perbesar</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* CUTE TAPE STRIP */}
@@ -717,7 +754,7 @@ export const Preview: React.FC = () => {
                 }`}
                 style={{ filter: getFilterCss() }}
               >
-                <PhotoCanvas stageRef={stageRef} containerWidth={canvasWidth} isPreviewMode={true} />
+                <PhotoCanvas stageRef={stageRef} containerWidth={canvasWidth} isPreviewMode={true} photoFitMode={photoFitMode} />
               </div>
 
               {/* Boomerang Live Showcase - Real-time Live Animated Canvas Player */}

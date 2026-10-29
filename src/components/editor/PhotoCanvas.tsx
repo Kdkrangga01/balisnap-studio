@@ -7,6 +7,7 @@ interface PhotoCanvasProps {
   stageRef: React.RefObject<any>;
   containerWidth: number;
   isPreviewMode?: boolean;
+  photoFitMode?: 'cover' | 'fit';
 }
 
 function resolveColorToFill(
@@ -132,6 +133,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
   stageRef,
   containerWidth,
   isPreviewMode = false,
+  photoFitMode = 'fit',
 }) => {
   const {
     selectedFrame,
@@ -425,19 +427,17 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const imgW = photoImg.naturalWidth;
             const imgH = photoImg.naturalHeight;
 
-            // Foto selalu otomatis masuk PENUH (coverScale) mengisi slot bingkai edge-to-edge
-            // tanpa ada area kosong/putih di sisi manapun ("seharusnya gada yang kosong").
-            const baseScale = Math.max(slot.w / imgW, slot.h / imgH);
+            // Skala foto berdasarkan photoFitMode:
+            // 'fit': Math.min agar seluruh badan dan pose terlihat 100% UTUH tanpa terpotong
+            // 'cover': Math.max untuk mengisi slot penuh
+            const baseScale = photoFitMode === 'fit' ? Math.min(slot.w / imgW, slot.h / imgH) : Math.max(slot.w / imgW, slot.h / imgH);
             const finalZoom = baseScale * transform.zoom;
 
             const scaledW = imgW * finalZoom;
             const scaledH = imgH * finalZoom;
 
-            // Foto selalu otomatis terpusat pas sempurna di tengah slot bingkai (Center Cover Fit)
-            // baik secara horizontal maupun vertikal, sehingga wajah dan badan subjek otomatis
-            // berada pas di tengah bingkai tanpa perlu digeser-geser manual oleh pengguna.
             const offsetX = (slot.w - scaledW) / 2;
-            const offsetY = (slot.h - scaledH) / 2;
+            const offsetY = photoFitMode === 'fit' ? (slot.h - scaledH) / 2 : Math.max(0, (slot.h - scaledH) * 0.15);
 
             const centeredX = offsetX + transform.x;
             const centeredY = offsetY + transform.y;

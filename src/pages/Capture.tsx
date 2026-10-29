@@ -266,6 +266,7 @@ export const Capture: React.FC = () => {
   const webcamRef = useRef<Webcam>(null);
   const cameraContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const stopBurstRecordingRef = useRef<boolean>(false);
 
   const photosStateRef = useRef<(string | null)[]>(photos);
   useEffect(() => {
@@ -512,8 +513,8 @@ export const Capture: React.FC = () => {
   ]);
 
   // LIVE CAMERA GIF / BOOMERANG BURST CAPTURE
-  // Merekam 22 frame gerakan ultra-smooth (~70ms interval, ~1.54s) langsung dari video stream kamera
-  // sehingga setiap gaya, tawa, lambaian tangan, dan gerakan user terekam otomatis sama persis
+  // Merekam 32 frame gerakan multi-pose dinamis yang menangkap seluruh rangkaian gaya Anda
+  // sehingga setiap pergantian gaya (lambaian, 2 jari, senyum, dll) terekam otomatis dan hidup
   const captureBurstSequence = useCallback(async () => {
     if (!webcamRef.current) return;
 
@@ -524,10 +525,14 @@ export const Capture: React.FC = () => {
     const targetAspect = getSlotAspectRatio(capturedSlot);
     const maxLongSide = 960; // optimal untuk pengambilan frame super cepat tanpa jeda
 
+    stopBurstRecordingRef.current = false;
     setIsBurstRecording(true);
     setBurstFrameProgress(0);
-    const totalBurstFrames = 22; // 22 frame gerakan mulus (~14.3 FPS)
-    const intervalMs = 70; // 70ms = gerakan sangat natural & mulus
+
+    const totalBurstFrames = 32; // 32 frame untuk menangkap beberapa pergantian gaya secara lengkap
+    // Sesuaikan durasi perekaman dengan jeda waktu yang dipilih user (misal 15s)
+    const targetSessionDurationMs = Math.max(3200, Math.min(timerInterval * 1000, 16000));
+    const intervalMs = Math.round(targetSessionDurationMs / totalBurstFrames);
     const rawFrames: string[] = [];
 
     // Siapkan canvas offscreen untuk grab frame secepat kilat (<2ms per frame)
@@ -549,6 +554,8 @@ export const Capture: React.FC = () => {
 
     try {
       for (let i = 0; i < totalBurstFrames; i++) {
+        if (stopBurstRecordingRef.current) break;
+
         if (grabCtx && video && !video.paused && !video.ended) {
           grabCtx.drawImage(video, 0, 0, grabW, grabH);
           const frameSrc = grabCanvas.toDataURL('image/jpeg', 0.85);
@@ -562,7 +569,7 @@ export const Capture: React.FC = () => {
         }
 
         setBurstFrameProgress(i + 1);
-        if (soundEnabled && (i === 0 || i === 7 || i === 14)) {
+        if (soundEnabled && (i === 0 || i % 8 === 0)) {
           playBeepSound();
         }
         if (i < totalBurstFrames - 1) {
@@ -627,6 +634,7 @@ export const Capture: React.FC = () => {
     brightness,
     isBeautyMode,
     soundEnabled,
+    timerInterval,
     setPhotoAtSlot,
     setPhotoBurstAtSlot,
   ]);
@@ -697,10 +705,10 @@ export const Capture: React.FC = () => {
 
   // Toggle Fullscreen Layar Penuh
   const toggleFullscreen = useCallback(() => {
-    const el = cameraContainerRef.current;
+    const el = cameraContainerRef.current; 
     if (!el) return;
     if (!document.fullscreenElement) {
-      if (el.requestFullscreen) {
+      if (el.requestFullscreen) { 
         el.requestFullscreen().catch(() => {});
       } else if ((el as any).webkitRequestFullscreen) {
         (el as any).webkitRequestFullscreen();
@@ -711,9 +719,9 @@ export const Capture: React.FC = () => {
       } else if ((document as any).webkitExitFullscreen) {
         (document as any).webkitExitFullscreen();
       }
-    }
-  }, []);
-
+    }  
+  }, []); 
+  
   // Handler klik / tap pada kamera untuk memulai countdown otomatis sesuai timer yang dipilih
   const handleCameraContainerClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     // Abaikan jika yang diklik tombol fullscreen atau kontrol lainnya
@@ -722,20 +730,20 @@ export const Capture: React.FC = () => {
     startSingleClickMultiShoot();
   }, [hasCamera, isProcessingPhoto, isBurstRecording, countdown, isAutoShooting, startSingleClickMultiShoot]);
 
-  // Dukungan tombol SPACE & TAB untuk memulai sesi pemotretan otomatis
+  // Dukungan tombol SPACE & TAB untuk memulai sesi pemotretan otomatis  
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.code === 'Space' || e.code === 'Tab' || e.key === 'Tab' || e.key === ' ') && !e.repeat) {
-        const activeEl = document.activeElement;
+        const activeEl = document.activeElement; 
         if (
           activeEl &&
           (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')
         ) {
-          return;
-        }
+          return; 
+        } 
         e.preventDefault();
         if (!isAutoShooting && countdown === null && hasCamera && !isProcessingPhoto && !isBurstRecording) {
-          startSingleClickMultiShoot();
+          startSingleClickMultiShoot(); 
         }
       }
     };
@@ -1139,6 +1147,29 @@ export const Capture: React.FC = () => {
                   )}
                 </div>
 
+                {/* Panduan Garis Bingkai Slot (Framing Safe-Zone) agar kepala & badan tidak terpotong */}
+                {hasCamera && selectedFrame?.slotCoords?.[activeSlot] && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 p-3 sm:p-4">
+                    <div
+                      className="border-2 border-dashed border-white/60 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.28)] transition-all duration-300 relative flex flex-col justify-between p-2"
+                      style={{
+                        aspectRatio: getSlotAspectRatio(activeSlot),
+                        maxHeight: '92%',
+                        maxWidth: '92%',
+                        height: getSlotAspectRatio(activeSlot) <= 1 ? '92%' : 'auto',
+                        width: getSlotAspectRatio(activeSlot) > 1 ? '92%' : 'auto',
+                      }}
+                    >
+                      <div className="bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white self-center border border-white/10 shadow-xs">
+                        Panduan Slot #{activeSlot + 1}
+                      </div>
+                      <div className="text-[9px] text-white/90 font-medium text-center bg-black/40 px-2 py-0.5 rounded-full self-center backdrop-blur-xs">
+                        Posisikan badan Anda di dalam kotak ini agar tidak terpotong
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Burst Recording Live HUD Indicator */}
                 <AnimatePresence>
                   {isBurstRecording && (
@@ -1150,19 +1181,26 @@ export const Capture: React.FC = () => {
                     >
                       <div className="bg-red-600/95 backdrop-blur-md text-white text-[11px] font-bold px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg border border-white/20">
                         <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
-                        <span>🔴 SEDANG MEREKAM GERAKAN ({burstFrameProgress}/22)</span>
+                        <span>🔴 MEREKAM RANGKAIAN GAYA ({burstFrameProgress}/32)</span>
                       </div>
 
-                      <div className="w-full max-w-xs bg-black/80 backdrop-blur-md p-3 rounded-2xl border border-white/20 flex flex-col items-center gap-2 shadow-2xl">
+                      <div className="w-full max-w-xs bg-black/85 backdrop-blur-md p-3.5 rounded-2xl border border-white/20 flex flex-col items-center gap-2.5 shadow-2xl pointer-events-auto">
                         <div className="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-gradient-to-r from-red-500 to-rose-400 transition-all duration-100 rounded-full"
-                            style={{ width: `${(burstFrameProgress / 22) * 100}%` }}
+                            style={{ width: `${(burstFrameProgress / 32) * 100}%` }}
                           />
                         </div>
                         <span className="text-[11px] text-white font-semibold tracking-wide text-center">
-                          ✨ Bergayalah sekarang! Gerakan Anda terekam otomatis.
+                          ✨ Silakan ganti-ganti pose bebas! Semua gaya terekam otomatis.
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => { stopBurstRecordingRef.current = true; }}
+                          className="px-3.5 py-1 bg-white/95 hover:bg-white text-stone-900 rounded-full text-[10px] font-bold shadow-md cursor-pointer transition-all active:scale-95"
+                        >
+                          ⏹️ Cukup, Selesai Bergaya
+                        </button>
                       </div>
                     </motion.div>
                   )}
