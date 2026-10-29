@@ -9,15 +9,15 @@ export interface GiftPayload {
   to: string;
   msg: string;
   audio?: string | null;
-  photo?: string | null;
+  photo?: string | null; 
 }
 
-export const RecipientGiftModal: React.FC = () => {
+export const RecipientGiftModal: React.FC = () => { 
   const [isOpen, setIsOpen] = useState(false);
-  const [giftData, setGiftData] = useState<GiftPayload | null>(null);
-  const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const [giftData, setGiftData] = useState<GiftPayload | null>(null); 
+  const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false); 
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false); 
+  const audioElementRef = useRef<HTMLAudioElement | null>(null); 
 
   // Periksa Query Parameter URL pada saat halaman dibuka
   useEffect(() => {

@@ -1,13 +1,12 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import { usePhotobooth } from '../context/PhotoboothContext';
-import { generateDemoPhoto } from '../lib/utils';
+import { generateDemoPhoto, generateDemoBurst } from '../lib/utils';
 import {
   ArrowLeft,
   Upload,
   Check,
   Camera,
-  Zap,
   ChevronRight,
   AlertCircle,
   CheckCircle2,
@@ -17,7 +16,9 @@ import {
   Sun,
   Maximize2,
   Clock,
-  X
+  X,
+  Film,
+  RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -145,6 +146,9 @@ export const Capture: React.FC = () => {
     clearPhotos,
     setStep,
     setPhotoBurstAtSlot,
+    captureType,
+    setCaptureType,
+    photoBurstFrames,
   } = usePhotobooth();
 
   const [activeSlot, setActiveSlot] = useState<number>(0);
@@ -160,6 +164,12 @@ export const Capture: React.FC = () => {
   const [isRetryingCamera, setIsRetryingCamera] = useState<boolean>(false);
   const [isAutoShooting, setIsAutoShooting] = useState<boolean>(false);
 
+  // Live Camera GIF / Boomerang Burst Recording State
+  const [isBurstRecording, setIsBurstRecording] = useState<boolean>(false);
+  const [burstFrameProgress, setBurstFrameProgress] = useState<number>(0);
+  const [burstRecordedPreview, setBurstRecordedPreview] = useState<{ slotIndex: number; frames: string[] } | null>(null);
+  const [burstPreviewFrameIndex, setBurstPreviewFrameIndex] = useState<number>(0);
+
   // Filter, Tone & Mirroring
   const [activeFilter, setActiveFilter] = useState<string>('none');
   const [brightness, setBrightness] = useState<number>(104);
@@ -168,6 +178,40 @@ export const Capture: React.FC = () => {
   const [timerInterval, setTimerInterval] = useState<number>(3);
   const [photoAspects, setPhotoAspects] = useState<Record<number, number>>({});
   const [previewModalPhoto, setPreviewModalPhoto] = useState<string | null>(null);
+  const [previewModalBurst, setPreviewModalBurst] = useState<string[] | null>(null);
+  const [modalBurstIndex, setModalBurstIndex] = useState<number>(0);
+
+  // Ping-pong loop for review modal (0..N-1..1)
+  useEffect(() => {
+    if (!burstRecordedPreview || burstRecordedPreview.frames.length <= 1) return;
+    const totalFrames = burstRecordedPreview.frames.length;
+    const seq: number[] = [];
+    for (let i = 0; i < totalFrames; i++) seq.push(i);
+    for (let i = totalFrames - 2; i > 0; i--) seq.push(i);
+
+    let step = 0;
+    const interval = setInterval(() => {
+      step = (step + 1) % seq.length;
+      setBurstPreviewFrameIndex(seq[step]);
+    }, 120);
+
+    return () => clearInterval(interval);
+  }, [burstRecordedPreview]);
+
+  // Ping-pong loop for lightbox modal when viewing recorded GIF
+  useEffect(() => {
+    if (!previewModalBurst || previewModalBurst.length <= 1) return;
+    const total = previewModalBurst.length;
+    const seq: number[] = [];
+    for (let i = 0; i < total; i++) seq.push(i);
+    for (let i = total - 2; i > 0; i--) seq.push(i);
+    let step = 0;
+    const timer = setInterval(() => {
+      step = (step + 1) % seq.length;
+      setModalBurstIndex(seq[step]);
+    }, 120);
+    return () => clearInterval(timer);
+  }, [previewModalBurst]);
 
   // Fitur Pendukung Kamera
   const soundEnabled = true; 
@@ -283,10 +327,17 @@ export const Capture: React.FC = () => {
         setTimeout(() => setShowCelebration(false), 3000);
         const fallbackIndex = totalSlots - 1;
         setActiveSlot(fallbackIndex >= 0 ? fallbackIndex : 0);
+
+        // Jika mode Foto GIF Boomerang, otomatis skip editor dan langsung menuju Pratinjau Studio
+        if (captureType === 'boomerang') {
+          setTimeout(() => {
+            setStep('preview');
+          }, 600);
+        }
         return null;
       }
     },
-    [selectedFrame]
+    [selectedFrame, captureType, setStep]
   );
 
   useEffect(() => {
@@ -447,6 +498,131 @@ export const Capture: React.FC = () => {
     getSlotAspectRatio,
   ]);
 
+  // LIVE CAMERA GIF / BOOMERANG BURST CAPTURE
+  // Captures 10 frames from webcam in rapid succession (~140ms interval, ~1.4s total)
+  // while the user poses freely, fits each frame to the slot aspect, and opens an instant review
+  const captureBurstSequence = useCallback(async () => {
+    if (!webcamRef.current) return;
+
+    const video = webcamRef.current.video;
+    const actualWidth = video?.videoWidth || actualResolution?.width || 1280;
+    const actualHeight = video?.videoHeight || actualResolution?.height || 720;
+    const capturedSlot = activeSlot;
+    const targetAspect = getSlotAspectRatio(capturedSlot);
+    const maxLongSide = 1280;
+
+    setIsBurstRecording(true);
+    setBurstFrameProgress(0);
+    const totalBurstFrames = 10;
+    const intervalMs = 140;
+    const rawFrames: string[] = [];
+
+    try {
+      for (let i = 0; i < totalBurstFrames; i++) {
+        const frameSrc = webcamRef.current.getScreenshot({
+          width: actualWidth,
+          height: actualHeight,
+        });
+        if (frameSrc) {
+          rawFrames.push(frameSrc);
+        }
+        setBurstFrameProgress(i + 1);
+        if (soundEnabled && i % 3 === 0) {
+          playBeepSound();
+        }
+        if (i < totalBurstFrames - 1) {
+          await new Promise((resolve) => setTimeout(resolve, intervalMs));
+        }
+      }
+
+      if (rawFrames.length === 0) {
+        throw new Error('Gagal mengambil frame dari webcam.');
+      }
+
+      if (soundEnabled) playShutterSound();
+      setShowFlash(true);
+      setTimeout(() => setShowFlash(false), 200);
+
+      setIsProcessingPhoto(true);
+
+      const filteredFrames = await Promise.all(
+        rawFrames.map((src) =>
+          fitDataUrlToSlotAspect(
+            src,
+            maxLongSide,
+            activeFilter,
+            brightness,
+            isBeautyMode,
+            targetAspect
+          )
+        )
+      );
+
+      // Middle frame is saved as sharp still photo for canvas & print
+      const middleIdx = Math.floor(filteredFrames.length / 2);
+      const middleFrame = filteredFrames[middleIdx];
+
+      setPhotoAtSlot(capturedSlot, middleFrame);
+      setPhotoBurstAtSlot(capturedSlot, filteredFrames);
+
+      const updatedPhotos = [...photosStateRef.current];
+      updatedPhotos[capturedSlot] = middleFrame;
+
+      setIsProcessingPhoto(false);
+      setIsBurstRecording(false);
+
+      // Open instant review modal so user can view their looping GIF and choose to Keep or Retake
+      setBurstRecordedPreview({
+        slotIndex: capturedSlot,
+        frames: filteredFrames,
+      });
+    } catch (err: any) {
+      console.error('Error during burst recording:', err);
+      setIsBurstRecording(false);
+      setIsProcessingPhoto(false);
+      setCaptureError(err?.message || 'Gagal merekam foto GIF.');
+      setIsAutoShooting(false);
+    }
+  }, [
+    webcamRef,
+    activeSlot,
+    actualResolution,
+    getSlotAspectRatio,
+    activeFilter,
+    brightness,
+    isBeautyMode,
+    soundEnabled,
+    setPhotoAtSlot,
+    setPhotoBurstAtSlot,
+  ]);
+
+  const handleConfirmBurst = useCallback(() => {
+    if (!burstRecordedPreview) return;
+    const slotIdx = burstRecordedPreview.slotIndex;
+    const middleFrame = burstRecordedPreview.frames[Math.floor(burstRecordedPreview.frames.length / 2)];
+    setPhotoAtSlot(slotIdx, middleFrame);
+    setPhotoBurstAtSlot(slotIdx, burstRecordedPreview.frames);
+    photosStateRef.current[slotIdx] = middleFrame;
+    setBurstRecordedPreview(null);
+    const updatedPhotos = [...photosStateRef.current];
+    updatedPhotos[slotIdx] = middleFrame;
+    setTimeout(() => {
+      const nextSlot = selectNextEmptySlot(updatedPhotos);
+      if (isAutoShooting && nextSlot !== null) {
+        setCountdown(timerInterval);
+      }
+    }, 200);
+  }, [burstRecordedPreview, selectNextEmptySlot, isAutoShooting, timerInterval, setPhotoAtSlot, setPhotoBurstAtSlot]);
+
+  const handleRetakeBurst = useCallback(() => {
+    if (!burstRecordedPreview) return;
+    const capturedSlot = burstRecordedPreview.slotIndex;
+    setPhotoAtSlot(capturedSlot, null);
+    setPhotoBurstAtSlot(capturedSlot, null);
+    setBurstRecordedPreview(null);
+    setActiveSlot(capturedSlot);
+  }, [burstRecordedPreview, setPhotoAtSlot, setPhotoBurstAtSlot]);
+
   if (!selectedFrame) return null;
 
   const { slots: totalSlots, name: frameName } = selectedFrame;
@@ -507,9 +683,9 @@ export const Capture: React.FC = () => {
   const handleCameraContainerClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     // Abaikan jika yang diklik tombol fullscreen atau kontrol lainnya
     if ((e.target as HTMLElement).closest('button')) return;
-    if (!hasCamera || isProcessingPhoto || countdown !== null || isAutoShooting) return;
+    if (!hasCamera || isProcessingPhoto || isBurstRecording || countdown !== null || isAutoShooting) return;
     startSingleClickMultiShoot();
-  }, [hasCamera, isProcessingPhoto, countdown, isAutoShooting, startSingleClickMultiShoot]);
+  }, [hasCamera, isProcessingPhoto, isBurstRecording, countdown, isAutoShooting, startSingleClickMultiShoot]);
 
   // Dukungan tombol SPACE & TAB untuk memulai sesi pemotretan otomatis
   useEffect(() => {
@@ -523,26 +699,30 @@ export const Capture: React.FC = () => {
           return;
         }
         e.preventDefault();
-        if (!isAutoShooting && countdown === null && hasCamera && !isProcessingPhoto) {
+        if (!isAutoShooting && countdown === null && hasCamera && !isProcessingPhoto && !isBurstRecording) {
           startSingleClickMultiShoot();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAutoShooting, countdown, hasCamera, isProcessingPhoto, startSingleClickMultiShoot]);
+  }, [isAutoShooting, countdown, hasCamera, isProcessingPhoto, isBurstRecording, startSingleClickMultiShoot]);
 
   useEffect(() => {
     if (countdown === null) return;
     if (countdown === 0) {
       setCountdown(null);
-      capturePhoto();
+      if (captureType === 'boomerang') {
+        captureBurstSequence();
+      } else {
+        capturePhoto();
+      }
       return;
     }
     if (soundEnabled && countdown > 0) playBeepSound();
     const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
     return () => clearTimeout(timer);
-  }, [countdown, capturePhoto, soundEnabled]);
+  }, [countdown, capturePhoto, captureBurstSequence, soundEnabled, captureType]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -593,11 +773,25 @@ export const Capture: React.FC = () => {
 
   const handleDemoPhoto = () => {
     const demoUrl = generateDemoPhoto(activeSlot);
-    setPhotoAtSlot(activeSlot, demoUrl);
-    setPhotoBurstAtSlot(activeSlot, [demoUrl, demoUrl, demoUrl, demoUrl, demoUrl]);
-    const updatedPhotos = [...photosStateRef.current];
-    updatedPhotos[activeSlot] = demoUrl;
-    setTimeout(() => selectNextEmptySlot(updatedPhotos), 300);
+    if (captureType === 'boomerang') {
+      const demoFrames = generateDemoBurst(activeSlot, 8);
+      const middleIdx = Math.floor(demoFrames.length / 2);
+      const middlePhoto = demoFrames[middleIdx] || demoUrl;
+      setPhotoAtSlot(activeSlot, middlePhoto);
+      setPhotoBurstAtSlot(activeSlot, demoFrames);
+      photosStateRef.current[activeSlot] = middlePhoto;
+      setBurstRecordedPreview({
+        slotIndex: activeSlot,
+        frames: demoFrames,
+      });
+    } else {
+      setPhotoAtSlot(activeSlot, demoUrl);
+      setPhotoBurstAtSlot(activeSlot, [demoUrl]);
+      photosStateRef.current[activeSlot] = demoUrl;
+      const updatedPhotos = [...photosStateRef.current];
+      updatedPhotos[activeSlot] = demoUrl;
+      setTimeout(() => selectNextEmptySlot(updatedPhotos), 300);
+    }
   };
 
   const isAllFilled = photos.slice(0, totalSlots).every((p) => p !== null);
@@ -650,12 +844,16 @@ export const Capture: React.FC = () => {
                   <Check className="w-7 h-7 stroke-[2.5]" />
                 </div>
                 <h2 className="font-serif text-2xl font-black text-stone-800 tracking-tight">Sesi Selesai!</h2>
-                <p className="text-stone-500 text-xs mt-1.5 font-normal">Semua slot foto telah lengkap terisi. Siap untuk beralih ke editor.</p>
+                <p className="text-stone-500 text-xs mt-1.5 font-normal">
+                  {captureType === 'boomerang'
+                    ? 'Semua foto GIF telah lengkap terisi. Mengalihkan ke pratinjau animasi...'
+                    : 'Semua slot foto telah lengkap terisi. Siap untuk beralih ke editor.'}
+                </p>
                 <button
-                  onClick={() => setStep('editor')}
-                  className="mt-5 w-full py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+                  onClick={() => setStep(captureType === 'boomerang' ? 'preview' : 'editor')}
+                  className="mt-5 w-full py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-all shadow-xs shadow-rose-500/20 cursor-pointer"
                 >
-                  Lanjut ke Editor Foto
+                  {captureType === 'boomerang' ? 'Lanjut ke Pratinjau Animasi' : 'Lanjut ke Editor Foto'}
                 </button>
               </motion.div>
             </motion.div>
@@ -687,6 +885,44 @@ export const Capture: React.FC = () => {
               </div>
             </div>
 
+            {/* Mode Switcher: Foto Biasa vs Foto GIF Boomerang */}
+            <div className="flex items-center p-1 bg-stone-100/90 border border-stone-200/90 rounded-xl gap-1 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isAutoShooting && !isBurstRecording) {
+                    setCaptureType('still');
+                  }
+                }}
+                disabled={isAutoShooting || isBurstRecording}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                  captureType === 'still'
+                    ? 'bg-rose-500 text-white shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>Foto Biasa</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isAutoShooting && !isBurstRecording) {
+                    setCaptureType('boomerang');
+                  }
+                }}
+                disabled={isAutoShooting || isBurstRecording}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                  captureType === 'boomerang'
+                    ? 'bg-rose-500 text-white shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                <Film className="w-3.5 h-3.5" />
+                <span>Foto GIF Boomerang</span>
+              </button>
+            </div>
+
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <button
                 onClick={() => { setIsAutoShooting(false); clearPhotos(); }}
@@ -696,7 +932,7 @@ export const Capture: React.FC = () => {
               </button>
               
               <button
-                onClick={() => { setIsAutoShooting(false); setStep('editor'); }}
+                onClick={() => { setIsAutoShooting(false); setStep(captureType === 'boomerang' ? 'preview' : 'editor'); }}
                 disabled={!isAllFilled}
                 className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer ${
                   isAllFilled
@@ -704,7 +940,7 @@ export const Capture: React.FC = () => {
                     : 'bg-stone-200 text-stone-400 cursor-not-allowed'
                 }`}
               >
-                <span>Lanjut ke Editor</span>
+                <span>{captureType === 'boomerang' ? 'Lanjut ke Pratinjau' : 'Lanjut ke Editor'}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button> 
             </div> 
@@ -793,12 +1029,14 @@ export const Capture: React.FC = () => {
                       >
                         {isRetryingCamera ? 'Mencoba...' : 'Coba Sambungkan'}
                       </button>
-                      <button
-                        onClick={handleDemoPhoto}
-                        className="px-4 py-2 bg-stone-800 hover:bg-[#1D63FF] text-stone-200 hover:text-white font-semibold text-xs rounded-xl transition-all cursor-pointer border border-stone-700"
-                      >
-                        Foto Demo
-                      </button>
+                      {captureType === 'still' && (
+                        <button
+                          onClick={handleDemoPhoto}
+                          className="px-4 py-2 bg-stone-800 hover:bg-[#1D63FF] text-stone-200 hover:text-white font-semibold text-xs rounded-xl transition-all cursor-pointer border border-stone-700"
+                        >
+                          Foto Demo
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -816,8 +1054,14 @@ export const Capture: React.FC = () => {
                 <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5 z-20 pointer-events-none">
                   {/* Slot Active Badge */}
                   <div className="bg-black/50 backdrop-blur-md text-white text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-white/10 pointer-events-auto">
-                    <span className={`w-1.5 h-1.5 rounded-full ${isAutoShooting ? 'bg-rose-400 animate-ping' : 'bg-emerald-400'}`} />
-                    <span>{isAutoShooting ? 'Foto Otomatis...' : `Slot #${activeSlot + 1}`}</span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isBurstRecording ? 'bg-red-500 animate-ping' : isAutoShooting ? 'bg-rose-400 animate-ping' : 'bg-emerald-400'}`} />
+                    <span>
+                      {isBurstRecording
+                        ? `Merekam Frame (${burstFrameProgress}/10)...`
+                        : isAutoShooting
+                          ? (captureType === 'boomerang' ? 'Merekam GIF...' : 'Foto Otomatis...')
+                          : `Slot #${activeSlot + 1} (${captureType === 'boomerang' ? 'GIF' : 'Foto'})`}
+                    </span>
                   </div>
 
                   {/* Quick Timer Selector saat Layar Penuh (Fullscreen) */}
@@ -830,7 +1074,7 @@ export const Capture: React.FC = () => {
                         <button
                           key={sec}
                           type="button"
-                          disabled={isAutoShooting || countdown !== null}
+                          disabled={isAutoShooting || countdown !== null || isBurstRecording}
                           onClick={(e) => {
                             e.stopPropagation();
                             setTimerInterval(sec);
@@ -847,6 +1091,35 @@ export const Capture: React.FC = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Burst Recording Live HUD Indicator */}
+                <AnimatePresence>
+                  {isBurstRecording && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-between p-4 bg-black/25 backdrop-blur-[1px]"
+                    >
+                      <div className="bg-red-600/90 backdrop-blur-md text-white text-[11px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
+                        <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
+                        <span>MEREKAM POSE BEBAS ({burstFrameProgress}/10)</span>
+                      </div>
+
+                      <div className="w-full max-w-xs bg-black/75 backdrop-blur-md p-2.5 rounded-2xl border border-white/20 flex flex-col items-center gap-1.5 shadow-xl">
+                        <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-rose-500 transition-all duration-150 rounded-full"
+                            style={{ width: `${(burstFrameProgress / 10) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-white font-medium tracking-wide">
+                          Bergayalah bebas! Kamera sedang merekam frame gerak.
+                        </span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Countdown Overlay */}
                 <AnimatePresence>
@@ -896,19 +1169,19 @@ export const Capture: React.FC = () => {
                   <svg
                     width="15"
                     height="15"
-                    viewBox="0 0 24 24"
+                    viewBox="0 0 24 24" 
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2.4"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                  >
-                    <path d="M15 3h6v6" />
+                  > 
+                    <path d="M15 3h6v6" /> 
                     <path d="M9 21H3v-6" />
-                    <path d="M21 15v6h-6" />
+                    <path d="M21 15v6h-6" /> 
                     <path d="M3 9V3h6" />
                   </svg>
-                </button>
+                </button> 
 
                 {/* Slot Indicator Pills Bawah */}
                 <div className="absolute bottom-2.5 left-4 right-14 sm:right-16 flex gap-1.5 z-20 pointer-events-none">
@@ -941,7 +1214,7 @@ export const Capture: React.FC = () => {
                     onClick={() => setActiveFilter(fStr.id)}
                     className={`px-2.5 py-1 text-[11px] font-bold rounded-xl transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
                       activeFilter === fStr.id
-                        ? 'bg-stone-900 text-white shadow-xs'
+                        ? 'bg-rose-500 text-white shadow-xs'
                         : 'bg-stone-100 text-stone-600 hover:bg-stone-200/70'
                     }`}
                   >
@@ -953,67 +1226,79 @@ export const Capture: React.FC = () => {
               {/* Brightness Slider */}
               <div className="flex items-center gap-2 pl-3 border-l border-stone-200 flex-shrink-0">
                 <Sun className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                <input
-                  type="range"
-                  min="80"
-                  max="140"
-                  value={brightness}
+                <input 
+                  type="range" 
+                  min="80" 
+                  max="140" 
+                  value={brightness} 
                   onChange={(e) => setBrightness(Number(e.target.value))}
-                  className="w-16 sm:w-20 accent-stone-800 cursor-pointer h-1.5 bg-stone-200 rounded-lg"
-                  title="Atur Kecerahan"
+                  className="w-16 sm:w-20 accent-rose-500 cursor-pointer h-1.5 bg-stone-200 rounded-lg"
+                  title="Atur Kecerahan" 
                 />
-                <span className="text-[10px] font-mono font-bold text-stone-600 w-7 text-right">{brightness}%</span>
-              </div>
-            </div>
+                <span className="text-[10px] font-mono font-bold text-stone-600 w-7 text-right">{brightness}%</span> 
+              </div>  
+            </div> 
 
-            {/* LOWER DECK CONTROLS - Aligned to exact camera width with balanced spacing */}
+            {/* LOWER DECK CONTROLS - Aligned to exact camera width with balanced spacing */} 
             <div className="w-full max-w-[min(100%,_calc((100vh_-_180px)_*_4_/_3))] mx-auto bg-white/95 backdrop-blur-md border border-stone-200/90 p-2 sm:p-2.5 rounded-2xl shadow-xs flex items-center justify-between gap-2.5 flex-shrink-0">
-              {/* Main Shutter & Upload Buttons */}
-              <div className="flex items-center gap-2">
+              {/* Main Shutter & Upload Buttons */} 
+              <div className="flex items-center gap-2"> 
                 <button
                   onClick={startSingleClickMultiShoot}
-                  disabled={countdown !== null || !hasCamera || isProcessingPhoto || isAutoShooting}
-                  className="h-9 px-4.5 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-40 cursor-pointer"
+                  disabled={countdown !== null || !hasCamera || isProcessingPhoto || isAutoShooting || isBurstRecording}
+                  className="h-9 px-4.5 active:scale-95 text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs shadow-rose-500/20 bg-rose-500 hover:bg-rose-600 disabled:opacity-40 cursor-pointer"
                 >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span>{isAutoShooting ? 'Sedang Memotret...' : 'Mulai Foto Otomatis'}</span>
+                  {captureType === 'boomerang' ? (
+                    <Film className="w-3.5 h-3.5 text-rose-100" />
+                  ) : (
+                    <Camera className="w-3.5 h-3.5" />
+                  )}
+                  <span>
+                    {isBurstRecording
+                      ? 'Merekam Frame...'
+                      : isAutoShooting
+                        ? (captureType === 'boomerang' ? 'Sedang Merekam GIF...' : 'Sedang Memotret...')
+                        : (captureType === 'boomerang' ? 'Rekam GIF Boomerang' : 'Mulai Foto Otomatis')}
+                  </span>
                 </button>
 
-                <button
-                  onClick={() => { setIsAutoShooting(false); fileInputRef.current?.click(); }}
-                  disabled={isProcessingPhoto || isAutoShooting}
-                  className="h-9 px-3.5 bg-[#1D63FF] hover:bg-[#1550D6] active:scale-95 text-white rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs shadow-blue-500/20 disabled:opacity-40 cursor-pointer"
-                  title="Unggah Foto dari Perangkat"
-                >
-                  <Upload className="w-3.5 h-3.5 text-white" />
-                  <span>Upload</span>
-                </button>
+                {captureType === 'still' && (
+                  <button
+                    onClick={() => { setIsAutoShooting(false); fileInputRef.current?.click(); }}
+                    disabled={isProcessingPhoto || isAutoShooting || isBurstRecording} 
+                    className="h-9 px-3.5 bg-rose-50 hover:bg-rose-100/80 active:scale-95 text-rose-700 border border-rose-200/80 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs disabled:opacity-40 cursor-pointer"
+                    title="Unggah Foto dari Perangkat"  
+                  >
+                    <Upload className="w-3.5 h-3.5 text-rose-500" /> 
+                    <span>Upload</span> 
+                  </button>
+                )}
                 <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
-              </div>
-
+              </div> 
+              
               {/* Center Spacebar Shortcut Hint */}
               <span className="hidden md:inline-flex items-center gap-1.5 text-[11px] text-stone-400 font-medium">
                 <span>Tips: Tekan</span>
                 <kbd className="px-1.5 py-0.5 bg-stone-100 border border-stone-200 rounded text-[9px] font-mono text-stone-600 font-bold">SPACE</kbd>
-                <span>untuk mulai</span>
+                <span>untuk {captureType === 'boomerang' ? 'rekam GIF' : 'mulai foto'}</span>
               </span>
-
+              
               {/* Timer Deck & Demo Button */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2"> 
                 {/* Timer Selector */}
-                <div className="h-9 flex items-center bg-blue-50/90 border border-blue-200/90 rounded-xl p-1 gap-1 shadow-2xs">
-                  <span className="text-[10px] font-bold text-blue-600 pl-2 pr-1 uppercase tracking-wider select-none">
+                <div className="h-9 flex items-center rounded-xl p-1 gap-1 shadow-2xs bg-stone-100/90 border border-stone-200/90">
+                  <span className="text-[10px] font-bold pl-2 pr-1 uppercase tracking-wider select-none text-stone-600">
                     Jeda: 
                   </span> 
                   {[3, 5, 7, 10].map((sec) => ( 
                     <button 
                       key={sec} 
-                      disabled={isAutoShooting || countdown !== null} 
+                      disabled={isAutoShooting || countdown !== null || isBurstRecording} 
                       onClick={() => setTimerInterval(sec)}     
                       className={`min-w-[32px] h-7 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
                         timerInterval === sec 
-                          ? 'bg-[#1D63FF] text-white shadow-xs scale-102' 
-                          : 'text-blue-900/70 hover:text-[#1D63FF] hover:bg-blue-100/60'
+                          ? 'bg-rose-500 text-white shadow-xs scale-102' 
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
                       }`} 
                     > 
                       {sec} 
@@ -1021,15 +1306,17 @@ export const Capture: React.FC = () => {
                   ))}
                 </div>
 
-                <button
-                  onClick={handleDemoPhoto}
-                  disabled={isAutoShooting}
-                  className="h-9 px-3.5 bg-[#1D63FF] hover:bg-[#1550D6] active:scale-95 text-white rounded-xl font-semibold text-xs shadow-xs shadow-blue-500/20 transition-all cursor-pointer flex items-center justify-center whitespace-nowrap"
-                >
-                  Foto Demo
-                </button>
+                {captureType === 'still' && (
+                  <button
+                    onClick={handleDemoPhoto}
+                    disabled={isAutoShooting || isBurstRecording}
+                    className="h-9 px-3.5 bg-stone-100 hover:bg-stone-200 active:scale-95 text-stone-700 border border-stone-200/90 rounded-xl font-semibold text-xs shadow-2xs transition-all cursor-pointer flex items-center justify-center whitespace-nowrap"
+                  >
+                    Foto Demo
+                  </button>
+                )}
               </div>
-              </div>
+            </div>
 
             </div>
 
@@ -1055,6 +1342,8 @@ export const Capture: React.FC = () => {
                   {Array.from({ length: totalSlots }).map((_, index) => {
                     const photo = photos[index] || null;
                     const hasPhoto = photo !== null;
+                    const burst = photoBurstFrames[index] || null;
+                    const hasBurst = Array.isArray(burst) && burst.length > 1;
                     const isActive = index === activeSlot;
                     const slotAspect = getSlotAspectRatio(index);
                     const actualAspect = photoAspects[index] || slotAspect;
@@ -1063,9 +1352,9 @@ export const Capture: React.FC = () => {
                     return (
                       <div
                         key={index}
-                        onClick={() => { if (!isAutoShooting) setActiveSlot(index); }}
+                        onClick={() => { if (!isAutoShooting && !isBurstRecording) setActiveSlot(index); }}
                         className={`flex items-center gap-2.5 p-2 rounded-2xl border transition-all ${
-                          isAutoShooting ? 'cursor-not-allowed' : 'cursor-pointer'
+                          isAutoShooting || isBurstRecording ? 'cursor-not-allowed' : 'cursor-pointer'
                         } ${
                           isActive
                             ? 'border-rose-400 bg-rose-50/40 shadow-sm ring-1 ring-rose-200'
@@ -1093,13 +1382,17 @@ export const Capture: React.FC = () => {
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setPreviewModalPhoto(photo);
+                                  if (hasBurst && burst) {
+                                    setPreviewModalBurst(burst);
+                                  } else {
+                                    setPreviewModalPhoto(photo);
+                                  }
                                 }}
                                 className="absolute inset-0 bg-black/45 opacity-0 group-hover/box:opacity-100 transition-opacity rounded-xl flex flex-col items-center justify-center gap-0.5 text-white cursor-pointer backdrop-blur-[1px]"
-                                title="Klik untuk Lihat Preview Foto Utuh"
+                                title={hasBurst ? "Lihat Animasi Boomerang Loop" : "Klik untuk Lihat Preview Foto Utuh"}
                               >
                                 <Maximize2 className="w-3.5 h-3.5 text-white drop-shadow" />
-                                <span className="text-[7px] font-bold tracking-tight">Lihat</span>
+                                <span className="text-[7px] font-bold tracking-tight">Lihat{hasBurst ? ' GIF' : ''}</span>
                               </button>
                             </div>
                           ) : (
@@ -1118,18 +1411,29 @@ export const Capture: React.FC = () => {
                         {/* Slot Information */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1.5">
-                            <span className="text-xs font-bold text-stone-800">Foto #{index + 1}</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold text-stone-800">Foto #{index + 1}</span>
+                              {hasBurst && (
+                                <span className="px-1.5 py-0.5 bg-rose-50 text-rose-600 border border-rose-200/80 text-[8px] font-mono font-bold rounded tracking-wide">
+                                  GIF
+                                </span>
+                              )}
+                            </div>
                             {hasPhoto && (
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setPreviewModalPhoto(photo);
+                                  if (hasBurst && burst) {
+                                    setPreviewModalBurst(burst);
+                                  } else {
+                                    setPreviewModalPhoto(photo);
+                                  }
                                 }}
                                 className="text-[9px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50 hover:bg-blue-100/80 px-2 py-0.5 rounded-full border border-blue-100 transition-all cursor-pointer"
                               >
                                 <Maximize2 className="w-2.5 h-2.5" />
-                                <span>Preview</span>
+                                <span>Preview{hasBurst ? ' GIF' : ''}</span>
                               </button>
                             )}
                           </div>
@@ -1137,10 +1441,14 @@ export const Capture: React.FC = () => {
                             {hasPhoto ? (
                               <>
                                 <CheckCircle2 className="w-3 h-3 text-emerald-500 inline flex-shrink-0" />
-                                <span className="text-emerald-700 font-semibold">Pas & tersimpan</span>
+                                <span className="text-emerald-700 font-semibold">
+                                  {hasBurst ? 'GIF Boomerang Siap' : 'Pas & tersimpan'}
+                                </span>
                               </>
                             ) : isActive ? (
-                              <span className="text-rose-600 font-semibold">Sedang dibidik kamera</span>
+                              <span className="text-rose-600 font-semibold">
+                                {isBurstRecording ? 'Merekam pose...' : 'Sedang dibidik kamera'}
+                              </span>
                             ) : (
                               <span>Menunggu antrean foto</span>
                             )}
@@ -1151,35 +1459,6 @@ export const Capture: React.FC = () => {
                   })}
                 </div>
 
-                {/* Bottom Status Box */}
-                <div className="mt-2.5 pt-2.5 border-t border-stone-100 flex-shrink-0">
-                  {isAutoShooting ? (
-                    <div className="p-2 bg-rose-50 border border-rose-100 rounded-xl text-rose-800 text-[10px] font-semibold flex items-center gap-1.5 animate-pulse">
-                      <Zap className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                      <span>Rentetan foto otomatis aktif ({timerInterval}s per foto)...</span>
-                    </div>
-                  ) : !isAllFilled ? (
-                    <div className="flex items-start gap-1.5 p-2 bg-stone-50 border border-stone-200/80 rounded-xl text-stone-600 text-[10px] font-medium leading-tight">
-                      <AlertCircle className="w-3.5 h-3.5 text-stone-400 shrink-0 mt-0.5" />
-                      <span>Ambil foto hingga semua slot terisi ({filledCount}/{totalSlots}).</span>
-                    </div>
-                  ) : (
-                    <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 flex items-center justify-between gap-2 shadow-2xs">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>Semua Foto Siap ({filledCount}/{totalSlots})!</span>
-                      </div>
-                      <button
-                        onClick={() => { setIsAutoShooting(false); setStep('editor'); }}
-                        className="py-1 px-3 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
-                      >
-                        <span>Ke Editor</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
               </div>
             </div>
 
@@ -1188,7 +1467,75 @@ export const Capture: React.FC = () => {
         </div>
       </div>
 
-      {/* Lightbox Modal: Preview Foto Penuh Utuh */}
+      {/* Review Modal: Langsung Tinjau GIF Setelah Direkam */}
+      <AnimatePresence>
+        {burstRecordedPreview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="relative max-w-md w-full bg-white rounded-3xl p-5 shadow-2xl border border-stone-200 flex flex-col items-center"
+            >
+              <div className="w-full flex items-center justify-between pb-3 border-b border-stone-100">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+                  <h3 className="font-serif font-bold text-base text-stone-900">
+                    Pratinjau Foto GIF Boomerang
+                  </h3>
+                </div>
+                <span className="text-[10px] font-bold text-stone-700 bg-stone-100 px-2.5 py-0.5 rounded-full border border-stone-200">
+                  Slot #{burstRecordedPreview.slotIndex + 1}
+                </span>
+              </div>
+
+              <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-950 my-4 relative shadow-inner flex items-center justify-center border border-stone-200">
+                {burstRecordedPreview.frames[burstPreviewFrameIndex] && (
+                  <img
+                    src={burstRecordedPreview.frames[burstPreviewFrameIndex]}
+                    alt="Pratinjau Foto GIF"
+                    className="w-full h-full object-cover camera-mirror"
+                  />
+                )}
+                <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>BOOMERANG LOOP</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-stone-500 text-center mb-4 leading-relaxed">
+                Pose bebas Anda berhasil direkam dalam format animasi Boomerang. Simpan untuk slot ini atau ulangi rekam jika ingin bergaya lain.
+              </p>
+
+              <div className="grid grid-cols-2 gap-2.5 w-full">
+                <button
+                  type="button"
+                  onClick={handleRetakeBurst}
+                  className="w-full py-2.5 px-3 rounded-xl border border-stone-300 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Ulangi Rekam</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmBurst}
+                  className="w-full py-2.5 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-xs shadow-rose-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Gunakan Foto GIF</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Lightbox Modal: Preview Foto Penuh Utuh (Still Foto) */}
       <AnimatePresence>
         {previewModalPhoto && (
           <motion.div
@@ -1224,6 +1571,55 @@ export const Capture: React.FC = () => {
               </div>
               <p className="text-[10px] text-stone-400 mt-2 text-center">
                 Foto tampil 100% utuh sesuai bentuk aslinya tanpa ada bagian yang terpotong.
+              </p>
+            </motion.div> 
+          </motion.div> 
+        )}
+      </AnimatePresence> 
+
+      {/* Lightbox Modal: Preview Animasi Boomerang Loop */}
+      <AnimatePresence>
+        {previewModalBurst && previewModalBurst.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewModalBurst(null)}
+            className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-lg w-full bg-stone-900 border border-stone-800 rounded-3xl p-4 shadow-2xl flex flex-col items-center"
+            >
+              <div className="w-full flex items-center justify-between pb-2 px-1 border-b border-stone-800 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-xs font-bold text-white">Animasi Boomerang Loop</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewModalBurst(null)}
+                  className="p-1 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition-all cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="w-full max-h-[68vh] aspect-[4/3] flex items-center justify-center overflow-hidden rounded-2xl bg-black/80 relative">
+                <img
+                  src={previewModalBurst[modalBurstIndex]}
+                  alt="Boomerang Loop"
+                  className="max-w-full max-h-[66vh] object-contain rounded-xl camera-mirror"
+                />
+                <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/20">
+                  <Film className="w-3 h-3 text-emerald-400" />
+                  <span>FRAME {modalBurstIndex + 1}/{previewModalBurst.length}</span>
+                </div>
+              </div>
+              <p className="text-[10px] text-stone-400 mt-2.5 text-center">
+                Animasi bolak-balik (boomerang loop) mulus dari gerakan asli kamera.
               </p>
             </motion.div> 
           </motion.div> 

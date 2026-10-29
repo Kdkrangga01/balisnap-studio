@@ -21,7 +21,7 @@ Aplikasi photobooth digital interaktif berbasis web untuk pengambilan, kustomisa
    - Pilihan retake pose individual jika hasil foto belum sesuai.
 4. **Editor Kanvas (Studio Editor)**:
    - Manipulasi objek foto menggunakan engine grafis `Konva` / `react-konva`.
-   - Penerapan filter warna (Normal, B&W, Vintage, Cyberpunk, Warm, Cool).
+   - Penerapan filter warna (Normal, B&W, Vintage, Cyberpunk, Warm, Cool). 
    - Penambahan stiker dekoratif interaktif (drag, drop, rotate, scale).
    - Pilihan warna latar belakang dan teks kustom.
 5. **Finalisasi & Pembayaran (Preview & Checkout)**:

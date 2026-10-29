@@ -358,8 +358,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       : Array(5).fill('')
   );
   const [photos, setPhotos] = useState<(string | null)[]>(savedSession?.photos || []);
-  const [captureType, setCaptureType] = useState<'still' | 'boomerang'>('boomerang');
-  const [photoBurstFrames, setPhotoBurstFrames] = useState<(string[] | null)[]>([]);
+  const [captureType, setCaptureType] = useState<'still' | 'boomerang'>(savedSession?.captureType || 'boomerang');
+  const [photoBurstFrames, setPhotoBurstFrames] = useState<(string[] | null)[]>(savedSession?.photoBurstFrames || []);
   const [photoTransforms, setPhotoTransforms] = useState<PhotoTransform[]>(savedSession?.photoTransforms || []);
   const [stickers, setStickers] = useState<CanvasSticker[]>(savedSession?.stickers || []);
   const [activeStickerPackId, setActiveStickerPackId] = useState<string | null>(null);
@@ -697,6 +697,8 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           step,
           selectedFrame,
           photos,
+          captureType,
+          photoBurstFrames,
           photoTransforms,
           stickers,
           texts,
@@ -729,7 +731,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       console.error("Failed to save session state:", e);
     }
   }, [
-    step, selectedFrame, photos, photoTransforms, stickers, texts, selectedId, appliedFilter,
+    step, selectedFrame, photos, captureType, photoBurstFrames, photoTransforms, stickers, texts, selectedId, appliedFilter,
     frameColor, frameStyle, borderThickness, borderRadius, shadowIntensity, shadowBlur,
     shadowColor, frameOpacity, framePadding, innerMargin, outerMargin, wallpaperId,
     wallpaperUpload, wallpaperBlur, wallpaperOpacity, wallpaperScaleMode, photoBlendMode, photoOpacity,
@@ -1082,6 +1084,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setStep('landing');
     setSelectedFrame(null);
     setPhotos([]);
+    setPhotoBurstFrames([]);
     setPhotoTransforms([]);
     setStickers([]);
     setTexts([]);

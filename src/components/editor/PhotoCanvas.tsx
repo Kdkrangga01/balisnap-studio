@@ -47,6 +47,15 @@ function applyFilterToImage(
   return new Promise((resolve) => {
     if (!img) return resolve(img);
 
+    const b = fineTuning?.brightness ?? 100;
+    const c = fineTuning?.contrast ?? 100;
+    const s = fineTuning?.saturation ?? 100;
+    const sf = fineTuning?.softFocus ?? 0;
+
+    if (filterType === 'normal' && b === 100 && c === 100 && s === 100 && sf === 0) {
+      return resolve(img);
+    }
+
     try {
       const canvas = document.createElement('canvas');
       const w = img.naturalWidth || img.width || 800;
@@ -411,10 +420,10 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const isSelected = selectedId === `photo-${index}`;
             const isHovered = hoveredPhotoIndex === index;
 
-            if (!photoImg) return null;
+            if (!photoImg || !photoImg.naturalWidth || !photoImg.naturalHeight) return null;
 
-            const imgW = photoImg.naturalWidth || photoImg.width;
-            const imgH = photoImg.naturalHeight || photoImg.height;
+            const imgW = photoImg.naturalWidth;
+            const imgH = photoImg.naturalHeight;
 
             // Foto selalu otomatis masuk PENUH (coverScale) mengisi slot bingkai edge-to-edge
             // tanpa ada area kosong/putih di sisi manapun ("seharusnya gada yang kosong").
@@ -445,6 +454,8 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             return (
               <Group
                 key={`slot-group-${index}`}
+                name={`slot-group-${index}`}
+                id={`slot-group-${index}`}
                 x={slot.x}
                 y={slot.y}
                 clipFunc={(ctx) => {
@@ -481,6 +492,8 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
                 />
 
                 <KonvaImage
+                  name={`slot-photo-img-${index}`}
+                  id={`slot-photo-img-${index}`}
                   image={photoImg}
                   x={centeredX}
                   y={centeredY}

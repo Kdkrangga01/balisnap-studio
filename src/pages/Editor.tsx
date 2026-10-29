@@ -56,7 +56,15 @@ export const Editor: React.FC = () => {
     photoTransforms,
     updatePhotoTransform,
     resetPhotoTransform,
+    captureType,
   } = usePhotobooth();
+
+  // Khusus Foto GIF Boomerang, lewati halaman editor dan langsung buka pratinjau animasi
+  useEffect(() => {
+    if (captureType === 'boomerang') {
+      setStep('preview');
+    }
+  }, [captureType, setStep]);
 
   const stageRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);

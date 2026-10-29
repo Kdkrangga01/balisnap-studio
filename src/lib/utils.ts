@@ -99,6 +99,106 @@ export function generateDemoPhoto(slotIndex: number): string {
   return canvas.toDataURL('image/jpeg', 0.95);
 }
 
+/**
+ * Generates an array of animated demo frames for GIF Boomerang testing without a webcam.
+ */
+export function generateDemoBurst(slotIndex: number, totalFrames = 8): string[] {
+  const frames: string[] = [];
+  const gradients = [
+    ['#FBCFE8', '#D8B4FE'],
+    ['#FEF3C7', '#FFCCD5'],
+    ['#CFFAFE', '#A5B4FC'],
+    ['#ECFDF5', '#A7F3D0'],
+    ['#E0F2FE', '#F472B6'],
+    ['#FFEDD5', '#FDA4AF'],
+  ];
+  const pair = gradients[slotIndex % gradients.length];
+
+  for (let f = 0; f < totalFrames; f++) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    canvas.height = 900;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) continue;
+
+    const angle = (f / totalFrames) * Math.PI * 2;
+    const swayX = Math.sin(angle) * 16;
+    const swayY = Math.cos(angle) * 10;
+    const headTilt = Math.sin(angle) * 0.05;
+
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, 1200, 900);
+    grad.addColorStop(0, pair[0]);
+    grad.addColorStop(1, pair[1]);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1200, 900);
+
+    // Dynamic floating shapes
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.beginPath();
+    ctx.arc(250 + swayX * 0.8, 250 - swayY * 0.5, 180, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(950 - swayX * 0.8, 650 + swayY * 0.5, 250, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(600 + swayX, 450 + swayY);
+    ctx.rotate(headTilt);
+    ctx.translate(-600, -450);
+
+    // Decorative ring
+    ctx.strokeStyle = 'rgba(201, 166, 107, 0.4)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(600, 450, 400, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Silhouette head
+    ctx.fillStyle = '#6B4A3A';
+    ctx.beginPath();
+    ctx.arc(600, 360, 130, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body shoulders
+    ctx.beginPath();
+    ctx.moveTo(380, 680);
+    ctx.quadraticCurveTo(600, 520, 820, 680);
+    ctx.lineTo(820, 900);
+    ctx.lineTo(380, 900);
+    ctx.closePath();
+    ctx.fill();
+
+    // Smile
+    ctx.strokeStyle = '#FAF6F0';
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(600, 370, 60, 0.1 * Math.PI, 0.9 * Math.PI);
+    ctx.stroke();
+
+    // Eyes
+    ctx.fillStyle = '#FAF6F0';
+    ctx.beginPath();
+    ctx.arc(555, 330, 12, 0, Math.PI * 2);
+    ctx.arc(645, 330, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Blush
+    ctx.fillStyle = '#FDA4AF';
+    ctx.beginPath();
+    ctx.arc(525, 380, 16, 0, Math.PI * 2);
+    ctx.arc(675, 380, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    frames.push(canvas.toDataURL('image/jpeg', 0.95));
+  }
+
+  return frames;
+}
+
 export function applyFilterToImage(dataUrl: string, filter: string): Promise<string> {
   return new Promise((resolve) => {
     if (filter === 'normal') {

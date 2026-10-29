@@ -12,9 +12,17 @@ export interface GifOptions {
 export type BoomerangMode = 'sequence' | 'pop' | 'flash';
 
 /**
+ * Smooth easing function (sine in-out) for natural motion.
+ * t: 0..1 -> 0..1 with smooth acceleration/deceleration
+ */
+function easeInOutSine(t: number): number {
+  return -(Math.cos(Math.PI * t) - 1) / 2;
+}
+
+/**
  * Menghasilkan frame-frame animasi dinamis dari 1 snapshot photostrip
- * Menjamin hasil Boomerang GIF SELALU bergerak hidup & dinamis,
- * baik untuk foto tunggal, foto seragam, maupun foto rombongan.
+ * Menggunakan interpolasi halus dengan banyak frame untuk hasil boomerang
+ * yang mulus, natural, dan tidak kaku seperti photobooth offline profesional.
  */
 export async function createBoomerangFrames(
   baseImageUri: string,
@@ -46,68 +54,76 @@ export async function createBoomerangFrames(
   const frames: string[] = [];
 
   if (mode === 'flash') {
-    // 5 frames: Normal -> Pre-flash glow -> Peak Studio Shutter Flash -> Warm Bloom -> Soft return
-    const flashSteps = [
-      { scale: 1.00, brightness: 1.00, flashOpacity: 0 },
-      { scale: 1.018, brightness: 1.10, flashOpacity: 0.08 },
-      { scale: 1.045, brightness: 1.38, flashOpacity: 0.32 },
-      { scale: 1.025, brightness: 1.16, flashOpacity: 0.10 },
-      { scale: 1.005, brightness: 1.04, flashOpacity: 0.02 },
-    ];
+    // Studio Flash: 10 frames with smooth brightness and subtle scale pulse
+    // Simulates a camera flash burst effect with natural falloff
+    const totalSteps = 10;
+    for (let i = 0; i < totalSteps; i++) {
+      const t = i / (totalSteps - 1); // 0..1
+      // Flash peaks at ~25% through, then decays smoothly
+      const flashT = t < 0.25
+        ? easeInOutSine(t / 0.25)               // ramp up
+        : easeInOutSine(1 - (t - 0.25) / 0.75); // smooth decay
+      
+      const flashOpacity = flashT * 0.35;
+      const scale = 1 + flashT * 0.04;
+      const brightness = 1 + flashT * 0.25;
 
-    for (const step of flashSteps) {
       ctx.clearRect(0, 0, targetW, targetH);
       ctx.save();
       ctx.translate(targetW / 2, targetH / 2);
-      ctx.scale(step.scale, step.scale);
-      ctx.filter = `brightness(${Math.round(step.brightness * 100)}%)`;
+      ctx.scale(scale, scale);
+      ctx.filter = `brightness(${Math.round(brightness * 100)}%)`;
       ctx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
       ctx.filter = 'none';
 
-      if (step.flashOpacity > 0) {
-        ctx.fillStyle = `rgba(255, 255, 255, ${step.flashOpacity})`;
+      if (flashOpacity > 0.005) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${flashOpacity})`;
         ctx.fillRect(-targetW / 2, -targetH / 2, targetW, targetH);
       }
       ctx.restore();
       frames.push(canvas.toDataURL('image/jpeg', 0.92));
     }
   } else if (mode === 'pop') {
-    // 5 frames: Dynamic Pop Pulse khas photostrip
-    const popSteps = [
-      { scale: 1.00, dy: 0, brightness: 1.00 },
-      { scale: 1.03, dy: -2, brightness: 1.02 },
-      { scale: 1.06, dy: -5, brightness: 1.05 },
-      { scale: 1.03, dy: -2, brightness: 1.02 },
-      { scale: 1.00, dy: 0, brightness: 1.00 },
-    ];
+    // Pop Pulse: 12 frames with smooth sinusoidal bounce
+    // Natural pop-in/pop-out motion like a heartbeat
+    const totalSteps = 12;
+    for (let i = 0; i < totalSteps; i++) {
+      const t = i / (totalSteps - 1); // 0..1
+      // Smooth pulse: peaks at center, symmetric
+      const pulse = Math.sin(t * Math.PI);
+      
+      const scale = 1 + pulse * 0.05;
+      const dy = -pulse * 4;
+      const brightness = 1 + pulse * 0.03;
 
-    for (const step of popSteps) {
       ctx.clearRect(0, 0, targetW, targetH);
       ctx.save();
-      ctx.translate(targetW / 2, targetH / 2 + step.dy);
-      ctx.scale(step.scale, step.scale);
-      ctx.filter = `brightness(${Math.round(step.brightness * 100)}%)`;
+      ctx.translate(targetW / 2, targetH / 2 + dy);
+      ctx.scale(scale, scale);
+      ctx.filter = `brightness(${Math.round(brightness * 100)}%)`;
       ctx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
       ctx.filter = 'none';
       ctx.restore();
       frames.push(canvas.toDataURL('image/jpeg', 0.92));
     }
   } else {
-    // Default: 'bounce' (Instagram / Photobooth Pop Pulse yang dinamis & ceria)
-    const bounceSteps = [
-      { scale: 1.00, dy: 0, brightness: 1.00 },
-      { scale: 1.028, dy: -4, brightness: 1.03 },
-      { scale: 1.06, dy: -8, brightness: 1.08 },
-      { scale: 1.09, dy: -11, brightness: 1.15 },
-      { scale: 1.045, dy: -5, brightness: 1.05 },
-    ];
+    // Default 'sequence': Smooth breathing animation
+    // 12 frames with gentle, organic motion that loops seamlessly
+    const totalSteps = 12;
+    for (let i = 0; i < totalSteps; i++) {
+      const t = i / (totalSteps - 1); // 0..1
+      // Smooth sine wave for organic breathing motion
+      const wave = Math.sin(t * Math.PI);
+      
+      const scale = 1 + wave * 0.035;
+      const dy = -wave * 3;
+      const brightness = 1 + wave * 0.04;
 
-    for (const step of bounceSteps) {
       ctx.clearRect(0, 0, targetW, targetH);
       ctx.save();
-      ctx.translate(targetW / 2, targetH / 2 + step.dy);
-      ctx.scale(step.scale, step.scale);
-      ctx.filter = `brightness(${Math.round(step.brightness * 100)}%)`;
+      ctx.translate(targetW / 2, targetH / 2 + dy);
+      ctx.scale(scale, scale);
+      ctx.filter = `brightness(${Math.round(brightness * 100)}%)`;
       ctx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
       ctx.restore();
       frames.push(canvas.toDataURL('image/jpeg', 0.92));
@@ -119,6 +135,7 @@ export async function createBoomerangFrames(
 
 /**
  * Mengubah array foto photobooth menjadi animasi GIF Boomerang beresolusi tinggi.
+ * Mendukung looping maju-mundur otomatis (boomerang) yang mulus dan natural.
  */
 export function generateBoomerangGif(options: GifOptions): Promise<{ dataUrl: string; blob: Blob }> {
   return new Promise(async (resolve, reject) => {
@@ -140,7 +157,7 @@ export function generateBoomerangGif(options: GifOptions): Promise<{ dataUrl: st
         boomerangSequence.push(validPhotos[i]);
       }
       
-      // Urutan mundur (tanpa mengulang elemen ujung)
+      // Urutan mundur (tanpa mengulang elemen ujung) untuk smooth boomerang loop
       for (let i = validPhotos.length - 2; i > 0; i--) {
         boomerangSequence.push(validPhotos[i]);
       }
@@ -174,7 +191,7 @@ export function generateBoomerangGif(options: GifOptions): Promise<{ dataUrl: st
 
     const gifWidth = targetWidth;
     const gifHeight = autoHeight || 630;
-    const interval = options.interval || 0.35; // ~350ms per frame
+    const interval = options.interval || 0.12; // ~120ms per frame for smooth playback
 
     gifshot.createGIF(
       {
