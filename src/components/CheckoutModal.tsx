@@ -240,14 +240,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     // Mode Direct Transfer / Upload Verification
     setTimeout(() => {
-      setIsProcessing(false);
-      setIsSuccess(true);
+      setIsProcessing(false); 
+      setIsSuccess(true); 
       setPackageTier(targetTier);
 
       // Record transaction with proof image
       addTransaction({
         id: invoiceId,
-        customerName: customerNameInput.trim() || 'Pelanggan Photobooth',
+        customerName: customerNameInput.trim() || 'Pelanggan Photobooth', 
         paymentProofUrl: proofImage,
         packageName,
         packageTier: targetTier,

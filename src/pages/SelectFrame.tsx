@@ -1153,16 +1153,16 @@ export const SelectFrame: React.FC = () => {
                   <span>Ekspor {customFrames.length} Frame Kustom</span>
                 </button>
               )}
-            </div>
+            </div> 
           </header>
 
-          {/* Banner Kuota Mode Coba Gratis */}
+          {/* Banner Kuota Mode Coba Gratis */} 
           {packageTier === 'free' && (
             <div className="w-full bg-gradient-to-r from-blue-50/60 to-white border border-blue-200/80 rounded-2xl p-4 sm:p-5 mb-1 flex flex-col sm:flex-row items-center justify-between gap-4 text-left shadow-xs">
               <div className="flex items-center gap-3.5">
                 <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#1D63FF] text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
-                  <Gift className="w-5 h-5 text-white" />
-                </div>
+                  <Gift className="w-5 h-5 text-white" /> 
+                </div> 
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-sans font-bold text-sm sm:text-base text-zinc-900 tracking-tight">
