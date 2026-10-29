@@ -1147,29 +1147,6 @@ export const Capture: React.FC = () => {
                   )}
                 </div>
 
-                {/* Panduan Garis Bingkai Slot (Framing Safe-Zone) agar kepala & badan tidak terpotong */}
-                {hasCamera && selectedFrame?.slotCoords?.[activeSlot] && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 p-3 sm:p-4">
-                    <div
-                      className="border-2 border-dashed border-white/60 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.28)] transition-all duration-300 relative flex flex-col justify-between p-2"
-                      style={{
-                        aspectRatio: getSlotAspectRatio(activeSlot),
-                        maxHeight: '92%',
-                        maxWidth: '92%',
-                        height: getSlotAspectRatio(activeSlot) <= 1 ? '92%' : 'auto',
-                        width: getSlotAspectRatio(activeSlot) > 1 ? '92%' : 'auto',
-                      }}
-                    >
-                      <div className="bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white self-center border border-white/10 shadow-xs">
-                        Panduan Slot #{activeSlot + 1}
-                      </div>
-                      <div className="text-[9px] text-white/90 font-medium text-center bg-black/40 px-2 py-0.5 rounded-full self-center backdrop-blur-xs">
-                        Posisikan badan Anda di dalam kotak ini agar tidak terpotong
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Burst Recording Live HUD Indicator */}
                 <AnimatePresence>
                   {isBurstRecording && (
@@ -1202,14 +1179,14 @@ export const Capture: React.FC = () => {
                           ⏹️ Cukup, Selesai Bergaya
                         </button>
                       </div>
-                    </motion.div>
+                    </motion.div>    
                   )}
                 </AnimatePresence>
 
                 {/* Countdown Overlay dengan Panduan Bersiap & Tombol Langsung Rekam */}
                 <AnimatePresence>
-                  {countdown !== null && (
-                    <motion.div
+                  {countdown !== null && ( 
+                    <motion.div  
                       initial={{ opacity: 0 }} 
                       animate={{ opacity: 1 }} 
                       exit={{ opacity: 0 }}
@@ -1599,17 +1576,17 @@ export const Capture: React.FC = () => {
                 </span>
               </div>
 
-              <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 my-4 relative shadow-inner flex items-center justify-center border border-stone-200">
+              <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-900 my-4 relative shadow-inner flex items-center justify-center border border-stone-200">
                 {burstRecordedPreview.frames[burstPreviewFrameIndex] && (
                   <img
                     src={burstRecordedPreview.frames[burstPreviewFrameIndex]}
                     alt="Pratinjau Foto GIF"
-                    className="w-full h-full object-cover camera-mirror"
+                    className="w-full h-full object-contain camera-mirror"
                   />
                 )}
                 <div className="absolute top-2.5 right-2.5 bg-stone-900/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/10 shadow-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>BOOMERANG LOOP (22 Frame Mulus)</span>
+                  <span>BOOMERANG LOOP (32 Frame Mulus)</span>
                 </div>
               </div>
 

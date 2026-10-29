@@ -414,7 +414,7 @@ export const Preview: React.FC = () => {
         isPreLooped = true;
         const pingPongSeq: number[] = [];
         for (let i = 0; i < maxBurstFrames; i++) pingPongSeq.push(i);
-        for (let i = maxBurstFrames - 2; i > 0; i--) pingPongSeq.push(i);
+        for (let i = maxBurstFrames - 2; i > 0; i -= 2) pingPongSeq.push(i);
 
         const totalSteps = pingPongSeq.length;
 
@@ -697,7 +697,10 @@ export const Preview: React.FC = () => {
                 <div className="bg-stone-100/90 backdrop-blur-md p-1 rounded-2xl flex items-center gap-1 border border-stone-200/80 shadow-2xs">
                   <button
                     type="button"
-                    onClick={() => setPhotoFitMode('fit')}
+                    onClick={() => {
+                      setPhotoFitMode('fit');
+                      setGifResult(null);
+                    }}
                     className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
                       photoFitMode === 'fit'
                         ? 'bg-white text-stone-900 shadow-xs font-bold'
@@ -709,7 +712,10 @@ export const Preview: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setPhotoFitMode('cover')}
+                    onClick={() => {
+                      setPhotoFitMode('cover');
+                      setGifResult(null);
+                    }}
                     className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
                       photoFitMode === 'cover'
                         ? 'bg-white text-stone-900 shadow-xs font-bold'
