@@ -44,7 +44,7 @@ export const Preview: React.FC = () => {
   const [isGeneratingGif, setIsGeneratingGif] = useState<boolean>(false); 
   const [gifProgress, setGifProgress] = useState<number>(0);
   const [gifResult, setGifResult] = useState<{ dataUrl: string; blob: Blob } | null>(null);
-  const [gifInterval, setGifInterval] = useState<number>(0.15);
+  const [gifInterval, setGifInterval] = useState<number>(captureType === 'boomerang' ? 0.08 : 0.15);
   const [gifMode, setGifMode] = useState<BoomerangMode>('sequence'); 
 
   // DIGITAL ENVELOPE GIFT STATE 
@@ -162,7 +162,7 @@ export const Preview: React.FC = () => {
       }
 
       let step = 0;
-      const frameIntervalMs = Math.max(80, Math.round(gifInterval * 1000));
+      const frameIntervalMs = hasBurst && maxFrames > 12 ? 70 : Math.max(70, Math.round(gifInterval * 1000));
 
       const renderFrame = () => {
         if (isCancelled) return;
@@ -323,7 +323,8 @@ export const Preview: React.FC = () => {
     setIsGeneratingGif(true);
     setGifProgress(15);
 
-    const targetInterval = customInterval !== undefined ? customInterval : gifInterval;
+    const defaultInterval = (photoBurstFrames && photoBurstFrames.some((b) => Array.isArray(b) && b.length > 12)) ? 0.08 : gifInterval;
+    const targetInterval = customInterval !== undefined ? customInterval : defaultInterval;
     const targetMode = customMode !== undefined ? customMode : gifMode;
     setGifInterval(targetInterval);
     setGifMode(targetMode);

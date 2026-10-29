@@ -175,13 +175,26 @@ export const Capture: React.FC = () => {
   const [brightness, setBrightness] = useState<number>(104);
   const isBeautyMode = false; 
   const isMirrorMode = true; 
-  const [timerInterval, setTimerInterval] = useState<number>(3);
+  const [timerInterval, setTimerInterval] = useState<number>(captureType === 'boomerang' ? 15 : 3);
   const [photoAspects, setPhotoAspects] = useState<Record<number, number>>({});
   const [previewModalPhoto, setPreviewModalPhoto] = useState<string | null>(null);
   const [previewModalBurst, setPreviewModalBurst] = useState<string[] | null>(null);
   const [modalBurstIndex, setModalBurstIndex] = useState<number>(0);
 
-  // Ping-pong loop for review modal (0..N-1..1)
+  // Otomatis sesuaikan rentang durasi saat berpindah antara Foto Biasa (3, 5, 7, 10s) vs Foto GIF Boomerang (15, 20, 25, 30s)
+  useEffect(() => {
+    if (captureType === 'boomerang') {
+      if (![15, 20, 25, 30].includes(timerInterval)) {
+        setTimerInterval(15);
+      }
+    } else {
+      if (![3, 5, 7, 10].includes(timerInterval)) {
+        setTimerInterval(3);
+      }
+    }
+  }, [captureType]);
+
+  // Ping-pong loop for review modal (0..N-1..1) - 70ms untuk putaran gerakan ultra halus
   useEffect(() => {
     if (!burstRecordedPreview || burstRecordedPreview.frames.length <= 1) return;
     const totalFrames = burstRecordedPreview.frames.length;
@@ -193,7 +206,7 @@ export const Capture: React.FC = () => {
     const interval = setInterval(() => {
       step = (step + 1) % seq.length;
       setBurstPreviewFrameIndex(seq[step]);
-    }, 120);
+    }, 70);
 
     return () => clearInterval(interval);
   }, [burstRecordedPreview]);
@@ -209,7 +222,7 @@ export const Capture: React.FC = () => {
     const timer = setInterval(() => {
       step = (step + 1) % seq.length;
       setModalBurstIndex(seq[step]);
-    }, 120);
+    }, 70);
     return () => clearInterval(timer);
   }, [previewModalBurst]);
 
@@ -499,8 +512,8 @@ export const Capture: React.FC = () => {
   ]);
 
   // LIVE CAMERA GIF / BOOMERANG BURST CAPTURE
-  // Captures 10 frames from webcam in rapid succession (~140ms interval, ~1.4s total)
-  // while the user poses freely, fits each frame to the slot aspect, and opens an instant review
+  // Merekam 22 frame gerakan ultra-smooth (~70ms interval, ~1.54s) langsung dari video stream kamera
+  // sehingga setiap gaya, tawa, lambaian tangan, dan gerakan user terekam otomatis sama persis
   const captureBurstSequence = useCallback(async () => {
     if (!webcamRef.current) return;
 
@@ -509,25 +522,47 @@ export const Capture: React.FC = () => {
     const actualHeight = video?.videoHeight || actualResolution?.height || 720;
     const capturedSlot = activeSlot;
     const targetAspect = getSlotAspectRatio(capturedSlot);
-    const maxLongSide = 1280;
+    const maxLongSide = 960; // optimal untuk pengambilan frame super cepat tanpa jeda
 
     setIsBurstRecording(true);
     setBurstFrameProgress(0);
-    const totalBurstFrames = 10;
-    const intervalMs = 140;
+    const totalBurstFrames = 22; // 22 frame gerakan mulus (~14.3 FPS)
+    const intervalMs = 70; // 70ms = gerakan sangat natural & mulus
     const rawFrames: string[] = [];
+
+    // Siapkan canvas offscreen untuk grab frame secepat kilat (<2ms per frame)
+    const grabCanvas = document.createElement('canvas');
+    let grabW = actualWidth;
+    let grabH = actualHeight;
+    if (Math.max(grabW, grabH) > maxLongSide) {
+      if (grabW > grabH) {
+        grabH = Math.round((grabH * maxLongSide) / grabW);
+        grabW = maxLongSide;
+      } else {
+        grabW = Math.round((grabW * maxLongSide) / grabH);
+        grabH = maxLongSide;
+      }
+    }
+    grabCanvas.width = grabW;
+    grabCanvas.height = grabH;
+    const grabCtx = grabCanvas.getContext('2d');
 
     try {
       for (let i = 0; i < totalBurstFrames; i++) {
-        const frameSrc = webcamRef.current.getScreenshot({
-          width: actualWidth,
-          height: actualHeight,
-        });
-        if (frameSrc) {
+        if (grabCtx && video && !video.paused && !video.ended) {
+          grabCtx.drawImage(video, 0, 0, grabW, grabH);
+          const frameSrc = grabCanvas.toDataURL('image/jpeg', 0.85);
           rawFrames.push(frameSrc);
+        } else {
+          const fallbackSrc = webcamRef.current.getScreenshot({
+            width: actualWidth,
+            height: actualHeight,
+          });
+          if (fallbackSrc) rawFrames.push(fallbackSrc);
         }
+
         setBurstFrameProgress(i + 1);
-        if (soundEnabled && i % 3 === 0) {
+        if (soundEnabled && (i === 0 || i === 7 || i === 14)) {
           playBeepSound();
         }
         if (i < totalBurstFrames - 1) {
@@ -558,7 +593,7 @@ export const Capture: React.FC = () => {
         )
       );
 
-      // Middle frame is saved as sharp still photo for canvas & print
+      // Frame tengah disimpan sebagai foto diam tajam untuk kanvas dan cetak
       const middleIdx = Math.floor(filteredFrames.length / 2);
       const middleFrame = filteredFrames[middleIdx];
 
@@ -571,7 +606,7 @@ export const Capture: React.FC = () => {
       setIsProcessingPhoto(false);
       setIsBurstRecording(false);
 
-      // Open instant review modal so user can view their looping GIF and choose to Keep or Retake
+      // Tampilkan pratinjau langsung animasi Boomerang slot tersebut
       setBurstRecordedPreview({
         slotIndex: capturedSlot,
         frames: filteredFrames,
@@ -708,6 +743,16 @@ export const Capture: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAutoShooting, countdown, hasCamera, isProcessingPhoto, isBurstRecording, startSingleClickMultiShoot]);
 
+  // Handler untuk melewati countdown dan langsung memicu pemotretan / perekaman gerakan
+  const triggerImmediateCapture = useCallback(() => {
+    setCountdown(null);
+    if (captureType === 'boomerang') {
+      captureBurstSequence();
+    } else {
+      capturePhoto();
+    }
+  }, [captureType, captureBurstSequence, capturePhoto]);
+
   useEffect(() => {
     if (countdown === null) return;
     if (countdown === 0) {
@@ -719,7 +764,9 @@ export const Capture: React.FC = () => {
       }
       return;
     }
-    if (soundEnabled && countdown > 0) playBeepSound();
+    if (soundEnabled && countdown > 0 && countdown <= 5) {
+      playBeepSound();
+    }
     const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
     return () => clearTimeout(timer);
   }, [countdown, capturePhoto, captureBurstSequence, soundEnabled, captureType]);
@@ -1057,7 +1104,7 @@ export const Capture: React.FC = () => {
                     <span className={`w-1.5 h-1.5 rounded-full ${isBurstRecording ? 'bg-red-500 animate-ping' : isAutoShooting ? 'bg-rose-400 animate-ping' : 'bg-emerald-400'}`} />
                     <span>
                       {isBurstRecording
-                        ? `Merekam Frame (${burstFrameProgress}/10)...`
+                        ? `Merekam Gerakan (${burstFrameProgress}/22)...`
                         : isAutoShooting
                           ? (captureType === 'boomerang' ? 'Merekam GIF...' : 'Foto Otomatis...')
                           : `Slot #${activeSlot + 1} (${captureType === 'boomerang' ? 'GIF' : 'Foto'})`}
@@ -1070,7 +1117,7 @@ export const Capture: React.FC = () => {
                       <span className="text-[9px] font-bold text-white/80 px-2 uppercase tracking-wider flex items-center gap-1 select-none">
                         <Clock className="w-2.5 h-2.5 text-rose-400" /> Jeda:
                       </span>
-                      {[3, 5, 7, 10].map((sec) => (
+                      {(captureType === 'boomerang' ? [15, 20, 25, 30] : [3, 5, 7, 10]).map((sec) => (
                         <button
                           key={sec}
                           type="button"
@@ -1099,46 +1146,66 @@ export const Capture: React.FC = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-between p-4 bg-black/25 backdrop-blur-[1px]"
+                      className="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-between p-4 bg-black/25 backdrop-blur-[1px] ring-4 ring-red-500/80 animate-pulse"
                     >
-                      <div className="bg-red-600/90 backdrop-blur-md text-white text-[11px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
+                      <div className="bg-red-600/95 backdrop-blur-md text-white text-[11px] font-bold px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg border border-white/20">
                         <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
-                        <span>MEREKAM POSE BEBAS ({burstFrameProgress}/10)</span>
+                        <span>🔴 SEDANG MEREKAM GERAKAN ({burstFrameProgress}/22)</span>
                       </div>
 
-                      <div className="w-full max-w-xs bg-black/75 backdrop-blur-md p-2.5 rounded-2xl border border-white/20 flex flex-col items-center gap-1.5 shadow-xl">
-                        <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                      <div className="w-full max-w-xs bg-black/80 backdrop-blur-md p-3 rounded-2xl border border-white/20 flex flex-col items-center gap-2 shadow-2xl">
+                        <div className="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-rose-500 transition-all duration-150 rounded-full"
-                            style={{ width: `${(burstFrameProgress / 10) * 100}%` }}
+                            className="h-full bg-gradient-to-r from-red-500 to-rose-400 transition-all duration-100 rounded-full"
+                            style={{ width: `${(burstFrameProgress / 22) * 100}%` }}
                           />
                         </div>
-                        <span className="text-[10px] text-white font-medium tracking-wide">
-                          Bergayalah bebas! Kamera sedang merekam frame gerak.
+                        <span className="text-[11px] text-white font-semibold tracking-wide text-center">
+                          ✨ Bergayalah sekarang! Gerakan Anda terekam otomatis.
                         </span>
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                {/* Countdown Overlay */}
+                {/* Countdown Overlay dengan Panduan Bersiap & Tombol Langsung Rekam */}
                 <AnimatePresence>
                   {countdown !== null && (
                     <motion.div
                       initial={{ opacity: 0 }} 
                       animate={{ opacity: 1 }} 
                       exit={{ opacity: 0 }}
-                      className="absolute inset-0 flex items-center justify-center bg-black/35 backdrop-blur-[2px] z-30"
+                      className="absolute inset-0 flex flex-col items-center justify-between p-6 bg-black/40 backdrop-blur-[2px] z-30"
                     >
+                      {/* Top Header Hint */}
+                      <div className="bg-stone-900/85 backdrop-blur-md border border-white/20 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 select-none">
+                        <Clock className="w-3.5 h-3.5 text-rose-400" />
+                        <span>
+                          {captureType === 'boomerang'
+                            ? `Siap-siap bergaya! Kamera akan merekam gerakan Anda (${countdown}s)`
+                            : `Bersiap di depan kamera (${countdown}s)`}
+                        </span>
+                      </div>
+
+                      {/* Main Countdown Digit */}
                       <motion.span
                         key={countdown}
                         initial={{ scale: 0.4, opacity: 0 }}
-                        animate={{ scale: 1.2, opacity: 1 }}
+                        animate={{ scale: 1.15, opacity: 1 }}
                         exit={{ scale: 0.8, opacity: 0 }}
-                        className="font-sans font-black text-white text-8xl sm:text-9xl tracking-tight drop-shadow-md select-none"
+                        className="font-sans font-black text-white text-8xl sm:text-9xl tracking-tight drop-shadow-2xl select-none"
                       >
                         {countdown}
                       </motion.span>
+
+                      {/* Bottom Fast Action Button: Langsung Rekam Sekarang */}
+                      <button
+                        type="button"
+                        onClick={triggerImmediateCapture}
+                        className="bg-white/95 hover:bg-white active:scale-95 text-stone-900 px-4 py-2 rounded-full text-xs font-bold shadow-xl border border-white/40 flex items-center gap-2 transition-all cursor-pointer pointer-events-auto"
+                      >
+                        <span>⚡ Sudah Siap? Langsung Rekam</span>
+                      </button>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -1290,7 +1357,7 @@ export const Capture: React.FC = () => {
                   <span className="text-[10px] font-bold pl-2 pr-1 uppercase tracking-wider select-none text-stone-600">
                     Jeda: 
                   </span> 
-                  {[3, 5, 7, 10].map((sec) => ( 
+                  {(captureType === 'boomerang' ? [15, 20, 25, 30] : [3, 5, 7, 10]).map((sec) => ( 
                     <button 
                       key={sec} 
                       disabled={isAutoShooting || countdown !== null || isBurstRecording} 
@@ -1301,7 +1368,7 @@ export const Capture: React.FC = () => {
                           : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/60'
                       }`} 
                     > 
-                      {sec} 
+                      {sec}s 
                     </button> 
                   ))}
                 </div>
@@ -1502,14 +1569,14 @@ export const Capture: React.FC = () => {
                     className="w-full h-full object-cover camera-mirror"
                   />
                 )}
-                <div className="absolute top-2.5 right-2.5 bg-stone-900/70 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/10">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>BOOMERANG LOOP</span>
+                <div className="absolute top-2.5 right-2.5 bg-stone-900/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/10 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>BOOMERANG LOOP (22 Frame Mulus)</span>
                 </div>
               </div>
 
               <p className="text-xs text-stone-500 text-center mb-4 leading-relaxed">
-                Pose bebas Anda berhasil direkam dalam format animasi Boomerang. Simpan untuk slot ini atau ulangi rekam jika ingin bergaya lain.
+                Setiap gerakan gaya Anda berhasil terekam secara otomatis sama persis. Anda dapat menyimpannya untuk slot ini atau rekam ulang.
               </p>
 
               <div className="grid grid-cols-2 gap-2.5 w-full">
