@@ -194,35 +194,35 @@ export const Capture: React.FC = () => {
     }
   }, [captureType]);
 
-  // Ping-pong loop for review modal (0..N-1..1) - 70ms untuk putaran gerakan ultra halus
+  // Ping-pong loop for review modal (0..N-1..1) - 140ms untuk putaran gerakan pas & enak dilihat
   useEffect(() => {
     if (!burstRecordedPreview || burstRecordedPreview.frames.length <= 1) return;
     const totalFrames = burstRecordedPreview.frames.length;
     const seq: number[] = [];
     for (let i = 0; i < totalFrames; i++) seq.push(i);
-    for (let i = totalFrames - 2; i > 0; i--) seq.push(i);
+    for (let i = totalFrames - 2; i > 0; i -= 2) seq.push(i);
 
     let step = 0;
     const interval = setInterval(() => {
       step = (step + 1) % seq.length;
       setBurstPreviewFrameIndex(seq[step]);
-    }, 70);
+    }, 140);
 
     return () => clearInterval(interval);
   }, [burstRecordedPreview]);
 
-  // Ping-pong loop for lightbox modal when viewing recorded GIF
+  // Ping-pong loop for lightbox modal when viewing recorded GIF - 140ms santai dan jelas
   useEffect(() => {
     if (!previewModalBurst || previewModalBurst.length <= 1) return;
     const total = previewModalBurst.length;
     const seq: number[] = [];
     for (let i = 0; i < total; i++) seq.push(i);
-    for (let i = total - 2; i > 0; i--) seq.push(i);
+    for (let i = total - 2; i > 0; i -= 2) seq.push(i);
     let step = 0;
     const timer = setInterval(() => {
       step = (step + 1) % seq.length;
       setModalBurstIndex(seq[step]);
-    }, 70);
+    }, 140);
     return () => clearInterval(timer);
   }, [previewModalBurst]);
 

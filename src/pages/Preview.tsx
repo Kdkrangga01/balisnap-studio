@@ -44,9 +44,9 @@ export const Preview: React.FC = () => {
   const [isGeneratingGif, setIsGeneratingGif] = useState<boolean>(false); 
   const [gifProgress, setGifProgress] = useState<number>(0);
   const [gifResult, setGifResult] = useState<{ dataUrl: string; blob: Blob } | null>(null);
-  const [gifInterval, setGifInterval] = useState<number>(captureType === 'boomerang' ? 0.08 : 0.15);
+  const [gifInterval, setGifInterval] = useState<number>(captureType === 'boomerang' ? 0.14 : 0.15);
   const [gifMode, setGifMode] = useState<BoomerangMode>('sequence'); 
-  const [photoFitMode, setPhotoFitMode] = useState<'fit' | 'cover'>('fit');
+  const photoFitMode: 'fit' | 'cover' = 'fit';
 
   // DIGITAL ENVELOPE GIFT STATE 
   const [showEnvelopeModal, setShowEnvelopeModal] = useState<boolean>(false);
@@ -165,7 +165,7 @@ export const Preview: React.FC = () => {
       }
 
       let step = 0;
-      const frameIntervalMs = hasBurst && maxFrames > 12 ? 85 : Math.max(70, Math.round(gifInterval * 1000));
+      const frameIntervalMs = hasBurst && maxFrames > 12 ? 140 : Math.max(120, Math.round(gifInterval * 1000));
 
       const renderFrame = () => {
         if (isCancelled) return;
@@ -330,7 +330,7 @@ export const Preview: React.FC = () => {
     setIsGeneratingGif(true);
     setGifProgress(15);
 
-    const defaultInterval = (photoBurstFrames && photoBurstFrames.some((b) => Array.isArray(b) && b.length > 12)) ? 0.08 : gifInterval;
+    const defaultInterval = (photoBurstFrames && photoBurstFrames.some((b) => Array.isArray(b) && b.length > 12)) ? 0.14 : gifInterval;
     const targetInterval = customInterval !== undefined ? customInterval : defaultInterval;
     const targetMode = customMode !== undefined ? customMode : gifMode;
     setGifInterval(targetInterval);
@@ -692,52 +692,16 @@ export const Preview: React.FC = () => {
                 </button>
               </div>
 
-              {/* TOGGLE BADAN UTUH (FIT) VS ISI PENUH (COVER) */}
-              <div className="flex items-center gap-1.5">
-                <div className="bg-stone-100/90 backdrop-blur-md p-1 rounded-2xl flex items-center gap-1 border border-stone-200/80 shadow-2xs">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPhotoFitMode('fit');
-                      setGifResult(null);
-                    }}
-                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
-                      photoFitMode === 'fit'
-                        ? 'bg-white text-stone-900 shadow-xs font-bold'
-                        : 'text-stone-500 hover:text-stone-800'
-                    }`}
-                    title="Seluruh badan dan pose tampak 100% utuh tanpa terpotong"
-                  >
-                    <span>👤 Badan Utuh</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPhotoFitMode('cover');
-                      setGifResult(null);
-                    }}
-                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer ${
-                      photoFitMode === 'cover'
-                        ? 'bg-white text-stone-900 shadow-xs font-bold'
-                        : 'text-stone-500 hover:text-stone-800'
-                    }`}
-                    title="Isi penuh seluruh area slot bingkai"
-                  >
-                    <span>🔲 Isi Penuh</span>
-                  </button>
-                </div>
-
-                {previewTab === 'boomerang' && gifResult && !isGeneratingGif && (
-                  <button
-                    onClick={() => setShowGifModal(true)}
-                    className="text-[11px] font-semibold text-stone-700 hover:text-stone-900 flex items-center gap-1 cursor-pointer bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1.5 rounded-xl transition-all border border-stone-200"
-                    title="Buka Pratinjau Penuh"
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                    <span>Perbesar</span>
-                  </button>
-                )}
-              </div>
+              {previewTab === 'boomerang' && gifResult && !isGeneratingGif && (
+                <button
+                  onClick={() => setShowGifModal(true)}
+                  className="text-[11px] font-semibold text-stone-700 hover:text-stone-900 flex items-center gap-1 cursor-pointer bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1.5 rounded-xl transition-all border border-stone-200"
+                  title="Buka Pratinjau Penuh"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>Perbesar</span>
+                </button>
+              )}
             </div>
 
             {/* CUTE TAPE STRIP */}
