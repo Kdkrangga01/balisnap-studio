@@ -1133,7 +1133,7 @@ export const Preview: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm"
             onClick={() => !isGeneratingGif && setShowGifModal(false)}
           >
             <motion.div
@@ -1141,7 +1141,7 @@ export const Preview: React.FC = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.85, opacity: 0, y: 20 }}
               transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-              className="bg-white border border-stone-200/90 rounded-[28px] max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.12)] relative overflow-hidden text-center flex flex-col items-center gap-3 z-50 select-none max-h-[90vh] overflow-y-auto"
+              className="bg-white border border-stone-200/90 rounded-[28px] max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-xl relative overflow-hidden text-center flex flex-col items-center gap-3 z-50 select-none max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* CLOSE BUTTON */}
@@ -1157,7 +1157,7 @@ export const Preview: React.FC = () => {
 
               <div className="flex flex-col items-center gap-1 mt-0.5">
                 <h3 className="font-serif text-lg sm:text-xl font-bold tracking-tight text-stone-900 flex items-center gap-2">
-                  <Film className="w-5 h-5 text-purple-600" />
+                  <Film className="w-5 h-5 text-rose-500" />
                   Pratinjau Animasi GIF
                 </h3>
                 <p className="text-xs text-stone-500 font-normal">
@@ -1167,22 +1167,22 @@ export const Preview: React.FC = () => {
 
               {/* GIF PREVIEW CONTAINER - Clean, borderless display like real photobooth */}
               <div
-                className="w-full bg-stone-950 rounded-2xl overflow-hidden flex items-center justify-center relative my-1"
+                className="w-full bg-stone-100 border border-stone-200/80 rounded-2xl overflow-hidden flex items-center justify-center relative my-1"
                 style={{ minHeight: '240px', maxHeight: '50vh' }}
               >
                 {isGeneratingGif ? (
                   <div className="flex flex-col items-center gap-3 p-6 text-center">
-                    <Loader2 className="w-7 h-7 text-white/80 animate-spin" />
+                    <Loader2 className="w-7 h-7 text-rose-500 animate-spin" />
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs font-semibold text-white/90">
+                      <span className="text-xs font-semibold text-stone-700">
                         Membuat animasi boomerang...
                       </span>
-                      <span className="text-[11px] text-purple-300 font-bold">{gifProgress}%</span>
+                      <span className="text-[11px] text-rose-600 font-bold">{gifProgress}%</span>
                     </div>
                     {/* PROGRESS BAR */}
-                    <div className="w-44 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-44 h-1.5 bg-stone-200 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-purple-400 transition-all duration-300 rounded-full"
+                        className="h-full bg-rose-500 transition-all duration-300 rounded-full"
                         style={{ width: `${gifProgress}%` }}
                       />
                     </div>
@@ -1216,12 +1216,12 @@ export const Preview: React.FC = () => {
                         onClick={() => handleOpenGifModal(undefined, m.id as BoomerangMode)}
                         className={`py-2 px-1 text-center rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center ${
                           gifMode === m.id
-                            ? 'bg-stone-900 text-white border-stone-900 shadow-xs font-semibold'
+                            ? 'bg-rose-500 text-white border-rose-500 shadow-xs font-semibold'
                             : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 font-medium'
                         }`}
                       >
                         <span className="text-[11px] font-bold leading-tight">{m.label}</span>
-                        <span className={`text-[9px] mt-0.5 ${gifMode === m.id ? 'text-stone-300' : 'text-stone-400'}`}>
+                        <span className={`text-[9px] mt-0.5 ${gifMode === m.id ? 'text-rose-100' : 'text-stone-400'}`}>
                           {m.desc}
                         </span>
                       </button>
@@ -1248,7 +1248,7 @@ export const Preview: React.FC = () => {
                         onClick={() => handleOpenGifModal(s.value, undefined)}
                         className={`py-2 px-1 text-[11px] rounded-xl border transition-all cursor-pointer font-semibold ${
                           gifInterval === s.value
-                            ? 'bg-stone-900 text-white border-stone-900 shadow-xs font-bold'
+                            ? 'bg-rose-500 text-white border-rose-500 shadow-xs font-semibold'
                             : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 font-medium'
                         }`}
                       >
@@ -1263,7 +1263,7 @@ export const Preview: React.FC = () => {
               {!isGeneratingGif && gifResult && ( 
                 <button
                   onClick={handleDownloadGif}
-                  className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] mt-0.5"
+                  className="w-full py-3 bg-[#E15A6E] hover:bg-[#D4485D] text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] mt-0.5"
                 >
                   <Download className="w-4 h-4" />
                   Unduh Animasi .GIF

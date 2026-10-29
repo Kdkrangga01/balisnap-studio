@@ -969,8 +969,8 @@ export const Capture: React.FC = () => {
                     if (!hasCamera || isProcessingPhoto || countdown !== null || isAutoShooting) return;
                     startSingleClickMultiShoot();
                   }}
-                  className={`relative bg-stone-950 border-[3px] border-black rounded-[24px] sm:rounded-[28px] overflow-hidden shadow-lg flex items-center justify-center mx-auto transition-all ${
-                    isFullscreen ? 'cursor-pointer ring-4 ring-black/40' : 'cursor-pointer'
+                  className={`relative bg-stone-900 border-2 border-stone-200/90 rounded-[24px] sm:rounded-[28px] overflow-hidden shadow-sm flex items-center justify-center mx-auto transition-all ${
+                    isFullscreen ? 'cursor-pointer ring-4 ring-rose-300/40' : 'cursor-pointer'
                   }`}
                   style={{
                     aspectRatio: viewfinderAspect,
@@ -1163,7 +1163,7 @@ export const Capture: React.FC = () => {
                 <button
                   type="button"
                   onClick={toggleFullscreen}
-                  className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-30 bg-white hover:bg-stone-50 active:scale-95 transition-all text-[#18181b] border border-black/80 rounded-xl px-2.5 py-1.5 shadow-sm flex items-center justify-center cursor-pointer pointer-events-auto"
+                  className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-30 bg-white hover:bg-stone-50 active:scale-95 transition-all text-stone-700 border border-stone-200/90 rounded-xl px-2.5 py-1.5 shadow-xs flex items-center justify-center cursor-pointer pointer-events-auto"
                   title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
                 >
                   <svg
@@ -1474,7 +1474,7 @@ export const Capture: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-[110] bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-4"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
@@ -1494,7 +1494,7 @@ export const Capture: React.FC = () => {
                 </span>
               </div>
 
-              <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-950 my-4 relative shadow-inner flex items-center justify-center border border-stone-200">
+              <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 my-4 relative shadow-inner flex items-center justify-center border border-stone-200">
                 {burstRecordedPreview.frames[burstPreviewFrameIndex] && (
                   <img
                     src={burstRecordedPreview.frames[burstPreviewFrameIndex]}
@@ -1502,7 +1502,7 @@ export const Capture: React.FC = () => {
                     className="w-full h-full object-cover camera-mirror"
                   />
                 )}
-                <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/20">
+                <div className="absolute top-2.5 right-2.5 bg-stone-900/70 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/10">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   <span>BOOMERANG LOOP</span>
                 </div>
@@ -1543,33 +1543,33 @@ export const Capture: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setPreviewModalPhoto(null)}
-            className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+            className="fixed inset-0 z-[120] bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-lg w-full bg-stone-900 border border-stone-800 rounded-3xl p-3.5 shadow-2xl flex flex-col items-center"
+              className="relative max-w-lg w-full bg-white border border-stone-200/90 rounded-3xl p-4 shadow-xl flex flex-col items-center"
             >
               <div className="w-full flex items-center justify-between pb-2 px-1">
-                <span className="text-xs font-bold text-white">Preview Foto Penuh (Utuh Tanpa Terpotong)</span>
+                <span className="text-xs font-bold text-stone-800">Preview Foto Penuh (Utuh Tanpa Terpotong)</span>
                 <button
                   type="button"
                   onClick={() => setPreviewModalPhoto(null)}
-                  className="p-1 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition-all cursor-pointer"
+                  className="p-1 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 transition-all cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="w-full max-h-[70vh] flex items-center justify-center overflow-hidden rounded-2xl bg-black/60 p-1">
+              <div className="w-full max-h-[70vh] flex items-center justify-center overflow-hidden rounded-2xl bg-stone-100/90 border border-stone-200/80 p-1">
                 <img
                   src={previewModalPhoto}
                   alt="Preview Penuh"
                   className="max-w-full max-h-[68vh] object-contain rounded-xl"
                 />
               </div>
-              <p className="text-[10px] text-stone-400 mt-2 text-center">
+              <p className="text-[10px] text-stone-500 mt-2 text-center">
                 Foto tampil 100% utuh sesuai bentuk aslinya tanpa ada bagian yang terpotong.
               </p>
             </motion.div> 
@@ -1585,40 +1585,40 @@ export const Capture: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setPreviewModalBurst(null)}
-            className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+            className="fixed inset-0 z-[120] bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }} 
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-lg w-full bg-stone-900 border border-stone-800 rounded-3xl p-4 shadow-2xl flex flex-col items-center"
+              className="relative max-w-lg w-full bg-white border border-stone-200/90 rounded-3xl p-4 shadow-xl flex flex-col items-center"
             >
-              <div className="w-full flex items-center justify-between pb-2 px-1 border-b border-stone-800 mb-3">
+              <div className="w-full flex items-center justify-between pb-2 px-1 border-b border-stone-100 mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="text-xs font-bold text-white">Animasi Boomerang Loop</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span className="text-xs font-bold text-stone-800">Animasi Boomerang Loop</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setPreviewModalBurst(null)}
-                  className="p-1 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition-all cursor-pointer"
+                  className="p-1 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 transition-all cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="w-full max-h-[68vh] aspect-[4/3] flex items-center justify-center overflow-hidden rounded-2xl bg-black/80 relative">
+              <div className="w-full max-h-[68vh] aspect-[4/3] flex items-center justify-center overflow-hidden rounded-2xl bg-stone-100/90 border border-stone-200/80 relative">
                 <img
                   src={previewModalBurst[modalBurstIndex]}
                   alt="Boomerang Loop"
                   className="max-w-full max-h-[66vh] object-contain rounded-xl camera-mirror"
                 />
-                <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/20">
+                <div className="absolute top-2.5 right-2.5 bg-stone-900/70 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/10">
                   <Film className="w-3 h-3 text-emerald-400" />
                   <span>FRAME {modalBurstIndex + 1}/{previewModalBurst.length}</span>
                 </div>
               </div>
-              <p className="text-[10px] text-stone-400 mt-2.5 text-center">
+              <p className="text-[10px] text-stone-500 mt-2.5 text-center">
                 Animasi bolak-balik (boomerang loop) mulus dari gerakan asli kamera.
               </p>
             </motion.div> 

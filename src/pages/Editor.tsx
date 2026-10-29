@@ -408,9 +408,9 @@ export const Editor: React.FC = () => {
                   </div>
                   <button
                     onClick={autoSpreadStickersEqually}
-                    className="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 active:scale-95 text-white font-semibold text-[10.5px] rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-semibold text-[10.5px] rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
-                    <LayoutGrid className="w-3 h-3 text-stone-300" />
+                    <LayoutGrid className="w-3 h-3 text-rose-100" />
                     <span>Pas Ke Sudut Bingkai</span>
                   </button>
                 </div>
