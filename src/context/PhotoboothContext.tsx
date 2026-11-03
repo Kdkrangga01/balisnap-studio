@@ -466,6 +466,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // Jika custom frame, hapus juga dari memory & IndexedDB
     setCustomFrames((prev) => prev.filter((f) => f.id !== id));
     removeCustomFrame(id).catch(() => {});
+    deleteCloudFrame(id).catch(() => {});
 
     return true;
   };
@@ -846,7 +847,17 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         // Sinkronisasi otomatis dari Supabase Cloud (jika tabel custom_frames sudah ada)
         if (isSupabaseConfigured()) {
           try {
-            const cloudFrames = await fetchCloudFrames();
+            const cloudFrames = (await fetchCloudFrames()) || [];
+            const cloudFrameIds = new Set(cloudFrames.map((cf: any) => cf.id));
+
+            // 1. PUSH: Unggah frame kustom dari IndexedDB lokal yang belum ada di Cloud ke Supabase
+            for (const localFrame of dbFrames) {
+              if (!cloudFrameIds.has(localFrame.id)) {
+                saveCloudFrame(localFrame).catch((err) =>
+                  console.warn("Auto-sync local frame to cloud failed:", err)
+                );
+              }
+            }
             if (cloudFrames && cloudFrames.length > 0) {
               setCustomFrames(prev => {
                 const combined = [...prev];

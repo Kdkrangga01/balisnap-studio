@@ -4,9 +4,12 @@ import type { TransactionRecord } from '../context/PhotoboothContext';
  * Konfigurasi Supabase Client via REST API (PostgREST API)
  * Bebas dari kebergantungan library eksternal yang berat.
  */
-const RAW_URL = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const DEFAULT_SUPABASE_URL = 'https://ffmlnkhfguziuaodfold.supabase.co';
+const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmbWxua2hmZ3V6aXVhb2Rmb2xkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyNDI3MjQsImV4cCI6MjEwODgxODcyNH0.9G8XvaMEadzfBRdu0xkdJ6T13VCp_4VnWPsftivZIGw';
+
+const RAW_URL = (import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
 const SUPABASE_URL = RAW_URL.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
-const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_KEY).trim();
 
 export const isSupabaseConfigured = (): boolean => {
   return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== 'https://your-project-id.supabase.co');
