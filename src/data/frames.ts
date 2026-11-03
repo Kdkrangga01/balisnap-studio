@@ -1199,5 +1199,29 @@ export const frames: FrameTemplate[] = [
       { x: 555, y: 572, w: 377, h: 303, rx: 9 },
       { x: 555, y: 948, w: 377, h: 303, rx: 9 }
     ]
+  },
+  {
+    id: "custom-1784191508813-huj0",
+    name: "Frame Cil Netflix",
+    slots: 1,
+    category: "retro",
+    src: "/templates/custom-1784191508813-huj0.jpg",
+    width: 736,
+    height: 1308,
+    slotCoords: [
+      { x: 74, y: 131, w: 589, h: 981, rx: 22 }
+    ]
+  },
+  {
+    id: "custom-1784259262573-ygrt",
+    name: "Frame Cute",
+    slots: 1,
+    category: "cute",
+    src: "/templates/custom-1784259262573-ygrt.png",
+    width: 900,
+    height: 1600,
+    slotCoords: [
+      { x: 131, y: 292, w: 641, h: 816, rx: 19 }
+    ]
   }
 ];
