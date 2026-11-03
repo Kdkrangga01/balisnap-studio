@@ -201,6 +201,7 @@ interface PhotoboothContextProps {
   customFrames: FrameTemplate[];
   addCustomFrame: (frame: FrameTemplate) => void;
   deleteCustomFrame: (id: string) => void;
+  syncCloudFrames: () => Promise<void>;
   // Custom nama daerah/kota — khusus dipakai oleh bingkai bertema koran/retro
   // (mis. "DENPASAR") supaya user bisa ganti dengan nama daerah masing-masing,
   // tetap pakai font headline koran yang sama.
@@ -816,6 +817,44 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   };
 
+  // Sinkronisasi otomatis dua arah (Two-Way Sync) dengan Supabase Cloud
+  const syncCloudFrames = useCallback(async () => {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const presetIds = new Set(frames.map((f) => f.id));
+      const dbFrames = await loadCustomFrames().catch(() => []);
+      const cloudFrames = (await fetchCloudFrames()) || [];
+      const cloudFrameIds = new Set(cloudFrames.map((cf) => cf.id));
+
+      // 1. PUSH: Unggah frame kustom lokal yang belum ada di Cloud ke Supabase
+      for (const localFrame of dbFrames) {
+        if (!cloudFrameIds.has(localFrame.id) && !presetIds.has(localFrame.id)) {
+          saveCloudFrame(localFrame).catch((err) =>
+            console.warn("Auto-sync local frame to cloud failed:", err)
+          );
+        }
+      }
+
+      // 2. PULL: Tarik frame kustom dari Cloud ke state dan cache lokal
+      if (cloudFrames.length > 0) {
+        setCustomFrames((prev) => {
+          const combined = [...prev];
+          let changed = false;
+          for (const cf of cloudFrames) {
+            if (!presetIds.has(cf.id) && !combined.some((f) => f.id === cf.id)) {
+              combined.push(cf);
+              saveCustomFrame(cf).catch(() => {});
+              changed = true;
+            }
+          }
+          return changed ? combined : prev;
+        });
+      }
+    } catch (cloudErr) {
+      console.warn("Supabase cloud frames sync warning:", cloudErr);
+    }
+  }, []);
+
   useEffect(() => {
     const initCustomFrames = async () => {
       try {
@@ -844,43 +883,29 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }
         setCustomFrames(dbFrames);
 
-        // Sinkronisasi otomatis dari Supabase Cloud (jika tabel custom_frames sudah ada)
-        if (isSupabaseConfigured()) {
-          try {
-            const cloudFrames = (await fetchCloudFrames()) || [];
-            const cloudFrameIds = new Set(cloudFrames.map((cf: any) => cf.id));
-
-            // 1. PUSH: Unggah frame kustom dari IndexedDB lokal yang belum ada di Cloud ke Supabase
-            for (const localFrame of dbFrames) {
-              if (!cloudFrameIds.has(localFrame.id)) {
-                saveCloudFrame(localFrame).catch((err) =>
-                  console.warn("Auto-sync local frame to cloud failed:", err)
-                );
-              }
-            }
-            if (cloudFrames && cloudFrames.length > 0) {
-              setCustomFrames(prev => {
-                const combined = [...prev];
-                for (const cf of cloudFrames) {
-                  if (!presetIds.has(cf.id) && !combined.some(f => f.id === cf.id)) {
-                    combined.push(cf);
-                    // Simpan juga ke IndexedDB lokal sebagai cache instan
-                    saveCustomFrame(cf).catch(() => {});
-                  }
-                }
-                return combined;
-              });
-            }
-          } catch (cloudErr) {
-            console.warn("Supabase cloud frames sync warning:", cloudErr);
-          }
-        }
+        // Jalankan sinkronisasi cloud Supabase
+        await syncCloudFrames();
       } catch (err) {
         console.error("Failed to load custom frames:", err);
       }
     };
     initCustomFrames();
-  }, []);
+  }, [syncCloudFrames]);
+
+  // Listener saat window/tab kembali aktif (misal user balik buka tab browser di HP)
+  useEffect(() => {
+    const handleSyncOnActive = () => {
+      if (document.visibilityState === 'visible') {
+        syncCloudFrames();
+      }
+    };
+    window.addEventListener('focus', handleSyncOnActive);
+    document.addEventListener('visibilitychange', handleSyncOnActive);
+    return () => {
+      window.removeEventListener('focus', handleSyncOnActive);
+      document.removeEventListener('visibilitychange', handleSyncOnActive);
+    };
+  }, [syncCloudFrames]);
 
   const selectFrame = (frame: FrameTemplate) => {
     setSelectedFrame(frame);
@@ -1167,7 +1192,7 @@ export const PhotoboothProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       photoBlendMode, setPhotoBlendMode, photoOpacity, setPhotoOpacity,
       favoriteColors, toggleFavoriteColor, recentColors, addRecentColor, favoriteWallpapers, toggleFavoriteWallpaper,
       recentWallpapers, addRecentWallpaper, favoriteStickers, toggleFavoriteSticker, resetAll, customFrames,
-      addCustomFrame, deleteCustomFrame,
+      addCustomFrame, deleteCustomFrame, syncCloudFrames,
       customHeadline, setCustomHeadline,
       customLocations, setCustomLocationLine, resetCustomLocations,
       transactions, addTransaction, clearTransactions, deleteTransaction, refreshTransactions,

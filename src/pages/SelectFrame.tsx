@@ -475,6 +475,7 @@ export const SelectFrame: React.FC = () => {
     addCustomFrame,
     deleteFrame,
     deletedFrameIds,
+    syncCloudFrames,
     isOwnerAuthenticated,
     verifyOwnerPasscode,
     packageTier,
@@ -483,6 +484,11 @@ export const SelectFrame: React.FC = () => {
     getRemainingTrialSessions,
     hasCompletedAllTrialSessions
   } = context;
+
+  // Sinkronisasi otomatis setiap kali halaman Pilih Bingkai dibuka
+  useEffect(() => {
+    syncCloudFrames();
+  }, [syncCloudFrames]);
 
   // Upgrade & Checkout Modal State
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
