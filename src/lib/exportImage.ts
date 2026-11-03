@@ -103,7 +103,8 @@ export function downloadBase64Image(dataURI: string, filename: string) {
 export async function saveOrShareImage(dataURI: string, filename: string): Promise<boolean> {
   try {
     const blob = dataURItoBlob(dataURI);
-    const file = new File([blob], filename, { type: 'image/png' });
+    const mimeType = blob.type || (filename.endsWith('.gif') ? 'image/gif' : 'image/png');
+    const file = new File([blob], filename, { type: mimeType });
 
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 

@@ -133,7 +133,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
   stageRef,
   containerWidth,
   isPreviewMode = false,
-  photoFitMode = 'fit',
+  photoFitMode = 'cover',
 }) => {
   const {
     selectedFrame,
@@ -437,7 +437,7 @@ export const PhotoCanvas: React.FC<PhotoCanvasProps> = ({
             const scaledH = imgH * finalZoom;
 
             const offsetX = (slot.w - scaledW) / 2;
-            const offsetY = photoFitMode === 'fit' ? (slot.h - scaledH) / 2 : Math.max(0, (slot.h - scaledH) * 0.15);
+            const offsetY = (slot.h - scaledH) / 2;
 
             const centeredX = offsetX + transform.x;
             const centeredY = offsetY + transform.y;

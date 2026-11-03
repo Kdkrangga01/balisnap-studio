@@ -27,7 +27,7 @@ function easeInOutSine(t: number): number {
 export async function createBoomerangFrames(
   baseImageUri: string,
   mode: BoomerangMode = 'sequence',
-  targetWidth = 450
+  targetWidth = 720
 ): Promise<{ frames: string[]; width: number; height: number }> {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const el = new Image();
@@ -170,7 +170,7 @@ export function generateBoomerangGif(options: GifOptions): Promise<{ dataUrl: st
 
     // Hitung aspek rasio asli dari frame pertama agar BINGKAI TIDAK PERNAH TERPOTONG
     let autoHeight = options.gifHeight;
-    const targetWidth = options.gifWidth || 420;
+    const targetWidth = options.gifWidth || 720;
 
     if (!autoHeight && boomerangSequence[0]) {
       try {
@@ -200,7 +200,7 @@ export function generateBoomerangGif(options: GifOptions): Promise<{ dataUrl: st
         gifHeight: gifHeight,
         interval: interval,
         numWorkers: 4,
-        sampleInterval: 8,
+        sampleInterval: 2,
         progressCallback: (progress: number) => {
           if (options.progressCallback) {
             options.progressCallback(Math.round(progress * 100));

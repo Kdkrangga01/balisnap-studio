@@ -121,12 +121,12 @@ function fitDataUrlToSlotAspect(
         return;
       }
 
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
+      ctx.imageSmoothingEnabled = true; 
+      ctx.imageSmoothingQuality = 'high'; 
 
       const currentFilterObj = CAMERA_FILTERS.find((f) => f.id === filterId);
       const filterCss = currentFilterObj ? currentFilterObj.filterCss : 'none';
-      const beautyCss = isBeautyMode ? 'blur(0.4px) contrast(98%)' : ''; 
+      const beautyCss = isBeautyMode ? 'blur(0.4px) contrast(98%)' : '';  
 
       ctx.filter = `brightness(${brightnessLevel}%) ${filterCss === 'none' ? '' : filterCss} ${beautyCss}`.trim();
 
@@ -175,24 +175,24 @@ export const Capture: React.FC = () => {
   const [brightness, setBrightness] = useState<number>(104);
   const isBeautyMode = false; 
   const isMirrorMode = true; 
-  const [timerInterval, setTimerInterval] = useState<number>(captureType === 'boomerang' ? 15 : 3);
+  const [timerInterval, setTimerInterval] = useState<number>(captureType === 'boomerang' ? 5 : 3);
   const [photoAspects, setPhotoAspects] = useState<Record<number, number>>({});
   const [previewModalPhoto, setPreviewModalPhoto] = useState<string | null>(null);
   const [previewModalBurst, setPreviewModalBurst] = useState<string[] | null>(null);
   const [modalBurstIndex, setModalBurstIndex] = useState<number>(0);
 
-  // Otomatis sesuaikan rentang durasi saat berpindah antara Foto Biasa (3, 5, 7, 10s) vs Foto GIF Boomerang (15, 20, 25, 30s)
+  // Otomatis sesuaikan default jeda saat berpindah antara Foto Biasa (default 3s) vs Foto GIF Boomerang (default 5s)
   useEffect(() => {
-    if (captureType === 'boomerang') {
-      if (![15, 20, 25, 30].includes(timerInterval)) {
-        setTimerInterval(15);
-      }
-    } else {
+    if (captureType === 'boomerang') { 
       if (![3, 5, 7, 10].includes(timerInterval)) {
-        setTimerInterval(3);
-      }
+        setTimerInterval(5); 
+      } 
+    } else {
+      if (![3, 5, 7, 10].includes(timerInterval)) { 
+        setTimerInterval(3); 
+      } 
     }
-  }, [captureType]);
+  }, [captureType]); 
 
   // Ping-pong loop for review modal (0..N-1..1) - 140ms untuk putaran gerakan pas & enak dilihat
   useEffect(() => {
@@ -201,9 +201,9 @@ export const Capture: React.FC = () => {
     const seq: number[] = [];
     for (let i = 0; i < totalFrames; i++) seq.push(i);
     for (let i = totalFrames - 2; i > 0; i -= 2) seq.push(i);
-
+   
     let step = 0;
-    const interval = setInterval(() => {
+    const interval = setInterval(() => { 
       step = (step + 1) % seq.length;
       setBurstPreviewFrameIndex(seq[step]);
     }, 140);
@@ -523,15 +523,15 @@ export const Capture: React.FC = () => {
     const actualHeight = video?.videoHeight || actualResolution?.height || 720;
     const capturedSlot = activeSlot;
     const targetAspect = getSlotAspectRatio(capturedSlot);
-    const maxLongSide = 960; // optimal untuk pengambilan frame super cepat tanpa jeda
+    const maxLongSide = 1280; // Full HD native frame capture untuk hasil Boomerang tajam & jernih
 
     stopBurstRecordingRef.current = false;
     setIsBurstRecording(true);
     setBurstFrameProgress(0);
 
-    const totalBurstFrames = 32; // 32 frame untuk menangkap beberapa pergantian gaya secara lengkap
-    // Sesuaikan durasi perekaman dengan jeda waktu yang dipilih user (misal 15s)
-    const targetSessionDurationMs = Math.max(3200, Math.min(timerInterval * 1000, 16000));
+    const totalBurstFrames = 24; // 24 frame untuk menangkap rangkaian gaya dinamis yang mulus & pas
+    // Durasi perekaman ~3.2 detik: durasi emas yang leluasa untuk pose bebas tanpa terburu-buru
+    const targetSessionDurationMs = 3200;
     const intervalMs = Math.round(targetSessionDurationMs / totalBurstFrames);
     const rawFrames: string[] = [];
 
@@ -551,6 +551,10 @@ export const Capture: React.FC = () => {
     grabCanvas.width = grabW;
     grabCanvas.height = grabH;
     const grabCtx = grabCanvas.getContext('2d');
+    if (grabCtx) {
+      grabCtx.imageSmoothingEnabled = true;
+      grabCtx.imageSmoothingQuality = 'high';
+    }
 
     try {
       for (let i = 0; i < totalBurstFrames; i++) {
@@ -558,7 +562,7 @@ export const Capture: React.FC = () => {
 
         if (grabCtx && video && !video.paused && !video.ended) {
           grabCtx.drawImage(video, 0, 0, grabW, grabH);
-          const frameSrc = grabCanvas.toDataURL('image/jpeg', 0.85);
+          const frameSrc = grabCanvas.toDataURL('image/jpeg', 0.98);
           rawFrames.push(frameSrc);
         } else {
           const fallbackSrc = webcamRef.current.getScreenshot({
@@ -569,9 +573,6 @@ export const Capture: React.FC = () => {
         }
 
         setBurstFrameProgress(i + 1);
-        if (soundEnabled && (i === 0 || i % 8 === 0)) {
-          playBeepSound();
-        }
         if (i < totalBurstFrames - 1) {
           await new Promise((resolve) => setTimeout(resolve, intervalMs));
         }
@@ -581,7 +582,6 @@ export const Capture: React.FC = () => {
         throw new Error('Gagal mengambil frame dari webcam.');
       }
 
-      if (soundEnabled) playShutterSound();
       setShowFlash(true);
       setTimeout(() => setShowFlash(false), 200);
 
@@ -772,7 +772,7 @@ export const Capture: React.FC = () => {
       }
       return;
     }
-    if (soundEnabled && countdown > 0 && countdown <= 5) {
+    if (soundEnabled && captureType !== 'boomerang' && countdown > 0 && countdown <= 5) {
       playBeepSound();
     }
     const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -1112,7 +1112,7 @@ export const Capture: React.FC = () => {
                     <span className={`w-1.5 h-1.5 rounded-full ${isBurstRecording ? 'bg-red-500 animate-ping' : isAutoShooting ? 'bg-rose-400 animate-ping' : 'bg-emerald-400'}`} />
                     <span>
                       {isBurstRecording
-                        ? `Merekam Gerakan (${burstFrameProgress}/22)...`
+                        ? `Merekam Gerakan (${burstFrameProgress}/24)...`
                         : isAutoShooting
                           ? (captureType === 'boomerang' ? 'Merekam GIF...' : 'Foto Otomatis...')
                           : `Slot #${activeSlot + 1} (${captureType === 'boomerang' ? 'GIF' : 'Foto'})`}
@@ -1125,7 +1125,7 @@ export const Capture: React.FC = () => {
                       <span className="text-[9px] font-bold text-white/80 px-2 uppercase tracking-wider flex items-center gap-1 select-none">
                         <Clock className="w-2.5 h-2.5 text-rose-400" /> Jeda:
                       </span>
-                      {(captureType === 'boomerang' ? [15, 20, 25, 30] : [3, 5, 7, 10]).map((sec) => (
+                      {[3, 5, 7, 10].map((sec) => (
                         <button
                           key={sec}
                           type="button"
@@ -1158,7 +1158,7 @@ export const Capture: React.FC = () => {
                     >
                       <div className="bg-red-600/95 backdrop-blur-md text-white text-[11px] font-bold px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg border border-white/20">
                         <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
-                        <span>🔴 MEREKAM RANGKAIAN GAYA ({burstFrameProgress}/32)</span>
+                        <span>🔴 MEREKAM RANGKAIAN GAYA ({burstFrameProgress}/24)</span>
                       </div>
 
                       <div className="w-full max-w-xs bg-black/85 backdrop-blur-md p-3.5 rounded-2xl border border-white/20 flex flex-col items-center gap-2.5 shadow-2xl pointer-events-auto">
@@ -1372,7 +1372,7 @@ export const Capture: React.FC = () => {
                   <span className="text-[10px] font-bold pl-2 pr-1 uppercase tracking-wider select-none text-stone-600">
                     Jeda: 
                   </span> 
-                  {(captureType === 'boomerang' ? [15, 20, 25, 30] : [3, 5, 7, 10]).map((sec) => ( 
+                  {[3, 5, 7, 10].map((sec) => ( 
                     <button 
                       key={sec} 
                       disabled={isAutoShooting || countdown !== null || isBurstRecording} 
@@ -1586,7 +1586,7 @@ export const Capture: React.FC = () => {
                 )}
                 <div className="absolute top-2.5 right-2.5 bg-stone-900/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/10 shadow-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>BOOMERANG LOOP (32 Frame Mulus)</span>
+                  <span>BOOMERANG LOOP ({burstRecordedPreview.frames.length} Frame Mulus)</span>
                 </div>
               </div>
 

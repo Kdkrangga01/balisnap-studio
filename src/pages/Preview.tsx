@@ -7,7 +7,7 @@ import { DigitalEnvelopeModal } from '../components/DigitalEnvelopeModal';
 import { UpgradeModal } from '../components/UpgradeModal'; 
 import {
   ArrowLeft, Download, RotateCcw, Check, Share2, Camera, X, 
-  ExternalLink, Copy, CheckCircle2, Sliders, Zap, ShieldCheck, Crown, 
+  ExternalLink, CheckCircle2, Sliders, ShieldCheck, Crown, 
   Film, Loader2, Mail, Smartphone 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -32,7 +32,6 @@ export const Preview: React.FC = () => {
   const [canvasWidth, setCanvasWidth] = useState<number>(450);
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false); 
   const [downloadedImageUri, setDownloadedImageUri] = useState<string | null>(null); 
-  const [copiedLink, setCopiedLink] = useState<boolean>(false); 
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false); 
 
   // NEW FEATURES STATE 
@@ -44,9 +43,16 @@ export const Preview: React.FC = () => {
   const [isGeneratingGif, setIsGeneratingGif] = useState<boolean>(false); 
   const [gifProgress, setGifProgress] = useState<number>(0);
   const [gifResult, setGifResult] = useState<{ dataUrl: string; blob: Blob } | null>(null);
-  const [gifInterval, setGifInterval] = useState<number>(captureType === 'boomerang' ? 0.14 : 0.15);
+  const [gifInterval, setGifInterval] = useState<number>(0.14);
   const [gifMode, setGifMode] = useState<BoomerangMode>('sequence'); 
-  const photoFitMode: 'fit' | 'cover' = 'fit';
+  const photoFitMode: 'fit' | 'cover' = 'cover';
+
+  // Auto-generate Boomerang GIF when on boomerang tab if not yet generated
+  useEffect(() => {
+    if (previewTab === 'boomerang' && !gifResult && !isGeneratingGif && selectedFrame) {
+      generateGif();
+    }
+  }, [previewTab, selectedFrame]);
 
   // DIGITAL ENVELOPE GIFT STATE 
   const [showEnvelopeModal, setShowEnvelopeModal] = useState<boolean>(false);
@@ -91,7 +97,7 @@ export const Preview: React.FC = () => {
 
       const fW = selectedFrame.width || 1200;
       const fH = selectedFrame.height || 1800;
-      const targetW = 420;
+      const targetW = 600;
       const targetH = Math.round(targetW * (fH / fW));
       canvas.width = targetW;
       canvas.height = targetH;
@@ -292,7 +298,8 @@ export const Preview: React.FC = () => {
     }
   };
 
-  // Helper untuk menggambar foto mengisi slot secara penuh 100% tanpa kotak kosong dan tanpa memotong gerakan
+  // Helper untuk menggambar foto mengisi slot secara penuh 100% murni (pure cover)
+  // Menghapus total lapisan blur 16px di latar belakang sehingga foto tajam kristal edge-to-edge
   const drawImageCover = (
     ctx: CanvasRenderingContext2D,
     img: HTMLImageElement,
@@ -303,50 +310,23 @@ export const Preview: React.FC = () => {
     scale = 1.0,
     panX = 0,
     panY = 0,
-    overrideFitMode?: 'cover' | 'fit'
+    _overrideFitMode?: 'cover' | 'fit'
   ) => {
     const imgW = img.naturalWidth || img.width || 800;
     const imgH = img.naturalHeight || img.height || 600;
     if (!imgW || !imgH) return;
 
-    const fitScale = Math.min(w / imgW, h / imgH) * scale;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // Cover scale: mengisi seluruh bidang slot foto secara presisi tanpa ada border blur atau celah kosong
     const coverScale = Math.max(w / imgW, h / imgH) * scale;
+    const renderW = imgW * coverScale;
+    const renderH = imgH * coverScale;
+    const renderX = x + (w - renderW) / 2 + panX;
+    const renderY = y + (h - renderH) / 2 + panY;
 
-    // Jika dipaksa cover penuh murni
-    if (overrideFitMode === 'cover') {
-      const renderW = imgW * coverScale;
-      const renderH = imgH * coverScale;
-      const renderX = x + (w - renderW) / 2 + panX;
-      const renderY = y + (h - renderH) / 2 + panY;
-      ctx.drawImage(img, renderX, renderY, renderW, renderH);
-      return;
-    }
-
-    // 1. LAPISAN LATAR BELAKANG: Isi 100% penuh slot edge-to-edge
-    // Mengeliminasi "kotak putih kosong" seutuhnya dengan warna & pencahayaan foto asli
-    if (Math.abs(coverScale - fitScale) > 0.005) {
-      const coverW = imgW * coverScale;
-      const coverH = imgH * coverScale;
-      const coverX = x + (w - coverW) / 2 + panX;
-      const coverY = y + (h - coverH) / 2 + panY;
-
-      ctx.save();
-      try {
-        ctx.filter = 'blur(16px) brightness(0.9) saturate(110%)';
-      } catch {}
-      ctx.drawImage(img, coverX - 6, coverY - 6, coverW + 12, coverH + 12);
-      ctx.restore();
-    }
-
-    // 2. LAPISAN UTAMA (FOREGROUND): Badan & seluruh gerakan utuh 100% tanpa ada yang terpotong
-    const fitW = imgW * fitScale;
-    const fitH = imgH * fitScale;
-    const fitX = x + (w - fitW) / 2 + panX;
-    const fitY = y + (h - fitH) / 2 + panY;
-
-    ctx.save();
-    ctx.drawImage(img, fitX, fitY, fitW, fitH);
-    ctx.restore();
+    ctx.drawImage(img, renderX, renderY, renderW, renderH);
   };
 
   // GIF Boomerang Generator Handler - RENDER VIA CANVAS 2D OFFSCREEN UNTUK EKSPOR FILE .GIF CEPAT & STABIL
@@ -365,9 +345,9 @@ export const Preview: React.FC = () => {
     try {
       const fW = selectedFrame.width || 1200;
       const fH = selectedFrame.height || 1800;
-      // Gunakan resolusi 340px optimal agar encoding GIF cepat (<2 detik) dan file ringan untuk diunduh
-      const targetGifW = 340;
-      const targetGifH = Math.min(800, Math.round(targetGifW * (fH / fW)));
+      // Resolusi True HD 720px: Kerapatan piksel tinggi, detail wajah tajam dan jernih kristal
+      const targetGifW = 720;
+      const targetGifH = Math.round(targetGifW * (fH / fW));
       const slotCount = selectedFrame.slotCoords.length;
 
       // 1. Preload frame overlay mask
@@ -438,9 +418,16 @@ export const Preview: React.FC = () => {
       if (hasCameraBurst) {
         // MODE LIVE BURST: Siklus Ping-Pong Boomerang Nyata
         isPreLooped = true;
-        const pingPongSeq: number[] = [];
-        for (let i = 0; i < maxBurstFrames; i++) pingPongSeq.push(i);
-        for (let i = maxBurstFrames - 2; i > 0; i -= 2) pingPongSeq.push(i);
+        const forwardSteps: number[] = [];
+        const stepInc = maxBurstFrames > 16 ? 2 : 1;
+        for (let i = 0; i < maxBurstFrames; i += stepInc) forwardSteps.push(i);
+        if (forwardSteps[forwardSteps.length - 1] !== maxBurstFrames - 1) {
+          forwardSteps.push(maxBurstFrames - 1);
+        }
+        const pingPongSeq: number[] = [...forwardSteps];
+        for (let i = forwardSteps.length - 2; i > 0; i -= 2) {
+          pingPongSeq.push(forwardSteps[i]);
+        }
 
         const totalSteps = pingPongSeq.length;
 
@@ -483,7 +470,7 @@ export const Preview: React.FC = () => {
             ctx.drawImage(frameImg, 0, 0, targetGifW, targetGifH);
           }
 
-          generatedFrames.push(offCanvas.toDataURL('image/jpeg', 0.88));
+          generatedFrames.push(offCanvas.toDataURL('image/jpeg', 0.98));
           setGifProgress(35 + Math.round(((step + 1) / totalSteps) * 35));
         }
       } else {
@@ -531,7 +518,7 @@ export const Preview: React.FC = () => {
             ctx.drawImage(frameImg, 0, 0, targetGifW, targetGifH);
           }
 
-          generatedFrames.push(offCanvas.toDataURL('image/jpeg', 0.88));
+          generatedFrames.push(offCanvas.toDataURL('image/jpeg', 0.98));
           setGifProgress(35 + Math.round(((step + 1) / totalSteps) * 35));
         }
       }
@@ -558,42 +545,31 @@ export const Preview: React.FC = () => {
     }
   };
 
-  const handleOpenGifModal = async (customInterval?: number, customMode?: BoomerangMode) => {
-    setShowGifModal(true);
-    if (!gifResult || customInterval !== undefined || customMode !== undefined) {
-      await generateGif(customInterval, customMode); 
-    }
-  };
-
   const handleDownloadGif = async () => { 
     let result = gifResult; 
     if (!result) {
       result = await generateGif();
     }
     if (!result) return;
-    const link = document.createElement('a');
-    link.href = result.dataUrl;
-    link.download = `balisnap-boomerang-${new Date().toISOString().slice(0, 10)}.gif`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `balisnap-boomerang-${timestamp}.gif`;
+    setDownloadedImageUri(result.dataUrl);
+
+    await saveOrShareImage(result.dataUrl, filename);
+    incrementCompletedTrialSession();
 
     try {
       confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 }
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#FF2A85', '#FF85C0', '#FBBF24', '#38BDF8', '#10B981', '#A855F7']
       });
     } catch (e) {
       console.error(e);
     }
-  };
 
-  // Quick Link Copying
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
+    setShowSuccessModal(true);
   };
 
   // Open high-res image Blob in a new tab
@@ -659,14 +635,6 @@ export const Preview: React.FC = () => {
           {/* RIGHT UTILITY BUTTONS */}
           <div className="flex items-center gap-2.5">
             <button
-              onClick={handleCopyLink}
-              className="px-4 py-2.5 rounded-2xl text-[11px] font-extrabold uppercase tracking-wider bg-pink-50/80 hover:bg-pink-100/80 border border-pink-200 text-pink-700 transition-all shadow-sm flex items-center gap-2"
-            >
-              {copiedLink ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-pink-500" />}
-              {copiedLink ? 'Link Tersalin!' : 'Salin Tautan'}
-            </button>
-
-            <button
               onClick={resetAll}
               className="px-4 py-2.5 rounded-2xl text-[11px] font-extrabold uppercase tracking-wider bg-white hover:bg-rose-50 border border-rose-200 text-zinc-700 transition-all shadow-sm flex items-center gap-2"
             >
@@ -683,40 +651,47 @@ export const Preview: React.FC = () => {
           <div className="lg:col-span-6 flex flex-col justify-center items-center relative" ref={containerRef}>
             {/* VIEW MODE TOGGLE (FOTO STRIP VS BOOMERANG GIF) */}
             <div className="flex items-center justify-between w-full mb-3 px-1">
-              <div className="bg-stone-100/90 backdrop-blur-md p-1 rounded-2xl flex items-center gap-1 border border-stone-200/80 shadow-2xs">
-                <button
-                  onClick={() => setPreviewTab('strip')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    previewTab === 'strip'
-                      ? 'bg-white text-stone-900 shadow-xs font-bold'
-                      : 'text-stone-500 hover:text-stone-800'
-                  }`}
-                >
-                  <Camera className="w-3.5 h-3.5 text-stone-700" />
-                  <span>Foto Strip HD</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setPreviewTab('boomerang');
-                    if (!gifResult && !isGeneratingGif) {
-                      generateGif();
-                    }
-                  }}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    previewTab === 'boomerang'
-                      ? 'bg-rose-500 text-white shadow-xs font-bold'
-                      : 'text-stone-500 hover:text-stone-800'
-                  }`}
-                >
-                  <Film className="w-3.5 h-3.5 text-rose-100" />
-                  <span>Animasi Boomerang</span>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-md uppercase tracking-wider font-semibold ${
-                    previewTab === 'boomerang' ? 'bg-white/20 text-white' : 'bg-stone-200 text-stone-700'
-                  }`}>
-                    GIF
-                  </span>
-                </button>
-              </div>
+              {captureType === 'boomerang' ? (
+                <div className="flex items-center gap-2 bg-rose-50/90 border border-rose-200/80 px-3.5 py-1.5 rounded-2xl text-xs font-bold text-rose-600 shadow-2xs">
+                  <Film className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Animasi Boomerang GIF</span>
+                </div>
+              ) : (
+                <div className="bg-stone-100/90 backdrop-blur-md p-1 rounded-2xl flex items-center gap-1 border border-stone-200/80 shadow-2xs">
+                  <button
+                    onClick={() => setPreviewTab('strip')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      previewTab === 'strip'
+                        ? 'bg-white text-stone-900 shadow-xs font-bold'
+                        : 'text-stone-500 hover:text-stone-800'
+                    }`}
+                  >
+                    <Camera className="w-3.5 h-3.5 text-stone-700" />
+                    <span>Foto Strip HD</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setPreviewTab('boomerang');
+                      if (!gifResult && !isGeneratingGif) {
+                        generateGif();
+                      }
+                    }}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      previewTab === 'boomerang'
+                        ? 'bg-rose-500 text-white shadow-xs font-bold'
+                        : 'text-stone-500 hover:text-stone-800'
+                    }`}
+                  >
+                    <Film className="w-3.5 h-3.5 text-rose-100" />
+                    <span>Animasi Boomerang</span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-md uppercase tracking-wider font-semibold ${
+                      previewTab === 'boomerang' ? 'bg-white/20 text-white' : 'bg-stone-200 text-stone-700'
+                    }`}>
+                      GIF
+                    </span>
+                  </button>
+                </div>
+              )}
 
               {previewTab === 'boomerang' && gifResult && !isGeneratingGif && (
                 <button
@@ -798,60 +773,7 @@ export const Preview: React.FC = () => {
                   ))}
                 </div>
               </div>
-            ) : (
-              /* BOOMERANG SPEED & STYLE CONTROLS BAR */
-              <div className="mt-3.5 bg-white/95 backdrop-blur-md border border-stone-200/90 p-3 rounded-2xl shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
-                {/* Gaya Efek */}
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <span className="text-[10px] font-bold uppercase text-stone-400 tracking-wider">Mode:</span>
-                  <div className="flex gap-1.5 flex-1 sm:flex-initial">
-                    {[
-                      { id: 'sequence', label: 'Siklus Dinamis' },
-                      { id: 'pop', label: 'Sorotan Panggung' },
-                      { id: 'flash', label: 'Kilat Studio' },
-                    ].map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => generateGif(undefined, m.id as BoomerangMode)}
-                        disabled={isGeneratingGif}
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer flex-1 sm:flex-initial ${
-                          gifMode === m.id
-                            ? 'bg-rose-500 text-white border-rose-500 shadow-xs'
-                            : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 hover:text-stone-900'
-                        }`}
-                      >
-                        {m.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Kecepatan */}
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-                  <span className="text-[10px] font-bold uppercase text-stone-400 tracking-wider">Tempo:</span>
-                  <div className="flex gap-1.5">
-                    {[
-                      { label: 'Cepat', value: 0.08 },
-                      { label: 'Sedang', value: 0.15 },
-                      { label: 'Santai', value: 0.28 },
-                    ].map((s) => (
-                      <button
-                        key={s.value}
-                        onClick={() => generateGif(s.value, undefined)}
-                        disabled={isGeneratingGif}
-                        className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
-                          gifInterval === s.value
-                            ? 'bg-rose-500 text-white border-rose-500 shadow-xs'
-                            : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 hover:text-stone-900'
-                        }`}
-                      >
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+            ) : null}
           </div>
 
           {/* RIGHT COLUMN: ACTION & SETTINGS PANEL */}
@@ -899,20 +821,15 @@ export const Preview: React.FC = () => {
                       <span className="text-[9px] text-stone-500">Mulus Tanpa Jeda</span>
                     </div>
                     <div className="bg-white p-2.5 rounded-xl border border-stone-200/80 shadow-2xs flex flex-col items-center">
-                      <span className="text-[9px] uppercase tracking-wider font-semibold text-stone-400">Mode Aktif</span>
-                      <span className="text-xs font-bold text-stone-900 mt-0.5">
-                        {gifMode === 'sequence' ? 'Siklus' : gifMode === 'pop' ? 'Sorotan' : 'Kilat'}
-                      </span>
-                      <span className="text-[9px] text-stone-500">Khas Event Booth</span>
+                      <span className="text-[9px] uppercase tracking-wider font-semibold text-stone-400">Gerakan</span>
+                      <span className="text-xs font-bold text-stone-900 mt-0.5">Loop Dinamis</span>
+                      <span className="text-[9px] text-stone-500">Multi-Pose Alami</span>
                     </div>
                     <div className="bg-white p-2.5 rounded-xl border border-stone-200/80 shadow-2xs flex flex-col items-center">
-                      <span className="text-[9px] uppercase tracking-wider font-semibold text-stone-400">Tempo</span>
-                      <span className="text-xs font-bold text-stone-900 mt-0.5">
-                        {gifInterval === 0.08 ? 'Cepat' : gifInterval === 0.28 ? 'Santai' : 'Sedang'}
-                      </span>
-                      <span className="text-[9px] text-stone-500">Fluid Motion</span>
-                    </div>
-                  </div>
+                      <span className="text-[9px] uppercase tracking-wider font-semibold text-stone-400">Optimasi</span>
+                      <span className="text-xs font-bold text-stone-900 mt-0.5">Story &amp; TikTok</span>
+                      <span className="text-[9px] text-stone-500">Siap Dibagikan</span>
+                    </div></div>
                 </div>
               ) : (
                 <div className="bg-stone-50 border border-stone-200/70 p-3 rounded-2xl flex flex-col gap-2">
@@ -971,7 +888,7 @@ export const Preview: React.FC = () => {
                   /* HERO ACTION WHEN ON BOOMERANG TAB: UNDUH GIF */
                   <button
                     onClick={handleDownloadGif}
-                    disabled={isGeneratingGif || !gifResult}
+                    disabled={isGeneratingGif}
                     className="w-full py-3.5 px-6 bg-[#E15A6E] hover:bg-[#D4485D] active:scale-[0.99] text-white font-bold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group cursor-pointer relative overflow-hidden disabled:opacity-50"
                   >
                     {isGeneratingGif ? (
@@ -1005,7 +922,15 @@ export const Preview: React.FC = () => {
 
                 {/* SECONDARY ROW (2-KOLOM SEIMBANG) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {previewTab === 'boomerang' ? (
+                  {captureType === 'boomerang' ? (
+                    <button
+                      onClick={() => setStep('capture')}
+                      className="py-3 px-3.5 bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-200/80 hover:border-stone-300 font-semibold text-xs rounded-2xl transition-all shadow-2xs flex items-center justify-center gap-2 cursor-pointer group"
+                    >
+                      <RotateCcw className="w-4 h-4 text-stone-700 group-hover:scale-110 transition-transform shrink-0" />
+                      <span>Rekam Boomerang Lagi</span>
+                    </button>
+                  ) : previewTab === 'boomerang' ? (
                     <button
                       onClick={() => setPreviewTab('strip')}
                       className="py-3 px-3.5 bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-200/80 hover:border-stone-300 font-semibold text-xs rounded-2xl transition-all shadow-2xs flex items-center justify-center gap-2 cursor-pointer group"
@@ -1086,14 +1011,14 @@ export const Preview: React.FC = () => {
               </div>
 
               <h3 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight leading-snug">
-                Frame Foto Berhasil Disimpan!
+                {previewTab === 'boomerang' ? 'Animasi GIF Berhasil Disimpan!' : 'Frame Foto Berhasil Disimpan!'}
               </h3>
 
               {/* MOBILE GALLERY TIP */}
               <div className="w-full p-3.5 bg-stone-50 border border-stone-200/80 rounded-2xl text-[11px] text-stone-600 leading-relaxed font-medium text-left flex items-start gap-2.5 select-auto">
                 <Smartphone className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold text-stone-800">Pengguna Smartphone:</span> Jika foto belum masuk otomatis ke Galeri, <span className="font-bold underline text-rose-600">tekan &amp; tahan foto</span> di bawah ini lalu pilih <b>"Simpan Gambar" (Save Image)</b>.
+                  <span className="font-bold text-stone-800">Pengguna Smartphone:</span> Jika {previewTab === 'boomerang' ? 'animasi GIF' : 'foto'} belum masuk otomatis ke Galeri, <span className="font-bold underline text-rose-600">tekan &amp; tahan {previewTab === 'boomerang' ? 'animasi' : 'foto'}</span> di bawah ini lalu pilih <b>"Simpan Gambar" (Save Image)</b>.
                 </div>
               </div>
 
@@ -1106,7 +1031,7 @@ export const Preview: React.FC = () => {
                 >
                   <img
                     src={downloadedImageUri}
-                    alt="Preview Frame Photobooth"
+                    alt={previewTab === 'boomerang' ? 'Pratinjau Animasi GIF' : 'Preview Frame Photobooth'}
                     className="max-h-44 object-contain rounded-xl shadow-md transition-transform duration-300 group-hover:scale-105 select-auto touch-manipulation"
                     style={{ WebkitTouchCallout: 'default', pointerEvents: 'auto' }}
                   />
@@ -1131,7 +1056,7 @@ export const Preview: React.FC = () => {
                     className="py-2.5 bg-white hover:bg-pink-50 text-zinc-700 border border-pink-200 font-extrabold tracking-wider uppercase text-[10px] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5"
                   >
                     <ExternalLink className="w-3.5 h-3.5 text-pink-500" />
-                    Buka Foto Full
+                    {previewTab === 'boomerang' ? 'Buka GIF Full' : 'Buka Foto Full'}
                   </button>
 
                   <button
@@ -1232,67 +1157,6 @@ export const Preview: React.FC = () => {
                 )}
               </div>
 
-              {/* ANIMATION STYLE CONTROLS */}
-              {!isGeneratingGif && (
-                <div className="w-full flex flex-col gap-1.5">
-                  <span className="text-[10px] font-bold uppercase text-stone-500 tracking-wider text-left flex items-center gap-1.5 px-0.5">
-                    <Sliders className="w-3.5 h-3.5 text-stone-700 inline" />
-                    Mode Animasi:
-                  </span>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {[
-                      { id: 'sequence', label: 'Siklus Dinamis', desc: 'Harmoni Mengalir' }, 
-                      { id: 'pop', label: 'Sorotan Panggung', desc: 'Fokus Sorotan Anggun' },
-                      { id: 'flash', label: 'Kilat Studio', desc: 'Blitz Lampu Kamera' }, 
-                    ].map((m) => ( 
-                      <button
-                        key={m.id}
-                        onClick={() => handleOpenGifModal(undefined, m.id as BoomerangMode)}
-                        className={`py-2 px-1 text-center rounded-xl border transition-all cursor-pointer flex flex-col items-center justify-center ${
-                          gifMode === m.id
-                            ? 'bg-rose-500 text-white border-rose-500 shadow-xs font-semibold'
-                            : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 font-medium'
-                        }`}
-                      >
-                        <span className="text-[11px] font-bold leading-tight">{m.label}</span>
-                        <span className={`text-[9px] mt-0.5 ${gifMode === m.id ? 'text-rose-100' : 'text-stone-400'}`}>
-                          {m.desc}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* SPEED CONTROLS */}
-              {!isGeneratingGif && (
-                <div className="w-full flex flex-col gap-1.5">
-                  <span className="text-[10px] font-bold uppercase text-stone-500 tracking-wider text-left flex items-center gap-1.5 px-0.5">
-                    <Zap className="w-3.5 h-3.5 text-stone-700 inline" />
-                    Tempo Gerakan:
-                  </span>
-                  <div className="grid grid-cols-3 gap-1.5"> 
-                    {[
-                      { label: 'Cepat (0.08s)', value: 0.08 },
-                      { label: 'Sedang (0.15s)', value: 0.15 }, 
-                      { label: 'Santai (0.28s)', value: 0.28 }, 
-                    ].map((s) => ( 
-                      <button
-                        key={s.value}
-                        onClick={() => handleOpenGifModal(s.value, undefined)}
-                        className={`py-2 px-1 text-[11px] rounded-xl border transition-all cursor-pointer font-semibold ${
-                          gifInterval === s.value
-                            ? 'bg-rose-500 text-white border-rose-500 shadow-xs font-semibold'
-                            : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100 font-medium'
-                        }`}
-                      >
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* DOWNLOAD GIF BUTTON */}
               {!isGeneratingGif && gifResult && ( 
                 <button
@@ -1312,7 +1176,7 @@ export const Preview: React.FC = () => {
       <DigitalEnvelopeModal
         isOpen={showEnvelopeModal}
         onClose={() => setShowEnvelopeModal(false)}
-        photoStripUri={downloadedImageUri || (stageRef.current ? exportHighResCanvas(stageRef.current, 600) : null)}
+        photoStripUri={previewTab === 'boomerang' && gifResult ? gifResult.dataUrl : (downloadedImageUri || (stageRef.current ? exportHighResCanvas(stageRef.current, 600) : null))}
       />
 
       {/* Upgrade Modal */}

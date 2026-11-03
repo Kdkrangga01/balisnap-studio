@@ -232,7 +232,9 @@ const createCombinedGiftCardCanvas = async (
         const padding = 36;
         const cardWidth = Math.max(800, img.width);
         const textBlockHeight = 310;
-        const cardHeight = img.height + textBlockHeight + padding * 2;
+        const photoW = cardWidth - padding * 2 - 40;
+        const photoH = Math.round(photoW * (img.height / (img.width || 1)));
+        const cardHeight = photoH + textBlockHeight + padding * 2;
 
         canvas.width = cardWidth;
         canvas.height = cardHeight;
@@ -262,8 +264,6 @@ const createCombinedGiftCardCanvas = async (
         // Draw Photo at top
         const photoX = padding + 20;
         const photoY = padding + 20;
-        const photoW = cardWidth - padding * 2 - 40;
-        const photoH = img.height;
         ctx.drawImage(img, photoX, photoY, photoW, photoH);
 
         // Divider
