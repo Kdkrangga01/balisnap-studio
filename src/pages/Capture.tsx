@@ -29,52 +29,9 @@ const CAMERA_FILTERS = [
   { id: 'indie-vibes', label: 'Warm Film', filterCss: 'contrast(95%) brightness(102%) sepia(18%) saturate(100%)' },
   { id: 'sweet-pink', label: 'Soft Blush', filterCss: 'contrast(102%) saturate(112%) sepia(6%) hue-rotate(-8deg)' },
   { id: 'bw-elegant', label: 'Classic B&W', filterCss: 'grayscale(100%) contrast(115%) brightness(102%)' }
-];
+]; 
 
-// Helper Audio Synth
-const playBeepSound = () => {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.15);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.15);
-  } catch (e) {
-    console.error(e);
-  }
-};
 
-const playShutterSound = () => {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const bufferSize = ctx.sampleRate * 0.1;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    const filter = ctx.createBiquadFilter(); 
-    filter.type = 'highpass';
-    filter.frequency.value = 1000;
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08); 
-    noise.connect(filter); 
-    filter.connect(gain); 
-    gain.connect(ctx.destination); 
-    noise.start();
-  } catch (e) { 
-    console.error(e);
-  }
-};
 
 function fitDataUrlToSlotAspect(
   dataUrl: string,
@@ -174,7 +131,6 @@ export const Capture: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<string>('none');
   const [brightness, setBrightness] = useState<number>(104);
   const isBeautyMode = false; 
-  const isMirrorMode = true; 
   const [timerInterval, setTimerInterval] = useState<number>(captureType === 'boomerang' ? 5 : 3);
   const [photoAspects, setPhotoAspects] = useState<Record<number, number>>({});
   const [previewModalPhoto, setPreviewModalPhoto] = useState<string | null>(null);
@@ -226,8 +182,6 @@ export const Capture: React.FC = () => {
     return () => clearInterval(timer);
   }, [previewModalBurst]);
 
-  // Fitur Pendukung Kamera
-  const soundEnabled = true; 
   const gridOverlay = false;
 
   const [isPortraitView, setIsPortraitView] = useState<boolean>(() => {
@@ -468,7 +422,7 @@ export const Capture: React.FC = () => {
       return;
     }
 
-    if (soundEnabled) playShutterSound();
+    // Shutter sound dinonaktifkan agar sunyi tanpa suara
     setShowFlash(true);
     setTimeout(() => setShowFlash(false), 200);
     setCaptureError(null);
@@ -508,7 +462,6 @@ export const Capture: React.FC = () => {
     setPhotoBurstAtSlot,
     selectNextEmptySlot,
     actualResolution,
-    soundEnabled,
     getSlotAspectRatio,
   ]);
 
@@ -633,7 +586,6 @@ export const Capture: React.FC = () => {
     activeFilter,
     brightness,
     isBeautyMode,
-    soundEnabled,
     timerInterval,
     setPhotoAtSlot,
     setPhotoBurstAtSlot,
@@ -772,12 +724,10 @@ export const Capture: React.FC = () => {
       }
       return;
     }
-    if (soundEnabled && captureType !== 'boomerang' && countdown > 0 && countdown <= 5) {
-      playBeepSound();
-    }
+    // Suara detikan / beep dihilangkan agar proses foto hening dan sunyi
     const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
     return () => clearTimeout(timer);
-  }, [countdown, capturePhoto, captureBurstSequence, soundEnabled, captureType]);
+  }, [countdown, capturePhoto, captureBurstSequence, captureType]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1055,6 +1005,7 @@ export const Capture: React.FC = () => {
                 {hasCamera ? (
                   <Webcam
                     audio={false}
+                    mirrored={false}
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
                     screenshotQuality={1.0}
@@ -1062,7 +1013,7 @@ export const Capture: React.FC = () => {
                     videoConstraints={getVideoConstraints()}
                     onUserMedia={handleUserMedia}
                     onUserMediaError={handleUserMediaError}
-                    className="w-full h-full object-cover object-center camera-mirror"
+                    className="w-full h-full object-cover object-center"
                     style={{ filter: combinedFilterStyle }}
                   />
                 ) : (
@@ -1581,7 +1532,7 @@ export const Capture: React.FC = () => {
                   <img
                     src={burstRecordedPreview.frames[burstPreviewFrameIndex]}
                     alt="Pratinjau Foto GIF"
-                    className="w-full h-full object-contain camera-mirror"
+                    className="w-full h-full object-contain"
                   />
                 )}
                 <div className="absolute top-2.5 right-2.5 bg-stone-900/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/10 shadow-sm">
@@ -1693,7 +1644,7 @@ export const Capture: React.FC = () => {
                 <img
                   src={previewModalBurst[modalBurstIndex]}
                   alt="Boomerang Loop"
-                  className="max-w-full max-h-[66vh] object-contain rounded-xl camera-mirror"
+                  className="max-w-full max-h-[66vh] object-contain rounded-xl"
                 />
                 <div className="absolute top-2.5 right-2.5 bg-stone-900/70 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-white tracking-wider flex items-center gap-1.5 border border-white/10">
                   <Film className="w-3 h-3 text-emerald-400" />
@@ -1713,7 +1664,7 @@ export const Capture: React.FC = () => {
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #D6D3D1; border-radius: 10px; }
         .camera-mirror {
-          transform: scaleX(${isMirrorMode ? '-1' : '1'});
+          transform: none;
         }
       `}</style>
     </>

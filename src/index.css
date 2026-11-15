@@ -105,7 +105,7 @@ h6 {
   @apply bg-cream rounded-full hover:bg-gold-light transition-colors;
 }
 
-/* Camera feed wrapper */
+/* Camera feed wrapper - pastikan normal tidak mirror */
 .camera-mirror video {
-  transform: scaleX(-1);
+  transform: none;
 }
