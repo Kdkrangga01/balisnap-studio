@@ -18,7 +18,8 @@ import {
   Clock,
   X,
   Film,
-  RotateCcw
+  RotateCcw,
+  FlipHorizontal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -131,6 +132,27 @@ export const Capture: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<string>('none');
   const [brightness, setBrightness] = useState<number>(104);
   const isBeautyMode = false; 
+
+  // Camera Mirroring State (Default: true / Mode Cermin Alami - dapat di-toggle oleh pengguna kapan saja)
+  const [isMirrored, setIsMirrored] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('balisnap_camera_mirror');
+      if (saved !== null) return saved === 'true';
+    }
+    return true;
+  });
+
+  const toggleMirror = useCallback(() => {
+    setIsMirrored((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('balisnap_camera_mirror', String(next));
+      } catch (e) {
+        console.error(e);
+      }
+      return next;
+    });
+  }, []);
   const [timerInterval, setTimerInterval] = useState<number>(captureType === 'boomerang' ? 5 : 3);
   const [photoAspects, setPhotoAspects] = useState<Record<number, number>>({});
   const [previewModalPhoto, setPreviewModalPhoto] = useState<string | null>(null);
@@ -458,6 +480,7 @@ export const Capture: React.FC = () => {
     brightness,
     isBeautyMode,
     timerInterval,
+    isMirrored,
     setPhotoAtSlot,
     setPhotoBurstAtSlot,
     selectNextEmptySlot,
@@ -514,7 +537,16 @@ export const Capture: React.FC = () => {
         if (stopBurstRecordingRef.current) break;
 
         if (grabCtx && video && !video.paused && !video.ended) {
-          grabCtx.drawImage(video, 0, 0, grabW, grabH);
+          grabCtx.clearRect(0, 0, grabW, grabH);
+          if (isMirrored) {
+            grabCtx.save();
+            grabCtx.translate(grabW, 0);
+            grabCtx.scale(-1, 1);
+            grabCtx.drawImage(video, 0, 0, grabW, grabH);
+            grabCtx.restore();
+          } else {
+            grabCtx.drawImage(video, 0, 0, grabW, grabH);
+          }
           const frameSrc = grabCanvas.toDataURL('image/jpeg', 0.98);
           rawFrames.push(frameSrc);
         } else {
@@ -587,6 +619,7 @@ export const Capture: React.FC = () => {
     brightness,
     isBeautyMode,
     timerInterval,
+    isMirrored,
     setPhotoAtSlot,
     setPhotoBurstAtSlot,
   ]);
@@ -1005,7 +1038,7 @@ export const Capture: React.FC = () => {
                 {hasCamera ? (
                   <Webcam
                     audio={false}
-                    mirrored={false}
+                    mirrored={isMirrored}
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
                     screenshotQuality={1.0}
@@ -1192,32 +1225,44 @@ export const Capture: React.FC = () => {
                 </AnimatePresence> 
 
 
-                {/* Tombol Fullscreen / Expand di pojok kanan bawah persis seperti referensi */}
-                <button
-                  type="button"
-                  onClick={toggleFullscreen}
-                  className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-30 bg-white hover:bg-stone-50 active:scale-95 transition-all text-stone-700 border border-stone-200/90 rounded-xl px-2.5 py-1.5 shadow-xs flex items-center justify-center cursor-pointer pointer-events-auto"
-                  title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
-                >
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24" 
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  > 
-                    <path d="M15 3h6v6" /> 
-                    <path d="M9 21H3v-6" />
-                    <path d="M21 15v6h-6" /> 
-                    <path d="M3 9V3h6" />
-                  </svg>
-                </button> 
+                {/* Tombol Aksi di pojok kanan bawah viewfinder: Flip/Cermin Kamera & Layar Penuh */}
+                <div className="absolute bottom-2.5 right-2.5 sm:bottom-3 sm:right-3 z-30 flex items-center gap-1.5 pointer-events-auto">
+                  <button
+                    type="button"
+                    onClick={toggleMirror}
+                    className="bg-white/95 hover:bg-white active:scale-95 transition-all text-stone-700 hover:text-stone-900 border border-stone-200/90 rounded-xl px-2.5 py-1.5 shadow-xs flex items-center gap-1.5 text-[11px] font-bold cursor-pointer"
+                    title={isMirrored ? "Beralih ke Kamera Normal (Non-Cermin)" : "Beralih ke Kamera Cermin (Mirror Selfie)"}
+                  >
+                    <FlipHorizontal className="w-3.5 h-3.5 text-stone-600" />
+                    <span className="hidden sm:inline">{isMirrored ? 'Cermin Aktif' : 'Normal'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={toggleFullscreen}
+                    className="bg-white hover:bg-stone-50 active:scale-95 transition-all text-stone-700 border border-stone-200/90 rounded-xl px-2.5 py-1.5 shadow-xs flex items-center justify-center cursor-pointer pointer-events-auto"
+                    title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
+                  >
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24" 
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    > 
+                      <path d="M15 3h6v6" /> 
+                      <path d="M9 21H3v-6" />
+                      <path d="M21 15v6h-6" /> 
+                      <path d="M3 9V3h6" />
+                    </svg>
+                  </button>
+                </div>
 
                 {/* Slot Indicator Pills Bawah */}
-                <div className="absolute bottom-2.5 left-4 right-14 sm:right-16 flex gap-1.5 z-20 pointer-events-none">
+                <div className="absolute bottom-2.5 left-4 right-28 sm:right-36 flex gap-1.5 z-20 pointer-events-none">
                   {Array.from({ length: totalSlots }).map((_, idx) => (
                     <div
                       key={idx}
@@ -1256,7 +1301,7 @@ export const Capture: React.FC = () => {
                 ))}
               </div>
 
-              {/* Brightness Slider */}
+              {/* Brightness Slider & Flip Camera */}
               <div className="flex items-center gap-2 pl-3 border-l border-stone-200 flex-shrink-0">
                 <Sun className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                 <input 
@@ -1269,6 +1314,20 @@ export const Capture: React.FC = () => {
                   title="Atur Kecerahan" 
                 />
                 <span className="text-[10px] font-mono font-bold text-stone-600 w-7 text-right">{brightness}%</span> 
+
+                <button
+                  type="button"
+                  onClick={toggleMirror}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex-shrink-0 border ml-1 ${
+                    isMirrored
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200'
+                      : 'bg-stone-100 hover:bg-stone-200 text-stone-600 border-stone-200'
+                  }`}
+                  title={isMirrored ? "Kamera Cermin Aktif (Klik untuk ubah ke Normal)" : "Kamera Normal Aktif (Klik untuk ubah ke Cermin)"}
+                >
+                  <FlipHorizontal className="w-3.5 h-3.5" />
+                  <span className="hidden md:inline">{isMirrored ? 'Cermin' : 'Normal'}</span>
+                </button>
               </div>  
             </div> 
 
