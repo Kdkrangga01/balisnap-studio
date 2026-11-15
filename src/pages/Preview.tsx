@@ -47,12 +47,7 @@ export const Preview: React.FC = () => {
   const [gifMode, setGifMode] = useState<BoomerangMode>('sequence'); 
   const photoFitMode: 'fit' | 'cover' = 'cover';
 
-  // Auto-generate Boomerang GIF when on boomerang tab if not yet generated
-  useEffect(() => {
-    if (previewTab === 'boomerang' && !gifResult && !isGeneratingGif && selectedFrame) {
-      generateGif();
-    }
-  }, [previewTab, selectedFrame]);
+  // Boomerang GIF di-render saat tombol unduh ditekan agar CPU ponsel tidak terbebani saat membuka halaman pratinjau
 
   // DIGITAL ENVELOPE GIFT STATE 
   const [showEnvelopeModal, setShowEnvelopeModal] = useState<boolean>(false);
@@ -608,23 +603,23 @@ export const Preview: React.FC = () => {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-100/70 via-zinc-50/40 to-transparent pointer-events-none z-0" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.025)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0" />
 
-      {/* AMBIENT LIGHTING ORBS */}
-      <div className="absolute top-10 left-1/4 w-96 h-96 bg-slate-200/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-zinc-200/25 rounded-full blur-3xl pointer-events-none" />
+      {/* AMBIENT LIGHTING ORBS - disembunyikan di HP agar GPU tidak drop frame */}
+      <div className="hidden sm:block absolute top-10 left-1/4 w-96 h-96 bg-slate-200/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="hidden sm:block absolute bottom-10 right-1/4 w-96 h-96 bg-zinc-200/25 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-6xl w-full mx-auto flex flex-col items-center relative z-10">
 
         {/* ===== TOP NAVBAR / HEADER ROW ===== */}
-        <div className="w-full flex flex-col md:flex-row justify-between items-center bg-white/90 backdrop-blur-xl border border-zinc-200/80 p-4 md:p-6 rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] gap-4 mb-8">
+        <div className="w-full flex flex-col md:flex-row justify-between items-center bg-white sm:bg-white/90 sm:backdrop-blur-xl border border-zinc-200/80 p-3.5 sm:p-5 md:p-6 rounded-2xl sm:rounded-3xl shadow-sm sm:shadow-[0_4px_24px_rgba(0,0,0,0.04)] gap-3 sm:gap-4 mb-4 sm:mb-8">
           <div className="text-center md:text-left flex flex-col items-center md:items-start">
             <button
               onClick={() => setStep(captureType === 'boomerang' ? 'capture' : 'editor')} 
-              className="inline-flex items-center gap-2 text-zinc-700 hover:text-zinc-900 font-extrabold text-[11px] tracking-wider uppercase mb-1.5 transition-all group px-3.5 py-1.5 bg-zinc-100/90 rounded-full border border-zinc-200 shadow-sm"
+              className="inline-flex items-center gap-2 text-zinc-700 hover:text-zinc-900 font-extrabold text-[11px] tracking-wider uppercase mb-1.5 transition-all group px-3.5 py-1.5 bg-zinc-100/90 rounded-full border border-zinc-200 shadow-sm cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
               {captureType === 'boomerang' ? 'Kembali ke Kamera' : 'Kembali ke Editor'}
             </button>
-            <h1 className="font-serif text-3xl md:text-4xl font-black text-zinc-900 tracking-tight leading-none mt-1">
+            <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-black text-zinc-900 tracking-tight leading-none mt-1">
               Pratinjau Studio HD 
             </h1>
             <p className="text-zinc-500 text-xs font-medium mt-1">
@@ -636,7 +631,7 @@ export const Preview: React.FC = () => {
           <div className="flex items-center gap-2.5">
             <button
               onClick={resetAll}
-              className="px-4 py-2.5 rounded-2xl text-[11px] font-extrabold uppercase tracking-wider bg-white hover:bg-rose-50 border border-rose-200 text-zinc-700 transition-all shadow-sm flex items-center gap-2"
+              className="px-4 py-2.5 rounded-2xl text-[11px] font-extrabold uppercase tracking-wider bg-white hover:bg-rose-50 border border-rose-200 text-zinc-700 transition-all shadow-sm flex items-center gap-2 cursor-pointer"
             >
               <RotateCcw className="w-4 h-4 text-pink-500" /> 
               Foto Baru
@@ -645,7 +640,7 @@ export const Preview: React.FC = () => {
         </div>
 
         {/* ===== MAIN WORKSPACE ===== */} 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start w-full pb-24 lg:pb-8">
 
           {/* LEFT COLUMN: CANVAS OR BOOMERANG SHOWCASE */}
           <div className="lg:col-span-6 flex flex-col justify-center items-center relative" ref={containerRef}>
@@ -713,8 +708,8 @@ export const Preview: React.FC = () => {
 
             {/* MAIN SHOWCASE CONTAINER */}
             <div
-              className="relative p-3 md:p-4 bg-white/95 backdrop-blur-xl border border-stone-200/90 shadow-[0_16px_40px_rgba(0,0,0,0.06)] rounded-[32px] flex flex-col items-center justify-center overflow-hidden transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] w-full"
-              style={{ minHeight: '480px' }}
+              className="relative p-2.5 sm:p-4 bg-white sm:bg-white/95 sm:backdrop-blur-xl border border-stone-200/90 shadow-sm sm:shadow-[0_16px_40px_rgba(0,0,0,0.06)] rounded-2xl sm:rounded-[32px] flex flex-col items-center justify-center overflow-hidden transition-colors w-full"
+              style={{ minHeight: 'auto', contain: 'paint' }}
             >
               {/* PhotoCanvas always stays mounted in DOM */}
               <div
@@ -777,11 +772,11 @@ export const Preview: React.FC = () => {
           </div>
 
           {/* RIGHT COLUMN: ACTION & SETTINGS PANEL */}
-          <div className="lg:col-span-6 flex flex-col gap-5 w-full">
-            <div className="bg-white/95 backdrop-blur-xl border border-stone-200/80 p-6 md:p-7 rounded-[32px] shadow-[0_16px_40px_rgba(0,0,0,0.04)] flex flex-col gap-4.5 text-left relative overflow-hidden">
+          <div className="lg:col-span-6 flex flex-col gap-4 sm:gap-5 w-full">
+            <div className="bg-white sm:bg-white/95 sm:backdrop-blur-xl border border-stone-200/80 p-4 sm:p-6 md:p-7 rounded-2xl sm:rounded-[32px] shadow-sm sm:shadow-[0_16px_40px_rgba(0,0,0,0.04)] flex flex-col gap-3.5 sm:gap-4.5 text-left relative overflow-hidden">
 
-              {/* SOFT AMBIENT ACCENT */}
-              <div className="absolute -top-20 -right-20 w-48 h-48 bg-rose-50/50 rounded-full blur-3xl pointer-events-none" />
+              {/* SOFT AMBIENT ACCENT - disembunyikan di HP agar performa scroll ringan */}
+              <div className="hidden sm:block absolute -top-20 -right-20 w-48 h-48 bg-rose-50/50 rounded-full blur-3xl pointer-events-none" />
 
               {/* SPECS */}
               <div className="flex items-center justify-end">
@@ -952,6 +947,35 @@ export const Preview: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* MOBILE STICKY FLOATING QUICK-DOWNLOAD BAR (Tetap muncul di layar HP tanpa harus scroll jauh) */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 sm:backdrop-blur-md border-t border-stone-200/90 px-4 py-2.5 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] flex items-center justify-between gap-3 lg:hidden">
+        <div className="flex flex-col min-w-0 flex-1">
+          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider truncate">
+            {previewTab === 'boomerang' ? 'Format GIF Boomerang' : `Format PNG (${exportQuality.toUpperCase()})`}
+          </span>
+          <span className="text-xs font-bold text-stone-800 truncate">
+            {selectedFrame?.name || 'Hasil Siap Unduh'}
+          </span>
+        </div>
+        <button
+          onClick={previewTab === 'boomerang' ? handleDownloadGif : handleDownload}
+          disabled={isGeneratingGif}
+          className="py-2.5 px-4.5 bg-[#E15A6E] active:bg-[#D4485D] text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
+        >
+          {isGeneratingGif ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+              <span>Merender...</span>
+            </>
+          ) : (
+            <>
+              <Download className="w-3.5 h-3.5" />
+              <span>{previewTab === 'boomerang' ? 'Unduh GIF' : 'Unduh Foto'}</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* ===== POP-UP MODAL UNDUH BERHASIL ===== */}
