@@ -920,8 +920,8 @@ export const Preview: React.FC = () => {
                   </button>
                 )}
 
-                {/* SECONDARY ROW (2-KOLOM SEIMBANG) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* SECONDARY ROW */}
+                <div className={captureType === 'boomerang' || previewTab === 'boomerang' ? "grid grid-cols-1 sm:grid-cols-2 gap-2.5" : "w-full"}>
                   {captureType === 'boomerang' ? (
                     <button
                       onClick={() => setStep('capture')}
@@ -938,24 +938,11 @@ export const Preview: React.FC = () => {
                       <Camera className="w-4 h-4 text-stone-700 group-hover:scale-110 transition-transform shrink-0" />
                       <span>Kembali ke Foto Strip</span>
                     </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setPreviewTab('boomerang');
-                        if (!gifResult && !isGeneratingGif) {
-                          generateGif();
-                        }
-                      }}
-                      className="py-3 px-3.5 bg-stone-100 hover:bg-stone-200/80 text-stone-800 border border-stone-200 font-semibold text-xs rounded-2xl transition-all shadow-2xs flex items-center justify-center gap-2 cursor-pointer group"
-                    >
-                      <Film className="w-4 h-4 text-stone-700 group-hover:scale-110 transition-transform shrink-0" />
-                      <span>Animasi Boomerang</span>
-                    </button>
-                  )}
+                  ) : null}
 
                   <button
                     onClick={() => setShowEnvelopeModal(true)}
-                    className="py-3 px-3.5 bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-200/80 hover:border-stone-300 font-semibold text-xs rounded-2xl transition-all shadow-2xs flex items-center justify-center gap-2 cursor-pointer group"
+                    className="w-full py-3 px-3.5 bg-stone-50 hover:bg-stone-100 text-stone-700 border border-stone-200/80 hover:border-stone-300 font-semibold text-xs rounded-2xl transition-all shadow-2xs flex items-center justify-center gap-2 cursor-pointer group"
                   >
                     <Mail className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform shrink-0" />
                     <span>Amplop Digital / Gift</span>
