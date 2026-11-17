@@ -88,9 +88,7 @@ export const Editor: React.FC = () => {
     }
   }, []);
 
-  if (!selectedFrame) return null;
-
-  const totalSlots = selectedFrame.slots;
+  const totalSlots = selectedFrame?.slots ?? 1;
   const filledSlots = photos.filter((p) => p !== null).length;
   const totalElements = canvasStickers.length + canvasTexts.length;
 
@@ -214,6 +212,8 @@ export const Editor: React.FC = () => {
 
     setSelectedId(null);
   };
+
+  if (!selectedFrame) return null;
 
   // Menyimpan jumlah stiker sebelumnya, untuk mendeteksi kapan ada stiker BARU ditambahkan
   return (

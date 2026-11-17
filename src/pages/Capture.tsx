@@ -651,9 +651,8 @@ export const Capture: React.FC = () => {
     setActiveSlot(capturedSlot);
   }, [burstRecordedPreview, setPhotoAtSlot, setPhotoBurstAtSlot]);
 
-  if (!selectedFrame) return null;
-
-  const { slots: totalSlots, name: frameName } = selectedFrame;
+  const totalSlots = selectedFrame?.slots ?? 1;
+  const frameName = selectedFrame?.name ?? '';
 
   const getVideoConstraints = () => {
     if (cameraRetryCount > 0) {
@@ -839,6 +838,8 @@ export const Capture: React.FC = () => {
   const activeFilterCss = selectedFilterObj ? selectedFilterObj.filterCss : '';
   const beautyCss = isBeautyMode ? 'blur(0.4px) contrast(98%)' : '';
   const combinedFilterStyle = `brightness(${brightness}%) ${activeFilterCss} ${beautyCss}`.trim();
+
+  if (!selectedFrame) return null;
 
   return (
     <>
