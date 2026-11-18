@@ -652,39 +652,9 @@ export const Preview: React.FC = () => {
                   <span>Animasi Boomerang GIF</span>
                 </div>
               ) : (
-                <div className="bg-stone-100/90 backdrop-blur-md p-1 rounded-2xl flex items-center gap-1 border border-stone-200/80 shadow-2xs">
-                  <button
-                    onClick={() => setPreviewTab('strip')}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                      previewTab === 'strip'
-                        ? 'bg-white text-stone-900 shadow-xs font-bold'
-                        : 'text-stone-500 hover:text-stone-800'
-                    }`}
-                  >
-                    <Camera className="w-3.5 h-3.5 text-stone-700" />
-                    <span>Foto Strip HD</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setPreviewTab('boomerang');
-                      if (!gifResult && !isGeneratingGif) {
-                        generateGif();
-                      }
-                    }}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                      previewTab === 'boomerang'
-                        ? 'bg-rose-500 text-white shadow-xs font-bold'
-                        : 'text-stone-500 hover:text-stone-800'
-                    }`}
-                  >
-                    <Film className="w-3.5 h-3.5 text-rose-100" />
-                    <span>Animasi Boomerang</span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-md uppercase tracking-wider font-semibold ${
-                      previewTab === 'boomerang' ? 'bg-white/20 text-white' : 'bg-stone-200 text-stone-700'
-                    }`}>
-                      GIF
-                    </span>
-                  </button>
+                <div className="flex items-center gap-2 bg-stone-100/90 border border-stone-200/80 px-3.5 py-1.5 rounded-2xl text-xs font-bold text-stone-700 shadow-2xs">
+                  <Camera className="w-3.5 h-3.5 text-stone-600" />
+                  <span>Foto Strip HD</span>
                 </div>
               )}
 
